@@ -8,6 +8,10 @@ import (
 	"net/http"
 )
 
+const (
+	url = "https://api.groq.com/openai/v1/chat/completions"
+)
+
 // ChatRequest is a request to the chat endpoint.
 type ChatRequest struct {
 	Messages  []Message `json:"messages"`
@@ -68,7 +72,6 @@ func (c *Client) Chat(ctx context.Context, req ChatRequest) (*ChatResponse, erro
 			if !c.models.contains(req.Model) {
 				return nil, fmt.Errorf("model %s is not available to the client. Models: %v", req.Model, c.models)
 			}
-			url := "https://api.groq.com/openai/v1/chat/completions"
 			reqJsonBody, err := json.Marshal(req)
 			if err != nil {
 				return nil, fmt.Errorf("error marshalling request body: %v", err)
@@ -104,7 +107,6 @@ func (c *Client) Chat(ctx context.Context, req ChatRequest) (*ChatResponse, erro
 //         if !c.models.contains(req.Model) {
 //                 return nil, fmt.Errorf("model %s is not available to the client", req.Model)
 //         }
-//         url := "https://api.groq.com/openai/v1/chat/completions"
 //         wr := bytes.NewBuffer([]byte{})
 //         err := json.NewEncoder(wr).Encode(req)
 //         if err != nil {
