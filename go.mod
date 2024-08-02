@@ -1,3 +1,3 @@
-module github.com/conneroisu/go-groq
+module github.com/conneroisu/groq-go
 
-go 1.22.0
+go 1.22.5

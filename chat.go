@@ -1,33 +1,34 @@
-package gogroq
+package groq
 
 import (
-	"bufio"
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
-
-	"github.com/conneroisu/go-groq/internal"
 )
 
-// ChatRequest is a request to the chat endpoint
+// ChatRequest is a request to the chat endpoint.
 type ChatRequest struct {
 	Messages  []Message `json:"messages"`
 	Model     string    `json:"model"`
 	TopP      float64   `json:"top_p"`
 	MaxTokens int       `json:"max_tokens"`
-	Stop      []string  `json:"stop omitempty"`
-	Seed      int       `json:"seed omitempty"`
-	Stream    bool      `json:"stream omitempty"`
+	Stop      []string  `json:"stop,omitempty"`
+	Seed      int       `json:"seed"`
+	Stream    bool      `json:"stream"`
+	Format    struct {
+		Type Format `json:"type"`
+	} `json:"response_format"`
 }
 
-// Message is a message in a chat request
+// Message is a message in a chat request.
 type Message struct {
 	Role    string `json:"role"`
 	Content string `json:"content"`
 }
 
-// ChatResponse is a response from the chat endpoint
+// ChatResponse is a response from the chat endpoint.
 type ChatResponse struct {
 	Id      string `json:"id"`
 	Object  string `json:"object"`
@@ -56,93 +57,102 @@ type ChatResponse struct {
 	} `json:"x_groq"`
 }
 
-// Chat sends a request to the chat endpoint
-func (c *Client) Chat(req ChatRequest) (*ChatResponse, error) {
-	request, err := c.newChatReq(req)
-	if err != nil {
-		return nil, fmt.Errorf("error creating request: %v", err)
-	}
-	done, err := c.client.Do(request)
-	if err != nil {
-		return nil, fmt.Errorf("error sending request: %v", err)
-	}
-	defer done.Body.Close()
-	resp, err := c.parseChatResp(done)
-	if err != nil {
-		return nil, fmt.Errorf("error parsing response: %v", err)
-	}
-	return resp, nil
-}
-
-type ChatStreamResponse struct {
-}
-
-func (c *Client) ChatStream(ctx context.Context, req ChatRequest) (*ChatResponse, error) {
-	req.Stream = true
-	request, err := c.newChatReq(req)
-	if err != nil {
-		return nil, fmt.Errorf("error creating request: %v", err)
-	}
-	done, err := c.client.Do(request)
-	if err != nil {
-		return nil, fmt.Errorf("error sending request: %v", err)
-	}
-	defer done.Body.Close()
-	resp, err := c.parseChatResp(done)
-	if err != nil {
-		return nil, fmt.Errorf("error parsing response: %v", err)
-	}
-	return resp, nil
-}
-
-var (
-	EMPTY_MESSAGES_LIMIT = uint(10)
-)
-
-// doStreamRequest sends a request to the chat endpoint and streams the response back
-func doStreamRequest[T streamable](client *Client, req *http.Request) (*streamReader[T], error) {
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "text/event-stream")
-	req.Header.Set("Cache-Control", "no-cache")
-	req.Header.Set("Connection", "keep-alive")
-
-	resp, err := client.client.Do(req) //nolint:bodyclose // body is closed in stream.Close()
-	if err != nil {
-		return new(streamReader[T]), err
-	}
-	if isFailureStatusCode(resp) {
-		return new(streamReader[T]), client.handleErrorResp(resp)
-	}
-	return &streamReader[T]{
-		emptyMessagesLimit: EMPTY_MESSAGES_LIMIT,
-		reader:             bufio.NewReader(resp.Body),
-		response:           resp,
-		errAccumulator:     internal.NewErrorAccumulator(),
-		unmarshaler:        &internal.JSONUnmarshaler{},
-		httpHeader:         httpHeader(resp.Header),
-	}, nil
-}
-
-// isFailureStatusCode checks if the status code is a failure status code
-func isFailureStatusCode(resp *http.Response) bool {
-	return resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusBadRequest
-}
-
-// handleErrorResp handles error responses from the API
-func (c *Client) handleErrorResp(resp *http.Response) error {
-	var errRes ErrorResponse
-	err := json.NewDecoder(resp.Body).Decode(&errRes)
-	if err != nil || errRes.Error == nil {
-		reqErr := &RequestError{
-			HTTPStatusCode: resp.StatusCode,
-			Err:            err,
+// Chat sends a request to the chat endpoint of the Groq API.
+func (c *Client) Chat(ctx context.Context, req ChatRequest) (*ChatResponse, error) {
+	for {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+			req.Stream = false
+			if !c.models.contains(req.Model) {
+				return nil, fmt.Errorf("model %s is not available to the client", req.Model)
+			}
+			url := "https://api.groq.com/openai/v1/chat/completions"
+			reqJsonBody, err := json.Marshal(req)
+			if err != nil {
+				return nil, fmt.Errorf("error marshalling request body: %v", err)
+			}
+			request, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(reqJsonBody)))
+			if err != nil {
+				return nil, fmt.Errorf("error reading request. %v", err)
+			}
+			request.Header.Set("Content-Type", "application/json")
+			request.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.groqApiKey))
+			done, err := c.client.Do(request)
+			if err != nil {
+				return nil, fmt.Errorf("error sending request: %v", err)
+			}
+			if done.StatusCode != http.StatusOK {
+				return nil, fmt.Errorf("unexpected status code: %d", done.StatusCode)
+			}
+			defer done.Body.Close()
+			var chatResponse ChatResponse
+			err = json.NewDecoder(done.Body).Decode(&chatResponse)
+			if err != nil {
+				return nil, fmt.Errorf("error decoding response: %v", err)
+			}
+			return &chatResponse, nil
 		}
-		if errRes.Error != nil {
-			reqErr.Err = errRes.Error
-		}
-		return reqErr
 	}
-
-	errRes.Error.HTTPStatusCode = resp.StatusCode
-	return errRes.Error
 }
+
+// TODO: Wait for iterators in 1.23 go
+// // ChatStream sends a request to the chat stream endpoint of the Groq API.
+// func (c *Client) ChatStream(ctx context.Context, req ChatRequest) (*ChatResponse, error) {
+//         req.Stream = true
+//         if !c.models.contains(req.Model) {
+//                 return nil, fmt.Errorf("model %s is not available to the client", req.Model)
+//         }
+//         url := "https://api.groq.com/openai/v1/chat/completions"
+//         wr := bytes.NewBuffer([]byte{})
+//         err := json.NewEncoder(wr).Encode(req)
+//         if err != nil {
+//                 return nil, fmt.Errorf("error marshalling request body: %v", err)
+//         }
+//         request, err := http.NewRequest("POST", url, wr)
+//         if err != nil {
+//                 return nil, fmt.Errorf("error reading request. %v", err)
+//         }
+//         request.Header.Set("Content-Type", "application/json")
+//         request.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.groqApiKey))
+//         done, err := c.client.Do(request)
+//         if err != nil {
+//                 return nil, fmt.Errorf("error sending request: %v", err)
+//         }
+//         defer done.Body.Close()
+//
+//         if done.StatusCode != http.StatusOK {
+//                 return nil, fmt.Errorf("unexpected status code: %d", done.StatusCode)
+//         }
+//
+//         scanner := bufio.NewScanner(done.Body)
+//         for scanner.Scan() {
+//                 var chatResponse ChatStreamResponse
+//                 err := json.Unmarshal(scanner.Bytes(), &chatResponse)
+//                 if err != nil {
+//                         return nil, fmt.Errorf("error decoding response: %v", err)
+//                 }
+//         }
+//         if err := scanner.Err(); err != nil {
+//                 fmt.Println("Error reading response:", err)
+//         }
+//         return nil, nil
+// }
+//
+// // ChatStreamResponse is a response from the chat stream endpoint.
+// type ChatStreamResponse struct {
+//         ID                string `json:"id"`
+//         Object            string `json:"object"`
+//         Created           int    `json:"created"`
+//         Model             string `json:"model"`
+//         SystemFingerprint string `json:"system_fingerprint"`
+//         Choices           []struct {
+//                 Index int `json:"index"`
+//                 Delta struct {
+//                         Content string `json:"content"`
+//                 } `json:"delta"`
+//                 Logprobs     interface{} `json:"logprobs"`
+//                 FinishReason interface{} `json:"finish_reason"`
+//         } `json:"choices"`
+// }
