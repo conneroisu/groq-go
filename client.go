@@ -10,21 +10,16 @@ import (
 
 // Client is a Groq api client.
 type Client struct {
-	groqApiKey string       // Groq API key
-	client     *http.Client // Client is the HTTP client to use
-	models     *Models      // Models is the list of models available to the client.
-	verbosity  slog.Level   // Verbosity is the verbosity level for the client.
-}
-
-// Models is the response from the GetModels method.
-type Models struct {
-	Models []string `json:"models"`
+	groqApiKey string         // Groq API key
+	client     *http.Client   // Client is the HTTP client to use
+	models     *ModelResponse // Models is the list of models available to the client.
+	verbosity  slog.Level     // Verbosity is the verbosity level for the client.
 }
 
 // Contains returns true if the model is in the list of models.
-func (m *Models) contains(model string) bool {
-	for _, m := range m.Models {
-		if m == model {
+func (m *ModelResponse) contains(model string) bool {
+	for _, m := range m.Data {
+		if m.ID == model {
 			return true
 		}
 	}
@@ -75,11 +70,25 @@ func (c *Client) GetModels() error {
 	if err != nil {
 		return err
 	}
-	var modelsResponse Models
+	var modelsResponse ModelResponse
 	err = json.Unmarshal(bodyText, &modelsResponse)
 	if err != nil {
 		return err
 	}
 	c.models = &modelsResponse
 	return nil
+}
+
+type ModelResponse struct {
+	Object string `json:"object"`
+	Data   []struct {
+		ID             string `json:"id"`
+		Object         string `json:"object"`
+		Created        int    `json:"created"`
+		OwnedBy        string `json:"owned_by"`
+		Active         bool   `json:"active"`
+		ContextWindow  int    `json:"context_window,omitempty"`
+		PublicApps     any    `json:"public_apps"`
+		ContextWindow0 int    `json:"context_ window,omitempty"`
+	} `json:"data"`
 }
