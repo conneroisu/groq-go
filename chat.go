@@ -65,6 +65,9 @@ func (c *Client) Chat(ctx context.Context, req ChatRequest) (*ChatResponse, erro
 			return nil, ctx.Err()
 		default:
 			req.Stream = false
+			if !c.models.contains(req.Model) {
+				return nil, fmt.Errorf("model %s is not available to the client", req.Model)
+			}
 			url := "https://api.groq.com/openai/v1/chat/completions"
 			reqJsonBody, err := json.Marshal(req)
 			if err != nil {
@@ -81,7 +84,7 @@ func (c *Client) Chat(ctx context.Context, req ChatRequest) (*ChatResponse, erro
 				return nil, fmt.Errorf("error sending request: %v", err)
 			}
 			if done.StatusCode != http.StatusOK {
-				return nil, fmt.Errorf("unexpected status code: %d", done.StatusCode)
+				return nil, fmt.Errorf("unexpected status code: %d: %v", done.StatusCode, done)
 			}
 			defer done.Body.Close()
 			var chatResponse ChatResponse
