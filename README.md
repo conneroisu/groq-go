@@ -9,3 +9,7 @@ Groq API is a super fast way to query open source llms.
 ```bash
 go get github.com/conneroisu/go-groq
 ```
+
+## Examples
+
+- [Automatic Git Commit Message Generator](https://github.com/conneroisu/gita)

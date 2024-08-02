@@ -10,7 +10,7 @@ import (
 	"github.com/conneroisu/go-groq/internal"
 )
 
-// ChatRequest is a request to the chat endpoint
+// ChatRequest is a request to the chat endpoint.
 type ChatRequest struct {
 	Messages  []Message `json:"messages"`
 	Model     string    `json:"model"`
@@ -21,13 +21,13 @@ type ChatRequest struct {
 	Stream    bool      `json:"stream omitempty"`
 }
 
-// Message is a message in a chat request
+// Message is a message in a chat request.
 type Message struct {
 	Role    string `json:"role"`
 	Content string `json:"content"`
 }
 
-// ChatResponse is a response from the chat endpoint
+// ChatResponse is a response from the chat endpoint.
 type ChatResponse struct {
 	Id      string `json:"id"`
 	Object  string `json:"object"`

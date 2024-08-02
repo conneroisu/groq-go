@@ -1,0 +1,35 @@
+version: '3'
+
+tasks:
+  run: 
+    cmds:
+      - task install
+      
+  clean:
+    cmds:
+      - sh ./scripts/taskfile/clean.sh
+      
+  fmt:
+    cmds:
+    - gofmt -w . && golines -w --max-len=79 .
+
+  lint:
+    cmds:
+    - sh ./scripts/taskfile/lint.sh
+
+  test:
+    cmds:
+      - sh ./scripts/taskfile/test.sh
+      
+  coverage:
+    cmds:
+      - sh ./scripts/taskfile/coverage.sh
+
+  install:
+    cmds:
+      - sh ./scripts/taskfile/install.sh
+
+  watch:
+    cmds:
+      - cd ./scripts/watch && go run .
+
