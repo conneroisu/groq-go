@@ -14,11 +14,12 @@ import (
 
 	groq "github.com/conneroisu/groq-go"
 	"github.com/conneroisu/groq-go/internal/test"
+	"github.com/stretchr/testify/assert"
 )
 
 // TestAudio Tests the transcription and translation endpoints of the API using the mocked server.
 func TestAudio(t *testing.T) {
-	client, server, teardown := setupOpenAITestServer()
+	client, server, teardown := setupGroqTestServer()
 	defer teardown()
 	server.RegisterHandler("/v1/audio/transcriptions", handleAudioEndpoint)
 	server.RegisterHandler("/v1/audio/translations", handleAudioEndpoint)
@@ -42,6 +43,7 @@ func TestAudio(t *testing.T) {
 	dir, cleanup := test.CreateTestDirectory(t)
 	defer cleanup()
 
+	a := assert.New(t)
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
 			path := filepath.Join(dir, "fake.mp3")
@@ -52,7 +54,7 @@ func TestAudio(t *testing.T) {
 				Model:    "whisper-3",
 			}
 			_, err := tc.createFn(ctx, req)
-			a.NoError(t, err, "audio API error")
+			a.NoError(err, "audio API error")
 		})
 
 		t.Run(tc.name+" (with reader)", func(t *testing.T) {
@@ -62,13 +64,13 @@ func TestAudio(t *testing.T) {
 				Model:    "whisper-3",
 			}
 			_, err := tc.createFn(ctx, req)
-			a.NoError(t, err, "audio API error")
+			a.NoError(err, "audio API error")
 		})
 	}
 }
 
 func TestAudioWithOptionalArgs(t *testing.T) {
-	client, server, teardown := setupOpenAITestServer()
+	client, server, teardown := setupGroqTestServer()
 	defer teardown()
 	server.RegisterHandler("/v1/audio/transcriptions", handleAudioEndpoint)
 	server.RegisterHandler("/v1/audio/translations", handleAudioEndpoint)
@@ -94,6 +96,7 @@ func TestAudioWithOptionalArgs(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
+			a := assert.New(t)
 			path := filepath.Join(dir, "fake.mp3")
 			test.CreateTestFile(t, path)
 
@@ -110,7 +113,7 @@ func TestAudioWithOptionalArgs(t *testing.T) {
 				},
 			}
 			_, err := tc.createFn(ctx, req)
-			a.NoError(t, err, "audio API error")
+			a.NoError(err, "audio API error")
 		})
 	}
 }

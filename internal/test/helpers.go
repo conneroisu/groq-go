@@ -49,7 +49,9 @@ type TokenRoundTripper struct {
 // Response should have its Body closed. If the RoundTrip method returns an
 // error, the Client's Get, Head, Post, and PostForm methods return the same
 // error.
-func (t *TokenRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+func (t *TokenRoundTripper) RoundTrip(
+	req *http.Request,
+) (*http.Response, error) {
 	req.Header.Set("Authorization", "Bearer "+t.Token)
 	return t.Fallback.RoundTrip(req)
 }

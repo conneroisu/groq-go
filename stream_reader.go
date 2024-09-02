@@ -27,7 +27,7 @@ type streamReader[T streamable] struct {
 	errAccumulator ErrorAccumulator
 	unmarshaler    *json.Decoder
 
-	httpHeader
+	http.Header
 }
 
 func (stream *streamReader[T]) Recv() (response T, err error) {
@@ -71,7 +71,7 @@ func (stream *streamReader[T]) processLines() (T, error) {
 			}
 			emptyMessagesCount++
 			if emptyMessagesCount > stream.emptyMessagesLimit {
-				return *new(T), ErrTooManyEmptyStreamMessages
+				return *new(T), ErrTooManyEmptyStreamMessages{}
 			}
 
 			continue
@@ -84,7 +84,7 @@ func (stream *streamReader[T]) processLines() (T, error) {
 		}
 
 		var response T
-		unmarshalErr := stream.unmarshaler.D(noPrefixLine, &response)
+		unmarshalErr := json.Unmarshal(noPrefixLine, &response)
 		if unmarshalErr != nil {
 			return *new(T), unmarshalErr
 		}
@@ -99,7 +99,7 @@ func (stream *streamReader[T]) unmarshalError() (errResp *ErrorResponse) {
 		return
 	}
 
-	err := stream.unmarshaler.Unmarshal(errBytes, &errResp)
+	err := json.Unmarshal(errBytes, &errResp)
 	if err != nil {
 		errResp = nil
 	}
@@ -107,6 +107,7 @@ func (stream *streamReader[T]) unmarshalError() (errResp *ErrorResponse) {
 	return
 }
 
+// Close closes the stream.
 func (stream *streamReader[T]) Close() error {
 	return stream.response.Body.Close()
 }

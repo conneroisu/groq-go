@@ -39,7 +39,12 @@ func TestRequestBuilderReturnsRequest(t *testing.T) {
 		url         = "/foo"
 		request     = map[string]string{"foo": "bar"}
 		reqBytes, _ = b.marshaller.Marshal(request)
-		want, _     = http.NewRequestWithContext(ctx, method, url, bytes.NewBuffer(reqBytes))
+		want, _     = http.NewRequestWithContext(
+			ctx,
+			method,
+			url,
+			bytes.NewBuffer(reqBytes),
+		)
 	)
 	got, _ := b.Build(ctx, method, url, request, nil)
 	if !reflect.DeepEqual(got.Body, want.Body) ||

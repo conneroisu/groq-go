@@ -5,12 +5,12 @@ import (
 	"errors"
 	"testing"
 
-	utils "github.com/conneroisu/groq-go/internal"
+	groq "github.com/conneroisu/groq-go"
 	"github.com/conneroisu/groq-go/internal/test"
 )
 
 func TestErrorAccumulatorBytes(t *testing.T) {
-	accumulator := &utils.DefaultErrorAccumulator{
+	accumulator := &groq.DefaultErrorAccumulator{
 		Buffer: &bytes.Buffer{},
 	}
 
@@ -26,12 +26,15 @@ func TestErrorAccumulatorBytes(t *testing.T) {
 
 	errBytes = accumulator.Bytes()
 	if len(errBytes) == 0 {
-		t.Fatalf("Did not return error bytes when has error: %s", string(errBytes))
+		t.Fatalf(
+			"Did not return error bytes when has error: %s",
+			string(errBytes),
+		)
 	}
 }
 
 func TestErrorByteWriteErrors(t *testing.T) {
-	accumulator := &utils.DefaultErrorAccumulator{
+	accumulator := &groq.DefaultErrorAccumulator{
 		Buffer: &test.FailingErrorBuffer{},
 	}
 	err := accumulator.Write([]byte("{"))

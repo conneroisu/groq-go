@@ -85,8 +85,16 @@ func reflectSchema(t reflect.Type) (*Definition, error) {
 	switch t.Kind() {
 	case reflect.String:
 		d.Type = String
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
-		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+	case reflect.Int,
+		reflect.Int8,
+		reflect.Int16,
+		reflect.Int32,
+		reflect.Int64,
+		reflect.Uint,
+		reflect.Uint8,
+		reflect.Uint16,
+		reflect.Uint32,
+		reflect.Uint64:
 		d.Type = Integer
 	case reflect.Float32, reflect.Float64:
 		d.Type = Number
@@ -113,8 +121,14 @@ func reflectSchema(t reflect.Type) (*Definition, error) {
 			return nil, err
 		}
 		d = *definition
-	case reflect.Invalid, reflect.Uintptr, reflect.Complex64, reflect.Complex128,
-		reflect.Chan, reflect.Func, reflect.Interface, reflect.Map,
+	case reflect.Invalid,
+		reflect.Uintptr,
+		reflect.Complex64,
+		reflect.Complex128,
+		reflect.Chan,
+		reflect.Func,
+		reflect.Interface,
+		reflect.Map,
 		reflect.UnsafePointer:
 		return nil, fmt.Errorf("unsupported type: %s", t.Kind().String())
 	default:

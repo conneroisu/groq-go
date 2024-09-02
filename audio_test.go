@@ -9,9 +9,11 @@ import (
 	"testing"
 
 	"github.com/conneroisu/groq-go/internal/test"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestAudioWithFailingFormBuilder(t *testing.T) {
+	a := assert.New(t)
 	dir, cleanup := test.CreateTestDirectory(t)
 	defer cleanup()
 	path := filepath.Join(dir, "fake.mp3")
@@ -36,7 +38,11 @@ func TestAudioWithFailingFormBuilder(t *testing.T) {
 		return mockFailedErr
 	}
 	err := audioMultipartForm(req, mockBuilder)
-	a.ErrorIs(t, err, mockFailedErr, "audioMultipartForm should return error if form builder fails")
+	a.ErrorIs(
+		err,
+		mockFailedErr,
+		"audioMultipartForm should return error if form builder fails",
+	)
 
 	mockBuilder.mockCreateFormFile = func(string, *os.File) error {
 		return nil
@@ -50,17 +56,32 @@ func TestAudioWithFailingFormBuilder(t *testing.T) {
 		return nil
 	}
 
-	failOn := []string{"model", "prompt", "temperature", "language", "response_format", "timestamp_granularities[]"}
+	failOn := []string{
+		"model",
+		"prompt",
+		"temperature",
+		"language",
+		"response_format",
+		"timestamp_granularities[]",
+	}
 	for _, failingField := range failOn {
 		failForField = failingField
-		mockFailedErr = fmt.Errorf("mock form builder fail on field %s", failingField)
+		mockFailedErr = fmt.Errorf(
+			"mock form builder fail on field %s",
+			failingField,
+		)
 
 		err = audioMultipartForm(req, mockBuilder)
-		a.ErrorIs(t, err, mockFailedErr, "audioMultipartForm should return error if form builder fails")
+		a.ErrorIs(
+			err,
+			mockFailedErr,
+			"audioMultipartForm should return error if form builder fails",
+		)
 	}
 }
 
 func TestCreateFileField(t *testing.T) {
+	a := assert.New(t)
 	t.Run("createFileField failing file", func(t *testing.T) {
 		dir, cleanup := test.CreateTestDirectory(t)
 		defer cleanup()
@@ -79,7 +100,11 @@ func TestCreateFileField(t *testing.T) {
 		}
 
 		err := createFileField(req, mockBuilder)
-		a.ErrorIs(t, err, mockFailedErr, "createFileField using a file should return error if form builder fails")
+		a.ErrorIs(
+			err,
+			mockFailedErr,
+			"createFileField using a file should return error if form builder fails",
+		)
 	})
 
 	t.Run("createFileField failing reader", func(t *testing.T) {
@@ -96,7 +121,11 @@ func TestCreateFileField(t *testing.T) {
 		}
 
 		err := createFileField(req, mockBuilder)
-		a.ErrorIs(t, err, mockFailedErr, "createFileField using a reader should return error if form builder fails")
+		a.ErrorIs(
+			err,
+			mockFailedErr,
+			"createFileField using a reader should return error if form builder fails",
+		)
 	})
 
 	t.Run("createFileField failing open", func(t *testing.T) {
@@ -107,6 +136,9 @@ func TestCreateFileField(t *testing.T) {
 		mockBuilder := &mockFormBuilder{}
 
 		err := createFileField(req, mockBuilder)
-		a.HasError(t, err, "createFileField using file should return error when open file fails")
+		a.ErrorContains(
+			err,
+			"createFileField using file should return error when open file fails",
+		)
 	})
 }

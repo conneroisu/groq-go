@@ -6,7 +6,9 @@ import "errors"
 var (
 	// ErrTestErrorAccumulatorWriteFailed is the error returned by the failing
 	// error buffer.
-	ErrTestErrorAccumulatorWriteFailed = errors.New("test error accumulator failed")
+	ErrTestErrorAccumulatorWriteFailed = errors.New(
+		"test error accumulator failed",
+	)
 )
 
 // FailingErrorBuffer is a buffer that always fails to write.

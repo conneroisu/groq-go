@@ -19,7 +19,9 @@ const (
 )
 
 var (
-	ErrModerationInvalidModel = errors.New("this model is not supported with moderation, please use text-moderation-stable or text-moderation-latest instead") //nolint:lll
+	ErrModerationInvalidModel = errors.New(
+		"this model is not supported with moderation, please use text-moderation-stable or text-moderation-latest instead",
+	) //nolint:lll
 )
 
 var validModerationModel = map[string]struct{}{
@@ -76,13 +78,17 @@ type ModerationResponse struct {
 	Model   string   `json:"model"`
 	Results []Result `json:"results"`
 
-	httpHeader
+	http.Header
 }
 
 // Moderations — perform a moderation api call over a string.
 // Input can be an array or slice but a string will reduce the complexity.
-func (c *Client) Moderations(ctx context.Context, request ModerationRequest) (response ModerationResponse, err error) {
-	if _, ok := validModerationModel[request.Model]; len(request.Model) > 0 && !ok {
+func (c *Client) Moderations(
+	ctx context.Context,
+	request ModerationRequest,
+) (response ModerationResponse, err error) {
+	if _, ok := validModerationModel[request.Model]; len(request.Model) > 0 &&
+		!ok {
 		err = ErrModerationInvalidModel
 		return
 	}

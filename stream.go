@@ -2,13 +2,16 @@ package groq
 
 import (
 	"context"
-	"errors"
 	"net/http"
 )
 
-var (
-	ErrTooManyEmptyStreamMessages = errors.New("stream has sent too many empty messages")
-)
+// ErrTooManyEmptyStreamMessages is returned when the stream has sent too many empty messages.
+type ErrTooManyEmptyStreamMessages struct{}
+
+// Error returns the error message.
+func (e ErrTooManyEmptyStreamMessages) Error() string {
+	return "stream has sent too many empty messages"
+}
 
 // CompletionStream is a stream of completions.
 type CompletionStream struct {
@@ -25,13 +28,11 @@ func (c *Client) CreateCompletionStream(
 ) (stream *CompletionStream, err error) {
 	urlSuffix := "/completions"
 	if !checkEndpointSupportsModel(urlSuffix, request.Model) {
-		err = ErrCompletionUnsupportedModel
-		return
+		return stream, ErrCompletionUnsupportedModel{model: request.Model}
 	}
 
 	if !checkPromptType(request.Prompt) {
-		err = ErrCompletionRequestPromptTypeNotSupported
-		return
+		return stream, ErrCompletionRequestPromptTypeNotSupported{}
 	}
 
 	request.Stream = true

@@ -10,7 +10,12 @@ import (
 
 // RequestBuilder is an interface that defines the Build method.
 type RequestBuilder interface {
-	Build(ctx context.Context, method, url string, body any, header http.Header) (*http.Request, error)
+	Build(
+		ctx context.Context,
+		method, url string,
+		body any,
+		header http.Header,
+	) (*http.Request, error)
 }
 
 // HTTPRequestBuilder is a struct that implements the RequestBuilder interface.

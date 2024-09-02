@@ -30,17 +30,28 @@ func NewFormBuilder(body io.Writer) *DefaultFormBuilder {
 }
 
 // CreateFormFile creates a form file.
-func (fb *DefaultFormBuilder) CreateFormFile(fieldname string, file *os.File) error {
+func (fb *DefaultFormBuilder) CreateFormFile(
+	fieldname string,
+	file *os.File,
+) error {
 	return fb.createFormFile(fieldname, file, file.Name())
 }
 
 // CreateFormFileReader creates a form file from a reader.
-func (fb *DefaultFormBuilder) CreateFormFileReader(fieldname string, r io.Reader, filename string) error {
+func (fb *DefaultFormBuilder) CreateFormFileReader(
+	fieldname string,
+	r io.Reader,
+	filename string,
+) error {
 	return fb.createFormFile(fieldname, r, path.Base(filename))
 }
 
 // createFormFile creates a form file.
-func (fb *DefaultFormBuilder) createFormFile(fieldname string, r io.Reader, filename string) error {
+func (fb *DefaultFormBuilder) createFormFile(
+	fieldname string,
+	r io.Reader,
+	filename string,
+) error {
 	if filename == "" {
 		return fmt.Errorf("filename cannot be empty")
 	}

@@ -32,48 +32,57 @@ func TestChatCompletionsStreamWrongModel(t *testing.T) {
 	}
 	_, err := client.CreateChatCompletionStream(ctx, req)
 	if !errors.Is(err, groq.ErrChatCompletionInvalidModel) {
-		t.Fatalf("CreateChatCompletion should return ErrChatCompletionInvalidModel, but returned: %v", err)
+		t.Fatalf(
+			"CreateChatCompletion should return ErrChatCompletionInvalidModel, but returned: %v",
+			err,
+		)
 	}
 }
 
 func TestCreateChatCompletionStream(t *testing.T) {
 	a := assert.New(t)
-	client, server, teardown := setupOpenAITestServer()
+	client, server, teardown := setupGroqTestServer()
 	defer teardown()
-	server.RegisterHandler("/v1/chat/completions", func(w http.ResponseWriter, _ *http.Request) {
-		w.Header().Set("Content-Type", "text/event-stream")
+	server.RegisterHandler(
+		"/v1/chat/completions",
+		func(w http.ResponseWriter, _ *http.Request) {
+			w.Header().Set("Content-Type", "text/event-stream")
 
-		// Send test responses
-		dataBytes := []byte{}
-		dataBytes = append(dataBytes, []byte("event: message\n")...)
-		//nolint:lll
-		data := `{"id":"1","object":"completion","created":1598069254,"model":"gpt-3.5-turbo","system_fingerprint": "fp_d9767fc5b9","choices":[{"index":0,"delta":{"content":"response1"},"finish_reason":"max_tokens"}]}`
-		dataBytes = append(dataBytes, []byte("data: "+data+"\n\n")...)
+			// Send test responses
+			dataBytes := []byte{}
+			dataBytes = append(dataBytes, []byte("event: message\n")...)
+			//nolint:lll
+			data := `{"id":"1","object":"completion","created":1598069254,"model":"gpt-3.5-turbo","system_fingerprint": "fp_d9767fc5b9","choices":[{"index":0,"delta":{"content":"response1"},"finish_reason":"max_tokens"}]}`
+			dataBytes = append(dataBytes, []byte("data: "+data+"\n\n")...)
 
-		dataBytes = append(dataBytes, []byte("event: message\n")...)
-		//nolint:lll
-		data = `{"id":"2","object":"completion","created":1598069255,"model":"gpt-3.5-turbo","system_fingerprint": "fp_d9767fc5b9","choices":[{"index":0,"delta":{"content":"response2"},"finish_reason":"max_tokens"}]}`
-		dataBytes = append(dataBytes, []byte("data: "+data+"\n\n")...)
+			dataBytes = append(dataBytes, []byte("event: message\n")...)
+			//nolint:lll
+			data = `{"id":"2","object":"completion","created":1598069255,"model":"gpt-3.5-turbo","system_fingerprint": "fp_d9767fc5b9","choices":[{"index":0,"delta":{"content":"response2"},"finish_reason":"max_tokens"}]}`
+			dataBytes = append(dataBytes, []byte("data: "+data+"\n\n")...)
 
-		dataBytes = append(dataBytes, []byte("event: done\n")...)
-		dataBytes = append(dataBytes, []byte("data: [DONE]\n\n")...)
+			dataBytes = append(dataBytes, []byte("event: done\n")...)
+			dataBytes = append(dataBytes, []byte("data: [DONE]\n\n")...)
 
-		_, err := w.Write(dataBytes)
-		a.NoError(t, err, "Write error")
-	})
-
-	stream, err := client.CreateChatCompletionStream(context.Background(), groq.ChatCompletionRequest{
-		MaxTokens: 5,
-		Model:     groq.GPT3Dot5Turbo,
-		Messages: []groq.ChatCompletionMessage{
-			{
-				Role:    groq.ChatMessageRoleUser,
-				Content: "Hello!",
-			},
+			_, err := w.Write(dataBytes)
+			a.NoError(err, "Write error")
 		},
-		Stream: true,
-	})
-	a.NoError(t, err, "CreateCompletionStream returned error")
+	)
+
+	stream, err := client.CreateChatCompletionStream(
+		context.Background(),
+		groq.ChatCompletionRequest{
+			MaxTokens: 5,
+			Model:     groq.GPT3Dot5Turbo,
+			Messages: []groq.ChatCompletionMessage{
+				{
+					Role:    groq.ChatMessageRoleUser,
+					Content: "Hello!",
+				},
+			},
+			Stream: true,
+		},
+	)
+	a.NoError(err, "CreateCompletionStream returned error")
 	defer stream.Close()
 
 	expectedResponses := []groq.ChatCompletionStreamResponse{
@@ -114,9 +123,14 @@ func TestCreateChatCompletionStream(t *testing.T) {
 		t.Logf("%d: %s", ix, string(b))
 
 		receivedResponse, streamErr := stream.Recv()
-		a.NoError(t, streamErr, "stream.Recv() failed")
+		a.NoError(streamErr, "stream.Recv() failed")
 		if !compareChatResponses(expectedResponse, receivedResponse) {
-			t.Errorf("Stream response %v is %v, expected %v", ix, receivedResponse, expectedResponse)
+			t.Errorf(
+				"Stream response %v is %v, expected %v",
+				ix,
+				receivedResponse,
+				expectedResponse,
+			)
 		}
 	}
 
@@ -127,54 +141,70 @@ func TestCreateChatCompletionStream(t *testing.T) {
 
 	_, streamErr = stream.Recv()
 
-	a.ErrorIs(t, streamErr, io.EOF, "stream.Recv() did not return EOF when the stream is finished")
+	a.ErrorIs(
+		streamErr,
+		io.EOF,
+		"stream.Recv() did not return EOF when the stream is finished",
+	)
 	if !errors.Is(streamErr, io.EOF) {
-		t.Errorf("stream.Recv() did not return EOF when the stream is finished: %v", streamErr)
+		t.Errorf(
+			"stream.Recv() did not return EOF when the stream is finished: %v",
+			streamErr,
+		)
 	}
 }
 
+// TestCreateChatCompletionStreamError tests the CreateChatCompletionStream function with an error
+// in the response.
 func TestCreateChatCompletionStreamError(t *testing.T) {
-	client, server, teardown := setupOpenAITestServer()
+	a := assert.New(t)
+	client, server, teardown := setupGroqTestServer()
 	defer teardown()
-	server.RegisterHandler("/v1/chat/completions", func(w http.ResponseWriter, _ *http.Request) {
-		w.Header().Set("Content-Type", "text/event-stream")
+	server.RegisterHandler(
+		"/v1/chat/completions",
+		func(w http.ResponseWriter, _ *http.Request) {
+			w.Header().Set("Content-Type", "text/event-stream")
 
-		// Send test responses
-		dataBytes := []byte{}
-		dataStr := []string{
-			`{`,
-			`"error": {`,
-			`"message": "Incorrect API key provided: sk-***************************************",`,
-			`"type": "invalid_request_error",`,
-			`"param": null,`,
-			`"code": "invalid_api_key"`,
-			`}`,
-			`}`,
-		}
-		for _, str := range dataStr {
-			dataBytes = append(dataBytes, []byte(str+"\n")...)
-		}
+			// Send test responses
+			dataBytes := []byte{}
+			dataStr := []string{
+				`{`,
+				`"error": {`,
+				`"message": "Incorrect API key provided: sk-***************************************",`,
+				`"type": "invalid_request_error",`,
+				`"param": null,`,
+				`"code": "invalid_api_key"`,
+				`}`,
+				`}`,
+			}
+			for _, str := range dataStr {
+				dataBytes = append(dataBytes, []byte(str+"\n")...)
+			}
 
-		_, err := w.Write(dataBytes)
-		a.NoError(t, err, "Write error")
-	})
-
-	stream, err := client.CreateChatCompletionStream(context.Background(), groq.ChatCompletionRequest{
-		MaxTokens: 5,
-		Model:     groq.GPT3Dot5Turbo,
-		Messages: []groq.ChatCompletionMessage{
-			{
-				Role:    groq.ChatMessageRoleUser,
-				Content: "Hello!",
-			},
+			_, err := w.Write(dataBytes)
+			a.NoError(err, "Write error")
 		},
-		Stream: true,
-	})
-	a.NoError(t, err, "CreateCompletionStream returned error")
+	)
+
+	stream, err := client.CreateChatCompletionStream(
+		context.Background(),
+		groq.ChatCompletionRequest{
+			MaxTokens: 5,
+			Model:     groq.GPT3Dot5Turbo,
+			Messages: []groq.ChatCompletionMessage{
+				{
+					Role:    groq.ChatMessageRoleUser,
+					Content: "Hello!",
+				},
+			},
+			Stream: true,
+		},
+	)
+	a.NoError(err, "CreateCompletionStream returned error")
 	defer stream.Close()
 
 	_, streamErr := stream.Recv()
-	a.HasError(t, streamErr, "stream.Recv() did not return error")
+	a.Error(streamErr, "stream.Recv() did not return error")
 
 	var apiErr *groq.APIError
 	if !errors.As(streamErr, &apiErr) {
@@ -184,76 +214,104 @@ func TestCreateChatCompletionStreamError(t *testing.T) {
 }
 
 func TestCreateChatCompletionStreamWithHeaders(t *testing.T) {
-	client, server, teardown := setupOpenAITestServer()
+	a := assert.New(t)
+	client, server, teardown := setupGroqTestServer()
 	defer teardown()
-	server.RegisterHandler("/v1/chat/completions", func(w http.ResponseWriter, _ *http.Request) {
-		w.Header().Set("Content-Type", "text/event-stream")
-		w.Header().Set(xCustomHeader, xCustomHeaderValue)
+	xCustomHeader := "x-custom-header"
+	xCustomHeaderValue := "x-custom-header-value"
+	server.RegisterHandler(
+		"/v1/chat/completions",
+		func(w http.ResponseWriter, _ *http.Request) {
+			w.Header().Set("Content-Type", "text/event-stream")
+			w.Header().Set(xCustomHeader, xCustomHeaderValue)
 
-		// Send test responses
-		//nolint:lll
-		dataBytes := []byte(`data: {"error":{"message":"The server had an error while processing your request. Sorry about that!", "type":"server_ error", "param":null,"code":null}}`)
-		dataBytes = append(dataBytes, []byte("\n\ndata: [DONE]\n\n")...)
+			// Send test responses
+			//nolint:lll
+			dataBytes := []byte(
+				`data: {"error":{"message":"The server had an error while processing your request. Sorry about that!", "type":"server_ error", "param":null,"code":null}}`,
+			)
+			dataBytes = append(dataBytes, []byte("\n\ndata: [DONE]\n\n")...)
 
-		_, err := w.Write(dataBytes)
-		a.NoError(t, err, "Write error")
-	})
-
-	stream, err := client.CreateChatCompletionStream(context.Background(), groq.ChatCompletionRequest{
-		MaxTokens: 5,
-		Model:     groq.GPT3Dot5Turbo,
-		Messages: []groq.ChatCompletionMessage{
-			{
-				Role:    groq.ChatMessageRoleUser,
-				Content: "Hello!",
-			},
+			_, err := w.Write(dataBytes)
+			a.NoError(err, "Write error")
 		},
-		Stream: true,
-	})
-	a.NoError(t, err, "CreateCompletionStream returned error")
+	)
+
+	stream, err := client.CreateChatCompletionStream(
+		context.Background(),
+		groq.ChatCompletionRequest{
+			MaxTokens: 5,
+			Model:     groq.GPT3Dot5Turbo,
+			Messages: []groq.ChatCompletionMessage{
+				{
+					Role:    groq.ChatMessageRoleUser,
+					Content: "Hello!",
+				},
+			},
+			Stream: true,
+		},
+	)
+	a.NoError(err, "CreateCompletionStream returned error")
 	defer stream.Close()
 
-	value := stream.Header().Get(xCustomHeader)
+	value := stream.Header.Get(xCustomHeader)
 	if value != xCustomHeaderValue {
 		t.Errorf("expected %s to be %s", xCustomHeaderValue, value)
 	}
 }
 
 func TestCreateChatCompletionStreamWithRatelimitHeaders(t *testing.T) {
-	client, server, teardown := setupOpenAITestServer()
+	client, server, teardown := setupGroqTestServer()
+	a := assert.New(t)
+	rateLimitHeaders := map[string]interface{}{
+		"x-ratelimit-limit-requests":     100,
+		"x-ratelimit-limit-tokens":       1000,
+		"x-ratelimit-remaining-requests": 99,
+		"x-ratelimit-remaining-tokens":   999,
+		"x-ratelimit-reset-requests":     "1s",
+		"x-ratelimit-reset-tokens":       "1m",
+	}
 	defer teardown()
-	server.RegisterHandler("/v1/chat/completions", func(w http.ResponseWriter, _ *http.Request) {
-		w.Header().Set("Content-Type", "text/event-stream")
-		for k, v := range rateLimitHeaders {
-			switch val := v.(type) {
-			case int:
-				w.Header().Set(k, strconv.Itoa(val))
-			default:
-				w.Header().Set(k, fmt.Sprintf("%s", v))
+	server.RegisterHandler(
+		"/v1/chat/completions",
+		func(w http.ResponseWriter, _ *http.Request) {
+			w.Header().Set("Content-Type", "text/event-stream")
+			for k, v := range rateLimitHeaders {
+				switch val := v.(type) {
+				case int:
+					w.Header().Set(k, strconv.Itoa(val))
+				default:
+					w.Header().Set(k, fmt.Sprintf("%s", v))
+				}
 			}
-		}
 
-		// Send test responses
-		//nolint:lll
-		dataBytes := []byte(`data: {"error":{"message":"The server had an error while processing your request. Sorry about that!", "type":"server_ error", "param":null,"code":null}}`)
-		dataBytes = append(dataBytes, []byte("\n\ndata: [DONE]\n\n")...)
+			// Send test responses
+			//nolint:lll
+			dataBytes := []byte(
+				`data: {"error":{"message":"The server had an error while processing your request. Sorry about that!", "type":"server_ error", "param":null,"code":null}}`,
+			)
+			dataBytes = append(dataBytes, []byte("\n\ndata: [DONE]\n\n")...)
 
-		_, err := w.Write(dataBytes)
-		a.NoError(t, err, "Write error")
-	})
-
-	stream, err := client.CreateChatCompletionStream(context.Background(), groq.ChatCompletionRequest{
-		MaxTokens: 5,
-		Model:     groq.GPT3Dot5Turbo,
-		Messages: []groq.ChatCompletionMessage{
-			{
-				Role:    groq.ChatMessageRoleUser,
-				Content: "Hello!",
-			},
+			_, err := w.Write(dataBytes)
+			a.NoError(err, "Write error")
 		},
-		Stream: true,
-	})
-	a.NoError(t, err, "CreateCompletionStream returned error")
+	)
+
+	stream, err := client.CreateChatCompletionStream(
+		context.Background(),
+		groq.ChatCompletionRequest{
+			MaxTokens: 5,
+			Model:     groq.GPT3Dot5Turbo,
+			Messages: []groq.ChatCompletionMessage{
+				{
+					Role:    groq.ChatMessageRoleUser,
+					Content: "Hello!",
+				},
+			},
+			Stream: true,
+		},
+	)
+	a.NoError(err, "CreateCompletionStream returned error")
 	defer stream.Close()
 
 	headers := stream.GetRateLimitHeaders()
@@ -265,36 +323,45 @@ func TestCreateChatCompletionStreamWithRatelimitHeaders(t *testing.T) {
 }
 
 func TestCreateChatCompletionStreamErrorWithDataPrefix(t *testing.T) {
-	client, server, teardown := setupOpenAITestServer()
+	a := assert.New(t)
+	client, server, teardown := setupGroqTestServer()
 	defer teardown()
-	server.RegisterHandler("/v1/chat/completions", func(w http.ResponseWriter, _ *http.Request) {
-		w.Header().Set("Content-Type", "text/event-stream")
+	server.RegisterHandler(
+		"/v1/chat/completions",
+		func(w http.ResponseWriter, _ *http.Request) {
+			w.Header().Set("Content-Type", "text/event-stream")
 
-		// Send test responses
-		//nolint:lll
-		dataBytes := []byte(`data: {"error":{"message":"The server had an error while processing your request. Sorry about that!", "type":"server_ error", "param":null,"code":null}}`)
-		dataBytes = append(dataBytes, []byte("\n\ndata: [DONE]\n\n")...)
+			// Send test responses
+			//nolint:lll
+			dataBytes := []byte(
+				`data: {"error":{"message":"The server had an error while processing your request. Sorry about that!", "type":"server_ error", "param":null,"code":null}}`,
+			)
+			dataBytes = append(dataBytes, []byte("\n\ndata: [DONE]\n\n")...)
 
-		_, err := w.Write(dataBytes)
-		a.NoError(t, err, "Write error")
-	})
-
-	stream, err := client.CreateChatCompletionStream(context.Background(), groq.ChatCompletionRequest{
-		MaxTokens: 5,
-		Model:     groq.GPT3Dot5Turbo,
-		Messages: []groq.ChatCompletionMessage{
-			{
-				Role:    groq.ChatMessageRoleUser,
-				Content: "Hello!",
-			},
+			_, err := w.Write(dataBytes)
+			a.NoError(err, "Write error")
 		},
-		Stream: true,
-	})
-	a.NoError(t, err, "CreateCompletionStream returned error")
+	)
+
+	stream, err := client.CreateChatCompletionStream(
+		context.Background(),
+		groq.ChatCompletionRequest{
+			MaxTokens: 5,
+			Model:     groq.GPT3Dot5Turbo,
+			Messages: []groq.ChatCompletionMessage{
+				{
+					Role:    groq.ChatMessageRoleUser,
+					Content: "Hello!",
+				},
+			},
+			Stream: true,
+		},
+	)
+	a.NoError(err, "CreateCompletionStream returned error")
 	defer stream.Close()
 
 	_, streamErr := stream.Recv()
-	a.HasError(t, streamErr, "stream.Recv() did not return error")
+	a.Error(streamErr, "stream.Recv() did not return error")
 
 	var apiErr *groq.APIError
 	if !errors.As(streamErr, &apiErr) {
@@ -304,82 +371,98 @@ func TestCreateChatCompletionStreamErrorWithDataPrefix(t *testing.T) {
 }
 
 func TestCreateChatCompletionStreamRateLimitError(t *testing.T) {
-	client, server, teardown := setupOpenAITestServer()
+	a := assert.New(t)
+	client, server, teardown := setupGroqTestServer()
 	defer teardown()
-	server.RegisterHandler("/v1/chat/completions", func(w http.ResponseWriter, _ *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(429)
+	server.RegisterHandler(
+		"/v1/chat/completions",
+		func(w http.ResponseWriter, _ *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(429)
 
-		// Send test responses
-		dataBytes := []byte(`{"error":{` +
-			`"message": "You are sending requests too quickly.",` +
-			`"type":"rate_limit_reached",` +
-			`"param":null,` +
-			`"code":"rate_limit_reached"}}`)
+			// Send test responses
+			dataBytes := []byte(`{"error":{` +
+				`"message": "You are sending requests too quickly.",` +
+				`"type":"rate_limit_reached",` +
+				`"param":null,` +
+				`"code":"rate_limit_reached"}}`)
 
-		_, err := w.Write(dataBytes)
-		a.NoError(t, err, "Write error")
-	})
-	_, err := client.CreateChatCompletionStream(context.Background(), groq.ChatCompletionRequest{
-		MaxTokens: 5,
-		Model:     groq.GPT3Dot5Turbo,
-		Messages: []groq.ChatCompletionMessage{
-			{
-				Role:    groq.ChatMessageRoleUser,
-				Content: "Hello!",
-			},
+			_, err := w.Write(dataBytes)
+			a.NoError(err, "Write error")
 		},
-		Stream: true,
-	})
+	)
+	_, err := client.CreateChatCompletionStream(
+		context.Background(),
+		groq.ChatCompletionRequest{
+			MaxTokens: 5,
+			Model:     groq.GPT3Dot5Turbo,
+			Messages: []groq.ChatCompletionMessage{
+				{
+					Role:    groq.ChatMessageRoleUser,
+					Content: "Hello!",
+				},
+			},
+			Stream: true,
+		},
+	)
 	var apiErr *groq.APIError
 	if !errors.As(err, &apiErr) {
-		t.Errorf("TestCreateChatCompletionStreamRateLimitError did not return APIError")
+		t.Errorf(
+			"TestCreateChatCompletionStreamRateLimitError did not return APIError",
+		)
 	}
 	t.Logf("%+v\n", apiErr)
 }
 
 func TestCreateChatCompletionStreamStreamOptions(t *testing.T) {
-	client, server, teardown := setupOpenAITestServer()
+	a := assert.New(t)
+	client, server, teardown := setupGroqTestServer()
 	defer teardown()
 
-	server.RegisterHandler("/v1/chat/completions", func(w http.ResponseWriter, _ *http.Request) {
-		w.Header().Set("Content-Type", "text/event-stream")
+	server.RegisterHandler(
+		"/v1/chat/completions",
+		func(w http.ResponseWriter, _ *http.Request) {
+			w.Header().Set("Content-Type", "text/event-stream")
 
-		// Send test responses
-		var dataBytes []byte
-		//nolint:lll
-		data := `{"id":"1","object":"completion","created":1598069254,"model":"gpt-3.5-turbo","system_fingerprint": "fp_d9767fc5b9","choices":[{"index":0,"delta":{"content":"response1"},"finish_reason":"max_tokens"}],"usage":null}`
-		dataBytes = append(dataBytes, []byte("data: "+data+"\n\n")...)
+			// Send test responses
+			var dataBytes []byte
+			//nolint:lll
+			data := `{"id":"1","object":"completion","created":1598069254,"model":"gpt-3.5-turbo","system_fingerprint": "fp_d9767fc5b9","choices":[{"index":0,"delta":{"content":"response1"},"finish_reason":"max_tokens"}],"usage":null}`
+			dataBytes = append(dataBytes, []byte("data: "+data+"\n\n")...)
 
-		//nolint:lll
-		data = `{"id":"2","object":"completion","created":1598069255,"model":"gpt-3.5-turbo","system_fingerprint": "fp_d9767fc5b9","choices":[{"index":0,"delta":{"content":"response2"},"finish_reason":"max_tokens"}],"usage":null}`
-		dataBytes = append(dataBytes, []byte("data: "+data+"\n\n")...)
+			//nolint:lll
+			data = `{"id":"2","object":"completion","created":1598069255,"model":"gpt-3.5-turbo","system_fingerprint": "fp_d9767fc5b9","choices":[{"index":0,"delta":{"content":"response2"},"finish_reason":"max_tokens"}],"usage":null}`
+			dataBytes = append(dataBytes, []byte("data: "+data+"\n\n")...)
 
-		//nolint:lll
-		data = `{"id":"3","object":"completion","created":1598069256,"model":"gpt-3.5-turbo","system_fingerprint": "fp_d9767fc5b9","choices":[],"usage":{"prompt_tokens":1,"completion_tokens":1,"total_tokens":2}}`
-		dataBytes = append(dataBytes, []byte("data: "+data+"\n\n")...)
+			//nolint:lll
+			data = `{"id":"3","object":"completion","created":1598069256,"model":"gpt-3.5-turbo","system_fingerprint": "fp_d9767fc5b9","choices":[],"usage":{"prompt_tokens":1,"completion_tokens":1,"total_tokens":2}}`
+			dataBytes = append(dataBytes, []byte("data: "+data+"\n\n")...)
 
-		dataBytes = append(dataBytes, []byte("data: [DONE]\n\n")...)
+			dataBytes = append(dataBytes, []byte("data: [DONE]\n\n")...)
 
-		_, err := w.Write(dataBytes)
-		a.NoError(t, err, "Write error")
-	})
+			_, err := w.Write(dataBytes)
+			a.NoError(err, "Write error")
+		},
+	)
 
-	stream, err := client.CreateChatCompletionStream(context.Background(), groq.ChatCompletionRequest{
-		MaxTokens: 5,
-		Model:     groq.GPT3Dot5Turbo,
-		Messages: []groq.ChatCompletionMessage{
-			{
-				Role:    groq.ChatMessageRoleUser,
-				Content: "Hello!",
+	stream, err := client.CreateChatCompletionStream(
+		context.Background(),
+		groq.ChatCompletionRequest{
+			MaxTokens: 5,
+			Model:     groq.GPT3Dot5Turbo,
+			Messages: []groq.ChatCompletionMessage{
+				{
+					Role:    groq.ChatMessageRoleUser,
+					Content: "Hello!",
+				},
+			},
+			Stream: true,
+			StreamOptions: &groq.StreamOptions{
+				IncludeUsage: true,
 			},
 		},
-		Stream: true,
-		StreamOptions: &groq.StreamOptions{
-			IncludeUsage: true,
-		},
-	})
-	a.NoError(t, err, "CreateCompletionStream returned error")
+	)
+	a.NoError(err, "CreateCompletionStream returned error")
 	defer stream.Close()
 
 	expectedResponses := []groq.ChatCompletionStreamResponse{
@@ -433,9 +516,14 @@ func TestCreateChatCompletionStreamStreamOptions(t *testing.T) {
 		t.Logf("%d: %s", ix, string(b))
 
 		receivedResponse, streamErr := stream.Recv()
-		a.NoError(t, streamErr, "stream.Recv() failed")
+		a.NoError(streamErr, "stream.Recv() failed")
 		if !compareChatResponses(expectedResponse, receivedResponse) {
-			t.Errorf("Stream response %v is %v, expected %v", ix, receivedResponse, expectedResponse)
+			t.Errorf(
+				"Stream response %v is %v, expected %v",
+				ix,
+				receivedResponse,
+				expectedResponse,
+			)
 		}
 	}
 
@@ -446,15 +534,23 @@ func TestCreateChatCompletionStreamStreamOptions(t *testing.T) {
 
 	_, streamErr = stream.Recv()
 
-	a.ErrorIs(t, streamErr, io.EOF, "stream.Recv() did not return EOF when the stream is finished")
+	a.ErrorIs(
+		streamErr,
+		io.EOF,
+		"stream.Recv() did not return EOF when the stream is finished",
+	)
 	if !errors.Is(streamErr, io.EOF) {
-		t.Errorf("stream.Recv() did not return EOF when the stream is finished: %v", streamErr)
+		t.Errorf(
+			"stream.Recv() did not return EOF when the stream is finished: %v",
+			streamErr,
+		)
 	}
 }
 
 // Helper funcs.
 func compareChatResponses(r1, r2 groq.ChatCompletionStreamResponse) bool {
-	if r1.ID != r2.ID || r1.Object != r2.Object || r1.Created != r2.Created || r1.Model != r2.Model {
+	if r1.ID != r2.ID || r1.Object != r2.Object || r1.Created != r2.Created ||
+		r1.Model != r2.Model {
 		return false
 	}
 	if len(r1.Choices) != len(r2.Choices) {
@@ -469,7 +565,8 @@ func compareChatResponses(r1, r2 groq.ChatCompletionStreamResponse) bool {
 		if r1.Usage == nil || r2.Usage == nil {
 			return false
 		}
-		if r1.Usage.PromptTokens != r2.Usage.PromptTokens || r1.Usage.CompletionTokens != r2.Usage.CompletionTokens ||
+		if r1.Usage.PromptTokens != r2.Usage.PromptTokens ||
+			r1.Usage.CompletionTokens != r2.Usage.CompletionTokens ||
 			r1.Usage.TotalTokens != r2.Usage.TotalTokens {
 			return false
 		}
@@ -477,7 +574,9 @@ func compareChatResponses(r1, r2 groq.ChatCompletionStreamResponse) bool {
 	return true
 }
 
-func compareChatStreamResponseChoices(c1, c2 groq.ChatCompletionStreamChoice) bool {
+func compareChatStreamResponseChoices(
+	c1, c2 groq.ChatCompletionStreamChoice,
+) bool {
 	if c1.Index != c2.Index {
 		return false
 	}

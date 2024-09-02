@@ -13,15 +13,16 @@ import (
 
 	groq "github.com/conneroisu/groq-go"
 	"github.com/conneroisu/groq-go/internal/test"
+	"github.com/stretchr/testify/assert"
 )
 
-func setupOpenAITestServer() (
+func setupGroqTestServer() (
 	client *groq.Client,
 	server *test.ServerTest,
 	teardown func(),
 ) {
 	server = test.NewTestServer()
-	ts := server.OpenAITestServer()
+	ts := server.GroqTestServer()
 	ts.Start()
 	teardown = ts.Close
 	config := groq.DefaultConfig(test.GetTestToken())
@@ -32,38 +33,54 @@ func setupOpenAITestServer() (
 
 // TestModeration Tests the moderations endpoint of the API using the mocked server.
 func TestModerations(t *testing.T) {
-	client, server, teardown := setupOpenAITestServer()
+	a := assert.New(t)
+	client, server, teardown := setupGroqTestServer()
 	defer teardown()
 	server.RegisterHandler("/v1/moderations", handleModerationEndpoint)
 	_, err := client.Moderations(context.Background(), groq.ModerationRequest{
 		Model: groq.ModerationTextStable,
 		Input: "I want to kill them.",
 	})
-	a.NoError(t, err, "Moderation error")
+	a.NoError(err, "Moderation error")
 }
 
 // TestModerationsWithIncorrectModel Tests passing valid and invalid models to moderations endpoint.
 func TestModerationsWithDifferentModelOptions(t *testing.T) {
+	a := assert.New(t)
 	var modelOptions []struct {
 		model  string
 		expect error
 	}
-	modelOptions = append(modelOptions,
-		getModerationModelTestOption(groq.GPT3Dot5Turbo, groq.ErrModerationInvalidModel),
+	modelOptions = append(
+		modelOptions,
+		getModerationModelTestOption(
+			groq.GPT3Dot5Turbo,
+			groq.ErrModerationInvalidModel,
+		),
 		getModerationModelTestOption(groq.ModerationTextStable, nil),
 		getModerationModelTestOption(groq.ModerationTextLatest, nil),
 		getModerationModelTestOption("", nil),
 	)
-	client, server, teardown := setupOpenAITestServer()
+	client, server, teardown := setupGroqTestServer()
 	defer teardown()
 	server.RegisterHandler("/v1/moderations", handleModerationEndpoint)
 	for _, modelTest := range modelOptions {
-		_, err := client.Moderations(context.Background(), groq.ModerationRequest{
-			Model: modelTest.model,
-			Input: "I want to kill them.",
-		})
-		a.ErrorIs(t, err, modelTest.expect,
-			fmt.Sprintf("Moderations(..) expects err: %v, actual err:%v", modelTest.expect, err))
+		_, err := client.Moderations(
+			context.Background(),
+			groq.ModerationRequest{
+				Model: modelTest.model,
+				Input: "I want to kill them.",
+			},
+		)
+		a.ErrorIs(
+			err,
+			modelTest.expect,
+			fmt.Sprintf(
+				"Moderations(..) expects err: %v, actual err:%v",
+				modelTest.expect,
+				err,
+			),
+		)
 	}
 }
 
@@ -140,7 +157,11 @@ func handleModerationEndpoint(w http.ResponseWriter, r *http.Request) {
 		resCatScore = groq.ResultCategoryScores{ViolenceGraphic: 1}
 	}
 
-	result := groq.Result{Categories: resCat, CategoryScores: resCatScore, Flagged: true}
+	result := groq.Result{
+		Categories:     resCat,
+		CategoryScores: resCatScore,
+		Flagged:        true,
+	}
 
 	res := groq.ModerationResponse{
 		ID:    strconv.Itoa(int(time.Now().Unix())),

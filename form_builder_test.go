@@ -17,11 +17,18 @@ type mockFormBuilder struct {
 	mockClose                func() error
 }
 
-func (fb *mockFormBuilder) CreateFormFile(fieldname string, file *os.File) error {
+func (fb *mockFormBuilder) CreateFormFile(
+	fieldname string,
+	file *os.File,
+) error {
 	return fb.mockCreateFormFile(fieldname, file)
 }
 
-func (fb *mockFormBuilder) CreateFormFileReader(fieldname string, r io.Reader, filename string) error {
+func (fb *mockFormBuilder) CreateFormFileReader(
+	fieldname string,
+	r io.Reader,
+	filename string,
+) error {
 	return fb.mockCreateFormFileReader(fieldname, r, filename)
 }
 
@@ -59,7 +66,12 @@ func TestFormBuilderWithFailingWriter(t *testing.T) {
 
 	builder := NewFormBuilder(&failingWriter{})
 	err = builder.CreateFormFile("file", file)
-	a.ErrorIs(t, err, errMockFailingWriterError, "formbuilder should return error if writer fails")
+	a.ErrorIs(
+		t,
+		err,
+		errMockFailingWriterError,
+		"formbuilder should return error if writer fails",
+	)
 }
 
 func TestFormBuilderWithClosedFile(t *testing.T) {
@@ -77,5 +89,10 @@ func TestFormBuilderWithClosedFile(t *testing.T) {
 	builder := NewFormBuilder(body)
 	err = builder.CreateFormFile("file", file)
 	a.HasError(t, err, "formbuilder should return error if file is closed")
-	a.ErrorIs(t, err, os.ErrClosed, "formbuilder should return error if file is closed")
+	a.ErrorIs(
+		t,
+		err,
+		os.ErrClosed,
+		"formbuilder should return error if file is closed",
+	)
 }

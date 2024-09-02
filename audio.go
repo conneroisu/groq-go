@@ -92,21 +92,29 @@ type AudioResponse struct {
 	} `json:"words"`
 	Text string `json:"text"`
 
-	httpHeader
+	http.Header
+}
+
+func (r AudioResponse) SetHeader(header http.Header) {
+	r.Header = header
 }
 
 // audioTextResponse is the response structure for the audio API when the response format is text.
 type audioTextResponse struct {
 	Text string `json:"text"`
 
-	httpHeader
+	http.Header
+}
+
+func (r *audioTextResponse) SetHeader(header http.Header) {
+	r.Header = header
 }
 
 // ToAudioResponse converts the audio text response to an audio response.
 func (r *audioTextResponse) ToAudioResponse() AudioResponse {
 	return AudioResponse{
-		Text:       r.Text,
-		httpHeader: r.httpHeader,
+		Text:   r.Text,
+		Header: r.Header,
 	}
 }
 
@@ -166,7 +174,8 @@ func (c *Client) callAudioAPI(
 
 // HasJSONResponse returns true if the response format is JSON.
 func (r AudioRequest) HasJSONResponse() bool {
-	return r.Format == "" || r.Format == AudioResponseFormatJSON || r.Format == AudioResponseFormatVerboseJSON
+	return r.Format == "" || r.Format == AudioResponseFormatJSON ||
+		r.Format == AudioResponseFormatVerboseJSON
 }
 
 // audioMultipartForm creates a form with audio file contents and the name of the model to use for
@@ -200,7 +209,10 @@ func audioMultipartForm(request AudioRequest, b FormBuilder) error {
 
 	// Create a form field for the temperature (if provided)
 	if request.Temperature != 0 {
-		err = b.WriteField("temperature", fmt.Sprintf("%.2f", request.Temperature))
+		err = b.WriteField(
+			"temperature",
+			fmt.Sprintf("%.2f", request.Temperature),
+		)
 		if err != nil {
 			return fmt.Errorf("writing temperature: %w", err)
 		}

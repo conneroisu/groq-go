@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/conneroisu/groq-go/internal/test"
-	"github.com/conneroisu/groq-go/internal/test/checks"
+	"github.com/stretchr/testify/assert"
 )
 
 var errTestUnmarshalerFailed = errors.New("test unmarshaler failed")
@@ -19,10 +19,10 @@ func (*failingUnMarshaller) Unmarshal(_ []byte, _ any) error {
 	return errTestUnmarshalerFailed
 }
 
+// TestStreamReaderReturnsUnmarshalerErrors tests the stream reader returns an unmarshaler error.
 func TestStreamReaderReturnsUnmarshalerErrors(t *testing.T) {
 	stream := &streamReader[ChatCompletionStreamResponse]{
 		errAccumulator: NewErrorAccumulator(),
-		unmarshaler:    &failingUnMarshaller{},
 	}
 
 	respErr := stream.unmarshalError()
@@ -41,25 +41,40 @@ func TestStreamReaderReturnsUnmarshalerErrors(t *testing.T) {
 	}
 }
 
+// TestStreamReaderReturnsErrTooManyEmptyStreamMessages tests the stream reader returns an error when the stream has too many empty messages.
 func TestStreamReaderReturnsErrTooManyEmptyStreamMessages(t *testing.T) {
+	a := assert.New(t)
 	stream := &streamReader[ChatCompletionStreamResponse]{
 		emptyMessagesLimit: 3,
-		reader:             bufio.NewReader(bytes.NewReader([]byte("\n\n\n\n"))),
-		errAccumulator:     NewErrorAccumulator(),
-		unmarshaler:        json.NewDecoder(bytes.NewReader([]byte("{}"))),
+		reader: bufio.NewReader(
+			bytes.NewReader([]byte("\n\n\n\n")),
+		),
+		errAccumulator: NewErrorAccumulator(),
+		unmarshaler:    json.NewDecoder(bytes.NewReader([]byte("{}"))),
 	}
 	_, err := stream.Recv()
-	checks.ErrorIs(t, err, ErrTooManyEmptyStreamMessages, "Did not return error when recv failed", err.Error())
+	a.ErrorIs(
+		err,
+		ErrTooManyEmptyStreamMessages{},
+		"Did not return error when recv failed",
+		err.Error(),
+	)
 }
 
+// TestStreamReaderReturnsErrTestErrorAccumulatorWriteFailed tests the stream reader returns an error when the error accumulator fails to write.
 func TestStreamReaderReturnsErrTestErrorAccumulatorWriteFailed(t *testing.T) {
+	a := assert.New(t)
 	stream := &streamReader[ChatCompletionStreamResponse]{
 		reader: bufio.NewReader(bytes.NewReader([]byte("\n"))),
-		errAccumulator: &utils.DefaultErrorAccumulator{
+		errAccumulator: &DefaultErrorAccumulator{
 			Buffer: &test.FailingErrorBuffer{},
 		},
-		unmarshaler: &utils.JSONUnmarshaler{},
 	}
 	_, err := stream.Recv()
-	checks.ErrorIs(t, err, test.ErrTestErrorAccumulatorWriteFailed, "Did not return error when write failed", err.Error())
+	a.ErrorIs(
+		err,
+		test.ErrTestErrorAccumulatorWriteFailed,
+		"Did not return error when write failed",
+		err.Error(),
+	)
 }

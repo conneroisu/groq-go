@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// TestCompletionsStreamWrongModel tests the completion stream returns an error when the model is not supported.
 func TestCompletionsStreamWrongModel(t *testing.T) {
 	config := groq.DefaultConfig("whatever")
 	config.BaseURL = "http://localhost/v1"
@@ -26,43 +27,53 @@ func TestCompletionsStreamWrongModel(t *testing.T) {
 			Model:     groq.GPT3Dot5Turbo,
 		},
 	)
-	if !errors.Is(err, groq.ErrCompletionUnsupportedModel) {
-		t.Fatalf("CreateCompletion should return ErrCompletionUnsupportedModel, but returned: %v", err)
+	if !errors.Is(err, groq.ErrCompletionUnsupportedModel{}) {
+		t.Fatalf(
+			"CreateCompletion should return ErrCompletionUnsupportedModel, but returned: %v",
+			err,
+		)
 	}
 }
 
 func TestCreateCompletionStream(t *testing.T) {
-	client, server, teardown := setupOpenAITestServer()
+	a := assert.New(t)
+	client, server, teardown := setupGroqTestServer()
 	defer teardown()
-	server.RegisterHandler("/v1/completions", func(w http.ResponseWriter, _ *http.Request) {
-		w.Header().Set("Content-Type", "text/event-stream")
+	server.RegisterHandler(
+		"/v1/completions",
+		func(w http.ResponseWriter, _ *http.Request) {
+			w.Header().Set("Content-Type", "text/event-stream")
 
-		// Send test responses
-		dataBytes := []byte{}
-		dataBytes = append(dataBytes, []byte("event: message\n")...)
-		//nolint:lll
-		data := `{"id":"1","object":"completion","created":1598069254,"model":"text-davinci-002","choices":[{"text":"response1","finish_reason":"max_tokens"}]}`
-		dataBytes = append(dataBytes, []byte("data: "+data+"\n\n")...)
+			// Send test responses
+			dataBytes := []byte{}
+			dataBytes = append(dataBytes, []byte("event: message\n")...)
+			//nolint:lll
+			data := `{"id":"1","object":"completion","created":1598069254,"model":"text-davinci-002","choices":[{"text":"response1","finish_reason":"max_tokens"}]}`
+			dataBytes = append(dataBytes, []byte("data: "+data+"\n\n")...)
 
-		dataBytes = append(dataBytes, []byte("event: message\n")...)
-		//nolint:lll
-		data = `{"id":"2","object":"completion","created":1598069255,"model":"text-davinci-002","choices":[{"text":"response2","finish_reason":"max_tokens"}]}`
-		dataBytes = append(dataBytes, []byte("data: "+data+"\n\n")...)
+			dataBytes = append(dataBytes, []byte("event: message\n")...)
+			//nolint:lll
+			data = `{"id":"2","object":"completion","created":1598069255,"model":"text-davinci-002","choices":[{"text":"response2","finish_reason":"max_tokens"}]}`
+			dataBytes = append(dataBytes, []byte("data: "+data+"\n\n")...)
 
-		dataBytes = append(dataBytes, []byte("event: done\n")...)
-		dataBytes = append(dataBytes, []byte("data: [DONE]\n\n")...)
+			dataBytes = append(dataBytes, []byte("event: done\n")...)
+			dataBytes = append(dataBytes, []byte("data: [DONE]\n\n")...)
 
-		_, err := w.Write(dataBytes)
-		a.NoError(t, err, "Write error")
-	})
+			_, err := w.Write(dataBytes)
+			a.NoError(err, "Write error")
+		},
+	)
 
-	stream, err := client.CreateCompletionStream(context.Background(), groq.CompletionRequest{
-		Prompt:    "Ex falso quodlibet",
-		Model:     "text-davinci-002",
-		MaxTokens: 10,
-		Stream:    true,
-	})
-	a.NoError(t, err, "CreateCompletionStream returned error")
+	stream, err := client.CreateCompletionStream(
+		context.Background(),
+		groq.CompletionRequest{
+			Prompt:    "Ex falso quodlibet",
+			Model:     "text-davinci-002",
+			MaxTokens: 10,
+			Stream:    true,
+		},
+	)
+	a.NoError(err, "CreateCompletionStream returned error")
 	defer stream.Close()
 
 	expectedResponses := []groq.CompletionResponse{
@@ -71,14 +82,18 @@ func TestCreateCompletionStream(t *testing.T) {
 			Object:  "completion",
 			Created: 1598069254,
 			Model:   "text-davinci-002",
-			Choices: []groq.CompletionChoice{{Text: "response1", FinishReason: "max_tokens"}},
+			Choices: []groq.CompletionChoice{
+				{Text: "response1", FinishReason: "max_tokens"},
+			},
 		},
 		{
 			ID:      "2",
 			Object:  "completion",
 			Created: 1598069255,
 			Model:   "text-davinci-002",
-			Choices: []groq.CompletionChoice{{Text: "response2", FinishReason: "max_tokens"}},
+			Choices: []groq.CompletionChoice{
+				{Text: "response2", FinishReason: "max_tokens"},
+			},
 		},
 	}
 
@@ -88,7 +103,12 @@ func TestCreateCompletionStream(t *testing.T) {
 			t.Errorf("stream.Recv() failed: %v", streamErr)
 		}
 		if !compareResponses(expectedResponse, receivedResponse) {
-			t.Errorf("Stream response %v is %v, expected %v", ix, receivedResponse, expectedResponse)
+			t.Errorf(
+				"Stream response %v is %v, expected %v",
+				ix,
+				receivedResponse,
+				expectedResponse,
+			)
 		}
 	}
 
@@ -99,47 +119,57 @@ func TestCreateCompletionStream(t *testing.T) {
 
 	_, streamErr = stream.Recv()
 	if !errors.Is(streamErr, io.EOF) {
-		t.Errorf("stream.Recv() did not return EOF when the stream is finished: %v", streamErr)
+		t.Errorf(
+			"stream.Recv() did not return EOF when the stream is finished: %v",
+			streamErr,
+		)
 	}
 }
 
 func TestCreateCompletionStreamError(t *testing.T) {
-	client, server, teardown := setupOpenAITestServer()
+	a := assert.New(t)
+	client, server, teardown := setupGroqTestServer()
 	defer teardown()
-	server.RegisterHandler("/v1/completions", func(w http.ResponseWriter, _ *http.Request) {
-		w.Header().Set("Content-Type", "text/event-stream")
+	server.RegisterHandler(
+		"/v1/completions",
+		func(w http.ResponseWriter, _ *http.Request) {
+			w.Header().Set("Content-Type", "text/event-stream")
 
-		// Send test responses
-		dataBytes := []byte{}
-		dataStr := []string{
-			`{`,
-			`"error": {`,
-			`"message": "Incorrect API key provided: sk-***************************************",`,
-			`"type": "invalid_request_error",`,
-			`"param": null,`,
-			`"code": "invalid_api_key"`,
-			`}`,
-			`}`,
-		}
-		for _, str := range dataStr {
-			dataBytes = append(dataBytes, []byte(str+"\n")...)
-		}
+			// Send test responses
+			dataBytes := []byte{}
+			dataStr := []string{
+				`{`,
+				`"error": {`,
+				`"message": "Incorrect API key provided: sk-***************************************",`,
+				`"type": "invalid_request_error",`,
+				`"param": null,`,
+				`"code": "invalid_api_key"`,
+				`}`,
+				`}`,
+			}
+			for _, str := range dataStr {
+				dataBytes = append(dataBytes, []byte(str+"\n")...)
+			}
 
-		_, err := w.Write(dataBytes)
-		a.NoError(t, err, "Write error")
-	})
+			_, err := w.Write(dataBytes)
+			a.NoError(err, "Write error")
+		},
+	)
 
-	stream, err := client.CreateCompletionStream(context.Background(), groq.CompletionRequest{
-		MaxTokens: 5,
-		Model:     groq.GPT3TextDavinci003,
-		Prompt:    "Hello!",
-		Stream:    true,
-	})
-	a.NoError(t, err, "CreateCompletionStream returned error")
+	stream, err := client.CreateCompletionStream(
+		context.Background(),
+		groq.CompletionRequest{
+			MaxTokens: 5,
+			Model:     groq.GPT3TextDavinci003,
+			Prompt:    "Hello!",
+			Stream:    true,
+		},
+	)
+	a.NoError(err, "CreateCompletionStream returned error")
 	defer stream.Close()
 
 	_, streamErr := stream.Recv()
-	a.HasError(t, streamErr, "stream.Recv() did not return error")
+	a.Error(streamErr, "stream.Recv() did not return error")
 
 	var apiErr *groq.APIError
 	if !errors.As(streamErr, &apiErr) {
@@ -149,166 +179,207 @@ func TestCreateCompletionStreamError(t *testing.T) {
 }
 
 func TestCreateCompletionStreamRateLimitError(t *testing.T) {
-	client, server, teardown := setupOpenAITestServer()
+	a := assert.New(t)
+	client, server, teardown := setupGroqTestServer()
 	defer teardown()
-	server.RegisterHandler("/v1/completions", func(w http.ResponseWriter, _ *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(429)
+	server.RegisterHandler(
+		"/v1/completions",
+		func(w http.ResponseWriter, _ *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(429)
 
-		// Send test responses
-		dataBytes := []byte(`{"error":{` +
-			`"message": "You are sending requests too quickly.",` +
-			`"type":"rate_limit_reached",` +
-			`"param":null,` +
-			`"code":"rate_limit_reached"}}`)
+			// Send test responses
+			dataBytes := []byte(`{"error":{` +
+				`"message": "You are sending requests too quickly.",` +
+				`"type":"rate_limit_reached",` +
+				`"param":null,` +
+				`"code":"rate_limit_reached"}}`)
 
-		_, err := w.Write(dataBytes)
-		a.NoError(t, err, "Write error")
-	})
+			_, err := w.Write(dataBytes)
+			a.NoError(err, "Write error")
+		},
+	)
 
 	var apiErr *groq.APIError
-	_, err := client.CreateCompletionStream(context.Background(), groq.CompletionRequest{
-		MaxTokens: 5,
-		Model:     groq.GPT3Ada,
-		Prompt:    "Hello!",
-		Stream:    true,
-	})
+	_, err := client.CreateCompletionStream(
+		context.Background(),
+		groq.CompletionRequest{
+			MaxTokens: 5,
+			Model:     groq.GPT4oLatest,
+			Prompt:    "Hello!",
+			Stream:    true,
+		},
+	)
 	if !errors.As(err, &apiErr) {
-		t.Errorf("TestCreateCompletionStreamRateLimitError did not return APIError")
+		t.Errorf(
+			"TestCreateCompletionStreamRateLimitError did not return APIError",
+		)
 	}
 	t.Logf("%+v\n", apiErr)
 }
 
+// TestCreateCompletionStreamTooManyEmptyStreamMessagesError tests the completion stream returns an error when the stream has too many empty messages.
 func TestCreateCompletionStreamTooManyEmptyStreamMessagesError(t *testing.T) {
-	client, server, teardown := setupOpenAITestServer()
+	a := assert.New(t)
+	client, server, teardown := setupGroqTestServer()
 	defer teardown()
-	server.RegisterHandler("/v1/completions", func(w http.ResponseWriter, _ *http.Request) {
-		w.Header().Set("Content-Type", "text/event-stream")
+	server.RegisterHandler(
+		"/v1/completions",
+		func(w http.ResponseWriter, _ *http.Request) {
+			w.Header().Set("Content-Type", "text/event-stream")
 
-		// Send test responses
-		dataBytes := []byte{}
-		dataBytes = append(dataBytes, []byte("event: message\n")...)
-		//nolint:lll
-		data := `{"id":"1","object":"completion","created":1598069254,"model":"text-davinci-002","choices":[{"text":"response1","finish_reason":"max_tokens"}]}`
-		dataBytes = append(dataBytes, []byte("data: "+data+"\n\n")...)
+			// Send test responses
+			dataBytes := []byte{}
+			dataBytes = append(dataBytes, []byte("event: message\n")...)
+			//nolint:lll
+			data := `{"id":"1","object":"completion","created":1598069254,"model":"text-davinci-002","choices":[{"text":"response1","finish_reason":"max_tokens"}]}`
+			dataBytes = append(dataBytes, []byte("data: "+data+"\n\n")...)
 
-		// Totally 301 empty messages (300 is the limit)
-		for i := 0; i < 299; i++ {
-			dataBytes = append(dataBytes, '\n')
-		}
+			// Totally 301 empty messages (300 is the limit)
+			for i := 0; i < 299; i++ {
+				dataBytes = append(dataBytes, '\n')
+			}
 
-		dataBytes = append(dataBytes, []byte("event: message\n")...)
-		//nolint:lll
-		data = `{"id":"2","object":"completion","created":1598069255,"model":"text-davinci-002","choices":[{"text":"response2","finish_reason":"max_tokens"}]}`
-		dataBytes = append(dataBytes, []byte("data: "+data+"\n\n")...)
+			dataBytes = append(dataBytes, []byte("event: message\n")...)
+			//nolint:lll
+			data = `{"id":"2","object":"completion","created":1598069255,"model":"text-davinci-002","choices":[{"text":"response2","finish_reason":"max_tokens"}]}`
+			dataBytes = append(dataBytes, []byte("data: "+data+"\n\n")...)
 
-		dataBytes = append(dataBytes, []byte("event: done\n")...)
-		dataBytes = append(dataBytes, []byte("data: [DONE]\n\n")...)
+			dataBytes = append(dataBytes, []byte("event: done\n")...)
+			dataBytes = append(dataBytes, []byte("data: [DONE]\n\n")...)
 
-		_, err := w.Write(dataBytes)
-		a.NoError(t, err, "Write error")
-	})
+			_, err := w.Write(dataBytes)
+			a.NoError(err, "Write error")
+		},
+	)
 
-	stream, err := client.CreateCompletionStream(context.Background(), groq.CompletionRequest{
-		Prompt:    "Ex falso quodlibet",
-		Model:     "text-davinci-002",
-		MaxTokens: 10,
-		Stream:    true,
-	})
-	a.NoError(t, err, "CreateCompletionStream returned error")
+	stream, err := client.CreateCompletionStream(
+		context.Background(),
+		groq.CompletionRequest{
+			Prompt:    "Ex falso quodlibet",
+			Model:     "text-davinci-002",
+			MaxTokens: 10,
+			Stream:    true,
+		},
+	)
+	a.NoError(err, "CreateCompletionStream returned error")
 	defer stream.Close()
 
 	_, _ = stream.Recv()
 	_, streamErr := stream.Recv()
-	if !errors.Is(streamErr, groq.ErrTooManyEmptyStreamMessages) {
-		t.Errorf("TestCreateCompletionStreamTooManyEmptyStreamMessagesError did not return ErrTooManyEmptyStreamMessages")
+	if !errors.Is(streamErr, groq.ErrTooManyEmptyStreamMessages{}) {
+		t.Errorf(
+			"TestCreateCompletionStreamTooManyEmptyStreamMessagesError did not return ErrTooManyEmptyStreamMessages",
+		)
 	}
 }
 
+// TestCreateCompletionStreamUnexpectedTerminatedError tests the completion stream returns an error when the stream is terminated unexpectedly.
 func TestCreateCompletionStreamUnexpectedTerminatedError(t *testing.T) {
-	client, server, teardown := setupOpenAITestServer()
+	a := assert.New(t)
+	client, server, teardown := setupGroqTestServer()
 	defer teardown()
-	server.RegisterHandler("/v1/completions", func(w http.ResponseWriter, _ *http.Request) {
-		w.Header().Set("Content-Type", "text/event-stream")
+	server.RegisterHandler(
+		"/v1/completions",
+		func(w http.ResponseWriter, _ *http.Request) {
+			w.Header().Set("Content-Type", "text/event-stream")
 
-		// Send test responses
-		dataBytes := []byte{}
-		dataBytes = append(dataBytes, []byte("event: message\n")...)
-		//nolint:lll
-		data := `{"id":"1","object":"completion","created":1598069254,"model":"text-davinci-002","choices":[{"text":"response1","finish_reason":"max_tokens"}]}`
-		dataBytes = append(dataBytes, []byte("data: "+data+"\n\n")...)
+			// Send test responses
+			dataBytes := []byte{}
+			dataBytes = append(dataBytes, []byte("event: message\n")...)
+			//nolint:lll
+			data := `{"id":"1","object":"completion","created":1598069254,"model":"text-davinci-002","choices":[{"text":"response1","finish_reason":"max_tokens"}]}`
+			dataBytes = append(dataBytes, []byte("data: "+data+"\n\n")...)
 
-		// Stream is terminated without sending "done" message
+			// Stream is terminated without sending "done" message
 
-		_, err := w.Write(dataBytes)
-		a.NoError(t, err, "Write error")
-	})
+			_, err := w.Write(dataBytes)
+			a.NoError(err, "Write error")
+		},
+	)
 
-	stream, err := client.CreateCompletionStream(context.Background(), groq.CompletionRequest{
-		Prompt:    "Ex falso quodlibet",
-		Model:     "text-davinci-002",
-		MaxTokens: 10,
-		Stream:    true,
-	})
-	a.NoError(t, err, "CreateCompletionStream returned error")
+	stream, err := client.CreateCompletionStream(
+		context.Background(),
+		groq.CompletionRequest{
+			Prompt:    "Ex falso quodlibet",
+			Model:     "text-davinci-002",
+			MaxTokens: 10,
+			Stream:    true,
+		},
+	)
+	a.NoError(err, "CreateCompletionStream returned error")
 	defer stream.Close()
 
 	_, _ = stream.Recv()
 	_, streamErr := stream.Recv()
 	if !errors.Is(streamErr, io.EOF) {
-		t.Errorf("TestCreateCompletionStreamUnexpectedTerminatedError did not return io.EOF")
+		t.Errorf(
+			"TestCreateCompletionStreamUnexpectedTerminatedError did not return io.EOF",
+		)
 	}
 }
 
+// TestCreateCompletionStreamBrokenJSONError tests the completion stream returns an error when the stream is broken.
 func TestCreateCompletionStreamBrokenJSONError(t *testing.T) {
 	a := assert.New(t)
-	client, server, teardown := setupOpenAITestServer()
+	client, server, teardown := setupGroqTestServer()
 	defer teardown()
-	server.RegisterHandler("/v1/completions", func(w http.ResponseWriter, _ *http.Request) {
-		w.Header().Set("Content-Type", "text/event-stream")
+	server.RegisterHandler(
+		"/v1/completions",
+		func(w http.ResponseWriter, _ *http.Request) {
+			w.Header().Set("Content-Type", "text/event-stream")
 
-		// Send test responses
-		dataBytes := []byte{}
-		dataBytes = append(dataBytes, []byte("event: message\n")...)
-		//nolint:lll
-		data := `{"id":"1","object":"completion","created":1598069254,"model":"text-davinci-002","choices":[{"text":"response1","finish_reason":"max_tokens"}]}`
-		dataBytes = append(dataBytes, []byte("data: "+data+"\n\n")...)
+			// Send test responses
+			dataBytes := []byte{}
+			dataBytes = append(dataBytes, []byte("event: message\n")...)
+			//nolint:lll
+			data := `{"id":"1","object":"completion","created":1598069254,"model":"text-davinci-002","choices":[{"text":"response1","finish_reason":"max_tokens"}]}`
+			dataBytes = append(dataBytes, []byte("data: "+data+"\n\n")...)
 
-		// Send broken json
-		dataBytes = append(dataBytes, []byte("event: message\n")...)
-		data = `{"id":"2","object":"completion","created":1598069255,"model":`
-		dataBytes = append(dataBytes, []byte("data: "+data+"\n\n")...)
+			// Send broken json
+			dataBytes = append(dataBytes, []byte("event: message\n")...)
+			data = `{"id":"2","object":"completion","created":1598069255,"model":`
+			dataBytes = append(dataBytes, []byte("data: "+data+"\n\n")...)
 
-		dataBytes = append(dataBytes, []byte("event: done\n")...)
-		dataBytes = append(dataBytes, []byte("data: [DONE]\n\n")...)
+			dataBytes = append(dataBytes, []byte("event: done\n")...)
+			dataBytes = append(dataBytes, []byte("data: [DONE]\n\n")...)
 
-		_, err := w.Write(dataBytes)
-		a.NoError(t, err, "Write error")
-	})
+			_, err := w.Write(dataBytes)
+			a.NoError(err, "Write error")
+		},
+	)
 
-	stream, err := client.CreateCompletionStream(context.Background(), groq.CompletionRequest{
-		Prompt:    "Ex falso quodlibet",
-		Model:     "text-davinci-002",
-		MaxTokens: 10,
-		Stream:    true,
-	})
-	a.NoError(t, err, "CreateCompletionStream returned error")
+	stream, err := client.CreateCompletionStream(
+		context.Background(),
+		groq.CompletionRequest{
+			Prompt:    "Ex falso quodlibet",
+			Model:     "text-davinci-002",
+			MaxTokens: 10,
+			Stream:    true,
+		},
+	)
+	a.NoError(err, "CreateCompletionStream returned error")
 	defer stream.Close()
 
 	_, _ = stream.Recv()
 	_, streamErr := stream.Recv()
 	var syntaxError *json.SyntaxError
 	if !errors.As(streamErr, &syntaxError) {
-		t.Errorf("TestCreateCompletionStreamBrokenJSONError did not return json.SyntaxError")
+		t.Errorf(
+			"TestCreateCompletionStreamBrokenJSONError did not return json.SyntaxError",
+		)
 	}
 }
 
 func TestCreateCompletionStreamReturnTimeoutError(t *testing.T) {
-	client, server, teardown := setupOpenAITestServer()
+	client, server, teardown := setupGroqTestServer()
 	defer teardown()
-	server.RegisterHandler("/v1/completions", func(http.ResponseWriter, *http.Request) {
-		time.Sleep(10 * time.Nanosecond)
-	})
+	server.RegisterHandler(
+		"/v1/completions",
+		func(http.ResponseWriter, *http.Request) {
+			time.Sleep(10 * time.Nanosecond)
+		},
+	)
 	ctx := context.Background()
 	ctx, cancel := context.WithTimeout(ctx, time.Nanosecond)
 	defer cancel()
@@ -329,7 +400,8 @@ func TestCreateCompletionStreamReturnTimeoutError(t *testing.T) {
 
 // Helper funcs.
 func compareResponses(r1, r2 groq.CompletionResponse) bool {
-	if r1.ID != r2.ID || r1.Object != r2.Object || r1.Created != r2.Created || r1.Model != r2.Model {
+	if r1.ID != r2.ID || r1.Object != r2.Object || r1.Created != r2.Created ||
+		r1.Model != r2.Model {
 		return false
 	}
 	if len(r1.Choices) != len(r2.Choices) {
