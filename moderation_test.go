@@ -26,7 +26,10 @@ func setupGroqTestServer() (
 	ts := server.GroqTestServer()
 	ts.Start()
 	teardown = ts.Close
-	client, err := groq.NewClient(test.GetTestToken(), groq.WithBaseURL(ts.URL+"/v1"))
+	client, err := groq.NewClient(
+		test.GetTestToken(),
+		groq.WithBaseURL(ts.URL+"/v1"),
+	)
 	if err != nil {
 		log.Fatal(err)
 	}

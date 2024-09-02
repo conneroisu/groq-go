@@ -19,7 +19,10 @@ import (
 // TestCompletionsWrongModel tests the CreateCompletion method with a wrong model.
 func TestCompletionsWrongModel(t *testing.T) {
 	a := assert.New(t)
-	client, err := groq.NewClient("whatever", groq.WithBaseURL("http://localhost/v1"))
+	client, err := groq.NewClient(
+		"whatever",
+		groq.WithBaseURL("http://localhost/v1"),
+	)
 	a.NoError(err, "NewClient error")
 
 	_, err = client.CreateCompletion(
@@ -40,7 +43,10 @@ func TestCompletionsWrongModel(t *testing.T) {
 // TestCompletionWithStream tests the CreateCompletion method with a stream.
 func TestCompletionWithStream(t *testing.T) {
 	a := assert.New(t)
-	client, err := groq.NewClient("whatever", groq.WithBaseURL("http://localhost/v1"))
+	client, err := groq.NewClient(
+		"whatever",
+		groq.WithBaseURL("http://localhost/v1"),
+	)
 	a.NoError(err, "NewClient error")
 
 	ctx := context.Background()

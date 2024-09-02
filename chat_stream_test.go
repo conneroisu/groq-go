@@ -16,7 +16,10 @@ import (
 
 func TestChatCompletionsStreamWrongModel(t *testing.T) {
 	a := assert.New(t)
-	client, err := groq.NewClient("whatever", groq.WithBaseURL("http://localhost/v1"))
+	client, err := groq.NewClient(
+		"whatever",
+		groq.WithBaseURL("http://localhost/v1"),
+	)
 	a.NoError(err, "NewClient returned error")
 	ctx := context.Background()
 
