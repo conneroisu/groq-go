@@ -314,11 +314,27 @@ func TestCreateChatCompletionStreamWithRatelimitHeaders(t *testing.T) {
 	a.NoError(err, "CreateCompletionStream returned error")
 	defer stream.Close()
 
-	headers := stream.GetRateLimitHeaders()
+	headers := newRateLimitHeaders(stream.Header)
 	bs1, _ := json.Marshal(headers)
 	bs2, _ := json.Marshal(rateLimitHeaders)
 	if string(bs1) != string(bs2) {
 		t.Errorf("expected rate limit header %s to be %s", bs2, bs1)
+	}
+}
+
+// newRateLimitHeaders creates a new RateLimitHeaders from an http.Header.
+func newRateLimitHeaders(h http.Header) groq.RateLimitHeaders {
+	limitReq, _ := strconv.Atoi(h.Get("x-ratelimit-limit-requests"))
+	limitTokens, _ := strconv.Atoi(h.Get("x-ratelimit-limit-tokens"))
+	remainingReq, _ := strconv.Atoi(h.Get("x-ratelimit-remaining-requests"))
+	remainingTokens, _ := strconv.Atoi(h.Get("x-ratelimit-remaining-tokens"))
+	return groq.RateLimitHeaders{
+		LimitRequests:     limitReq,
+		LimitTokens:       limitTokens,
+		RemainingRequests: remainingReq,
+		RemainingTokens:   remainingTokens,
+		ResetRequests:     groq.ResetTime(h.Get("x-ratelimit-reset-requests")),
+		ResetTokens:       groq.ResetTime(h.Get("x-ratelimit-reset-tokens")),
 	}
 }
 

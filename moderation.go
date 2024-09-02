@@ -19,6 +19,7 @@ const (
 )
 
 var (
+	// ErrModerationInvalidModel is returned when the model is not supported with the moderation endpoint.
 	ErrModerationInvalidModel = errors.New(
 		"this model is not supported with moderation, please use text-moderation-stable or text-moderation-latest instead",
 	) //nolint:lll

@@ -1,8 +1,6 @@
 package groq
 
 import (
-	"net/http"
-	"strconv"
 	"time"
 )
 
@@ -29,20 +27,4 @@ func (r ResetTime) String() string {
 func (r ResetTime) Time() time.Time {
 	d, _ := time.ParseDuration(string(r))
 	return time.Now().Add(d)
-}
-
-// newRateLimitHeaders creates a new RateLimitHeaders from an http.Header.
-func newRateLimitHeaders(h http.Header) RateLimitHeaders {
-	limitReq, _ := strconv.Atoi(h.Get("x-ratelimit-limit-requests"))
-	limitTokens, _ := strconv.Atoi(h.Get("x-ratelimit-limit-tokens"))
-	remainingReq, _ := strconv.Atoi(h.Get("x-ratelimit-remaining-requests"))
-	remainingTokens, _ := strconv.Atoi(h.Get("x-ratelimit-remaining-tokens"))
-	return RateLimitHeaders{
-		LimitRequests:     limitReq,
-		LimitTokens:       limitTokens,
-		RemainingRequests: remainingReq,
-		RemainingTokens:   remainingTokens,
-		ResetRequests:     ResetTime(h.Get("x-ratelimit-reset-requests")),
-		ResetTokens:       ResetTime(h.Get("x-ratelimit-reset-tokens")),
-	}
 }
