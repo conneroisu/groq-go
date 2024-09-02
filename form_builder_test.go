@@ -52,8 +52,7 @@ func (fb *mockFormBuilder) FormDataContentType() string {
 }
 
 // failingWriter is a failing writer.
-type failingWriter struct {
-}
+type failingWriter struct{}
 
 var errMockFailingWriterError = errors.New("mock writer failed")
 

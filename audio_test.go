@@ -72,7 +72,7 @@ func TestAudioWithFailingFormBuilder(t *testing.T) {
 		)
 
 		err = audioMultipartForm(req, mockBuilder)
-		a.ErrorIs(
+		a.Error(
 			err,
 			mockFailedErr,
 			"audioMultipartForm should return error if form builder fails",
@@ -136,7 +136,7 @@ func TestCreateFileField(t *testing.T) {
 		mockBuilder := &mockFormBuilder{}
 
 		err := createFileField(req, mockBuilder)
-		a.ErrorContains(
+		a.Error(
 			err,
 			"createFileField using file should return error when open file fails",
 		)

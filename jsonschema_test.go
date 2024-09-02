@@ -5,28 +5,28 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/conneroisu/groq-go/jsonschema"
+	"github.com/conneroisu/groq-go"
 )
 
 func TestDefinition_MarshalJSON(t *testing.T) {
 	tests := []struct {
 		name string
-		def  jsonschema.Definition
+		def  groq.Definition
 		want string
 	}{
 		{
 			name: "Test with empty Definition",
-			def:  jsonschema.Definition{},
+			def:  groq.Definition{},
 			want: `{"properties":{}}`,
 		},
 		{
 			name: "Test with Definition properties set",
-			def: jsonschema.Definition{
-				Type:        jsonschema.String,
+			def: groq.Definition{
+				Type:        groq.String,
 				Description: "A string type",
-				Properties: map[string]jsonschema.Definition{
+				Properties: map[string]groq.Definition{
 					"name": {
-						Type: jsonschema.String,
+						Type: groq.String,
 					},
 				},
 			},
@@ -43,17 +43,17 @@ func TestDefinition_MarshalJSON(t *testing.T) {
 		},
 		{
 			name: "Test with nested Definition properties",
-			def: jsonschema.Definition{
-				Type: jsonschema.Object,
-				Properties: map[string]jsonschema.Definition{
+			def: groq.Definition{
+				Type: groq.Object,
+				Properties: map[string]groq.Definition{
 					"user": {
-						Type: jsonschema.Object,
-						Properties: map[string]jsonschema.Definition{
+						Type: groq.Object,
+						Properties: map[string]groq.Definition{
 							"name": {
-								Type: jsonschema.String,
+								Type: groq.String,
 							},
 							"age": {
-								Type: jsonschema.Integer,
+								Type: groq.Integer,
 							},
 						},
 					},
@@ -80,26 +80,26 @@ func TestDefinition_MarshalJSON(t *testing.T) {
 		},
 		{
 			name: "Test with complex nested Definition",
-			def: jsonschema.Definition{
-				Type: jsonschema.Object,
-				Properties: map[string]jsonschema.Definition{
+			def: groq.Definition{
+				Type: groq.Object,
+				Properties: map[string]groq.Definition{
 					"user": {
-						Type: jsonschema.Object,
-						Properties: map[string]jsonschema.Definition{
+						Type: groq.Object,
+						Properties: map[string]groq.Definition{
 							"name": {
-								Type: jsonschema.String,
+								Type: groq.String,
 							},
 							"age": {
-								Type: jsonschema.Integer,
+								Type: groq.Integer,
 							},
 							"address": {
-								Type: jsonschema.Object,
-								Properties: map[string]jsonschema.Definition{
+								Type: groq.Object,
+								Properties: map[string]groq.Definition{
 									"city": {
-										Type: jsonschema.String,
+										Type: groq.String,
 									},
 									"country": {
-										Type: jsonschema.String,
+										Type: groq.String,
 									},
 								},
 							},
@@ -141,14 +141,14 @@ func TestDefinition_MarshalJSON(t *testing.T) {
 		},
 		{
 			name: "Test with Array type Definition",
-			def: jsonschema.Definition{
-				Type: jsonschema.Array,
-				Items: &jsonschema.Definition{
-					Type: jsonschema.String,
+			def: groq.Definition{
+				Type: groq.Array,
+				Items: &groq.Definition{
+					Type: groq.String,
 				},
-				Properties: map[string]jsonschema.Definition{
+				Properties: map[string]groq.Definition{
 					"name": {
-						Type: jsonschema.String,
+						Type: groq.String,
 					},
 				},
 			},

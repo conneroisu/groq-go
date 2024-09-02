@@ -25,6 +25,28 @@ const (
 	Array   DataType = "array"   // Array is the type of an array.
 	Enum    DataType = "enum"    // Enum is the type of an enum.
 	AnyOf   DataType = "anyOf"   // AnyOf is the type of an anyOf.
+
+	Description           = "description"         // Description is the description of the schema.
+	DescriptionKey        = "desc"                // DescriptionKey is the description of the schema.
+	DescriptionAutoGenFmt = "%s is the %s of %s." // DescriptionAutoGenFmt is the format of the description auto generated.
+
+	Type = "type" // Type is the type of the schema.
+
+	MinItems    = "minItems" // MinItems is the minimum number of items in an array.
+	MinItemsKey = "min"      // MinItemsKey is the minimum number of items in an array.
+
+	UniqueItems    = "uniqueItems" // UniqueItems is a boolean value that specifies whether all items in an array must be unique.
+	UniqueItemsKey = "unique"      // UniqueItemsKey is a boolean value that specifies whether all items in an array must be unique.
+
+	Required    = "required" // Required is a boolean value that specifies whether a field is required.
+	RequiredKey = "req"      // RequiredKey is a boolean value that specifies whether a field is required.
+)
+
+var (
+	// BaseKeys are the base keys for the base object schema structure definition.
+	BaseKeys = []string{
+		RequiredKey,
+	}
 )
 
 // Definition is a struct for describing a JSON Schema.
@@ -62,11 +84,6 @@ func (d *Definition) MarshalJSON() ([]byte, error) {
 	}{
 		Alias: (Alias)(*d),
 	})
-}
-
-// Unmarshal unmarshals a JSON schema from a string.
-func (d *Definition) Unmarshal(content string, v any) error {
-	return VerifySchemaAndUnmarshal(*d, []byte(content), v)
 }
 
 // GenerateSchemaForType generates a JSON schema for a given type.
