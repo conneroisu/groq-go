@@ -118,6 +118,16 @@ func handleCompletionEndpoint(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, string(resBytes))
 }
 
+// numTokens Returns the number of GPT-3 encoded tokens in the given text.
+// This function approximates based on the rule of thumb stated by OpenAI:
+// https://beta.openai.com/tokenizer
+//
+// TODO: implement an actual tokenizer for each model available and use that
+// instead.
+func numTokens(s string) int {
+	return int(float32(len(s)) / 4)
+}
+
 // getCompletionBody Returns the body of the request to create a completion.
 func getCompletionBody(r *http.Request) (groq.CompletionRequest, error) {
 	completion := groq.CompletionRequest{}

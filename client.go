@@ -28,6 +28,7 @@ type Client struct {
 	requestFormBuilder FormBuilder
 	createFormBuilder  func(body io.Writer) FormBuilder
 	logger             zerolog.Logger // Logger is the logger for the client.
+	EmptyMessagesLimit uint
 }
 
 // fullURL returns full URL for request.
@@ -60,8 +61,8 @@ func NewClient(groqAPIKey string, opts ...Opts) (*Client, error) {
 			With().
 			Timestamp().
 			Logger(),
-		baseURL: groqAPIURLv1,
-
+		baseURL:            groqAPIURLv1,
+		EmptyMessagesLimit: 10,
 		createFormBuilder: func(body io.Writer) FormBuilder {
 			return NewFormBuilder(body)
 		},

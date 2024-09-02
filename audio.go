@@ -22,7 +22,6 @@ const (
 	AudioResponseFormatVerboseJSON AudioResponseFormat = "verbose_json"
 	// AudioResponseFormatVTT is the VTT format.
 	AudioResponseFormatVTT AudioResponseFormat = "vtt"
-
 	// TranscriptionTimestampGranularityWord is the word timestamp granularity.
 	TranscriptionTimestampGranularityWord TranscriptionTimestampGranularity = "word"
 	// TranscriptionTimestampGranularitySegment is the segment timestamp granularity.
