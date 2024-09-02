@@ -1,4 +1,4 @@
-package jsonschema_test
+package groq_test
 
 import (
 	"encoding/json"

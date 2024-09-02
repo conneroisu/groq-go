@@ -2,7 +2,7 @@
 // (nested) struct. This struct can be used with the chat completion "function call" feature.
 // For more complicated schemas, it is recommended to use a dedicated JSON schema library
 // and/or pass in the schema in []byte format.
-package jsonschema
+package groq
 
 import (
 	"encoding/json"
@@ -17,20 +17,14 @@ import (
 type DataType string
 
 const (
-	// Object is the type of an object.
-	Object DataType = "object"
-	// Number is the type of a number.
-	Number DataType = "number"
-	// Integer is the type of an integer.
-	Integer DataType = "integer"
-	// String is the type of a string.
-	String DataType = "string"
-	// Array is the type of an array.
-	Array DataType = "array"
-	// Null is the type of a null value.
-	Null DataType = "null"
-	// Boolean is the type of a boolean.
-	Boolean DataType = "boolean"
+	Number  DataType = "number"  // Number is the type of a number.
+	String  DataType = "string"  // String is the type of a string.
+	Boolean DataType = "boolean" // Boolean is the type of a boolean.
+	Integer DataType = "integer" // Integer is the type of an integer.
+	Object  DataType = "object"  // Object is the type of an object.
+	Array   DataType = "array"   // Array is the type of an array.
+	Enum    DataType = "enum"    // Enum is the type of an enum.
+	AnyOf   DataType = "anyOf"   // AnyOf is the type of an anyOf.
 )
 
 // Definition is a struct for describing a JSON Schema.
