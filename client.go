@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/rs/zerolog"
 )
@@ -25,7 +26,18 @@ type Client struct {
 	models             *ModelResponse // Models is the list of models available to the client.
 	requestBuilder     RequestBuilder
 	requestFormBuilder FormBuilder
+	createFormBuilder  func(body io.Writer) FormBuilder
 	logger             zerolog.Logger // Logger is the logger for the client.
+}
+
+// fullURL returns full URL for request.
+func (c *Client) fullURL(suffix string, setters ...fullURLOption) string {
+	baseURL := strings.TrimRight(c.baseURL, "/")
+	args := fullURLOptions{}
+	for _, setter := range setters {
+		setter(&args)
+	}
+	return fmt.Sprintf("%s%s", baseURL, suffix)
 }
 
 // Contains returns true if the model is in the list of models.
@@ -49,6 +61,10 @@ func NewClient(groqAPIKey string, opts ...Opts) (*Client, error) {
 			Timestamp().
 			Logger(),
 		baseURL: groqAPIURLv1,
+
+		createFormBuilder: func(body io.Writer) FormBuilder {
+			return NewFormBuilder(body)
+		},
 	}
 	err := c.GetModels()
 	if err != nil {
@@ -210,10 +226,17 @@ func (c *Client) sendRequest(req *http.Request, v Response) error {
 	return decodeResponse(res.Body, v)
 }
 
+// RawResponse is a response from the raw endpoint.
+type RawResponse struct {
+	io.ReadCloser
+
+	http.Header
+}
+
 func (c *Client) sendRequestRaw(
 	req *http.Request,
 ) (response RawResponse, err error) {
-	resp, err := c.config.HTTPClient.Do(
+	resp, err := c.client.Do(
 		req,
 	) //nolint:bodyclose // body should be closed by outer function
 	if err != nil {
@@ -225,7 +248,7 @@ func (c *Client) sendRequestRaw(
 		return
 	}
 
-	response.SetHeader(resp.Header)
+	response.Header = resp.Header
 	response.ReadCloser = resp.Body
 	return
 }
@@ -239,7 +262,7 @@ func sendRequestStream[T streamable](
 	req.Header.Set("Cache-Control", "no-cache")
 	req.Header.Set("Connection", "keep-alive")
 
-	resp, err := client.config.HTTPClient.Do(
+	resp, err := client.client.Do(
 		req,
 	) //nolint:bodyclose // body is closed in stream.Close()
 	if err != nil {
@@ -253,7 +276,6 @@ func sendRequestStream[T streamable](
 		reader:             bufio.NewReader(resp.Body),
 		response:           resp,
 		errAccumulator:     NewErrorAccumulator(),
-		unmarshaler:        &JSONUnmarshaler{},
 		Header:             resp.Header,
 	}, nil
 }

@@ -12,7 +12,7 @@ import (
 func CreateTestFile(t *testing.T, path string) {
 	a := assert.New(t)
 	file, err := os.Create(path)
-	a.NoError(t, err, "failed to create file")
+	a.NoError(err, "failed to create file")
 
 	if _, err = file.WriteString("hello"); err != nil {
 		t.Fatalf("failed to write to file %v", err)
@@ -26,7 +26,7 @@ func CreateTestDirectory(t *testing.T) (path string, cleanup func()) {
 
 	a := assert.New(t)
 	path, err := os.MkdirTemp(os.TempDir(), "")
-	a.NoError(t, err)
+	a.NoError(err)
 
 	return path, func() { os.RemoveAll(path) }
 }

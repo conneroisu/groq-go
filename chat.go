@@ -145,6 +145,7 @@ func (m ChatCompletionMessage) MarshalJSON() ([]byte, error) {
 	return json.Marshal(msg)
 }
 
+// UnmarshalJSON implements the json.Unmarshaler interface.
 func (m *ChatCompletionMessage) UnmarshalJSON(bs []byte) error {
 	msg := struct {
 		Role         string `json:"role"`

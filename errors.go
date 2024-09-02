@@ -196,11 +196,11 @@ func (e *ErrContentFieldsMisused) Error() string {
 }
 
 // ErrCompletionUnsupportedModel is an error that occurs when the model is not supported with the CreateCompletion method.
-type ErrCompletionUnsupportedModel struct{ model string }
+type ErrCompletionUnsupportedModel struct{ Model string }
 
 // Error implements the error interface.
 func (e ErrCompletionUnsupportedModel) Error() string {
-	return fmt.Errorf("this model (%s) is not supported with this method, please use CreateCompletion client method instead", e.model).
+	return fmt.Errorf("this model (%s) is not supported with this method, please use CreateCompletion client method instead", e.Model).
 		Error()
 }
 

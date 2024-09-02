@@ -81,6 +81,11 @@ type ModerationResponse struct {
 	http.Header
 }
 
+// SetHeader sets the header of the response.
+func (r ModerationResponse) SetHeader(header http.Header) {
+	r.Header = header
+}
+
 // Moderations — perform a moderation api call over a string.
 // Input can be an array or slice but a string will reduce the complexity.
 func (c *Client) Moderations(

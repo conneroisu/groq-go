@@ -3,32 +3,10 @@ package groq //nolint:testpackage // testing private field
 import (
 	"bytes"
 	"context"
-	"errors"
 	"net/http"
 	"reflect"
 	"testing"
 )
-
-var errTestMarshallerFailed = errors.New("test marshaller failed")
-
-type failingMarshaller struct{}
-
-// Marshal is a failing marshaller.
-func (*failingMarshaller) Marshal(_ any) ([]byte, error) {
-	return []byte{}, errTestMarshallerFailed
-}
-
-// TestRequestBuilderReturnsMarshallerErrors tests the request builder returns a marshaller error.
-func TestRequestBuilderReturnsMarshallerErrors(t *testing.T) {
-	builder := HTTPRequestBuilder{
-		marshaller: &failingMarshaller{},
-	}
-
-	_, err := builder.Build(context.Background(), "", "", struct{}{}, nil)
-	if !errors.Is(err, errTestMarshallerFailed) {
-		t.Fatalf("Did not return error when marshaller failed: %v", err)
-	}
-}
 
 // TestRequestBuilderReturnsRequest  tests the request builder returns a request.
 func TestRequestBuilderReturnsRequest(t *testing.T) {

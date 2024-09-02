@@ -25,7 +25,6 @@ type streamReader[T streamable] struct {
 	reader         *bufio.Reader
 	response       *http.Response
 	errAccumulator ErrorAccumulator
-	unmarshaler    *json.Decoder
 
 	http.Header
 }

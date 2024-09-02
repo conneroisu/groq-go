@@ -3,7 +3,6 @@ package groq //nolint:testpackage // testing private field
 import (
 	"bufio"
 	"bytes"
-	"encoding/json"
 	"errors"
 	"testing"
 
@@ -50,7 +49,6 @@ func TestStreamReaderReturnsErrTooManyEmptyStreamMessages(t *testing.T) {
 			bytes.NewReader([]byte("\n\n\n\n")),
 		),
 		errAccumulator: NewErrorAccumulator(),
-		unmarshaler:    json.NewDecoder(bytes.NewReader([]byte("{}"))),
 	}
 	_, err := stream.Recv()
 	a.ErrorIs(

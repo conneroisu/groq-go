@@ -12,15 +12,6 @@ import (
 // Whisper Defines the models provided by OpenAI to use when processing audio with OpenAI.
 const (
 	Whisper1 = "whisper-1"
-)
-
-// AudioResponseFormat is the response format for the audio API.
-//
-// Response formats; Whisper uses AudioResponseFormatJSON by default.
-// string
-type AudioResponseFormat string
-
-const (
 	// AudioResponseFormatJSON is the JSON format.
 	AudioResponseFormatJSON AudioResponseFormat = "json"
 	// AudioResponseFormatText is the text format.
@@ -31,40 +22,36 @@ const (
 	AudioResponseFormatVerboseJSON AudioResponseFormat = "verbose_json"
 	// AudioResponseFormatVTT is the VTT format.
 	AudioResponseFormatVTT AudioResponseFormat = "vtt"
-)
 
-// TranscriptionTimestampGranularity is the timestamp granularity for the transcription.
-// string
-type TranscriptionTimestampGranularity string
-
-const (
 	// TranscriptionTimestampGranularityWord is the word timestamp granularity.
 	TranscriptionTimestampGranularityWord TranscriptionTimestampGranularity = "word"
 	// TranscriptionTimestampGranularitySegment is the segment timestamp granularity.
 	TranscriptionTimestampGranularitySegment TranscriptionTimestampGranularity = "segment"
 )
 
+// AudioResponseFormat is the response format for the audio API.
+//
+// Response formats; Whisper uses AudioResponseFormatJSON by default.
+// string
+type AudioResponseFormat string
+
+// TranscriptionTimestampGranularity is the timestamp granularity for the transcription.
+// string
+type TranscriptionTimestampGranularity string
+
 // AudioRequest represents a request structure for audio API.
 type AudioRequest struct {
-	// Model is the model to use for the transcription.
-	Model string
+	Model string // Model is the model to use for the transcription.
 
-	// FilePath is either an existing file in your filesystem or a filename representing the contents of Reader.
-	FilePath string
+	FilePath string // FilePath is either an existing file in your filesystem or a filename representing the contents of Reader.
 
-	// Reader is an optional io.Reader when you do not want to use an existing file.
-	Reader io.Reader
+	Reader io.Reader // Reader is an optional io.Reader when you do not want to use an existing file.
 
-	// Prompt is the prompt for the transcription.
-	Prompt string
-	// Temperature is the temperature for the transcription.
-	Temperature float32
-	// Language is the language for the transcription.
-	Language string // Only for transcription.
-	// Format is the format for the response.
-	Format AudioResponseFormat
-	// TimestampGranularities is the timestamp granularities for the transcription.
-	TimestampGranularities []TranscriptionTimestampGranularity // Only for transcription.
+	Prompt                 string                              // Prompt is the prompt for the transcription.
+	Temperature            float32                             // Temperature is the temperature for the transcription.
+	Language               string                              // Language is the language for the transcription. Only for transcription.
+	Format                 AudioResponseFormat                 // Format is the format for the response.
+	TimestampGranularities []TranscriptionTimestampGranularity // Only for transcription. TimestampGranularities is the timestamp granularities for the transcription.
 }
 
 // AudioResponse represents a response structure for audio API.
@@ -95,6 +82,7 @@ type AudioResponse struct {
 	http.Header
 }
 
+// SetHeader sets the header of the response.
 func (r AudioResponse) SetHeader(header http.Header) {
 	r.Header = header
 }

@@ -16,18 +16,18 @@ import (
 
 // TestCompletionsStreamWrongModel tests the completion stream returns an error when the model is not supported.
 func TestCompletionsStreamWrongModel(t *testing.T) {
-	config := groq.DefaultConfig("whatever")
-	config.BaseURL = "http://localhost/v1"
-	client := groq.NewClientWithConfig(config)
+	a := assert.New(t)
+	client, err := groq.NewClient("whatever", groq.WithBaseURL("http://localhost/v1"))
+	a.NoError(err, "NewClient returned error")
 
-	_, err := client.CreateCompletionStream(
+	_, err = client.CreateCompletionStream(
 		context.Background(),
 		groq.CompletionRequest{
 			MaxTokens: 5,
-			Model:     groq.GPT3Dot5Turbo,
+			Model:     groq.GPT432K,
 		},
 	)
-	if !errors.Is(err, groq.ErrCompletionUnsupportedModel{}) {
+	if !errors.Is(err, groq.ErrCompletionUnsupportedModel{Model: groq.GPT3Dot5Turbo}) {
 		t.Fatalf(
 			"CreateCompletion should return ErrCompletionUnsupportedModel, but returned: %v",
 			err,
@@ -160,7 +160,7 @@ func TestCreateCompletionStreamError(t *testing.T) {
 		context.Background(),
 		groq.CompletionRequest{
 			MaxTokens: 5,
-			Model:     groq.GPT3TextDavinci003,
+			Model:     groq.GPT3Dot5Turbo,
 			Prompt:    "Hello!",
 			Stream:    true,
 		},

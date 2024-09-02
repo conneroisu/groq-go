@@ -144,6 +144,11 @@ type CompletionResponse struct {
 	http.Header
 }
 
+// SetHeader sets the header of the response.
+func (r CompletionResponse) SetHeader(header http.Header) {
+	r.Header = header
+}
+
 // CreateCompletion — API call to create a completion. This is the main endpoint of the API. Returns new text as well
 // as, if requested, the probabilities over each alternative token at each position.
 //
@@ -154,18 +159,18 @@ func (c *Client) CreateCompletion(
 	request CompletionRequest,
 ) (response CompletionResponse, err error) {
 	if request.Stream {
-		err = ErrCompletionStreamNotSupported
+		err = ErrCompletionStreamNotSupported{}
 		return
 	}
 
 	urlSuffix := "/completions"
 	if !checkEndpointSupportsModel(urlSuffix, request.Model) {
-		err = ErrCompletionUnsupportedModel
+		err = ErrCompletionUnsupportedModel{}
 		return
 	}
 
 	if !checkPromptType(request.Prompt) {
-		err = ErrCompletionRequestPromptTypeNotSupported
+		err = ErrCompletionRequestPromptTypeNotSupported{}
 		return
 	}
 

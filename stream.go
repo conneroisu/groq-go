@@ -28,7 +28,7 @@ func (c *Client) CreateCompletionStream(
 ) (stream *CompletionStream, err error) {
 	urlSuffix := "/completions"
 	if !checkEndpointSupportsModel(urlSuffix, request.Model) {
-		return stream, ErrCompletionUnsupportedModel{model: request.Model}
+		return stream, ErrCompletionUnsupportedModel{Model: request.Model}
 	}
 
 	if !checkPromptType(request.Prompt) {

@@ -15,9 +15,9 @@ import (
 )
 
 func TestChatCompletionsStreamWrongModel(t *testing.T) {
-	config := groq.DefaultConfig("whatever")
-	config.BaseURL = "http://localhost/v1"
-	client := groq.NewClientWithConfig(config)
+	a := assert.New(t)
+	client, err := groq.NewClient("whatever", groq.WithBaseURL("http://localhost/v1"))
+	a.NoError(err, "NewClient returned error")
 	ctx := context.Background()
 
 	req := groq.ChatCompletionRequest{
@@ -30,8 +30,8 @@ func TestChatCompletionsStreamWrongModel(t *testing.T) {
 			},
 		},
 	}
-	_, err := client.CreateChatCompletionStream(ctx, req)
-	if !errors.Is(err, groq.ErrChatCompletionInvalidModel) {
+	_, err = client.CreateChatCompletionStream(ctx, req)
+	if !errors.Is(err, &groq.ErrChatCompletionInvalidModel{}) {
 		t.Fatalf(
 			"CreateChatCompletion should return ErrChatCompletionInvalidModel, but returned: %v",
 			err,

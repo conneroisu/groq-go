@@ -16,19 +16,20 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// TestCompletionsWrongModel tests the CreateCompletion method with a wrong model.
 func TestCompletionsWrongModel(t *testing.T) {
-	config := groq.DefaultConfig("whatever")
-	config.BaseURL = "http://localhost/v1"
-	client := groq.NewClientWithConfig(config)
+	a := assert.New(t)
+	client, err := groq.NewClient("whatever", groq.WithBaseURL("http://localhost/v1"))
+	a.NoError(err, "NewClient error")
 
-	_, err := client.CreateCompletion(
+	_, err = client.CreateCompletion(
 		context.Background(),
 		groq.CompletionRequest{
 			MaxTokens: 5,
 			Model:     groq.GPT3Dot5Turbo,
 		},
 	)
-	if !errors.Is(err, groq.ErrCompletionUnsupportedModel) {
+	if !errors.Is(err, groq.ErrCompletionUnsupportedModel{}) {
 		t.Fatalf(
 			"CreateCompletion should return ErrCompletionUnsupportedModel, but returned: %v",
 			err,
@@ -36,14 +37,16 @@ func TestCompletionsWrongModel(t *testing.T) {
 	}
 }
 
+// TestCompletionWithStream tests the CreateCompletion method with a stream.
 func TestCompletionWithStream(t *testing.T) {
-	config := groq.DefaultConfig("whatever")
-	client := groq.NewClientWithConfig(config)
+	a := assert.New(t)
+	client, err := groq.NewClient("whatever", groq.WithBaseURL("http://localhost/v1"))
+	a.NoError(err, "NewClient error")
 
 	ctx := context.Background()
 	req := groq.CompletionRequest{Stream: true}
-	_, err := client.CreateCompletion(ctx, req)
-	if !errors.Is(err, groq.ErrCompletionStreamNotSupported) {
+	_, err = client.CreateCompletion(ctx, req)
+	if !errors.Is(err, groq.ErrCompletionStreamNotSupported{}) {
 		t.Fatalf(
 			"CreateCompletion didn't return ErrCompletionStreamNotSupported",
 		)

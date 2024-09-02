@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -25,9 +26,10 @@ func setupGroqTestServer() (
 	ts := server.GroqTestServer()
 	ts.Start()
 	teardown = ts.Close
-	config := groq.DefaultConfig(test.GetTestToken())
-	config.BaseURL = ts.URL + "/v1"
-	client = groq.NewClientWithConfig(config)
+	client, err := groq.NewClient(test.GetTestToken(), groq.WithBaseURL(ts.URL+"/v1"))
+	if err != nil {
+		log.Fatal(err)
+	}
 	return
 }
 
