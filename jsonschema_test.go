@@ -209,3 +209,47 @@ func structToMap(t *testing.T, v any) map[string]any {
 	}
 	return got
 }
+
+// testSchemaStruct is a test struct for testing that a similar structure can be used as a schema.
+//
+// This is used to test that the schema generation works correctly with a minimalist struct.
+type testSchemaStruct struct {
+	Name string `json:"name"`
+	Age  int    `json:"age"`
+}
+
+func TestDefinition_MarshalJSONWithMinimalistStruct(t *testing.T) {
+	tests := []struct {
+		name string
+		def  groq.Definition
+		want string
+	}{
+		{
+			name: "Test with empty Definition",
+			def:  groq.Definition{},
+			want: `{"properties":{}}`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			wantBytes := []byte(tt.want)
+			var want map[string]interface{}
+			err := json.Unmarshal(wantBytes, &want)
+			if err != nil {
+				t.Errorf("Failed to Unmarshal JSON: error = %v", err)
+				return
+			}
+
+			got := structToMap(t, tt.def)
+			gotPtr := structToMap(t, &tt.def)
+
+			if !reflect.DeepEqual(got, want) {
+				t.Errorf("MarshalJSON() got = %v, want %v", got, want)
+			}
+			if !reflect.DeepEqual(gotPtr, want) {
+				t.Errorf("MarshalJSON() gotPtr = %v, want %v", gotPtr, want)
+			}
+		})
+	}
+}

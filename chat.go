@@ -192,7 +192,8 @@ type FunctionCall struct {
 	Arguments string `json:"arguments,omitempty"`
 }
 
-// ChatCompletionResponseFormatType is the chat completion response.
+// ChatCompletionResponseFormatType is the chat completion response format type.
+//
 // string
 type ChatCompletionResponseFormatType string
 
@@ -210,7 +211,7 @@ type ChatCompletionResponseFormatJSONSchema struct {
 	Strict      bool           `json:"strict"`
 }
 
-// ChatCompletionRequest represents a request structure for chat completion API.
+// ChatCompletionRequest represents a request structure for the chat completion API.
 type ChatCompletionRequest struct {
 	Model            string                        `json:"model"`
 	Messages         []ChatCompletionMessage       `json:"messages"`
@@ -359,7 +360,7 @@ type ChatCompletionResponse struct {
 }
 
 // SetHeader sets the header of the response.
-func (r ChatCompletionResponse) SetHeader(h http.Header) {
+func (r *ChatCompletionResponse) SetHeader(h http.Header) {
 	r.Header = h
 }
 

@@ -82,7 +82,7 @@ type AudioResponse struct {
 }
 
 // SetHeader sets the header of the response.
-func (r AudioResponse) SetHeader(header http.Header) {
+func (r *AudioResponse) SetHeader(header http.Header) {
 	r.Header = header
 }
 
