@@ -176,7 +176,7 @@ func TestCreateChatCompletionStreamError(t *testing.T) {
 			dataStr := []string{
 				`{`,
 				`"error": {`,
-				`"message": "Incorrect API key provided: sk-***************************************",`,
+				`"message": "Incorrect API key provided: gsk-***************************************",`,
 				`"type": "invalid_request_error",`,
 				`"param": null,`,
 				`"code": "invalid_api_key"`,
