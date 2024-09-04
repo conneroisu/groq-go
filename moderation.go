@@ -139,7 +139,6 @@ func (c *Client) Moderations(
 	if err != nil {
 		return
 	}
-
 	err = c.sendRequest(req, &response)
 	return
 }

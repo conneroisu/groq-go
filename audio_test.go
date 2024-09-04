@@ -1,144 +1,168 @@
-package groq //nolint:testpackage // testing private field
+package groq_test
 
 import (
 	"bytes"
-	"fmt"
+	"context"
+	"errors"
 	"io"
-	"os"
+	"mime"
+	"mime/multipart"
+	"net/http"
 	"path/filepath"
+	"strings"
 	"testing"
 
+	groq "github.com/conneroisu/groq-go"
 	"github.com/conneroisu/groq-go/internal/test"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAudioWithFailingFormBuilder(t *testing.T) {
-	a := assert.New(t)
-	dir, cleanup := test.CreateTestDirectory(t)
-	defer cleanup()
-	path := filepath.Join(dir, "fake.mp3")
-	test.CreateTestFile(t, path)
+// TestAudio Tests the transcription and translation endpoints of the API using the mocked server.
+func TestAudio(t *testing.T) {
+	client, server, teardown := setupGroqTestServer()
+	defer teardown()
+	server.RegisterHandler("/v1/audio/transcriptions", handleAudioEndpoint)
+	server.RegisterHandler("/v1/audio/translations", handleAudioEndpoint)
 
-	req := AudioRequest{
-		FilePath:    path,
-		Prompt:      "test",
-		Temperature: 0.5,
-		Language:    "en",
-		Format:      AudioResponseFormatSRT,
-		TimestampGranularities: []TranscriptionTimestampGranularity{
-			TranscriptionTimestampGranularitySegment,
-			TranscriptionTimestampGranularityWord,
+	testcases := []struct {
+		name     string
+		createFn func(context.Context, groq.AudioRequest) (groq.AudioResponse, error)
+	}{
+		{
+			"transcribe",
+			client.CreateTranscription,
+		},
+		{
+			"translate",
+			client.CreateTranslation,
 		},
 	}
 
-	mockFailedErr := fmt.Errorf("mock form builder fail")
-	mockBuilder := &mockFormBuilder{}
+	ctx := context.Background()
 
-	mockBuilder.mockCreateFormFile = func(string, *os.File) error {
-		return mockFailedErr
-	}
-	err := audioMultipartForm(req, mockBuilder)
-	a.ErrorIs(
-		err,
-		mockFailedErr,
-		"audioMultipartForm should return error if form builder fails",
-	)
+	dir, cleanup := test.CreateTestDirectory(t)
+	defer cleanup()
 
-	mockBuilder.mockCreateFormFile = func(string, *os.File) error {
-		return nil
-	}
+	a := assert.New(t)
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			path := filepath.Join(dir, "fake.mp3")
+			test.CreateTestFile(t, path)
 
-	var failForField string
-	mockBuilder.mockWriteField = func(fieldname, _ string) error {
-		if fieldname == failForField {
-			return mockFailedErr
-		}
-		return nil
-	}
+			req := groq.AudioRequest{
+				FilePath: path,
+				Model:    "whisper-3",
+			}
+			_, err := tc.createFn(ctx, req)
+			a.NoError(err, "audio API error")
+		})
 
-	failOn := []string{
-		"model",
-		"prompt",
-		"temperature",
-		"language",
-		"response_format",
-		"timestamp_granularities[]",
-	}
-	for _, failingField := range failOn {
-		failForField = failingField
-		mockFailedErr = fmt.Errorf(
-			"mock form builder fail on field %s",
-			failingField,
-		)
-
-		err = audioMultipartForm(req, mockBuilder)
-		a.Error(
-			err,
-			mockFailedErr,
-			"audioMultipartForm should return error if form builder fails",
-		)
+		t.Run(tc.name+" (with reader)", func(t *testing.T) {
+			req := groq.AudioRequest{
+				FilePath: "fake.webm",
+				Reader:   bytes.NewBuffer([]byte(`some webm binary data`)),
+				Model:    "whisper-3",
+			}
+			_, err := tc.createFn(ctx, req)
+			a.NoError(err, "audio API error")
+		})
 	}
 }
 
-func TestCreateFileField(t *testing.T) {
-	a := assert.New(t)
-	t.Run("createFileField failing file", func(t *testing.T) {
-		dir, cleanup := test.CreateTestDirectory(t)
-		defer cleanup()
-		path := filepath.Join(dir, "fake.mp3")
-		test.CreateTestFile(t, path)
+func TestAudioWithOptionalArgs(t *testing.T) {
+	client, server, teardown := setupGroqTestServer()
+	defer teardown()
+	server.RegisterHandler("/v1/audio/transcriptions", handleAudioEndpoint)
+	server.RegisterHandler("/v1/audio/translations", handleAudioEndpoint)
 
-		req := AudioRequest{
-			FilePath: path,
-		}
+	testcases := []struct {
+		name     string
+		createFn func(context.Context, groq.AudioRequest) (groq.AudioResponse, error)
+	}{
+		{
+			"transcribe",
+			client.CreateTranscription,
+		},
+		{
+			"translate",
+			client.CreateTranslation,
+		},
+	}
 
-		mockFailedErr := fmt.Errorf("mock form builder fail")
-		mockBuilder := &mockFormBuilder{
-			mockCreateFormFile: func(string, *os.File) error {
-				return mockFailedErr
-			},
-		}
+	ctx := context.Background()
 
-		err := createFileField(req, mockBuilder)
-		a.ErrorIs(
-			err,
-			mockFailedErr,
-			"createFileField using a file should return error if form builder fails",
-		)
-	})
+	dir, cleanup := test.CreateTestDirectory(t)
+	defer cleanup()
 
-	t.Run("createFileField failing reader", func(t *testing.T) {
-		req := AudioRequest{
-			FilePath: "test.wav",
-			Reader:   bytes.NewBuffer([]byte(`wav test contents`)),
-		}
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			a := assert.New(t)
+			path := filepath.Join(dir, "fake.mp3")
+			test.CreateTestFile(t, path)
 
-		mockFailedErr := fmt.Errorf("mock form builder fail")
-		mockBuilder := &mockFormBuilder{
-			mockCreateFormFileReader: func(string, io.Reader, string) error {
-				return mockFailedErr
-			},
-		}
+			req := groq.AudioRequest{
+				FilePath:    path,
+				Model:       "whisper-3",
+				Prompt:      "用简体中文",
+				Temperature: 0.5,
+				Language:    "zh",
+				Format:      groq.AudioResponseFormatSRT,
+				TimestampGranularities: []groq.TranscriptionTimestampGranularity{
+					groq.TranscriptionTimestampGranularitySegment,
+					groq.TranscriptionTimestampGranularityWord,
+				},
+			}
+			_, err := tc.createFn(ctx, req)
+			a.NoError(err, "audio API error")
+		})
+	}
+}
 
-		err := createFileField(req, mockBuilder)
-		a.ErrorIs(
-			err,
-			mockFailedErr,
-			"createFileField using a reader should return error if form builder fails",
-		)
-	})
+// handleAudioEndpoint Handles the completion endpoint by the test server.
+func handleAudioEndpoint(w http.ResponseWriter, r *http.Request) {
+	var err error
 
-	t.Run("createFileField failing open", func(t *testing.T) {
-		req := AudioRequest{
-			FilePath: "non_existing_file.wav",
-		}
+	// audio endpoints only accept POST requests
+	if r.Method != "POST" {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	}
 
-		mockBuilder := &mockFormBuilder{}
+	mediaType, params, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
+	if err != nil {
+		http.Error(w, "failed to parse media type", http.StatusBadRequest)
+		return
+	}
 
-		err := createFileField(req, mockBuilder)
-		a.Error(
-			err,
-			"createFileField using file should return error when open file fails",
-		)
-	})
+	if !strings.HasPrefix(mediaType, "multipart") {
+		http.Error(w, "request is not multipart", http.StatusBadRequest)
+	}
+
+	boundary, ok := params["boundary"]
+	if !ok {
+		http.Error(w, "no boundary in params", http.StatusBadRequest)
+		return
+	}
+
+	fileData := &bytes.Buffer{}
+	mr := multipart.NewReader(r.Body, boundary)
+	part, err := mr.NextPart()
+	if err != nil && errors.Is(err, io.EOF) {
+		http.Error(w, "error accessing file", http.StatusBadRequest)
+		return
+	}
+	if _, err = io.Copy(fileData, part); err != nil {
+		http.Error(w, "failed to copy file", http.StatusInternalServerError)
+		return
+	}
+
+	if len(fileData.Bytes()) == 0 {
+		w.WriteHeader(http.StatusInternalServerError)
+		http.Error(w, "received empty file data", http.StatusBadRequest)
+		return
+	}
+
+	if _, err = w.Write([]byte(`{"body": "hello"}`)); err != nil {
+		http.Error(w, "failed to write body", http.StatusInternalServerError)
+		return
+	}
 }
