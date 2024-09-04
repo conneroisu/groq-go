@@ -75,16 +75,15 @@ type streamReader[T streamable] struct {
 	response       *http.Response
 	errAccumulator ErrorAccumulator
 
-	http.Header
+	http.Header // Header is the header of the response.
 }
 
 // Recv receives a response from the stream.
 func (stream *streamReader[T]) Recv() (response T, err error) {
 	if stream.isFinished {
 		err = io.EOF
-		return
+		return response, err
 	}
-
 	return stream.processLines()
 }
 

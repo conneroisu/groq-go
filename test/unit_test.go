@@ -17,7 +17,7 @@ func TestTestServer(t *testing.T) {
 	client, err := groq.NewClient(os.Getenv("GROQ_KEY"))
 	a.NoError(err, "NewClient error")
 	strm, err := client.CreateChatCompletionStream(ctx, groq.ChatCompletionRequest{
-		Model: "llama3-70b-8192",
+		Model: groq.Llama3070B8192ToolUsePreview,
 		Messages: []groq.ChatCompletionMessage{
 			{
 				Role:    groq.ChatMessageRoleUser,
@@ -34,6 +34,6 @@ func TestTestServer(t *testing.T) {
 		if errors.Is(err, io.EOF) {
 			break
 		}
-		t.Logf("%+v\n", val)
+		t.Logf("%s\n", val.Choices[0].Delta.Content)
 	}
 }
