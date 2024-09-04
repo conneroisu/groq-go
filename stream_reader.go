@@ -45,7 +45,6 @@ func (stream *streamReader[T]) processLines() (T, error) {
 		emptyMessagesCount uint
 		hasErrorPrefix     bool
 	)
-
 	for {
 		rawLine, readErr := stream.reader.ReadBytes('\n')
 		if readErr != nil || hasErrorPrefix {
@@ -55,7 +54,6 @@ func (stream *streamReader[T]) processLines() (T, error) {
 			}
 			return *new(T), readErr
 		}
-
 		noSpaceLine := bytes.TrimSpace(rawLine)
 		if bytes.HasPrefix(noSpaceLine, errorPrefix) {
 			hasErrorPrefix = true
@@ -75,19 +73,16 @@ func (stream *streamReader[T]) processLines() (T, error) {
 
 			continue
 		}
-
 		noPrefixLine := bytes.TrimPrefix(noSpaceLine, headerData)
 		if string(noPrefixLine) == "[DONE]" {
 			stream.isFinished = true
 			return *new(T), io.EOF
 		}
-
 		var response T
 		unmarshalErr := json.Unmarshal(noPrefixLine, &response)
 		if unmarshalErr != nil {
 			return *new(T), unmarshalErr
 		}
-
 		return response, nil
 	}
 }

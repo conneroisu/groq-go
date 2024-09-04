@@ -13,7 +13,19 @@ import (
 	"github.com/rs/zerolog"
 )
 
+// Format is the format of a response.
+// string
+type Format string
+
 const (
+	// FormatText is the text format. It is the default format of a
+	// response.
+	FormatText Format = "text"
+	// FormatJSON is the JSON format. There is no support for streaming with
+	// JSON format selected.
+	FormatJSON Format = "json"
+
+	// groqAPIURLv1 is the base URL for the Groq API.
 	groqAPIURLv1 = "https://api.groq.com/openai/v1"
 )
 
