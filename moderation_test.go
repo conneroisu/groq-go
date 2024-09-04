@@ -60,7 +60,9 @@ func TestModerationsWithDifferentModelOptions(t *testing.T) {
 		modelOptions,
 		getModerationModelTestOption(
 			groq.Llama3070B8192ToolUsePreview,
-			groq.ErrModerationInvalidModel{Model: groq.Llama3070B8192ToolUsePreview},
+			groq.ErrModerationInvalidModel{
+				Model: groq.Llama3070B8192ToolUsePreview,
+			},
 		),
 		getModerationModelTestOption(groq.ModerationTextStable, nil),
 		getModerationModelTestOption(groq.ModerationTextLatest, nil),

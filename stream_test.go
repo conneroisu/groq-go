@@ -32,7 +32,9 @@ func TestCompletionsStreamWrongModel(t *testing.T) {
 	)
 	if !errors.Is(
 		err,
-		groq.ErrCompletionUnsupportedModel{Model: groq.Llama3070B8192ToolUsePreview},
+		groq.ErrCompletionUnsupportedModel{
+			Model: groq.Llama3070B8192ToolUsePreview,
+		},
 	) {
 		t.Fatalf(
 			"CreateCompletion should return ErrCompletionUnsupportedModel, but returned: %v",

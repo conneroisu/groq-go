@@ -85,9 +85,8 @@ func (r *AudioResponse) SetHeader(header http.Header) {
 
 // audioTextResponse is the response structure for the audio API when the response format is text.
 type audioTextResponse struct {
-	Text string `json:"text"`
-
-	http.Header
+	Text        string `json:"text"` // Text is the text of the response.
+	http.Header        // Header is the header of the response.
 }
 
 func (r *audioTextResponse) SetHeader(header http.Header) {

@@ -1,8 +1,7 @@
-package models
+package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -10,8 +9,20 @@ import (
 )
 
 const (
-	outputFile = "models.go"
+	outputFile    = "models.go"
+	modelsInitURL = "https://console.groq.com/docs/models"
 )
+
+// each model~:
+//
+// Distil-Whisper English
+//
+//     Model ID: distil-whisper-large-v3-en
+//     Developer: HuggingFace
+//     Max File Size: 25 MB
+//     [ Model Card ](https://huggingface.co/distil-whisper-large-v3-en)
+//
+// Need to then go to the huggingface page and take the first tag Text-Generation (Llama) or Automatic-Speech-Recognition (Whisper).
 
 // main is the entry point for the application.
 func main() {
@@ -45,7 +56,7 @@ func run() error {
 	if err != nil {
 		log.Fatal(err)
 	}
-	req.Header.Set("Authorization", "Bearer "+os.Getenv("API_KEY"))
+	req.Header.Set("Authorization", "Bearer "+os.Getenv("GROQ_KEY"))
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := client.Do(req)
 	if err != nil {
@@ -56,7 +67,6 @@ func run() error {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("%s\n", bodyText)
 	var response Response
 	err = json.Unmarshal(bodyText, &response)
 	if err != nil {

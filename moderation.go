@@ -14,7 +14,9 @@ import (
 // If you use text-moderation-stable, we will provide advanced notice before updating the model.
 // Accuracy of text-moderation-stable may be slightly lower than for text-moderation-latest.
 const (
+	// ModerationTextStable is the text-moderation-stable model.
 	ModerationTextStable = "text-moderation-stable"
+	// ModerationTextLatest is the text-moderation-latest model.
 	ModerationTextLatest = "text-moderation-latest"
 )
 

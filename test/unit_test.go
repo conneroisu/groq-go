@@ -16,17 +16,20 @@ func TestTestServer(t *testing.T) {
 	ctx := context.Background()
 	client, err := groq.NewClient(os.Getenv("GROQ_KEY"))
 	a.NoError(err, "NewClient error")
-	strm, err := client.CreateChatCompletionStream(ctx, groq.ChatCompletionRequest{
-		Model: groq.Llama3070B8192ToolUsePreview,
-		Messages: []groq.ChatCompletionMessage{
-			{
-				Role:    groq.ChatMessageRoleUser,
-				Content: "Hello! What is a proface industrial display?",
+	strm, err := client.CreateChatCompletionStream(
+		ctx,
+		groq.ChatCompletionRequest{
+			Model: groq.Llama3070B8192ToolUsePreview,
+			Messages: []groq.ChatCompletionMessage{
+				{
+					Role:    groq.ChatMessageRoleUser,
+					Content: "Hello! What is a proface industrial display?",
+				},
 			},
+			MaxTokens: 90,
+			Stream:    true,
 		},
-		MaxTokens: 90,
-		Stream:    true,
-	})
+	)
 	a.NoError(err, "CreateCompletionStream error")
 
 	for {
