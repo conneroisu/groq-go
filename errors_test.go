@@ -38,7 +38,7 @@ func TestErrorByteWriteErrors(t *testing.T) {
 		Buffer: &test.FailingErrorBuffer{},
 	}
 	err := accumulator.Write([]byte("{"))
-	if !errors.Is(err, test.ErrTestErrorAccumulatorWriteFailed) {
+	if !errors.Is(err, test.ErrTestErrorAccumulatorWriteFailed{}) {
 		t.Fatalf("Did not return error when write failed: %v", err)
 	}
 }

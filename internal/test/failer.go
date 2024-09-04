@@ -1,15 +1,13 @@
 // Package test contains test helpers.
 package test
 
-import "errors"
+// ErrTestErrorAccumulatorWriteFailed is the error returned by the failing
+// error buffer.
+type ErrTestErrorAccumulatorWriteFailed struct{}
 
-var (
-	// ErrTestErrorAccumulatorWriteFailed is the error returned by the failing
-	// error buffer.
-	ErrTestErrorAccumulatorWriteFailed = errors.New(
-		"test error accumulator failed",
-	)
-)
+func (e ErrTestErrorAccumulatorWriteFailed) Error() string {
+	return "test error accumulator failed"
+}
 
 // FailingErrorBuffer is a buffer that always fails to write.
 type FailingErrorBuffer struct{}
@@ -18,7 +16,7 @@ type FailingErrorBuffer struct{}
 //
 // It is used to test the behavior of the error accumulator.
 func (b *FailingErrorBuffer) Write(_ []byte) (n int, err error) {
-	return 0, ErrTestErrorAccumulatorWriteFailed
+	return 0, ErrTestErrorAccumulatorWriteFailed{}
 }
 
 // Len always returns 0.

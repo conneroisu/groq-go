@@ -62,7 +62,7 @@ func TestStreamReaderReturnsErrTestErrorAccumulatorWriteFailed(t *testing.T) {
 	_, err := stream.Recv()
 	a.ErrorIs(
 		err,
-		test.ErrTestErrorAccumulatorWriteFailed,
+		test.ErrTestErrorAccumulatorWriteFailed{},
 		"Did not return error when write failed",
 		err.Error(),
 	)
