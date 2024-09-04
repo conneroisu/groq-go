@@ -31,26 +31,6 @@ type Client struct {
 	EmptyMessagesLimit uint
 }
 
-// fullURL returns full URL for request.
-func (c *Client) fullURL(suffix string, setters ...fullURLOption) string {
-	baseURL := strings.TrimRight(c.baseURL, "/")
-	args := fullURLOptions{}
-	for _, setter := range setters {
-		setter(&args)
-	}
-	return fmt.Sprintf("%s%s", baseURL, suffix)
-}
-
-// Contains returns true if the model is in the list of models.
-func (m *ModelResponse) contains(model string) bool {
-	for _, m := range m.Data {
-		if m.ID == model {
-			return true
-		}
-	}
-	return false
-}
-
 // NewClient creates a new Groq client.
 func NewClient(groqAPIKey string, opts ...Opts) (*Client, error) {
 	c := &Client{
@@ -75,6 +55,26 @@ func NewClient(groqAPIKey string, opts ...Opts) (*Client, error) {
 		opt(c)
 	}
 	return c, nil
+}
+
+// fullURL returns full URL for request.
+func (c *Client) fullURL(suffix string, setters ...fullURLOption) string {
+	baseURL := strings.TrimRight(c.baseURL, "/")
+	args := fullURLOptions{}
+	for _, setter := range setters {
+		setter(&args)
+	}
+	return fmt.Sprintf("%s%s", baseURL, suffix)
+}
+
+// Contains returns true if the model is in the list of models.
+func (m *ModelResponse) contains(model string) bool {
+	for _, m := range m.Data {
+		if m.ID == model {
+			return true
+		}
+	}
+	return false
 }
 
 // GetModels gets the list of models from the Groq API.
@@ -175,7 +175,7 @@ func (c *Client) newRequest(
 	// Default Options
 	args := &requestOptions{
 		body:   nil,
-		header: make(http.Header),
+		header: http.Header{},
 	}
 	for _, setter := range setters {
 		setter(args)

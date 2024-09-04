@@ -51,9 +51,10 @@ type ChatCompletionStream struct {
 }
 
 // CreateChatCompletionStream is an API call to create a chat completion w/ streaming
-// support. It sets whether to stream back partial progress. If set, tokens will be
-// sent as data-only server-sent events as they become available, with the
-// stream terminated by a data: [DONE] message.
+// support.
+//
+// If set, tokens will be sent as data-only server-sent events as they become
+// available, with the stream terminated by a data: [DONE] message.
 func (c *Client) CreateChatCompletionStream(
 	ctx context.Context,
 	request ChatCompletionRequest,

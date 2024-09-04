@@ -36,38 +36,6 @@ type Message struct {
 	Content string `json:"content"`
 }
 
-// Hate represents a hate message.
-type Hate struct {
-	Filtered bool   `json:"filtered"`
-	Severity string `json:"severity,omitempty"`
-}
-
-// SelfHarm represents a self-harm message.
-type SelfHarm struct {
-	Filtered bool   `json:"filtered"`
-	Severity string `json:"severity,omitempty"`
-}
-
-// Sexual represents a sexual message.
-type Sexual struct {
-	Filtered bool   `json:"filtered"`
-	Severity string `json:"severity,omitempty"`
-}
-
-// Violence represents a violence message.
-type Violence struct {
-	Filtered bool   `json:"filtered"`
-	Severity string `json:"severity,omitempty"`
-}
-
-// ContentFilterResults represents the content filter results.
-type ContentFilterResults struct {
-	Hate     Hate     `json:"hate,omitempty"`
-	SelfHarm SelfHarm `json:"self_harm,omitempty"`
-	Sexual   Sexual   `json:"sexual,omitempty"`
-	Violence Violence `json:"violence,omitempty"`
-}
-
 // PromptAnnotation represents the prompt annotation.
 type PromptAnnotation struct {
 	PromptIndex          int                  `json:"prompt_index,omitempty"`
@@ -88,7 +56,7 @@ type ChatMessageImageURL struct {
 // string
 type ChatMessagePartType string
 
-// ChatMessagePart represents the chat message part.
+// ChatMessagePart represents the chat message part of a chat completion message.
 type ChatMessagePart struct {
 	Type     ChatMessagePartType  `json:"type,omitempty"`
 	Text     string               `json:"text,omitempty"`
@@ -146,7 +114,7 @@ func (m ChatCompletionMessage) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON implements the json.Unmarshaler interface.
-func (m *ChatCompletionMessage) UnmarshalJSON(bs []byte) error {
+func (m *ChatCompletionMessage) UnmarshalJSON(bs []byte) (err error) {
 	msg := struct {
 		Role         string `json:"role"`
 		Content      string `json:"content"`
@@ -156,7 +124,8 @@ func (m *ChatCompletionMessage) UnmarshalJSON(bs []byte) error {
 		ToolCalls    []ToolCall    `json:"tool_calls,omitempty"`
 		ToolCallID   string        `json:"tool_call_id,omitempty"`
 	}{}
-	if err := json.Unmarshal(bs, &msg); err == nil {
+	err = json.Unmarshal(bs, &msg)
+	if err == nil {
 		*m = ChatCompletionMessage(msg)
 		return nil
 	}
@@ -169,14 +138,15 @@ func (m *ChatCompletionMessage) UnmarshalJSON(bs []byte) error {
 		ToolCalls    []ToolCall        `json:"tool_calls,omitempty"`
 		ToolCallID   string            `json:"tool_call_id,omitempty"`
 	}{}
-	if err := json.Unmarshal(bs, &multiMsg); err != nil {
+	err = json.Unmarshal(bs, &multiMsg)
+	if err != nil {
 		return err
 	}
 	*m = ChatCompletionMessage(multiMsg)
 	return nil
 }
 
-// ToolCall represents the tool call.
+// ToolCall represents a tool call.
 type ToolCall struct {
 	// Index is not nil only in chat completion chunk object
 	Index    *int         `json:"index,omitempty"`
@@ -185,7 +155,7 @@ type ToolCall struct {
 	Function FunctionCall `json:"function"`
 }
 
-// FunctionCall represents the function call.
+// FunctionCall represents a function call.
 type FunctionCall struct {
 	Name string `json:"name,omitempty"`
 	// call function with arguments in JSON format
@@ -364,32 +334,25 @@ func (r *ChatCompletionResponse) SetHeader(h http.Header) {
 	r.Header = h
 }
 
-// CreateChatCompletion — API call to Create a completion for the chat message.
+// CreateChatCompletion is an API call to create a chat completion.
 func (c *Client) CreateChatCompletion(
 	ctx context.Context,
 	request ChatCompletionRequest,
 ) (response ChatCompletionResponse, err error) {
 	if request.Stream {
-		return response, &ErrChatCompletionStreamNotSupported{
-			model: request.Model,
-		}
+		return response, ErrChatCompletionStreamNotSupported{model: request.Model}
 	}
-
-	urlSuffix := chatCompletionsSuffix
-	if !checkEndpointSupportsModel(urlSuffix, request.Model) {
-		return response, &ErrChatCompletionInvalidModel{model: request.Model}
+	if !checkEndpointSupportsModel(chatCompletionsSuffix, request.Model) {
+		return response, ErrChatCompletionInvalidModel{model: request.Model}
 	}
-
 	req, err := c.newRequest(
 		ctx,
 		http.MethodPost,
-		c.fullURL(urlSuffix, withModel(request.Model)),
-		withBody(request),
-	)
+		c.fullURL(chatCompletionsSuffix, withModel(request.Model)),
+		withBody(request))
 	if err != nil {
-		return
+		return response, err
 	}
 
-	err = c.sendRequest(req, &response)
-	return
+	return response, c.sendRequest(req, &response)
 }

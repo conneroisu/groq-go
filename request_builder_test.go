@@ -8,7 +8,8 @@ import (
 	"testing"
 )
 
-// TestRequestBuilderReturnsRequest  tests the request builder returns a request.
+// TestRequestBuilderReturnsRequest  tests the request builder returns a
+// request.
 func TestRequestBuilderReturnsRequest(t *testing.T) {
 	b := NewRequestBuilder()
 	var (
@@ -32,7 +33,8 @@ func TestRequestBuilderReturnsRequest(t *testing.T) {
 	}
 }
 
-// TestRequestBuilderReturnsRequestWhenRequestOfArgsIsNil tests the request builder returns a request when the request of args is nil.
+// TestRequestBuilderReturnsRequestWhenRequestOfArgsIsNil tests the request
+// builder returns a request when the request of args is nil.
 func TestRequestBuilderReturnsRequestWhenRequestOfArgsIsNil(t *testing.T) {
 	var (
 		ctx     = context.Background()

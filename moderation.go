@@ -43,6 +43,38 @@ type Result struct {
 	Flagged        bool                 `json:"flagged"`
 }
 
+// Hate represents a hate message.
+type Hate struct {
+	Filtered bool   `json:"filtered"`
+	Severity string `json:"severity,omitempty"`
+}
+
+// SelfHarm represents a self-harm message.
+type SelfHarm struct {
+	Filtered bool   `json:"filtered"`
+	Severity string `json:"severity,omitempty"`
+}
+
+// Sexual represents a sexual message.
+type Sexual struct {
+	Filtered bool   `json:"filtered"`
+	Severity string `json:"severity,omitempty"`
+}
+
+// Violence represents a violence message.
+type Violence struct {
+	Filtered bool   `json:"filtered"`
+	Severity string `json:"severity,omitempty"`
+}
+
+// ContentFilterResults represents the content filter results.
+type ContentFilterResults struct {
+	Hate     Hate     `json:"hate,omitempty"`
+	SelfHarm SelfHarm `json:"self_harm,omitempty"`
+	Sexual   Sexual   `json:"sexual,omitempty"`
+	Violence Violence `json:"violence,omitempty"`
+}
+
 // ResultCategories represents Categories of Result.
 type ResultCategories struct {
 	Hate                  bool `json:"hate"`

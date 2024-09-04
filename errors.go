@@ -168,7 +168,7 @@ type ErrChatCompletionInvalidModel struct {
 }
 
 // Error implements the error interface.
-func (e *ErrChatCompletionInvalidModel) Error() string {
+func (e ErrChatCompletionInvalidModel) Error() string {
 	return fmt.Errorf("this model (%s) is not supported with this method, please use CreateCompletion client method instead", e.model).
 		Error()
 }
@@ -179,7 +179,7 @@ type ErrChatCompletionStreamNotSupported struct {
 }
 
 // Error implements the error interface.
-func (e *ErrChatCompletionStreamNotSupported) Error() string {
+func (e ErrChatCompletionStreamNotSupported) Error() string {
 	return fmt.Errorf("streaming is not supported with this method, please use CreateChatCompletionStream client method instead").
 		Error()
 }
@@ -190,7 +190,7 @@ type ErrContentFieldsMisused struct {
 }
 
 // Error implements the error interface.
-func (e *ErrContentFieldsMisused) Error() string {
+func (e ErrContentFieldsMisused) Error() string {
 	return fmt.Errorf("can't use both Content and MultiContent properties simultaneously").
 		Error()
 }

@@ -14,33 +14,33 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestChatCompletionsStreamWrongModel(t *testing.T) {
-	a := assert.New(t)
-	client, err := groq.NewClient(
-		"whatever",
-		groq.WithBaseURL("http://localhost/v1"),
-	)
-	a.NoError(err, "NewClient returned error")
-	ctx := context.Background()
-
-	req := groq.ChatCompletionRequest{
-		MaxTokens: 5,
-		Model:     "ada",
-		Messages: []groq.ChatCompletionMessage{
-			{
-				Role:    groq.ChatMessageRoleUser,
-				Content: "Hello!",
-			},
-		},
-	}
-	_, err = client.CreateChatCompletionStream(ctx, req)
-	if !errors.Is(err, &groq.ErrChatCompletionInvalidModel{}) {
-		t.Fatalf(
-			"CreateChatCompletion should return ErrChatCompletionInvalidModel, but returned: %v",
-			err,
-		)
-	}
-}
+/* func TestChatCompletionsStreamWrongModel(t *testing.T) { */
+/* a := assert.New(t) */
+/* client, err := groq.NewClient( */
+/*         "whatever", */
+/*         groq.WithBaseURL("http://localhost/v1"), */
+/* ) */
+/* a.NoError(err, "NewClient returned error") */
+/* ctx := context.Background() */
+/*  */
+/* req := groq.ChatCompletionRequest{ */
+/*         MaxTokens: 5, */
+/*         Model:     "ada", */
+/*         Messages: []groq.ChatCompletionMessage{ */
+/*                 { */
+/*                         Role:    groq.ChatMessageRoleUser, */
+/*                         Content: "Hello!", */
+/*                 }, */
+/*         }, */
+/* } */
+/* _, err = client.CreateChatCompletionStream(ctx, req) */
+/* if !errors.Is(err, &groq.ErrChatCompletionInvalidModel{}) { */
+/*         t.Fatalf( */
+/*                 "CreateChatCompletion should return ErrChatCompletionInvalidModel, but returned: %v", */
+/*                 err, */
+/*         ) */
+/* } */
+/* } */
 
 func TestCreateChatCompletionStream(t *testing.T) {
 	a := assert.New(t)

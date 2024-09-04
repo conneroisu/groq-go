@@ -40,12 +40,9 @@ type TranscriptionTimestampGranularity string
 
 // AudioRequest represents a request structure for audio API.
 type AudioRequest struct {
-	Model string // Model is the model to use for the transcription.
-
-	FilePath string // FilePath is either an existing file in your filesystem or a filename representing the contents of Reader.
-
-	Reader io.Reader // Reader is an optional io.Reader when you do not want to use an existing file.
-
+	Model                  string                              // Model is the model to use for the transcription.
+	FilePath               string                              // FilePath is either an existing file in your filesystem or a filename representing the contents of Reader.
+	Reader                 io.Reader                           // Reader is an optional io.Reader when you do not want to use an existing file.
 	Prompt                 string                              // Prompt is the prompt for the transcription.
 	Temperature            float32                             // Temperature is the temperature for the transcription.
 	Language               string                              // Language is the language for the transcription. Only for transcription.
@@ -55,30 +52,36 @@ type AudioRequest struct {
 
 // AudioResponse represents a response structure for audio API.
 type AudioResponse struct {
-	Task     string  `json:"task"`
-	Language string  `json:"language"`
-	Duration float64 `json:"duration"`
-	Segments []struct {
-		ID               int     `json:"id"`
-		Seek             int     `json:"seek"`
-		Start            float64 `json:"start"`
-		End              float64 `json:"end"`
-		Text             string  `json:"text"`
-		Tokens           []int   `json:"tokens"`
-		Temperature      float64 `json:"temperature"`
-		AvgLogprob       float64 `json:"avg_logprob"`
-		CompressionRatio float64 `json:"compression_ratio"`
-		NoSpeechProb     float64 `json:"no_speech_prob"`
-		Transient        bool    `json:"transient"`
-	} `json:"segments"`
-	Words []struct {
-		Word  string  `json:"word"`
-		Start float64 `json:"start"`
-		End   float64 `json:"end"`
-	} `json:"words"`
-	Text string `json:"text"`
+	Task     string   `json:"task"`
+	Language string   `json:"language"`
+	Duration float64  `json:"duration"`
+	Segments Segments `json:"segments"`
+	Words    Words    `json:"words"`
+	Text     string   `json:"text"`
 
 	http.Header
+}
+
+// Words is the words of the response.
+type Words []struct {
+	Word  string  `json:"word"`
+	Start float64 `json:"start"`
+	End   float64 `json:"end"`
+}
+
+// Segments is the segments of the response.
+type Segments []struct {
+	ID               int     `json:"id"`
+	Seek             int     `json:"seek"`
+	Start            float64 `json:"start"`
+	End              float64 `json:"end"`
+	Text             string  `json:"text"`
+	Tokens           []int   `json:"tokens"`
+	Temperature      float64 `json:"temperature"`
+	AvgLogprob       float64 `json:"avg_logprob"`
+	CompressionRatio float64 `json:"compression_ratio"`
+	NoSpeechProb     float64 `json:"no_speech_prob"`
+	Transient        bool    `json:"transient"`
 }
 
 // SetHeader sets the header of the response.
@@ -130,7 +133,8 @@ func (c *Client) callAudioAPI(
 	var formBody bytes.Buffer
 	builder := c.createFormBuilder(&formBody)
 
-	if err = audioMultipartForm(request, builder); err != nil {
+	err = audioMultipartForm(request, builder)
+	if err != nil {
 		return AudioResponse{}, err
 	}
 
@@ -227,7 +231,9 @@ func audioMultipartForm(request AudioRequest, b FormBuilder) error {
 }
 
 // createFileField creates the "file" form field from either an existing file or by using the reader.
-func createFileField(request AudioRequest, b FormBuilder) error {
+func createFileField(request AudioRequest, b FormBuilder) (
+	err error,
+) {
 	if request.Reader != nil {
 		err := b.CreateFormFileReader("file", request.Reader, request.FilePath)
 		if err != nil {
@@ -235,17 +241,14 @@ func createFileField(request AudioRequest, b FormBuilder) error {
 		}
 		return nil
 	}
-
 	f, err := os.Open(request.FilePath)
 	if err != nil {
 		return fmt.Errorf("opening audio file: %w", err)
 	}
 	defer f.Close()
-
 	err = b.CreateFormFile("file", f)
 	if err != nil {
 		return fmt.Errorf("creating form file: %w", err)
 	}
-
 	return nil
 }
