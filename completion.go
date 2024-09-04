@@ -5,12 +5,6 @@ import (
 	"net/http"
 )
 
-func checkPromptType(prompt any) bool {
-	_, isString := prompt.(string)
-	_, isStringSlice := prompt.([]string)
-	return isString || isStringSlice
-}
-
 // CompletionRequest represents a request structure for completion API.
 type CompletionRequest struct {
 	Model            string         `json:"model"`                       // Model is the model to use for the completion.
@@ -57,7 +51,7 @@ type CompletionResponse struct {
 	Choices []CompletionChoice `json:"choices"` // Choices is the choices of the completion.
 	Usage   Usage              `json:"usage"`   // Usage is the usage of the completion.
 
-	http.Header
+	http.Header // Header is the header of the response.
 }
 
 // SetHeader sets the header of the response.
@@ -102,4 +96,10 @@ func (c *Client) CreateCompletion(
 
 	err = c.sendRequest(req, &response)
 	return
+}
+
+func checkPromptType(prompt any) bool {
+	_, isString := prompt.(string)
+	_, isStringSlice := prompt.([]string)
+	return isString || isStringSlice
 }

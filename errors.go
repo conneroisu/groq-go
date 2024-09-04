@@ -57,20 +57,12 @@ func (e *DefaultErrorAccumulator) Bytes() (errBytes []byte) {
 }
 
 // APIError provides error information returned by the OpenAI API.
-// InnerError struct is only valid for Azure OpenAI Service.
 type APIError struct {
-	Code           any         `json:"code,omitempty"`
-	Message        string      `json:"message"`
-	Param          *string     `json:"param,omitempty"`
-	Type           string      `json:"type"`
-	HTTPStatusCode int         `json:"-"`
-	InnerError     *InnerError `json:"innererror,omitempty"`
-}
-
-// InnerError Azure Content filtering. Only valid for Azure OpenAI Service.
-type InnerError struct {
-	Code                 string               `json:"code,omitempty"`
-	ContentFilterResults ContentFilterResults `json:"content_filter_result,omitempty"`
+	Code           any     `json:"code,omitempty"`  // Code is the code of the error.
+	Message        string  `json:"message"`         // Message is the message of the error.
+	Param          *string `json:"param,omitempty"` // Param is the param of the error.
+	Type           string  `json:"type"`            // Type is the type of the error.
+	HTTPStatusCode int     `json:"-"`               // HTTPStatusCode is the status code of the error.
 }
 
 // RequestError provides information about generic request errors.
@@ -115,13 +107,6 @@ func (e *APIError) UnmarshalJSON(data []byte) (err error) {
 			return
 		}
 		e.Message = strings.Join(messages, ", ")
-	}
-
-	if _, ok := rawMap["innererror"]; ok {
-		err = json.Unmarshal(rawMap["innererror"], &e.InnerError)
-		if err != nil {
-			return
-		}
 	}
 
 	// optional fields
