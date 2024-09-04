@@ -164,12 +164,17 @@ func (e *RequestError) Unwrap() error {
 
 // ErrChatCompletionInvalidModel is an error that occurs when the model is not supported with the CreateChatCompletion method.
 type ErrChatCompletionInvalidModel struct {
-	model string
+	Model    string
+	Endpoint string
 }
 
 // Error implements the error interface.
 func (e ErrChatCompletionInvalidModel) Error() string {
-	return fmt.Errorf("this model (%s) is not supported with this method, please use CreateCompletion client method instead", e.model).
+	return fmt.Errorf(
+		"this model (%s) is not supported with this method of interaction over %s, please use CreateCompletion client method instead",
+		e.Endpoint,
+		e.Model,
+	).
 		Error()
 }
 

@@ -14,34 +14,37 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-/* func TestChatCompletionsStreamWrongModel(t *testing.T) { */
-/* a := assert.New(t) */
-/* client, err := groq.NewClient( */
-/*         "whatever", */
-/*         groq.WithBaseURL("http://localhost/v1"), */
-/* ) */
-/* a.NoError(err, "NewClient returned error") */
-/* ctx := context.Background() */
-/*  */
-/* req := groq.ChatCompletionRequest{ */
-/*         MaxTokens: 5, */
-/*         Model:     "ada", */
-/*         Messages: []groq.ChatCompletionMessage{ */
-/*                 { */
-/*                         Role:    groq.ChatMessageRoleUser, */
-/*                         Content: "Hello!", */
-/*                 }, */
-/*         }, */
-/* } */
-/* _, err = client.CreateChatCompletionStream(ctx, req) */
-/* if !errors.Is(err, &groq.ErrChatCompletionInvalidModel{}) { */
-/*         t.Fatalf( */
-/*                 "CreateChatCompletion should return ErrChatCompletionInvalidModel, but returned: %v", */
-/*                 err, */
-/*         ) */
-/* } */
-/* } */
+// // TestChatCompletionsStreamInvalidModel tests the CreateChatCompletionStream method with an invalid model.
+//
+//	func TestChatCompletionsStreamInvalidModel(t *testing.T) {
+//	        client, server, teardown := setupGroqTestServer()
+//	        defer teardown()
+//	        server.RegisterHandler(
+//	                "/v1/chat/completions",
+//	                func(w http.ResponseWriter, _ *http.Request) {
+//	                },
+//	        )
+//	        ctx := context.Background()
+//	        req := groq.ChatCompletionRequest{
+//	                MaxTokens: 5,
+//	                Model:     "adaadsf",
+//	                Messages: []groq.ChatCompletionMessage{
+//	                        {
+//	                                Role:    groq.ChatMessageRoleUser,
+//	                                Content: "Hello!",
+//	                        },
+//	                },
+//	        }
+//	        _, err := client.CreateChatCompletionStream(ctx, req)
+//	        if !errors.Is(err, groq.ErrChatCompletionInvalidModel{}) {
+//	                t.Fatalf(
+//	                        "CreateChatCompletionStream should return ErrChatCompletionInvalidModel, but returned: %v",
+//	                        err,
+//	                )
+//	        }
+//	}
 
+// TestCreateChatCompletionStream tests the CreateChatCompletionStream method.
 func TestCreateChatCompletionStream(t *testing.T) {
 	a := assert.New(t)
 	client, server, teardown := setupGroqTestServer()
@@ -75,7 +78,7 @@ func TestCreateChatCompletionStream(t *testing.T) {
 		context.Background(),
 		groq.ChatCompletionRequest{
 			MaxTokens: 5,
-			Model:     groq.GPT3Dot5Turbo,
+			Model:     groq.GPT4o,
 			Messages: []groq.ChatCompletionMessage{
 				{
 					Role:    groq.ChatMessageRoleUser,

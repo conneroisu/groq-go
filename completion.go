@@ -11,6 +11,7 @@ import (
 // GPT3 Models are designed for text-based tasks. For code-specific
 // tasks, please refer to the Codex series of models.
 const (
+	completionsSuffix     = "/completions"
 	chatCompletionsSuffix = "/chat/completions"
 
 	GPT432K0613           = "gpt-4-32k-0613"
@@ -51,7 +52,7 @@ const (
 )
 
 var disabledModelsForEndpoints = map[string]map[string]bool{
-	"/completions": {
+	completionsSuffix: {
 		GPT3Dot5Turbo:        true,
 		GPT3Dot5Turbo0301:    true,
 		GPT3Dot5Turbo0613:    true,
@@ -85,7 +86,7 @@ var disabledModelsForEndpoints = map[string]map[string]bool{
 	},
 }
 
-func checkEndpointSupportsModel(endpoint, model string) bool {
+func endpointSupportsModel(endpoint, model string) bool {
 	return !disabledModelsForEndpoints[endpoint][model]
 }
 
@@ -145,7 +146,7 @@ type CompletionResponse struct {
 }
 
 // SetHeader sets the header of the response.
-func (r CompletionResponse) SetHeader(header http.Header) {
+func (r *CompletionResponse) SetHeader(header http.Header) {
 	r.Header = header
 }
 
@@ -164,7 +165,7 @@ func (c *Client) CreateCompletion(
 	}
 
 	urlSuffix := "/completions"
-	if !checkEndpointSupportsModel(urlSuffix, request.Model) {
+	if !endpointSupportsModel(urlSuffix, request.Model) {
 		err = ErrCompletionUnsupportedModel{}
 		return
 	}

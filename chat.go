@@ -342,10 +342,12 @@ func (c *Client) CreateChatCompletion(
 	request ChatCompletionRequest,
 ) (response ChatCompletionResponse, err error) {
 	if request.Stream {
-		return response, ErrChatCompletionStreamNotSupported{model: request.Model}
+		return response, ErrChatCompletionStreamNotSupported{
+			model: request.Model,
+		}
 	}
-	if !checkEndpointSupportsModel(chatCompletionsSuffix, request.Model) {
-		return response, ErrChatCompletionInvalidModel{model: request.Model}
+	if !endpointSupportsModel(chatCompletionsSuffix, request.Model) {
+		return response, ErrChatCompletionInvalidModel{Model: request.Model}
 	}
 	req, err := c.newRequest(
 		ctx,
@@ -414,8 +416,11 @@ func (c *Client) CreateChatCompletionStream(
 	request ChatCompletionRequest,
 ) (stream *ChatCompletionStream, err error) {
 	urlSuffix := chatCompletionsSuffix
-	if !checkEndpointSupportsModel(urlSuffix, request.Model) {
-		return stream, ErrChatCompletionInvalidModel{model: request.Model}
+	if !endpointSupportsModel(urlSuffix, request.Model) {
+		return stream, ErrChatCompletionInvalidModel{
+			Model:    request.Model,
+			Endpoint: urlSuffix,
+		}
 	}
 	request.Stream = true
 	req, err := c.newRequest(

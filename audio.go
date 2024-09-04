@@ -11,21 +11,14 @@ import (
 
 // Whisper Defines the models provided by OpenAI to use when processing audio with OpenAI.
 const (
-	Whisper1 = "whisper-1"
-	// AudioResponseFormatJSON is the JSON format.
-	AudioResponseFormatJSON AudioResponseFormat = "json"
-	// AudioResponseFormatText is the text format.
-	AudioResponseFormatText AudioResponseFormat = "text"
-	// AudioResponseFormatSRT is the SRT format.
-	AudioResponseFormatSRT AudioResponseFormat = "srt"
-	// AudioResponseFormatVerboseJSON is the verbose JSON format.
-	AudioResponseFormatVerboseJSON AudioResponseFormat = "verbose_json"
-	// AudioResponseFormatVTT is the VTT format.
-	AudioResponseFormatVTT AudioResponseFormat = "vtt"
-	// TranscriptionTimestampGranularityWord is the word timestamp granularity.
-	TranscriptionTimestampGranularityWord TranscriptionTimestampGranularity = "word"
-	// TranscriptionTimestampGranularitySegment is the segment timestamp granularity.
-	TranscriptionTimestampGranularitySegment TranscriptionTimestampGranularity = "segment"
+	Whisper1                                                                   = "whisper-1"    // Whisper1 is the whisper-1 model.
+	AudioResponseFormatJSON                  AudioResponseFormat               = "json"         // AudioResponseFormatJSON is the JSON format.
+	AudioResponseFormatText                  AudioResponseFormat               = "text"         // AudioResponseFormatText is the text format.
+	AudioResponseFormatSRT                   AudioResponseFormat               = "srt"          // AudioResponseFormatSRT is the SRT format.
+	AudioResponseFormatVerboseJSON           AudioResponseFormat               = "verbose_json" // AudioResponseFormatVerboseJSON is the verbose JSON format.
+	AudioResponseFormatVTT                   AudioResponseFormat               = "vtt"          // AudioResponseFormatVTT is the VTT format.
+	TranscriptionTimestampGranularityWord    TranscriptionTimestampGranularity = "word"         // TranscriptionTimestampGranularityWord is the word timestamp granularity.
+	TranscriptionTimestampGranularitySegment TranscriptionTimestampGranularity = "segment"      // TranscriptionTimestampGranularitySegment is the segment timestamp granularity.
 )
 
 // AudioResponseFormat is the response format for the audio API.
@@ -66,24 +59,24 @@ type AudioResponse struct {
 
 // Words is the words of the response.
 type Words []struct {
-	Word  string  `json:"word"`
-	Start float64 `json:"start"`
-	End   float64 `json:"end"`
+	Word  string  `json:"word"`  // Word is the word of the words.
+	Start float64 `json:"start"` // Start is the start of the words.
+	End   float64 `json:"end"`   // End is the end of the words.
 }
 
 // Segments is the segments of the response.
 type Segments []struct {
-	ID               int     `json:"id"`
-	Seek             int     `json:"seek"`
-	Start            float64 `json:"start"`
-	End              float64 `json:"end"`
-	Text             string  `json:"text"`
-	Tokens           []int   `json:"tokens"`
-	Temperature      float64 `json:"temperature"`
-	AvgLogprob       float64 `json:"avg_logprob"`
-	CompressionRatio float64 `json:"compression_ratio"`
-	NoSpeechProb     float64 `json:"no_speech_prob"`
-	Transient        bool    `json:"transient"`
+	ID               int     `json:"id"`                // ID is the ID of the segment.
+	Seek             int     `json:"seek"`              // Seek is the seek of the segment.
+	Start            float64 `json:"start"`             // Start is the start of the segment.
+	End              float64 `json:"end"`               // End is the end of the segment.
+	Text             string  `json:"text"`              // Text is the text of the segment.
+	Tokens           []int   `json:"tokens"`            // Tokens is the tokens of the segment.
+	Temperature      float64 `json:"temperature"`       // Temperature is the temperature of the segment.
+	AvgLogprob       float64 `json:"avg_logprob"`       // AvgLogprob is the avg log prob of the segment.
+	CompressionRatio float64 `json:"compression_ratio"` // CompressionRatio is the compression ratio of the segment.
+	NoSpeechProb     float64 `json:"no_speech_prob"`    // NoSpeechProb is the no speech prob of the segment.
+	Transient        bool    `json:"transient"`         // Transient is the transient of the segment.
 }
 
 // SetHeader sets the header of the response.
