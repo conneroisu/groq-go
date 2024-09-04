@@ -115,7 +115,7 @@ type ModerationResponse struct {
 }
 
 // SetHeader sets the header of the response.
-func (r ModerationResponse) SetHeader(header http.Header) {
+func (r *ModerationResponse) SetHeader(header http.Header) {
 	r.Header = header
 }
 
