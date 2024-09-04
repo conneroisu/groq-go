@@ -3,20 +3,11 @@ package groq //nolint:testpackage // testing private field
 import (
 	"bufio"
 	"bytes"
-	"errors"
 	"testing"
 
 	"github.com/conneroisu/groq-go/internal/test"
 	"github.com/stretchr/testify/assert"
 )
-
-var errTestUnmarshalerFailed = errors.New("test unmarshaler failed")
-
-type failingUnMarshaller struct{}
-
-func (*failingUnMarshaller) Unmarshal(_ []byte, _ any) error {
-	return errTestUnmarshalerFailed
-}
 
 // TestStreamReaderReturnsUnmarshalerErrors tests the stream reader returns an unmarshaler error.
 func TestStreamReaderReturnsUnmarshalerErrors(t *testing.T) {
