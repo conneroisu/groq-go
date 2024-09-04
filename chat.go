@@ -174,7 +174,8 @@ type ChatCompletionResponseFormat struct {
 	JSONSchema *ChatCompletionResponseFormatJSONSchema `json:"json_schema,omitempty"` // JSONSchema is the json schema of the chat completion response format.
 }
 
-// ChatCompletionResponseFormatJSONSchema is the chat completion response format json schema.
+// ChatCompletionResponseFormatJSONSchema is the chat completion response format
+// json schema.
 type ChatCompletionResponseFormatJSONSchema struct {
 	Name        string         `json:"name"`                  // Name is the name of the chat completion response format json schema.
 	Description string         `json:"description,omitempty"` // Description is the description of the chat completion response format json schema.
