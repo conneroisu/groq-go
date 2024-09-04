@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/rs/zerolog"
 )
@@ -360,4 +361,29 @@ func (c *Client) handleErrorResp(resp *http.Response) error {
 
 	errRes.Error.HTTPStatusCode = resp.StatusCode
 	return errRes.Error
+}
+
+// RateLimitHeaders struct represents Groq rate limits headers.
+type RateLimitHeaders struct {
+	LimitRequests     int       `json:"x-ratelimit-limit-requests"`     // LimitRequests is the limit requests of the rate limit headers.
+	LimitTokens       int       `json:"x-ratelimit-limit-tokens"`       // LimitTokens is the limit tokens of the rate limit headers.
+	RemainingRequests int       `json:"x-ratelimit-remaining-requests"` // RemainingRequests is the remaining requests of the rate limit headers.
+	RemainingTokens   int       `json:"x-ratelimit-remaining-tokens"`   // RemainingTokens is the remaining tokens of the rate limit headers.
+	ResetRequests     ResetTime `json:"x-ratelimit-reset-requests"`     // ResetRequests is the reset requests of the rate limit headers.
+	ResetTokens       ResetTime `json:"x-ratelimit-reset-tokens"`       // ResetTokens is the reset tokens of the rate limit headers.
+}
+
+// ResetTime is a time.Time wrapper for the rate limit reset time.
+// string
+type ResetTime string
+
+// String returns the string representation of the ResetTime.
+func (r ResetTime) String() string {
+	return string(r)
+}
+
+// Time returns the time.Time representation of the ResetTime.
+func (r ResetTime) Time() time.Time {
+	d, _ := time.ParseDuration(string(r))
+	return time.Now().Add(d)
 }

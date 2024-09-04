@@ -29,6 +29,7 @@ type streamReader[T streamable] struct {
 	http.Header
 }
 
+// Recv receives a response from the stream.
 func (stream *streamReader[T]) Recv() (response T, err error) {
 	if stream.isFinished {
 		err = io.EOF
