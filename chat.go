@@ -276,18 +276,15 @@ type TopLogProbs struct {
 
 // LogProb represents the probability information for a token.
 type LogProb struct {
-	Token   string  `json:"token"`
-	LogProb float64 `json:"logprob"`
-	Bytes   []byte  `json:"bytes,omitempty"` // Omitting the field if it is null
-	// TopLogProbs is a list of the most likely tokens and their log probability, at this token position.
-	// In rare cases, there may be fewer than the number of requested top_logprobs returned.
-	TopLogProbs []TopLogProbs `json:"top_logprobs"`
+	Token       string        `json:"token"`           // Token is the token of the log prob.
+	LogProb     float64       `json:"logprob"`         // LogProb is the log prob of the log prob.
+	Bytes       []byte        `json:"bytes,omitempty"` // Omitting the field if it is null
+	TopLogProbs []TopLogProbs `json:"top_logprobs"`    // TopLogProbs is a list of the most likely tokens and their log probability, at this token position. In rare cases, there may be fewer than the number of requested top_logprobs returned.
 }
 
 // LogProbs is the top-level structure containing the log probability information.
 type LogProbs struct {
-	// Content is a list of message content tokens with log probability information.
-	Content []LogProb `json:"content"`
+	Content []LogProb `json:"content"` // Content is a list of message content tokens with log probability information.
 }
 
 // FinishReason is the finish reason.
@@ -308,7 +305,8 @@ func (r FinishReason) MarshalJSON() ([]byte, error) {
 type ChatCompletionChoice struct {
 	Index   int                   `json:"index"`   // Index is the index of the choice.
 	Message ChatCompletionMessage `json:"message"` // Message is the chat completion message of the choice.
-	// FinishReason
+	// FinishReason is the finish reason of the choice.
+	//
 	// stop: API returned complete message,
 	// or a message terminated by one of the stop sequences provided via the stop parameter
 	// length: Incomplete model output due to max_tokens parameter or token limit
@@ -395,6 +393,7 @@ type ChatCompletionStreamResponse struct {
 	PromptAnnotations   []PromptAnnotation           `json:"prompt_annotations,omitempty"`    // PromptAnnotations is the prompt annotations for the chat completion stream response.
 	PromptFilterResults []PromptFilterResult         `json:"prompt_filter_results,omitempty"` // PromptFilterResults is the prompt filter results for the chat completion stream response.
 	// Usage is an optional field that will only be present when you set stream_options: {"include_usage": true} in your request.
+	//
 	// When present, it contains a null value except for the last chunk which contains the token usage statistics
 	// for the entire request.
 	Usage *Usage `json:"usage,omitempty"`

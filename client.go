@@ -37,11 +37,11 @@ type Client struct {
 	baseURL            string         // Base URL for the client.
 	client             *http.Client   // Client is the HTTP client to use
 	models             *ModelResponse // Models is the list of models available to the client.
+	EmptyMessagesLimit uint           // EmptyMessagesLimit is the limit for the empty messages.
 	requestBuilder     RequestBuilder
 	requestFormBuilder FormBuilder
 	createFormBuilder  func(body io.Writer) FormBuilder
 	logger             zerolog.Logger // Logger is the logger for the client.
-	EmptyMessagesLimit uint
 }
 
 // NewClient creates a new Groq client.
