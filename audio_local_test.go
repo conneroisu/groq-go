@@ -83,6 +83,7 @@ func TestAudioWithFailingFormBuilder(t *testing.T) {
 func TestCreateFileField(t *testing.T) {
 	a := assert.New(t)
 	t.Run("createFileField failing file", func(t *testing.T) {
+		t.Parallel()
 		dir, cleanup := test.CreateTestDirectory(t)
 		defer cleanup()
 		path := filepath.Join(dir, "fake.mp3")
@@ -108,6 +109,7 @@ func TestCreateFileField(t *testing.T) {
 	})
 
 	t.Run("createFileField failing reader", func(t *testing.T) {
+		t.Parallel()
 		req := AudioRequest{
 			FilePath: "test.wav",
 			Reader:   bytes.NewBuffer([]byte(`wav test contents`)),
@@ -129,12 +131,11 @@ func TestCreateFileField(t *testing.T) {
 	})
 
 	t.Run("createFileField failing open", func(t *testing.T) {
+		t.Parallel()
 		req := AudioRequest{
 			FilePath: "non_existing_file.wav",
 		}
-
 		mockBuilder := &mockFormBuilder{}
-
 		err := createFileField(req, mockBuilder)
 		a.Error(
 			err,

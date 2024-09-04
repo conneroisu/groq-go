@@ -30,13 +30,14 @@ type CompletionStream struct {
 func (c *Client) CreateCompletionStream(
 	ctx context.Context,
 	request CompletionRequest,
-) (stream *CompletionStream, err error) {
+) (*CompletionStream, error) {
+	var err error
 	urlSuffix := "/completions"
 	if !endpointSupportsModel(urlSuffix, request.Model) {
-		return stream, ErrCompletionUnsupportedModel{Model: request.Model}
+		return nil, ErrCompletionUnsupportedModel{Model: request.Model}
 	}
 	if !checkPromptType(request.Prompt) {
-		return stream, ErrCompletionRequestPromptTypeNotSupported{}
+		return nil, ErrCompletionRequestPromptTypeNotSupported{}
 	}
 	request.Stream = true
 	req, err := c.newRequest(
@@ -50,12 +51,11 @@ func (c *Client) CreateCompletionStream(
 	}
 	resp, err := sendRequestStream[CompletionResponse](c, req)
 	if err != nil {
-		return
+		return nil, err
 	}
-	stream = &CompletionStream{
+	return &CompletionStream{
 		streamReader: resp,
-	}
-	return
+	}, nil
 }
 
 var (
@@ -85,8 +85,7 @@ func (stream *streamReader[T]) Recv() (response T, err error) {
 		return
 	}
 
-	response, err = stream.processLines()
-	return
+	return stream.processLines()
 }
 
 //nolint:gocognit

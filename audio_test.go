@@ -51,7 +51,7 @@ func TestAudio(t *testing.T) {
 
 			req := groq.AudioRequest{
 				FilePath: path,
-				Model:    "whisper-3",
+				Model:    "distil-whisper-large-v3-en",
 			}
 			_, err := tc.createFn(ctx, req)
 			a.NoError(err, "audio API error")

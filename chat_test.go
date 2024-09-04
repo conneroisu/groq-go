@@ -58,12 +58,12 @@ func TestCreateChatCompletionStream(t *testing.T) {
 			dataBytes := []byte{}
 			dataBytes = append(dataBytes, []byte("event: message\n")...)
 			//nolint:lll
-			data := `{"id":"1","object":"completion","created":1598069254,"model":"gpt-3.5-turbo","system_fingerprint": "fp_d9767fc5b9","choices":[{"index":0,"delta":{"content":"response1"},"finish_reason":"max_tokens"}]}`
+			data := `{"id":"1","object":"completion","created":1598069254,"model":"llama3-groq-70b-8192-tool-use-preview","system_fingerprint": "fp_d9767fc5b9","choices":[{"index":0,"delta":{"content":"response1"},"finish_reason":"max_tokens"}]}`
 			dataBytes = append(dataBytes, []byte("data: "+data+"\n\n")...)
 
 			dataBytes = append(dataBytes, []byte("event: message\n")...)
 			//nolint:lll
-			data = `{"id":"2","object":"completion","created":1598069255,"model":"gpt-3.5-turbo","system_fingerprint": "fp_d9767fc5b9","choices":[{"index":0,"delta":{"content":"response2"},"finish_reason":"max_tokens"}]}`
+			data = `{"id":"2","object":"completion","created":1598069255,"model":"llama3-groq-70b-8192-tool-use-preview","system_fingerprint": "fp_d9767fc5b9","choices":[{"index":0,"delta":{"content":"response2"},"finish_reason":"max_tokens"}]}`
 			dataBytes = append(dataBytes, []byte("data: "+data+"\n\n")...)
 
 			dataBytes = append(dataBytes, []byte("event: done\n")...)
@@ -78,7 +78,7 @@ func TestCreateChatCompletionStream(t *testing.T) {
 		context.Background(),
 		groq.ChatCompletionRequest{
 			MaxTokens: 5,
-			Model:     groq.GPT4o,
+			Model:     groq.Llama3070B8192ToolUsePreview,
 			Messages: []groq.ChatCompletionMessage{
 				{
 					Role:    groq.ChatMessageRoleUser,
@@ -96,7 +96,7 @@ func TestCreateChatCompletionStream(t *testing.T) {
 			ID:                "1",
 			Object:            "completion",
 			Created:           1598069254,
-			Model:             groq.GPT3Dot5Turbo,
+			Model:             groq.Llama3070B8192ToolUsePreview,
 			SystemFingerprint: "fp_d9767fc5b9",
 			Choices: []groq.ChatCompletionStreamChoice{
 				{
@@ -111,7 +111,7 @@ func TestCreateChatCompletionStream(t *testing.T) {
 			ID:                "2",
 			Object:            "completion",
 			Created:           1598069255,
-			Model:             groq.GPT3Dot5Turbo,
+			Model:             groq.Llama3070B8192ToolUsePreview,
 			SystemFingerprint: "fp_d9767fc5b9",
 			Choices: []groq.ChatCompletionStreamChoice{
 				{
@@ -141,6 +141,11 @@ func TestCreateChatCompletionStream(t *testing.T) {
 	}
 
 	_, streamErr := stream.Recv()
+	if !errors.Is(streamErr, io.EOF) {
+		t.Errorf("stream.Recv() did not return EOF in the end: %v", streamErr)
+	}
+
+	_, streamErr = stream.Recv()
 	if !errors.Is(streamErr, io.EOF) {
 		t.Errorf("stream.Recv() did not return EOF in the end: %v", streamErr)
 	}
@@ -196,7 +201,7 @@ func TestCreateChatCompletionStreamError(t *testing.T) {
 		context.Background(),
 		groq.ChatCompletionRequest{
 			MaxTokens: 5,
-			Model:     groq.GPT3Dot5Turbo,
+			Model:     groq.Llama3070B8192ToolUsePreview,
 			Messages: []groq.ChatCompletionMessage{
 				{
 					Role:    groq.ChatMessageRoleUser,
@@ -247,7 +252,7 @@ func TestCreateChatCompletionStreamWithHeaders(t *testing.T) {
 		context.Background(),
 		groq.ChatCompletionRequest{
 			MaxTokens: 5,
-			Model:     groq.GPT3Dot5Turbo,
+			Model:     groq.Llama3070B8192ToolUsePreview,
 			Messages: []groq.ChatCompletionMessage{
 				{
 					Role:    groq.ChatMessageRoleUser,
@@ -307,7 +312,7 @@ func TestCreateChatCompletionStreamWithRatelimitHeaders(t *testing.T) {
 		context.Background(),
 		groq.ChatCompletionRequest{
 			MaxTokens: 5,
-			Model:     groq.GPT3Dot5Turbo,
+			Model:     groq.Llama3070B8192ToolUsePreview,
 			Messages: []groq.ChatCompletionMessage{
 				{
 					Role:    groq.ChatMessageRoleUser,
@@ -369,7 +374,7 @@ func TestCreateChatCompletionStreamErrorWithDataPrefix(t *testing.T) {
 		context.Background(),
 		groq.ChatCompletionRequest{
 			MaxTokens: 5,
-			Model:     groq.GPT3Dot5Turbo,
+			Model:     groq.Llama3070B8192ToolUsePreview,
 			Messages: []groq.ChatCompletionMessage{
 				{
 					Role:    groq.ChatMessageRoleUser,
@@ -417,7 +422,7 @@ func TestCreateChatCompletionStreamRateLimitError(t *testing.T) {
 		context.Background(),
 		groq.ChatCompletionRequest{
 			MaxTokens: 5,
-			Model:     groq.GPT3Dot5Turbo,
+			Model:     groq.Llama3070B8192ToolUsePreview,
 			Messages: []groq.ChatCompletionMessage{
 				{
 					Role:    groq.ChatMessageRoleUser,
@@ -449,15 +454,15 @@ func TestCreateChatCompletionStreamStreamOptions(t *testing.T) {
 			// Send test responses
 			var dataBytes []byte
 			//nolint:lll
-			data := `{"id":"1","object":"completion","created":1598069254,"model":"gpt-3.5-turbo","system_fingerprint": "fp_d9767fc5b9","choices":[{"index":0,"delta":{"content":"response1"},"finish_reason":"max_tokens"}],"usage":null}`
+			data := `{"id":"1","object":"completion","created":1598069254,"model":"llama3-groq-70b-8192-tool-use-preview","system_fingerprint": "fp_d9767fc5b9","choices":[{"index":0,"delta":{"content":"response1"},"finish_reason":"max_tokens"}],"usage":null}`
 			dataBytes = append(dataBytes, []byte("data: "+data+"\n\n")...)
 
 			//nolint:lll
-			data = `{"id":"2","object":"completion","created":1598069255,"model":"gpt-3.5-turbo","system_fingerprint": "fp_d9767fc5b9","choices":[{"index":0,"delta":{"content":"response2"},"finish_reason":"max_tokens"}],"usage":null}`
+			data = `{"id":"2","object":"completion","created":1598069255,"model":"llama3-groq-70b-8192-tool-use-preview","system_fingerprint": "fp_d9767fc5b9","choices":[{"index":0,"delta":{"content":"response2"},"finish_reason":"max_tokens"}],"usage":null}`
 			dataBytes = append(dataBytes, []byte("data: "+data+"\n\n")...)
 
 			//nolint:lll
-			data = `{"id":"3","object":"completion","created":1598069256,"model":"gpt-3.5-turbo","system_fingerprint": "fp_d9767fc5b9","choices":[],"usage":{"prompt_tokens":1,"completion_tokens":1,"total_tokens":2}}`
+			data = `{"id":"3","object":"completion","created":1598069256,"model":"llama3-groq-70b-8192-tool-use-preview","system_fingerprint": "fp_d9767fc5b9","choices":[],"usage":{"prompt_tokens":1,"completion_tokens":1,"total_tokens":2}}`
 			dataBytes = append(dataBytes, []byte("data: "+data+"\n\n")...)
 
 			dataBytes = append(dataBytes, []byte("data: [DONE]\n\n")...)
@@ -471,7 +476,7 @@ func TestCreateChatCompletionStreamStreamOptions(t *testing.T) {
 		context.Background(),
 		groq.ChatCompletionRequest{
 			MaxTokens: 5,
-			Model:     groq.GPT3Dot5Turbo,
+			Model:     groq.Llama3070B8192ToolUsePreview,
 			Messages: []groq.ChatCompletionMessage{
 				{
 					Role:    groq.ChatMessageRoleUser,
@@ -486,13 +491,12 @@ func TestCreateChatCompletionStreamStreamOptions(t *testing.T) {
 	)
 	a.NoError(err, "CreateCompletionStream returned error")
 	defer stream.Close()
-
 	expectedResponses := []groq.ChatCompletionStreamResponse{
 		{
 			ID:                "1",
 			Object:            "completion",
 			Created:           1598069254,
-			Model:             groq.GPT3Dot5Turbo,
+			Model:             groq.Llama3070B8192ToolUsePreview,
 			SystemFingerprint: "fp_d9767fc5b9",
 			Choices: []groq.ChatCompletionStreamChoice{
 				{
@@ -507,7 +511,7 @@ func TestCreateChatCompletionStreamStreamOptions(t *testing.T) {
 			ID:                "2",
 			Object:            "completion",
 			Created:           1598069255,
-			Model:             groq.GPT3Dot5Turbo,
+			Model:             groq.Llama3070B8192ToolUsePreview,
 			SystemFingerprint: "fp_d9767fc5b9",
 			Choices: []groq.ChatCompletionStreamChoice{
 				{
@@ -522,7 +526,7 @@ func TestCreateChatCompletionStreamStreamOptions(t *testing.T) {
 			ID:                "3",
 			Object:            "completion",
 			Created:           1598069256,
-			Model:             groq.GPT3Dot5Turbo,
+			Model:             groq.Llama3070B8192ToolUsePreview,
 			SystemFingerprint: "fp_d9767fc5b9",
 			Choices:           []groq.ChatCompletionStreamChoice{},
 			Usage: &groq.Usage{
@@ -534,11 +538,14 @@ func TestCreateChatCompletionStreamStreamOptions(t *testing.T) {
 	}
 
 	for ix, expectedResponse := range expectedResponses {
+		ix++
 		b, _ := json.Marshal(expectedResponse)
 		t.Logf("%d: %s", ix, string(b))
 
 		receivedResponse, streamErr := stream.Recv()
-		a.NoError(streamErr, "stream.Recv() failed")
+		if !errors.Is(streamErr, io.EOF) {
+			a.NoError(streamErr, "stream.Recv() failed")
+		}
 		if !compareChatResponses(expectedResponse, receivedResponse) {
 			t.Errorf(
 				"Stream response %v is %v, expected %v",

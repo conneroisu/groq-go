@@ -11,7 +11,6 @@ import (
 
 // Whisper Defines the models provided by OpenAI to use when processing audio with OpenAI.
 const (
-	Whisper1                                                                   = "whisper-1"    // Whisper1 is the whisper-1 model.
 	AudioResponseFormatJSON                  AudioResponseFormat               = "json"         // AudioResponseFormatJSON is the JSON format.
 	AudioResponseFormatText                  AudioResponseFormat               = "text"         // AudioResponseFormatText is the text format.
 	AudioResponseFormatSRT                   AudioResponseFormat               = "srt"          // AudioResponseFormatSRT is the SRT format.

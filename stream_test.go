@@ -27,12 +27,12 @@ func TestCompletionsStreamWrongModel(t *testing.T) {
 		context.Background(),
 		groq.CompletionRequest{
 			MaxTokens: 5,
-			Model:     groq.GPT432K,
+			Model:     groq.Llama3070B8192ToolUsePreview,
 		},
 	)
 	if !errors.Is(
 		err,
-		groq.ErrCompletionUnsupportedModel{Model: groq.GPT432K},
+		groq.ErrCompletionUnsupportedModel{Model: groq.Llama3070B8192ToolUsePreview},
 	) {
 		t.Fatalf(
 			"CreateCompletion should return ErrCompletionUnsupportedModel, but returned: %v",

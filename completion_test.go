@@ -29,7 +29,7 @@ func TestCompletionsWrongModel(t *testing.T) {
 		context.Background(),
 		groq.CompletionRequest{
 			MaxTokens: 5,
-			Model:     groq.GPT3Dot5Turbo,
+			Model:     groq.Llama3070B8192ToolUsePreview,
 		},
 	)
 	if !errors.Is(err, groq.ErrCompletionUnsupportedModel{}) {

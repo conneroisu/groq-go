@@ -387,3 +387,53 @@ func (r ResetTime) Time() time.Time {
 	d, _ := time.ParseDuration(string(r))
 	return time.Now().Add(d)
 }
+
+// GPT3 Defines the models provided by OpenAI to use when generating
+// completions from OpenAI.
+//
+// GPT3 Models are designed for text-based tasks. For code-specific
+// tasks, please refer to the Codex series of models.
+const (
+	completionsSuffix     = "/completions"
+	chatCompletionsSuffix = "/chat/completions"
+	transcriptionsSuffix  = "/audio/transcriptions"
+	translationsSuffix    = "/audio/translations"
+
+	Gemma209B                    = "gemma2-9b-it"
+	Gemma207B                    = "gemma-7b-it"
+	Llama3070B8192ToolUsePreview = "llama3-groq-70b-8192-tool-use-preview"
+	Llama308B8192ToolUsePreview  = "llama3-groq-8b-8192-tool-use-preview"
+	WhisperLargeV3               = "whisper-large-v3"
+	WhisperDistilledLargeV3      = "distil-whisper-large-v3-en"
+)
+
+var disabledModelsForEndpoints = map[string]map[string]bool{
+	completionsSuffix: {
+		Llama3070B8192ToolUsePreview: true,
+		Llama308B8192ToolUsePreview:  true,
+		WhisperLargeV3:               true,
+		WhisperDistilledLargeV3:      true,
+		Gemma209B:                    true,
+		Gemma207B:                    true,
+	},
+	chatCompletionsSuffix: {
+		WhisperLargeV3:          true,
+		WhisperDistilledLargeV3: true,
+	},
+	transcriptionsSuffix: {
+		Llama3070B8192ToolUsePreview: true,
+		Llama308B8192ToolUsePreview:  true,
+		Gemma209B:                    true,
+		Gemma207B:                    true,
+	},
+	translationsSuffix: {
+		Llama3070B8192ToolUsePreview: true,
+		Llama308B8192ToolUsePreview:  true,
+		Gemma209B:                    true,
+		Gemma207B:                    true,
+	},
+}
+
+func endpointSupportsModel(endpoint, model string) bool {
+	return !disabledModelsForEndpoints[endpoint][model]
+}

@@ -2,7 +2,7 @@ package groq
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"net/http"
 )
 
@@ -18,12 +18,18 @@ const (
 	ModerationTextLatest = "text-moderation-latest"
 )
 
-var (
-	// ErrModerationInvalidModel is returned when the model is not supported with the moderation endpoint.
-	ErrModerationInvalidModel = errors.New(
-		"this model is not supported with moderation, please use text-moderation-stable or text-moderation-latest instead",
-	) //nolint:lll
-)
+// ErrModerationInvalidModel is returned when the model is not supported with the moderation endpoint.
+type ErrModerationInvalidModel struct {
+	Model string
+}
+
+// Error implements the error interface.
+func (e ErrModerationInvalidModel) Error() string {
+	return fmt.Sprintf(
+		"this model (%s) is not supported with moderation, please use text-moderation-stable or text-moderation-latest instead",
+		e.Model,
+	)
+}
 
 var validModerationModel = map[string]struct{}{
 	ModerationTextStable: {},
@@ -32,15 +38,15 @@ var validModerationModel = map[string]struct{}{
 
 // ModerationRequest represents a request structure for moderation API.
 type ModerationRequest struct {
-	Input string `json:"input,omitempty"`
-	Model string `json:"model,omitempty"`
+	Input string `json:"input,omitempty"` // Input is the input text to be moderated.
+	Model string `json:"model,omitempty"` // Model is the model to use for the moderation.
 }
 
 // Result represents one of possible moderation results.
 type Result struct {
-	Categories     ResultCategories     `json:"categories"`
-	CategoryScores ResultCategoryScores `json:"category_scores"`
-	Flagged        bool                 `json:"flagged"`
+	Categories     ResultCategories     `json:"categories"`      // Categories is the categories of the result.
+	CategoryScores ResultCategoryScores `json:"category_scores"` // CategoryScores is the category scores of the result.
+	Flagged        bool                 `json:"flagged"`         // Flagged is the flagged of the result.
 }
 
 // Hate represents a hate message.
@@ -51,8 +57,8 @@ type Hate struct {
 
 // SelfHarm represents a self-harm message.
 type SelfHarm struct {
-	Filtered bool   `json:"filtered"`
-	Severity string `json:"severity,omitempty"`
+	Filtered bool   `json:"filtered"`           // Filtered is the filtered of the self-harm message.
+	Severity string `json:"severity,omitempty"` // Severity is the severity of the self-harm message.
 }
 
 // Sexual represents a sexual message.
@@ -107,11 +113,11 @@ type ResultCategoryScores struct {
 
 // ModerationResponse represents a response structure for moderation API.
 type ModerationResponse struct {
-	ID      string   `json:"id"`
-	Model   string   `json:"model"`
-	Results []Result `json:"results"`
+	ID      string   `json:"id"`      // ID is the ID of the response.
+	Model   string   `json:"model"`   // Model is the model of the response.
+	Results []Result `json:"results"` // Results is the results of the response.
 
-	http.Header
+	http.Header // Header is the header of the response.
 }
 
 // SetHeader sets the header of the response.
@@ -127,7 +133,7 @@ func (c *Client) Moderations(
 ) (response ModerationResponse, err error) {
 	if _, ok := validModerationModel[request.Model]; len(request.Model) > 0 &&
 		!ok {
-		err = ErrModerationInvalidModel
+		err = ErrModerationInvalidModel{Model: request.Model}
 		return
 	}
 	req, err := c.newRequest(
