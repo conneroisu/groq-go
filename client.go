@@ -46,6 +46,7 @@ func NewClient(groqAPIKey string, opts ...Opts) (*Client, error) {
 		createFormBuilder: func(body io.Writer) FormBuilder {
 			return NewFormBuilder(body)
 		},
+		requestBuilder: NewRequestBuilder(),
 	}
 	err := c.GetModels()
 	if err != nil {

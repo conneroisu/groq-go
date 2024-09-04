@@ -29,15 +29,15 @@ type PromptFilterResult struct {
 
 // ChatCompletionStreamResponse represents a response structure for chat completion API.
 type ChatCompletionStreamResponse struct {
-	ID                  string                       `json:"id"`
-	Object              string                       `json:"object"`
-	Created             int64                        `json:"created"`
-	Model               string                       `json:"model"`
-	Choices             []ChatCompletionStreamChoice `json:"choices"`
-	SystemFingerprint   string                       `json:"system_fingerprint"`
-	PromptAnnotations   []PromptAnnotation           `json:"prompt_annotations,omitempty"`
-	PromptFilterResults []PromptFilterResult         `json:"prompt_filter_results,omitempty"`
-	// An optional field that will only be present when you set stream_options: {"include_usage": true} in your request.
+	ID                  string                       `json:"id"`                              // ID is the identifier for the chat completion stream response.
+	Object              string                       `json:"object"`                          // Object is the object type of the chat completion stream response.
+	Created             int64                        `json:"created"`                         // Created is the creation time of the chat completion stream response.
+	Model               string                       `json:"model"`                           // Model is the model used for the chat completion stream response.
+	Choices             []ChatCompletionStreamChoice `json:"choices"`                         // Choices is the choices for the chat completion stream response.
+	SystemFingerprint   string                       `json:"system_fingerprint"`              // SystemFingerprint is the system fingerprint for the chat completion stream response.
+	PromptAnnotations   []PromptAnnotation           `json:"prompt_annotations,omitempty"`    // PromptAnnotations is the prompt annotations for the chat completion stream response.
+	PromptFilterResults []PromptFilterResult         `json:"prompt_filter_results,omitempty"` // PromptFilterResults is the prompt filter results for the chat completion stream response.
+	// Usage is an optional field that will only be present when you set stream_options: {"include_usage": true} in your request.
 	// When present, it contains a null value except for the last chunk which contains the token usage statistics
 	// for the entire request.
 	Usage *Usage `json:"usage,omitempty"`
@@ -61,9 +61,8 @@ func (c *Client) CreateChatCompletionStream(
 ) (stream *ChatCompletionStream, err error) {
 	urlSuffix := chatCompletionsSuffix
 	if !checkEndpointSupportsModel(urlSuffix, request.Model) {
-		return stream, &ErrChatCompletionInvalidModel{model: request.Model}
+		return stream, ErrChatCompletionInvalidModel{model: request.Model}
 	}
-
 	request.Stream = true
 	req, err := c.newRequest(
 		ctx,
@@ -74,7 +73,6 @@ func (c *Client) CreateChatCompletionStream(
 	if err != nil {
 		return nil, err
 	}
-
 	resp, err := sendRequestStream[ChatCompletionStreamResponse](c, req)
 	if err != nil {
 		return

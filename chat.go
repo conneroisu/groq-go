@@ -7,27 +7,27 @@ import (
 )
 
 const (
-	url                                                                         = "https://api.groq.com/openai/v1/chat/completions"
-	ChatMessageRoleSystem                                                       = "system"         // ChatMessageRoleSystem is the system chat message role.
-	ChatMessageRoleUser                                                         = "user"           // ChatMessageRoleUser is the user chat message role.
-	ChatMessageRoleAssistant                                                    = "assistant"      // ChatMessageRoleAssistant is the assistant chat message role.
-	ChatMessageRoleFunction                                                     = "function"       // ChatMessageRoleFunction is the function chat message role.
-	ChatMessageRoleTool                                                         = "tool"           // ChatMessageRoleTool is the tool chat message role.
-	ImageURLDetailHigh                         ImageURLDetail                   = "high"           // ImageURLDetailHigh is the high image url detail.
-	ImageURLDetailLow                          ImageURLDetail                   = "low"            // ImageURLDetailLow is the low image url detail.
-	ImageURLDetailAuto                         ImageURLDetail                   = "auto"           // ImageURLDetailAuto is the auto image url detail.
-	ChatMessagePartTypeText                    ChatMessagePartType              = "text"           // ChatMessagePartTypeText is the text chat message part type.
-	ChatMessagePartTypeImageURL                ChatMessagePartType              = "image_url"      // ChatMessagePartTypeImageURL is the image url chat message part type.
-	ChatCompletionResponseFormatTypeJSONObject ChatCompletionResponseFormatType = "json_object"    // ChatCompletionResponseFormatTypeJSONObject is the json object chat completion response format type.
-	ChatCompletionResponseFormatTypeJSONSchema ChatCompletionResponseFormatType = "json_schema"    // ChatCompletionResponseFormatTypeJSONSchema is the json schema chat completion response format type.
-	ChatCompletionResponseFormatTypeText       ChatCompletionResponseFormatType = "text"           // ChatCompletionResponseFormatTypeText is the text chat completion response format type.
-	ToolTypeFunction                           ToolType                         = "function"       // ToolTypeFunction is the function tool type.
-	FinishReasonStop                           FinishReason                     = "stop"           // FinishReasonStop is the stop finish reason.
-	FinishReasonLength                         FinishReason                     = "length"         // FinishReasonLength is the length finish reason.
-	FinishReasonFunctionCall                   FinishReason                     = "function_call"  // FinishReasonFunctionCall is the function call finish reason.
-	FinishReasonToolCalls                      FinishReason                     = "tool_calls"     // FinishReasonToolCalls is the tool calls finish reason.
-	FinishReasonContentFilter                  FinishReason                     = "content_filter" // FinishReasonContentFilter is the content filter finish reason.
-	FinishReasonNull                           FinishReason                     = "null"           // FinishReasonNull is the null finish reason.
+	url                                                                         = "https://api.groq.com/openai/v1/chat/completions" // url is the url of the chat completions endpoint.
+	ChatMessageRoleSystem                                                       = "system"                                          // ChatMessageRoleSystem is the system chat message role.
+	ChatMessageRoleUser                                                         = "user"                                            // ChatMessageRoleUser is the user chat message role.
+	ChatMessageRoleAssistant                                                    = "assistant"                                       // ChatMessageRoleAssistant is the assistant chat message role.
+	ChatMessageRoleFunction                                                     = "function"                                        // ChatMessageRoleFunction is the function chat message role.
+	ChatMessageRoleTool                                                         = "tool"                                            // ChatMessageRoleTool is the tool chat message role.
+	ImageURLDetailHigh                         ImageURLDetail                   = "high"                                            // ImageURLDetailHigh is the high image url detail.
+	ImageURLDetailLow                          ImageURLDetail                   = "low"                                             // ImageURLDetailLow is the low image url detail.
+	ImageURLDetailAuto                         ImageURLDetail                   = "auto"                                            // ImageURLDetailAuto is the auto image url detail.
+	ChatMessagePartTypeText                    ChatMessagePartType              = "text"                                            // ChatMessagePartTypeText is the text chat message part type.
+	ChatMessagePartTypeImageURL                ChatMessagePartType              = "image_url"                                       // ChatMessagePartTypeImageURL is the image url chat message part type.
+	ChatCompletionResponseFormatTypeJSONObject ChatCompletionResponseFormatType = "json_object"                                     // ChatCompletionResponseFormatTypeJSONObject is the json object chat completion response format type.
+	ChatCompletionResponseFormatTypeJSONSchema ChatCompletionResponseFormatType = "json_schema"                                     // ChatCompletionResponseFormatTypeJSONSchema is the json schema chat completion response format type.
+	ChatCompletionResponseFormatTypeText       ChatCompletionResponseFormatType = "text"                                            // ChatCompletionResponseFormatTypeText is the text chat completion response format type.
+	ToolTypeFunction                           ToolType                         = "function"                                        // ToolTypeFunction is the function tool type.
+	FinishReasonStop                           FinishReason                     = "stop"                                            // FinishReasonStop is the stop finish reason.
+	FinishReasonLength                         FinishReason                     = "length"                                          // FinishReasonLength is the length finish reason.
+	FinishReasonFunctionCall                   FinishReason                     = "function_call"                                   // FinishReasonFunctionCall is the function call finish reason.
+	FinishReasonToolCalls                      FinishReason                     = "tool_calls"                                      // FinishReasonToolCalls is the tool calls finish reason.
+	FinishReasonContentFilter                  FinishReason                     = "content_filter"                                  // FinishReasonContentFilter is the content filter finish reason.
+	FinishReasonNull                           FinishReason                     = "null"                                            // FinishReasonNull is the null finish reason.
 )
 
 // Message is a message in a chat request.
@@ -43,6 +43,7 @@ type PromptAnnotation struct {
 }
 
 // ImageURLDetail is the image url detail.
+//
 // string
 type ImageURLDetail string
 
@@ -65,9 +66,9 @@ type ChatMessagePart struct {
 
 // ChatCompletionMessage represents the chat completion message.
 type ChatCompletionMessage struct {
-	Role         string `json:"role"`
-	Content      string `json:"content"`
-	MultiContent []ChatMessagePart
+	Role         string            `json:"role"`    // Role is the role of the chat completion message.
+	Content      string            `json:"content"` // Content is the content of the chat completion message.
+	MultiContent []ChatMessagePart // MultiContent is the multi content of the chat completion message.
 
 	// This property isn't in the official documentation, but it's in
 	// the documentation for the official library for python:
@@ -75,12 +76,13 @@ type ChatCompletionMessage struct {
 	// - https://github.com/openai/openai-cookbook/blob/main/examples/How_to_count_tokens_with_tiktoken.ipynb
 	Name string `json:"name,omitempty"`
 
+	// FunctionCall setting for Role=assistant prompts this may be set to the function call generated by the model.
 	FunctionCall *FunctionCall `json:"function_call,omitempty"`
 
-	// For Role=assistant prompts this may be set to the tool calls generated by the model, such as function calls.
+	// ToolCalls setting for Role=assistant prompts this may be set to the tool calls generated by the model, such as function calls.
 	ToolCalls []ToolCall `json:"tool_calls,omitempty"`
 
-	// For Role=tool prompts this should be set to the ID given in the assistant's prior request to call a tool.
+	// ToolCallID is setting for Role=tool prompts this should be set to the ID given in the assistant's prior request to call a tool.
 	ToolCallID string `json:"tool_call_id,omitempty"`
 }
 
@@ -149,17 +151,16 @@ func (m *ChatCompletionMessage) UnmarshalJSON(bs []byte) (err error) {
 // ToolCall represents a tool call.
 type ToolCall struct {
 	// Index is not nil only in chat completion chunk object
-	Index    *int         `json:"index,omitempty"`
-	ID       string       `json:"id"`
-	Type     ToolType     `json:"type"`
-	Function FunctionCall `json:"function"`
+	Index    *int         `json:"index,omitempty"` // Index is the index of the tool call.
+	ID       string       `json:"id"`              // ID is the id of the tool call.
+	Type     ToolType     `json:"type"`            // Type is the type of the tool call.
+	Function FunctionCall `json:"function"`        // Function is the function of the tool call.
 }
 
 // FunctionCall represents a function call.
 type FunctionCall struct {
-	Name string `json:"name,omitempty"`
-	// call function with arguments in JSON format
-	Arguments string `json:"arguments,omitempty"`
+	Name      string `json:"name,omitempty"`      // Name is the name of the function call.
+	Arguments string `json:"arguments,omitempty"` // Arguments is the arguments of the function call in JSON format.
 }
 
 // ChatCompletionResponseFormatType is the chat completion response format type.
@@ -169,32 +170,32 @@ type ChatCompletionResponseFormatType string
 
 // ChatCompletionResponseFormat is the chat completion response format.
 type ChatCompletionResponseFormat struct {
-	Type       ChatCompletionResponseFormatType        `json:"type,omitempty"`
-	JSONSchema *ChatCompletionResponseFormatJSONSchema `json:"json_schema,omitempty"`
+	Type       ChatCompletionResponseFormatType        `json:"type,omitempty"`        // Type is the type of the chat completion response format.
+	JSONSchema *ChatCompletionResponseFormatJSONSchema `json:"json_schema,omitempty"` // JSONSchema is the json schema of the chat completion response format.
 }
 
 // ChatCompletionResponseFormatJSONSchema is the chat completion response format json schema.
 type ChatCompletionResponseFormatJSONSchema struct {
-	Name        string         `json:"name"`
-	Description string         `json:"description,omitempty"`
-	Schema      json.Marshaler `json:"schema"`
-	Strict      bool           `json:"strict"`
+	Name        string         `json:"name"`                  // Name is the name of the chat completion response format json schema.
+	Description string         `json:"description,omitempty"` // Description is the description of the chat completion response format json schema.
+	Schema      json.Marshaler `json:"schema"`                // Schema is the schema of the chat completion response format json schema.
+	Strict      bool           `json:"strict"`                // Strict is the strict of the chat completion response format json schema.
 }
 
 // ChatCompletionRequest represents a request structure for the chat completion API.
 type ChatCompletionRequest struct {
-	Model            string                        `json:"model"`
-	Messages         []ChatCompletionMessage       `json:"messages"`
-	MaxTokens        int                           `json:"max_tokens,omitempty"`
-	Temperature      float32                       `json:"temperature,omitempty"`
-	TopP             float32                       `json:"top_p,omitempty"`
-	N                int                           `json:"n,omitempty"`
-	Stream           bool                          `json:"stream,omitempty"`
-	Stop             []string                      `json:"stop,omitempty"`
-	PresencePenalty  float32                       `json:"presence_penalty,omitempty"`
-	ResponseFormat   *ChatCompletionResponseFormat `json:"response_format,omitempty"`
-	Seed             *int                          `json:"seed,omitempty"`
-	FrequencyPenalty float32                       `json:"frequency_penalty,omitempty"`
+	Model            string                        `json:"model"`                       // Model is the model of the chat completion request.
+	Messages         []ChatCompletionMessage       `json:"messages"`                    // Messages is the messages of the chat completion request.
+	MaxTokens        int                           `json:"max_tokens,omitempty"`        // MaxTokens is the max tokens of the chat completion request.
+	Temperature      float32                       `json:"temperature,omitempty"`       // Temperature is the temperature of the chat completion request.
+	TopP             float32                       `json:"top_p,omitempty"`             // TopP is the top p of the chat completion request.
+	N                int                           `json:"n,omitempty"`                 // N is the n of the chat completion request.
+	Stream           bool                          `json:"stream,omitempty"`            // Stream is the stream of the chat completion request.
+	Stop             []string                      `json:"stop,omitempty"`              // Stop is the stop of the chat completion request.
+	PresencePenalty  float32                       `json:"presence_penalty,omitempty"`  // PresencePenalty is the presence penalty of the chat completion request.
+	ResponseFormat   *ChatCompletionResponseFormat `json:"response_format,omitempty"`   // ResponseFormat is the response format of the chat completion request.
+	Seed             *int                          `json:"seed,omitempty"`              // Seed is the seed of the chat completion request.
+	FrequencyPenalty float32                       `json:"frequency_penalty,omitempty"` // FrequencyPenalty is the frequency penalty of the chat completion request.
 	// LogitBias is must be a token id string (specified by their token ID in the tokenizer), not a word string.
 	// incorrect: `"logit_bias":{"You": 6}`, correct: `"logit_bias":{"1639": 6}`
 	// refs: https://platform.openai.com/docs/api-reference/chat/create#chat/create-logit_bias
@@ -231,31 +232,32 @@ type StreamOptions struct {
 }
 
 // ToolType is the tool type.
+//
 // string
 type ToolType string
 
 // Tool represents the tool.
 type Tool struct {
-	Type     ToolType            `json:"type"`
-	Function *FunctionDefinition `json:"function,omitempty"`
+	Type     ToolType            `json:"type"`               // Type is the type of the tool.
+	Function *FunctionDefinition `json:"function,omitempty"` // Function is the function of the tool.
 }
 
 // ToolChoice represents the tool choice.
 type ToolChoice struct {
-	Type     ToolType     `json:"type"`
-	Function ToolFunction `json:"function,omitempty"`
+	Type     ToolType     `json:"type"`               // Type is the type of the tool choice.
+	Function ToolFunction `json:"function,omitempty"` // Function is the function of the tool choice.
 }
 
 // ToolFunction represents the tool function.
 type ToolFunction struct {
-	Name string `json:"name"`
+	Name string `json:"name"` // Name is the name of the tool function.
 }
 
 // FunctionDefinition represents the function definition.
 type FunctionDefinition struct {
-	Name        string `json:"name"`
-	Description string `json:"description,omitempty"`
-	Strict      bool   `json:"strict,omitempty"`
+	Name        string `json:"name"`                  // Name is the name of the function.
+	Description string `json:"description,omitempty"` // Description is the description of the function.
+	Strict      bool   `json:"strict,omitempty"`      // Strict is the strict of the function.
 	// Parameters is an object describing the function.
 	// You can pass json.RawMessage to describe the schema,
 	// or you can pass in a struct which serializes to the proper JSON schema.
@@ -266,9 +268,9 @@ type FunctionDefinition struct {
 
 // TopLogProbs represents the top log probs.
 type TopLogProbs struct {
-	Token   string  `json:"token"`
-	LogProb float64 `json:"logprob"`
-	Bytes   []byte  `json:"bytes,omitempty"`
+	Token   string  `json:"token"`           // Token is the token of the top log probs.
+	LogProb float64 `json:"logprob"`         // LogProb is the log prob of the top log probs.
+	Bytes   []byte  `json:"bytes,omitempty"` // Bytes is the bytes of the top log probs.
 }
 
 // LogProb represents the probability information for a token.
@@ -303,8 +305,8 @@ func (r FinishReason) MarshalJSON() ([]byte, error) {
 
 // ChatCompletionChoice represents the chat completion choice.
 type ChatCompletionChoice struct {
-	Index   int                   `json:"index"`
-	Message ChatCompletionMessage `json:"message"`
+	Index   int                   `json:"index"`   // Index is the index of the choice.
+	Message ChatCompletionMessage `json:"message"` // Message is the chat completion message of the choice.
 	// FinishReason
 	// stop: API returned complete message,
 	// or a message terminated by one of the stop sequences provided via the stop parameter

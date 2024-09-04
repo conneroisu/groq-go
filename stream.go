@@ -30,11 +30,9 @@ func (c *Client) CreateCompletionStream(
 	if !checkEndpointSupportsModel(urlSuffix, request.Model) {
 		return stream, ErrCompletionUnsupportedModel{Model: request.Model}
 	}
-
 	if !checkPromptType(request.Prompt) {
 		return stream, ErrCompletionRequestPromptTypeNotSupported{}
 	}
-
 	request.Stream = true
 	req, err := c.newRequest(
 		ctx,

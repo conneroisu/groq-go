@@ -31,10 +31,12 @@ const (
 // AudioResponseFormat is the response format for the audio API.
 //
 // Response formats; Whisper uses AudioResponseFormatJSON by default.
+//
 // string
 type AudioResponseFormat string
 
 // TranscriptionTimestampGranularity is the timestamp granularity for the transcription.
+//
 // string
 type TranscriptionTimestampGranularity string
 
@@ -52,14 +54,14 @@ type AudioRequest struct {
 
 // AudioResponse represents a response structure for audio API.
 type AudioResponse struct {
-	Task     string   `json:"task"`
-	Language string   `json:"language"`
-	Duration float64  `json:"duration"`
-	Segments Segments `json:"segments"`
-	Words    Words    `json:"words"`
-	Text     string   `json:"text"`
+	Task     string   `json:"task"`     // Task is the task of the response.
+	Language string   `json:"language"` // Language is the language of the response.
+	Duration float64  `json:"duration"` // Duration is the duration of the response.
+	Segments Segments `json:"segments"` // Segments is the segments of the response.
+	Words    Words    `json:"words"`    // Words is the words of the response.
+	Text     string   `json:"text"`     // Text is the text of the response.
 
-	http.Header
+	http.Header // Header is the header of the response.
 }
 
 // Words is the words of the response.
@@ -131,20 +133,18 @@ func (c *Client) callAudioAPI(
 	endpointSuffix string,
 ) (response AudioResponse, err error) {
 	var formBody bytes.Buffer
-	builder := c.createFormBuilder(&formBody)
-
-	err = audioMultipartForm(request, builder)
+	c.requestFormBuilder = c.createFormBuilder(&formBody)
+	err = audioMultipartForm(request, c.requestFormBuilder)
 	if err != nil {
 		return AudioResponse{}, err
 	}
-
 	urlSuffix := fmt.Sprintf("/audio/%s", endpointSuffix)
 	req, err := c.newRequest(
 		ctx,
 		http.MethodPost,
 		c.fullURL(urlSuffix, withModel(request.Model)),
 		withBody(&formBody),
-		withContentType(builder.FormDataContentType()),
+		withContentType(c.requestFormBuilder.FormDataContentType()),
 	)
 	if err != nil {
 		return AudioResponse{}, err
@@ -225,15 +225,15 @@ func audioMultipartForm(request AudioRequest, b FormBuilder) error {
 			}
 		}
 	}
-
 	// Close the multipart writer
 	return b.Close()
 }
 
 // createFileField creates the "file" form field from either an existing file or by using the reader.
-func createFileField(request AudioRequest, b FormBuilder) (
-	err error,
-) {
+func createFileField(
+	request AudioRequest,
+	b FormBuilder,
+) (err error) {
 	if request.Reader != nil {
 		err := b.CreateFormFileReader("file", request.Reader, request.FilePath)
 		if err != nil {

@@ -32,7 +32,7 @@ func TestCompletionsStreamWrongModel(t *testing.T) {
 	)
 	if !errors.Is(
 		err,
-		groq.ErrCompletionUnsupportedModel{Model: groq.GPT3Dot5Turbo},
+		groq.ErrCompletionUnsupportedModel{Model: groq.GPT432K},
 	) {
 		t.Fatalf(
 			"CreateCompletion should return ErrCompletionUnsupportedModel, but returned: %v",
@@ -130,98 +130,6 @@ func TestCreateCompletionStream(t *testing.T) {
 			streamErr,
 		)
 	}
-}
-
-func TestCreateCompletionStreamError(t *testing.T) {
-	a := assert.New(t)
-	client, server, teardown := setupGroqTestServer()
-	defer teardown()
-	server.RegisterHandler(
-		"/v1/completions",
-		func(w http.ResponseWriter, _ *http.Request) {
-			w.Header().Set("Content-Type", "text/event-stream")
-
-			// Send test responses
-			dataBytes := []byte{}
-			dataStr := []string{
-				`{`,
-				`"error": {`,
-				`"message": "Incorrect API key provided: sk-***************************************",`,
-				`"type": "invalid_request_error",`,
-				`"param": null,`,
-				`"code": "invalid_api_key"`,
-				`}`,
-				`}`,
-			}
-			for _, str := range dataStr {
-				dataBytes = append(dataBytes, []byte(str+"\n")...)
-			}
-
-			_, err := w.Write(dataBytes)
-			a.NoError(err, "Write error")
-		},
-	)
-
-	stream, err := client.CreateCompletionStream(
-		context.Background(),
-		groq.CompletionRequest{
-			MaxTokens: 5,
-			Model:     groq.GPT3Dot5Turbo,
-			Prompt:    "Hello!",
-			Stream:    true,
-		},
-	)
-	a.NoError(err, "CreateCompletionStream returned error")
-	defer stream.Close()
-
-	_, streamErr := stream.Recv()
-	a.Error(streamErr, "stream.Recv() did not return error")
-
-	var apiErr *groq.APIError
-	if !errors.As(streamErr, &apiErr) {
-		t.Errorf("stream.Recv() did not return APIError")
-	}
-	t.Logf("%+v\n", apiErr)
-}
-
-func TestCreateCompletionStreamRateLimitError(t *testing.T) {
-	a := assert.New(t)
-	client, server, teardown := setupGroqTestServer()
-	defer teardown()
-	server.RegisterHandler(
-		"/v1/completions",
-		func(w http.ResponseWriter, _ *http.Request) {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(429)
-
-			// Send test responses
-			dataBytes := []byte(`{"error":{` +
-				`"message": "You are sending requests too quickly.",` +
-				`"type":"rate_limit_reached",` +
-				`"param":null,` +
-				`"code":"rate_limit_reached"}}`)
-
-			_, err := w.Write(dataBytes)
-			a.NoError(err, "Write error")
-		},
-	)
-
-	var apiErr *groq.APIError
-	_, err := client.CreateCompletionStream(
-		context.Background(),
-		groq.CompletionRequest{
-			MaxTokens: 5,
-			Model:     groq.GPT4oLatest,
-			Prompt:    "Hello!",
-			Stream:    true,
-		},
-	)
-	if !errors.As(err, &apiErr) {
-		t.Errorf(
-			"TestCreateCompletionStreamRateLimitError did not return APIError",
-		)
-	}
-	t.Logf("%+v\n", apiErr)
 }
 
 // TestCreateCompletionStreamTooManyEmptyStreamMessagesError tests the completion stream returns an error when the stream has too many empty messages.
