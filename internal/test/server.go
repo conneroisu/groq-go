@@ -33,7 +33,7 @@ func NewTestServer() *ServerTest {
 // RegisterHandler registers a handler for a path.
 func (ts *ServerTest) RegisterHandler(path string, handler handler) {
 	// to make the registered paths friendlier to a regex match in the route handler
-	// in OpenAITestServer
+	// in GroqTestServer
 	path = strings.ReplaceAll(path, "*", ".*")
 	ts.handlers[path] = handler
 }

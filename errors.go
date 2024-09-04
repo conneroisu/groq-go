@@ -16,7 +16,11 @@ type Helper interface {
 
 // ErrorAccumulator is an interface for accumulating errors
 type ErrorAccumulator interface {
+	// Write writes bytes to the error accumulator
+	//
+	// It implements the io.Writer interface.
 	Write(p []byte) error
+	// Bytes returns the bytes of the error accumulator.
 	Bytes() []byte
 }
 
@@ -56,7 +60,7 @@ func (e *DefaultErrorAccumulator) Bytes() (errBytes []byte) {
 	return
 }
 
-// APIError provides error information returned by the OpenAI API.
+// APIError provides error information returned by the Groq API.
 type APIError struct {
 	Code           any     `json:"code,omitempty"`  // Code is the code of the error.
 	Message        string  `json:"message"`         // Message is the message of the error.
@@ -99,8 +103,6 @@ func (e *APIError) UnmarshalJSON(data []byte) (err error) {
 
 	err = json.Unmarshal(rawMap["message"], &e.Message)
 	if err != nil {
-		// If the parameter field of a function call is invalid as a JSON schema
-		// refs: https://github.com/sashabaranov/go-openai/issues/381
 		var messages []string
 		err = json.Unmarshal(rawMap["message"], &messages)
 		if err != nil {
