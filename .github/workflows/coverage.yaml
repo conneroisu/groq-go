@@ -1,4 +1,4 @@
-name: Quality
+name: Coverage
 on: [push, pull_request]
 jobs:
   test:
@@ -22,6 +22,7 @@ jobs:
     - name: Send coverage
       env:
         COVERALLS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GROQ_KEY: ${{ secrets.GROQ_KEY }}
       run: goveralls -coverprofile=covprofile -service=github
     # or use shogo82148/actions-goveralls
     # - name: Send coverage
