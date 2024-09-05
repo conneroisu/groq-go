@@ -2,29 +2,71 @@ package groq
 
 import (
 	"context"
-	"fmt"
 	"net/http"
+	"strings"
 )
+
+// HarmfulCategory is the category of the harmful content.
+//
+// Llama Guard 3 provides content safety support for the following languages: English, French, German, Hindi, Italian, Portuguese, Spanish, and Thai.
+//
+// string
+type HarmfulCategory string
 
 const (
 	// ModerationTextStable is the text-moderation-stable model.
 	ModerationTextStable = "text-moderation-stable"
 	// ModerationTextLatest is the text-moderation-latest model.
 	ModerationTextLatest = "text-moderation-latest"
+
+	// ViolentCrimes (S1) is the violent crimes category. Responses that enable, encourage, or endorse the commission of violent crimes, including: (1) unlawful violence toward people (ex: terrorism, genocide, murder, hate-motivated violent crimes, child abuse, assault, battery, kidnapping) and (2) unlawful violence toward animals (ex: animal abuse)
+	ViolentCrimes HarmfulCategory = "violent_crimes"
+	// NonViolentCrimes (S2) is the non-violent crimes category.
+	NonViolentCrimes HarmfulCategory = "non_violent_crimes"
+	// SexRelatedCrimes (S3) is the sex-related crimes category.
+	SexRelatedCrimes HarmfulCategory = "sex_related_crimes"
+	// ChildSexualExploitation (S4) is the child sexual exploitation category. Responses that contain, describe, enable, encourage, or endorse the sexual abuse of children.
+	ChildSexualExploitation HarmfulCategory = "child_sexual_exploitation"
+	// Defamation (S5) is the defamation category. Responses that contain, describe, enable, encourage, or endorse defamation.
+	Defamation HarmfulCategory = "defamation"
+	// SpecializedAdvice (S6) is the specialized advice category. Responses that contain, describe, enable, encourage, or endorse specialized advice.
+	SpecializedAdvice HarmfulCategory = "specialized_advice"
+	// Privacy (S7) is the privacy category. Responses that contain, describe, enable, encourage, or endorse privacy.
+	Privacy HarmfulCategory = "privacy"
+	// IntellectualProperty (S8) is the intellectual property category. Responses that contain, describe, enable, encourage, or endorse intellectual property.
+	IntellectualProperty HarmfulCategory = "intellectual_property"
+	// IndiscriminateWeapons (S9) is the indiscriminate weapons category. Responses that contain, describe, enable, encourage, or endorse indiscriminate weapons.
+	IndiscriminateWeapons HarmfulCategory = "indiscriminate_weapons"
+	// Hate (S10) is the hate category. Responses that contain, describe, enable, encourage, or endorse hate.
+	Hate HarmfulCategory = "hate"
+	// SuicideNSelfHarm (S11) is the suicide/self-harm category. Responses that contain, describe, enable, encourage, or endorse suicide or self-harm.
+	SuicideNSelfHarm HarmfulCategory = "suicide_and_self_harm"
+	// SexualContent (S12) is the sexual content category. Responses that contain, describe, enable, encourage, or endorse sexual content.
+	SexualContent HarmfulCategory = "sexual_content"
+	// Elections (S13) is the elections category. Responses that contain factually incorrect information about electoral systems and processes, including in the time, place, or manner of voting in civic elections.
+	Elections HarmfulCategory = "elections"
+	// CodeInterpreterAbuse (S14) is the code interpreter abuse category. Responses that contain, describe, enable, encourage, or endorse code interpreter abuse.
+	CodeInterpreterAbuse HarmfulCategory = "code_interpreter_abuse"
 )
 
-// ErrModerationInvalidModel is returned when the model is not supported with the moderation endpoint.
-type ErrModerationInvalidModel struct {
-	Model Model
-}
-
-// Error implements the error interface.
-func (e ErrModerationInvalidModel) Error() string {
-	return fmt.Sprintf(
-		"this model (%s) is not supported with moderation, please use text-moderation-stable or text-moderation-latest instead",
-		e.Model,
-	)
-}
+var (
+	cateMap = map[string]HarmfulCategory{
+		"violent_crimes":            ViolentCrimes,
+		"non_violent_crimes":        NonViolentCrimes,
+		"sex_related_crimes":        SexRelatedCrimes,
+		"child_sexual_exploitation": ChildSexualExploitation,
+		"defamation":                Defamation,
+		"specialized_advice":        SpecializedAdvice,
+		"privacy":                   Privacy,
+		"intellectual_property":     IntellectualProperty,
+		"indiscriminate_weapons":    IndiscriminateWeapons,
+		"hate":                      Hate,
+		"suicide_and_self_harm":     SuicideNSelfHarm,
+		"sexual_content":            SexualContent,
+		"elections":                 Elections,
+		"code_interpreter_abuse":    CodeInterpreterAbuse,
+	}
+)
 
 var validModerationModel = map[Model]struct{}{
 	ModerationTextStable: {},
@@ -37,109 +79,41 @@ type ModerationRequest struct {
 	Model Model  `json:"model,omitempty"` // Model is the model to use for the moderation.
 }
 
-// Result represents one of possible moderation results.
-type Result struct {
-	Categories     ResultCategories     `json:"categories"`      // Categories is the categories of the result.
-	CategoryScores ResultCategoryScores `json:"category_scores"` // CategoryScores is the category scores of the result.
-	Flagged        bool                 `json:"flagged"`         // Flagged is the flagged of the result.
+// Moderation represents one of possible moderation results.
+type Moderation struct {
+	Categories HarmfulCategory `json:"categories"` // Categories is the categories of the result.
+	Flagged    bool            `json:"flagged"`    // Flagged is the flagged of the result.
 }
 
-// hate represents a hate message.
-type hate struct {
-	Filtered bool   `json:"filtered"`
-	Severity string `json:"severity,omitempty"`
-}
-
-// selfHarm represents a self-harm message.
-type selfHarm struct {
-	Filtered bool   `json:"filtered"`           // Filtered is the filtered of the self-harm message.
-	Severity string `json:"severity,omitempty"` // Severity is the severity of the self-harm message.
-}
-
-// sexual represents a sexual message.
-type sexual struct {
-	Filtered bool   `json:"filtered"`           // Filtered is the filtered of the sexual message.
-	Severity string `json:"severity,omitempty"` // Severity is the severity of the sexual message.
-}
-
-// violence represents a violence message.
-type violence struct {
-	Filtered bool   `json:"filtered"`           // Filtered is the filtered of the violence message.
-	Severity string `json:"severity,omitempty"` // Severity is the severity of the violence message.
-}
-
-// ContentFilterResults represents the content filter results.
-type ContentFilterResults struct {
-	Hate     hate     `json:"hate,omitempty"`      // Hate is the hate of the content filter results.
-	SelfHarm selfHarm `json:"self_harm,omitempty"` // SelfHarm is the self harm of the content filter results.
-	Sexual   sexual   `json:"sexual,omitempty"`    // Sexual is the sexual of the content filter results.
-	Violence violence `json:"violence,omitempty"`  // Violence is the violence of the content filter results.
-}
-
-// ResultCategories represents Categories of Result.
-type ResultCategories struct {
-	Hate                  bool `json:"hate"`
-	HateThreatening       bool `json:"hate/threatening"`
-	Harassment            bool `json:"harassment"`
-	HarassmentThreatening bool `json:"harassment/threatening"`
-	SelfHarm              bool `json:"self-harm"`
-	SelfHarmIntent        bool `json:"self-harm/intent"`
-	SelfHarmInstructions  bool `json:"self-harm/instructions"`
-	Sexual                bool `json:"sexual"`
-	SexualMinors          bool `json:"sexual/minors"`
-	Violence              bool `json:"violence"`
-	ViolenceGraphic       bool `json:"violence/graphic"`
-}
-
-// ResultCategoryScores represents CategoryScores of Result.
-type ResultCategoryScores struct {
-	Hate                  float32 `json:"hate"`
-	HateThreatening       float32 `json:"hate/threatening"`
-	Harassment            float32 `json:"harassment"`
-	HarassmentThreatening float32 `json:"harassment/threatening"`
-	SelfHarm              float32 `json:"self-harm"`
-	SelfHarmIntent        float32 `json:"self-harm/intent"`
-	SelfHarmInstructions  float32 `json:"self-harm/instructions"`
-	Sexual                float32 `json:"sexual"`
-	SexualMinors          float32 `json:"sexual/minors"`
-	Violence              float32 `json:"violence"`
-	ViolenceGraphic       float32 `json:"violence/graphic"`
-}
-
-// ModerationResponse represents a response structure for moderation API.
-type ModerationResponse struct {
-	ID      string   `json:"id"`      // ID is the ID of the response.
-	Model   Model    `json:"model"`   // Model is the model of the response.
-	Results []Result `json:"results"` // Results is the results of the response.
-
-	http.Header // Header is the header of the response.
-}
-
-// SetHeader sets the header of the response.
-func (r *ModerationResponse) SetHeader(header http.Header) {
-	r.Header = header
-}
-
-// Moderations — perform a moderation api call over a string.
+// Moderate — perform a moderation api call over a string.
 // Input can be an array or slice but a string will reduce the complexity.
-func (c *Client) Moderations(
+func (c *Client) Moderate(
 	ctx context.Context,
 	request ModerationRequest,
-) (response ModerationResponse, err error) {
+) (response Moderation, err error) {
 	if _, ok := validModerationModel[request.Model]; len(request.Model) > 0 &&
 		!ok {
-		err = ErrModerationInvalidModel{Model: request.Model}
+		err = ErrChatCompletionInvalidModel{Model: request.Model}
 		return
 	}
 	req, err := c.newRequest(
 		ctx,
 		http.MethodPost,
-		c.fullURL("/moderations", withModel(request.Model)),
+		c.fullURL(chatCompletionsSuffix, withModel(request.Model)),
 		withBody(&request),
 	)
 	if err != nil {
 		return
 	}
-	err = c.sendRequest(req, &response)
+	var resp ChatCompletionResponse
+	err = c.sendRequest(req, &resp)
+	if err != nil {
+		return
+	}
+	if strings.Contains(resp.Choices[0].Message.Content, "unsafe") {
+		split := strings.Split(resp.Choices[0].Message.Content, "\n")[1]
+		response.Categories = cateMap[strings.TrimSpace(split)]
+		response.Flagged = true
+	}
 	return
 }

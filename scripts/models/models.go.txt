@@ -24,11 +24,6 @@ const (
 		{{ $model.Name }} Model = "{{ $model.ID }}" {{- end }}
 )
 
-// String returns the string representation of the Endpoint.
-func (e Endpoint) String() string {
-	return string(e)
-}
-
 var disabledModelsForEndpoints = map[Endpoint]map[Model]bool{
 	completionsSuffix: {
 	{{- range $model := .Models }} {{ if isAudioModel $model }}
@@ -55,11 +50,11 @@ func endpointSupportsModel(endpoint Endpoint, model Model) bool {
 
 // Whisper Defines the models provided by OpenAI to use when processing audio with OpenAI.
 const (
-	AudioResponseFormatJSON        AudioResponseFormat = "json"         // AudioResponseFormatJSON is the JSON format.
-	AudioResponseFormatText        AudioResponseFormat = "text"         // AudioResponseFormatText is the text format.
-	AudioResponseFormatSRT         AudioResponseFormat = "srt"          // AudioResponseFormatSRT is the SRT format.
-	AudioResponseFormatVerboseJSON AudioResponseFormat = "verbose_json" // AudioResponseFormatVerboseJSON is the verbose JSON format.
-	AudioResponseFormatVTT         AudioResponseFormat = "vtt"          // AudioResponseFormatVTT is the VTT format.
+	AudioResponseFormatJSON        AudioResponseFormat = "json"         // AudioResponseFormatJSON is the JSON format of some audio.
+	AudioResponseFormatText        AudioResponseFormat = "text"         // AudioResponseFormatText is the text format of some audio.
+	AudioResponseFormatSRT         AudioResponseFormat = "srt"          // AudioResponseFormatSRT is the SRT format of some audio.
+	AudioResponseFormatVerboseJSON AudioResponseFormat = "verbose_json" // AudioResponseFormatVerboseJSON is the verbose JSON format of some audio.
+	AudioResponseFormatVTT         AudioResponseFormat = "vtt"          // AudioResponseFormatVTT is the VTT format of some audio.
 
 	TranscriptionTimestampGranularityWord    TranscriptionTimestampGranularity = "word"    // TranscriptionTimestampGranularityWord is the word timestamp granularity.
 	TranscriptionTimestampGranularitySegment TranscriptionTimestampGranularity = "segment" // TranscriptionTimestampGranularitySegment is the segment timestamp granularity.

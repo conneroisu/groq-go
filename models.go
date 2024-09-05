@@ -46,11 +46,6 @@ const (
 	Mixtral_8x7b_32768 Model = "mixtral-8x7b-32768"
 )
 
-// String returns the string representation of the Endpoint.
-func (e Endpoint) String() string {
-	return string(e)
-}
-
 var disabledModelsForEndpoints = map[Endpoint]map[Model]bool{
 	completionsSuffix: {
 		Distil_Whisper_Large_V3_En: true,
@@ -94,11 +89,11 @@ func endpointSupportsModel(endpoint Endpoint, model Model) bool {
 
 // Whisper Defines the models provided by OpenAI to use when processing audio with OpenAI.
 const (
-	AudioResponseFormatJSON        AudioResponseFormat = "json"         // AudioResponseFormatJSON is the JSON format.
-	AudioResponseFormatText        AudioResponseFormat = "text"         // AudioResponseFormatText is the text format.
-	AudioResponseFormatSRT         AudioResponseFormat = "srt"          // AudioResponseFormatSRT is the SRT format.
-	AudioResponseFormatVerboseJSON AudioResponseFormat = "verbose_json" // AudioResponseFormatVerboseJSON is the verbose JSON format.
-	AudioResponseFormatVTT         AudioResponseFormat = "vtt"          // AudioResponseFormatVTT is the VTT format.
+	AudioResponseFormatJSON        AudioResponseFormat = "json"         // AudioResponseFormatJSON is the JSON format of some audio.
+	AudioResponseFormatText        AudioResponseFormat = "text"         // AudioResponseFormatText is the text format of some audio.
+	AudioResponseFormatSRT         AudioResponseFormat = "srt"          // AudioResponseFormatSRT is the SRT format of some audio.
+	AudioResponseFormatVerboseJSON AudioResponseFormat = "verbose_json" // AudioResponseFormatVerboseJSON is the verbose JSON format of some audio.
+	AudioResponseFormatVTT         AudioResponseFormat = "vtt"          // AudioResponseFormatVTT is the VTT format of some audio.
 
 	TranscriptionTimestampGranularityWord    TranscriptionTimestampGranularity = "word"    // TranscriptionTimestampGranularityWord is the word timestamp granularity.
 	TranscriptionTimestampGranularitySegment TranscriptionTimestampGranularity = "segment" // TranscriptionTimestampGranularitySegment is the segment timestamp granularity.

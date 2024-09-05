@@ -47,8 +47,7 @@ type Role string
 
 // PromptAnnotation represents the prompt annotation.
 type PromptAnnotation struct {
-	PromptIndex          int                  `json:"prompt_index,omitempty"`
-	ContentFilterResults ContentFilterResults `json:"content_filter_results,omitempty"`
+	PromptIndex int `json:"prompt_index,omitempty"`
 }
 
 // ChatMessageImageURL represents the chat message image url.
@@ -373,16 +372,14 @@ type ChatCompletionStreamChoiceDelta struct {
 
 // ChatCompletionStreamChoice represents a response structure for chat completion API.
 type ChatCompletionStreamChoice struct {
-	Index                int                             `json:"index"`
-	Delta                ChatCompletionStreamChoiceDelta `json:"delta"`
-	FinishReason         FinishReason                    `json:"finish_reason"`
-	ContentFilterResults ContentFilterResults            `json:"content_filter_results,omitempty"`
+	Index        int                             `json:"index"`
+	Delta        ChatCompletionStreamChoiceDelta `json:"delta"`
+	FinishReason FinishReason                    `json:"finish_reason"`
 }
 
 // PromptFilterResult represents a response structure for chat completion API.
 type PromptFilterResult struct {
-	Index                int                  `json:"index"`
-	ContentFilterResults ContentFilterResults `json:"content_filter_results,omitempty"`
+	Index int `json:"index"`
 }
 
 // ChatCompletionStreamResponse represents a response structure for chat completion API.

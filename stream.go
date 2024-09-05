@@ -15,10 +15,14 @@ type CompletionStream struct {
 	*streamReader[CompletionResponse]
 }
 
-// CreateCompletionStream — API call to create a completion w/ streaming
-// support. It sets whether to stream back partial progress. If set, tokens will be
-// sent as data-only server-sent events as they become available, with the
-// stream terminated by a data: [DONE] message.
+// CreateCompletionStream — API call to create a completion w/ streaming 
+// support.
+//
+// Recv receives a response from the stream.
+// It sets whether to stream back partial progress.
+//
+// If set, tokens will be sent as data-only server-sent events as they become
+// available, with the stream terminated by a data: [DONE] message.
 func (c *Client) CreateCompletionStream(
 	ctx context.Context,
 	request CompletionRequest,
@@ -73,6 +77,7 @@ func (stream *streamReader[T]) Recv() (response T, err error) {
 	return stream.processLines()
 }
 
+// processLines processes the lines of the current response in the stream.
 func (stream *streamReader[T]) processLines() (T, error) {
 	var (
 		headerData  = []byte("data: ")
@@ -137,7 +142,6 @@ func (stream *streamReader[T]) unmarshalError() (errResp *ErrorResponse) {
 	return
 }
 
-// Close closes the stream.
 func (stream *streamReader[T]) Close() error {
 	return stream.response.Body.Close()
 }
