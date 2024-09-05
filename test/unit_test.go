@@ -22,7 +22,7 @@ func TestTestServer(t *testing.T) {
 	strm, err := client.CreateChatCompletionStream(
 		ctx,
 		groq.ChatCompletionRequest{
-			Model: groq.Llama3070B8192ToolUsePreview,
+			Model: groq.Llama3_Groq_70b_8192_Tool_Use_Preview,
 			Messages: []groq.ChatCompletionMessage{
 				{
 					Role: groq.ChatMessageRoleUser,

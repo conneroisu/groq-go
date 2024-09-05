@@ -78,7 +78,7 @@ func TestCreateChatCompletionStream(t *testing.T) {
 		context.Background(),
 		groq.ChatCompletionRequest{
 			MaxTokens: 5,
-			Model:     groq.Llama3070B8192ToolUsePreview,
+			Model:     groq.Llama3_8b_8192,
 			Messages: []groq.ChatCompletionMessage{
 				{
 					Role:    groq.ChatMessageRoleUser,
@@ -96,7 +96,7 @@ func TestCreateChatCompletionStream(t *testing.T) {
 			ID:                "1",
 			Object:            "completion",
 			Created:           1598069254,
-			Model:             groq.Llama3070B8192ToolUsePreview,
+			Model:             groq.Llama3_8b_8192,
 			SystemFingerprint: "fp_d9767fc5b9",
 			Choices: []groq.ChatCompletionStreamChoice{
 				{
@@ -111,7 +111,7 @@ func TestCreateChatCompletionStream(t *testing.T) {
 			ID:                "2",
 			Object:            "completion",
 			Created:           1598069255,
-			Model:             groq.Llama3070B8192ToolUsePreview,
+			Model:             groq.Llama3_8b_8192,
 			SystemFingerprint: "fp_d9767fc5b9",
 			Choices: []groq.ChatCompletionStreamChoice{
 				{
@@ -130,7 +130,7 @@ func TestCreateChatCompletionStream(t *testing.T) {
 
 		receivedResponse, streamErr := stream.Recv()
 		a.NoError(streamErr, "stream.Recv() failed")
-		if !compareChatResponses(expectedResponse, receivedResponse) {
+		if !compareChatResponses(t, expectedResponse, receivedResponse) {
 			t.Errorf(
 				"Stream response %v is %v, expected %v",
 				ix,
@@ -201,7 +201,7 @@ func TestCreateChatCompletionStreamError(t *testing.T) {
 		context.Background(),
 		groq.ChatCompletionRequest{
 			MaxTokens: 5,
-			Model:     groq.Llama3070B8192ToolUsePreview,
+			Model:     groq.Llama3_8b_8192,
 			Messages: []groq.ChatCompletionMessage{
 				{
 					Role:    groq.ChatMessageRoleUser,
@@ -252,7 +252,7 @@ func TestCreateChatCompletionStreamWithHeaders(t *testing.T) {
 		context.Background(),
 		groq.ChatCompletionRequest{
 			MaxTokens: 5,
-			Model:     groq.Llama3070B8192ToolUsePreview,
+			Model:     groq.Llama3_8b_8192,
 			Messages: []groq.ChatCompletionMessage{
 				{
 					Role:    groq.ChatMessageRoleUser,
@@ -312,7 +312,7 @@ func TestCreateChatCompletionStreamWithRatelimitHeaders(t *testing.T) {
 		context.Background(),
 		groq.ChatCompletionRequest{
 			MaxTokens: 5,
-			Model:     groq.Llama3070B8192ToolUsePreview,
+			Model:     groq.Llama3_8b_8192,
 			Messages: []groq.ChatCompletionMessage{
 				{
 					Role:    groq.ChatMessageRoleUser,
@@ -374,7 +374,7 @@ func TestCreateChatCompletionStreamErrorWithDataPrefix(t *testing.T) {
 		context.Background(),
 		groq.ChatCompletionRequest{
 			MaxTokens: 5,
-			Model:     groq.Llama3070B8192ToolUsePreview,
+			Model:     groq.Llama3_8b_8192,
 			Messages: []groq.ChatCompletionMessage{
 				{
 					Role:    groq.ChatMessageRoleUser,
@@ -422,7 +422,7 @@ func TestCreateChatCompletionStreamRateLimitError(t *testing.T) {
 		context.Background(),
 		groq.ChatCompletionRequest{
 			MaxTokens: 5,
-			Model:     groq.Llama3070B8192ToolUsePreview,
+			Model:     groq.Llama3_8b_8192,
 			Messages: []groq.ChatCompletionMessage{
 				{
 					Role:    groq.ChatMessageRoleUser,
@@ -476,7 +476,7 @@ func TestCreateChatCompletionStreamStreamOptions(t *testing.T) {
 		context.Background(),
 		groq.ChatCompletionRequest{
 			MaxTokens: 5,
-			Model:     groq.Llama3070B8192ToolUsePreview,
+			Model:     groq.Llama3_8b_8192,
 			Messages: []groq.ChatCompletionMessage{
 				{
 					Role:    groq.ChatMessageRoleUser,
@@ -496,7 +496,7 @@ func TestCreateChatCompletionStreamStreamOptions(t *testing.T) {
 			ID:                "1",
 			Object:            "completion",
 			Created:           1598069254,
-			Model:             groq.Llama3070B8192ToolUsePreview,
+			Model:             groq.Llama3_8b_8192,
 			SystemFingerprint: "fp_d9767fc5b9",
 			Choices: []groq.ChatCompletionStreamChoice{
 				{
@@ -511,7 +511,7 @@ func TestCreateChatCompletionStreamStreamOptions(t *testing.T) {
 			ID:                "2",
 			Object:            "completion",
 			Created:           1598069255,
-			Model:             groq.Llama3070B8192ToolUsePreview,
+			Model:             groq.Llama3_8b_8192,
 			SystemFingerprint: "fp_d9767fc5b9",
 			Choices: []groq.ChatCompletionStreamChoice{
 				{
@@ -526,7 +526,7 @@ func TestCreateChatCompletionStreamStreamOptions(t *testing.T) {
 			ID:                "3",
 			Object:            "completion",
 			Created:           1598069256,
-			Model:             groq.Llama3070B8192ToolUsePreview,
+			Model:             groq.Llama3_8b_8192,
 			SystemFingerprint: "fp_d9767fc5b9",
 			Choices:           []groq.ChatCompletionStreamChoice{},
 			Usage: &groq.Usage{
@@ -546,9 +546,9 @@ func TestCreateChatCompletionStreamStreamOptions(t *testing.T) {
 		if !errors.Is(streamErr, io.EOF) {
 			a.NoError(streamErr, "stream.Recv() failed")
 		}
-		if !compareChatResponses(expectedResponse, receivedResponse) {
+		if !compareChatResponses(t, expectedResponse, receivedResponse) {
 			t.Errorf(
-				"Stream response %v is %v, expected %v",
+				"Stream response %v: %v,BUT expected %v",
 				ix,
 				receivedResponse,
 				expectedResponse,
@@ -577,16 +577,26 @@ func TestCreateChatCompletionStreamStreamOptions(t *testing.T) {
 }
 
 // Helper funcs.
-func compareChatResponses(r1, r2 groq.ChatCompletionStreamResponse) bool {
-	if r1.ID != r2.ID || r1.Object != r2.Object || r1.Created != r2.Created ||
-		r1.Model != r2.Model {
+func compareChatResponses(t *testing.T, r1, r2 groq.ChatCompletionStreamResponse) bool {
+	if r1.ID != r2.ID {
+		t.Logf("Not Equal ID: %v", r1.ID)
+		return false
+	}
+	if r1.Object != r2.Object {
+		t.Logf("Not Equal Object: %v", r1.Object)
+		return false
+	}
+	if r1.Created != r2.Created {
+		t.Logf("Not Equal Created: %v", r1.Created)
 		return false
 	}
 	if len(r1.Choices) != len(r2.Choices) {
+		t.Logf("Not Equal Choices: %v", r1.Choices)
 		return false
 	}
 	for i := range r1.Choices {
 		if !compareChatStreamResponseChoices(r1.Choices[i], r2.Choices[i]) {
+			t.Logf("Not Equal Choices: %v", r1.Choices[i])
 			return false
 		}
 	}

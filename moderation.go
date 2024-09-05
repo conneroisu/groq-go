@@ -6,13 +6,6 @@ import (
 	"net/http"
 )
 
-// The moderation endpoint is a tool you can use to check whether content complies with OpenAI's usage policies.
-// Developers can thus identify content that our usage policies prohibits and take action, for instance by filtering it.
-
-// The default is text-moderation-latest which will be automatically upgraded over time.
-// This ensures you are always using our most accurate model.
-// If you use text-moderation-stable, we will provide advanced notice before updating the model.
-// Accuracy of text-moderation-stable may be slightly lower than for text-moderation-latest.
 const (
 	// ModerationTextStable is the text-moderation-stable model.
 	ModerationTextStable = "text-moderation-stable"
@@ -51,36 +44,36 @@ type Result struct {
 	Flagged        bool                 `json:"flagged"`         // Flagged is the flagged of the result.
 }
 
-// Hate represents a hate message.
-type Hate struct {
+// hate represents a hate message.
+type hate struct {
 	Filtered bool   `json:"filtered"`
 	Severity string `json:"severity,omitempty"`
 }
 
-// SelfHarm represents a self-harm message.
-type SelfHarm struct {
+// selfHarm represents a self-harm message.
+type selfHarm struct {
 	Filtered bool   `json:"filtered"`           // Filtered is the filtered of the self-harm message.
 	Severity string `json:"severity,omitempty"` // Severity is the severity of the self-harm message.
 }
 
-// Sexual represents a sexual message.
-type Sexual struct {
-	Filtered bool   `json:"filtered"`
-	Severity string `json:"severity,omitempty"`
+// sexual represents a sexual message.
+type sexual struct {
+	Filtered bool   `json:"filtered"`           // Filtered is the filtered of the sexual message.
+	Severity string `json:"severity,omitempty"` // Severity is the severity of the sexual message.
 }
 
-// Violence represents a violence message.
-type Violence struct {
-	Filtered bool   `json:"filtered"`
-	Severity string `json:"severity,omitempty"`
+// violence represents a violence message.
+type violence struct {
+	Filtered bool   `json:"filtered"`           // Filtered is the filtered of the violence message.
+	Severity string `json:"severity,omitempty"` // Severity is the severity of the violence message.
 }
 
 // ContentFilterResults represents the content filter results.
 type ContentFilterResults struct {
-	Hate     Hate     `json:"hate,omitempty"`
-	SelfHarm SelfHarm `json:"self_harm,omitempty"`
-	Sexual   Sexual   `json:"sexual,omitempty"`
-	Violence Violence `json:"violence,omitempty"`
+	Hate     hate     `json:"hate,omitempty"`      // Hate is the hate of the content filter results.
+	SelfHarm selfHarm `json:"self_harm,omitempty"` // SelfHarm is the self harm of the content filter results.
+	Sexual   sexual   `json:"sexual,omitempty"`    // Sexual is the sexual of the content filter results.
+	Violence violence `json:"violence,omitempty"`  // Violence is the violence of the content filter results.
 }
 
 // ResultCategories represents Categories of Result.

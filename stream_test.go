@@ -27,13 +27,13 @@ func TestCompletionsStreamWrongModel(t *testing.T) {
 		context.Background(),
 		groq.CompletionRequest{
 			MaxTokens: 5,
-			Model:     groq.Llama3070B8192ToolUsePreview,
+			Model:     groq.Whisper_Large_V3,
 		},
 	)
 	if !errors.Is(
 		err,
 		groq.ErrCompletionUnsupportedModel{
-			Model: groq.Llama3070B8192ToolUsePreview,
+			Model: groq.Whisper_Large_V3,
 		},
 	) {
 		t.Fatalf(

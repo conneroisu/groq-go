@@ -14,6 +14,8 @@ import (
 	"github.com/rs/zerolog"
 )
 
+//go:generate go run ./scripts/models/main.go
+
 // Format is the format of a response.
 // string
 type Format string
@@ -74,56 +76,6 @@ func (c *Client) fullURL(suffix Endpoint, setters ...fullURLOption) string {
 		setter(&args)
 	}
 	return fmt.Sprintf("%s%s", baseURL, suffix)
-}
-
-// Contains returns true if the model is in the list of models.
-func (m *ModelResponse) contains(model string) bool {
-	for _, m := range m.Data {
-		if m.ID == model {
-			return true
-		}
-	}
-	return false
-}
-
-// GetModels gets the list of models from the Groq API.
-func (c *Client) GetModels(ctx context.Context) (ModelResponse, error) {
-	req, err := http.NewRequestWithContext(ctx, "GET", c.baseURL+"/models", nil)
-	if err != nil {
-		return ModelResponse{}, err
-	}
-	req.Header.Set("Authorization", "Bearer "+c.groqAPIKey)
-	req.Header.Set("Content-Type", "application/json")
-	resp, err := c.client.Do(req)
-	if err != nil {
-		return ModelResponse{}, err
-	}
-	defer resp.Body.Close()
-	bodyText, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return ModelResponse{}, err
-	}
-	var modelsResponse ModelResponse
-	err = json.Unmarshal(bodyText, &modelsResponse)
-	if err != nil {
-		return ModelResponse{}, err
-	}
-	return modelsResponse, nil
-}
-
-// ModelResponse is a response from the models endpoint.
-type ModelResponse struct {
-	Object string          `json:"object"`
-	Data   []responseModel `json:"data"`
-}
-type responseModel struct {
-	ID            string `json:"id"`
-	Object        string `json:"object"`
-	Created       int    `json:"created"`
-	OwnedBy       string `json:"owned_by"`
-	Active        bool   `json:"active"`
-	ContextWindow int    `json:"context_window"`
-	PublicApps    any    `json:"public_apps"`
 }
 
 // Opts is a function that sets options for a Groq client.
@@ -380,71 +332,4 @@ func (r ResetTime) String() string {
 func (r ResetTime) Time() time.Time {
 	d, _ := time.ParseDuration(string(r))
 	return time.Now().Add(d)
-}
-
-// Endpoint is the endpoint for the groq api.
-// string
-type Endpoint string
-
-// Model is the type for models present on the groq api.
-// string
-type Model string
-
-// GPT3 Defines the models provided by OpenAI to use when generating
-// completions from OpenAI.
-//
-// GPT3 Models are designed for text-based tasks. For code-specific
-// tasks, please refer to the Codex series of models.
-const (
-	completionsSuffix     Endpoint = "/completions"
-	chatCompletionsSuffix Endpoint = "/chat/completions"
-	transcriptionsSuffix  Endpoint = "/audio/transcriptions"
-	translationsSuffix    Endpoint = "/audio/translations"
-	embeddingsSuffix      Endpoint = "/embeddings"
-
-	Gemma209B                    Model = "gemma2-9b-it"
-	Gemma207B                    Model = "gemma-7b-it"
-	Llama3070B8192ToolUsePreview Model = "llama3-groq-70b-8192-tool-use-preview"
-	Llama308B8192ToolUsePreview  Model = "llama3-groq-8b-8192-tool-use-preview"
-	WhisperLargeV3               Model = "whisper-large-v3"
-	WhisperDistilledLargeV3      Model = "distil-whisper-large-v3-en"
-)
-
-func (e Endpoint) String() string {
-	return string(e)
-}
-
-var disabledModelsForEndpoints = map[Endpoint]map[Model]bool{
-	completionsSuffix: {
-		Llama3070B8192ToolUsePreview: true,
-		Llama308B8192ToolUsePreview:  true,
-		WhisperLargeV3:               true,
-		WhisperDistilledLargeV3:      true,
-		Gemma209B:                    true,
-		Gemma207B:                    true,
-	},
-	chatCompletionsSuffix: {
-		WhisperLargeV3:          true,
-		WhisperDistilledLargeV3: true,
-	},
-	transcriptionsSuffix: {
-		Llama3070B8192ToolUsePreview: true,
-		Llama308B8192ToolUsePreview:  true,
-		Gemma209B:                    true,
-		Gemma207B:                    true,
-	},
-	translationsSuffix: {
-		Llama3070B8192ToolUsePreview: true,
-		Llama308B8192ToolUsePreview:  true,
-		Gemma209B:                    true,
-		Gemma207B:                    true,
-	},
-	embeddingsSuffix: {
-		WhisperLargeV3:          true,
-		WhisperDistilledLargeV3: true,
-	},
-}
-
-func endpointSupportsModel(endpoint Endpoint, model Model) bool {
-	return !disabledModelsForEndpoints[endpoint][model]
 }

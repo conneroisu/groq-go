@@ -57,11 +57,6 @@ func (c *Client) CreateCompletionStream(
 	}, nil
 }
 
-var (
-	headerData  = []byte("data: ")
-	errorPrefix = []byte(`data: {"error":`)
-)
-
 type streamer interface {
 	ChatCompletionStreamResponse | CompletionResponse
 }
@@ -89,6 +84,9 @@ func (stream *streamReader[T]) Recv() (response T, err error) {
 //nolint:gocognit
 func (stream *streamReader[T]) processLines() (T, error) {
 	var (
+		headerData  = []byte("data: ")
+		errorPrefix = []byte(`data: {"error":`)
+
 		emptyMessagesCount uint
 		hasErrorPrefix     bool
 	)
