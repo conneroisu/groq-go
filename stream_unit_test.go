@@ -27,7 +27,7 @@ func TestCompletionsStreamWrongModel(t *testing.T) {
 		context.Background(),
 		groq.CompletionRequest{
 			MaxTokens: 5,
-			Model:     groq.Whisper_Large_V3,
+			Model:     groq.WhisperLargeV3,
 		},
 	)
 	if !errors.Is(

@@ -14,7 +14,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/ettle/strcase"
+	"github.com/samber/lo"
 )
 
 //go:embed models.go.txt
@@ -134,11 +134,21 @@ func fillTemplate(w io.Writer, models []ResponseModel) error {
 	funcMap := template.FuncMap{
 		"isTextModel": func(model ResponseModel) bool {
 			// if context window is greater than 1024 then it is a text model
-			return model.ContextWindow > 1024
+			if model.ID != "llama-guard-3-8b" {
+				return model.ContextWindow > 1024
+			}
+			return false
 		},
 		"isAudioModel": func(model ResponseModel) bool {
 			// if context window is less than 1024 then it is a audio model
-			return model.ContextWindow < 1024
+			if model.ID != "llama-guard-3-8b" {
+				return model.ContextWindow < 1024
+			}
+			return false
+		},
+		"isModerationModel": func(model ResponseModel) bool {
+			// if the id of the model is llama-guard-3-8b
+			return model.ID == "llama-guard-3-8b"
 		},
 	}
 	tmpla, err := template.New("output").
@@ -160,11 +170,7 @@ func nameModels(models []ResponseModel) {
 		if (models)[i].Name == "" {
 			filtered := strings.Replace(models[i].ID, "-", "_", -1)
 			filtered = strings.Replace(filtered, ".", "_", -1)
-			models[i].Name = strcase.ToGoCase(
-				filtered,
-				strcase.TitleCase,
-				bytes.Runes([]byte("_"))[0],
-			)
+			models[i].Name = lo.PascalCase(filtered)
 		}
 	}
 }
