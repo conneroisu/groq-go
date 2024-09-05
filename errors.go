@@ -89,7 +89,6 @@ func (e *APIError) Error() string {
 			e.Message,
 		)
 	}
-
 	return e.Message
 }
 
@@ -100,7 +99,6 @@ func (e *APIError) UnmarshalJSON(data []byte) (err error) {
 	if err != nil {
 		return
 	}
-
 	err = json.Unmarshal(rawMap["message"], &e.Message)
 	if err != nil {
 		var messages []string
@@ -110,7 +108,6 @@ func (e *APIError) UnmarshalJSON(data []byte) (err error) {
 		}
 		e.Message = strings.Join(messages, ", ")
 	}
-
 	// optional fields
 	if _, ok := rawMap["param"]; ok {
 		err = json.Unmarshal(rawMap["param"], &e.Param)
@@ -118,11 +115,9 @@ func (e *APIError) UnmarshalJSON(data []byte) (err error) {
 			return
 		}
 	}
-
 	if _, ok := rawMap["code"]; !ok {
 		return nil
 	}
-
 	// if the api returned a number, we need to force an integer
 	// since the json package defaults to float64
 	var intCode int
@@ -131,7 +126,6 @@ func (e *APIError) UnmarshalJSON(data []byte) (err error) {
 		e.Code = intCode
 		return nil
 	}
-
 	return json.Unmarshal(rawMap["code"], &e.Code)
 }
 

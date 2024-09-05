@@ -7,27 +7,27 @@ import (
 )
 
 const (
-	url                                                                         = "https://api.groq.com/openai/v1/chat/completions" // url is the url of the chat completions endpoint.
-	ChatMessageRoleSystem                      Role                             = "system"                                          // ChatMessageRoleSystem is the system chat message role.
-	ChatMessageRoleUser                        Role                             = "user"                                            // ChatMessageRoleUser is the user chat message role.
-	ChatMessageRoleAssistant                   Role                             = "assistant"                                       // ChatMessageRoleAssistant is the assistant chat message role.
-	ChatMessageRoleFunction                    Role                             = "function"                                        // ChatMessageRoleFunction is the function chat message role.
-	ChatMessageRoleTool                        Role                             = "tool"                                            // ChatMessageRoleTool is the tool chat message role.
-	ImageURLDetailHigh                         ImageURLDetail                   = "high"                                            // ImageURLDetailHigh is the high image url detail.
-	ImageURLDetailLow                          ImageURLDetail                   = "low"                                             // ImageURLDetailLow is the low image url detail.
-	ImageURLDetailAuto                         ImageURLDetail                   = "auto"                                            // ImageURLDetailAuto is the auto image url detail.
-	ChatMessagePartTypeText                    ChatMessagePartType              = "text"                                            // ChatMessagePartTypeText is the text chat message part type.
-	ChatMessagePartTypeImageURL                ChatMessagePartType              = "image_url"                                       // ChatMessagePartTypeImageURL is the image url chat message part type.
-	ChatCompletionResponseFormatTypeJSONObject ChatCompletionResponseFormatType = "json_object"                                     // ChatCompletionResponseFormatTypeJSONObject is the json object chat completion response format type.
-	ChatCompletionResponseFormatTypeJSONSchema ChatCompletionResponseFormatType = "json_schema"                                     // ChatCompletionResponseFormatTypeJSONSchema is the json schema chat completion response format type.
-	ChatCompletionResponseFormatTypeText       ChatCompletionResponseFormatType = "text"                                            // ChatCompletionResponseFormatTypeText is the text chat completion response format type.
-	ToolTypeFunction                           ToolType                         = "function"                                        // ToolTypeFunction is the function tool type.
-	FinishReasonStop                           FinishReason                     = "stop"                                            // FinishReasonStop is the stop finish reason.
-	FinishReasonLength                         FinishReason                     = "length"                                          // FinishReasonLength is the length finish reason.
-	FinishReasonFunctionCall                   FinishReason                     = "function_call"                                   // FinishReasonFunctionCall is the function call finish reason.
-	FinishReasonToolCalls                      FinishReason                     = "tool_calls"                                      // FinishReasonToolCalls is the tool calls finish reason.
-	FinishReasonContentFilter                  FinishReason                     = "content_filter"                                  // FinishReasonContentFilter is the content filter finish reason.
-	FinishReasonNull                           FinishReason                     = "null"                                            // FinishReasonNull is the null finish reason.
+	ChatMessageRoleSystem    Role = "system"    // ChatMessageRoleSystem is the system chat message role.
+	ChatMessageRoleUser      Role = "user"      // ChatMessageRoleUser is the user chat message role.
+	ChatMessageRoleAssistant Role = "assistant" // ChatMessageRoleAssistant is the assistant chat message role.
+	ChatMessageRoleFunction  Role = "function"  // ChatMessageRoleFunction is the function chat message role.
+	ChatMessageRoleTool      Role = "tool"      // ChatMessageRoleTool is the tool chat message role.
+
+	ImageURLDetailHigh                         ImageURLDetail                   = "high"           // ImageURLDetailHigh is the high image url detail.
+	ImageURLDetailLow                          ImageURLDetail                   = "low"            // ImageURLDetailLow is the low image url detail.
+	ImageURLDetailAuto                         ImageURLDetail                   = "auto"           // ImageURLDetailAuto is the auto image url detail.
+	ChatMessagePartTypeText                    ChatMessagePartType              = "text"           // ChatMessagePartTypeText is the text chat message part type.
+	ChatMessagePartTypeImageURL                ChatMessagePartType              = "image_url"      // ChatMessagePartTypeImageURL is the image url chat message part type.
+	ChatCompletionResponseFormatTypeJSONObject ChatCompletionResponseFormatType = "json_object"    // ChatCompletionResponseFormatTypeJSONObject is the json object chat completion response format type.
+	ChatCompletionResponseFormatTypeJSONSchema ChatCompletionResponseFormatType = "json_schema"    // ChatCompletionResponseFormatTypeJSONSchema is the json schema chat completion response format type.
+	ChatCompletionResponseFormatTypeText       ChatCompletionResponseFormatType = "text"           // ChatCompletionResponseFormatTypeText is the text chat completion response format type.
+	ToolTypeFunction                           ToolType                         = "function"       // ToolTypeFunction is the function tool type.
+	FinishReasonStop                           FinishReason                     = "stop"           // FinishReasonStop is the stop finish reason.
+	FinishReasonLength                         FinishReason                     = "length"         // FinishReasonLength is the length finish reason.
+	FinishReasonFunctionCall                   FinishReason                     = "function_call"  // FinishReasonFunctionCall is the function call finish reason.
+	FinishReasonToolCalls                      FinishReason                     = "tool_calls"     // FinishReasonToolCalls is the tool calls finish reason.
+	FinishReasonContentFilter                  FinishReason                     = "content_filter" // FinishReasonContentFilter is the content filter finish reason.
+	FinishReasonNull                           FinishReason                     = "null"           // FinishReasonNull is the null finish reason.
 )
 
 // Message is a message in a chat request.
