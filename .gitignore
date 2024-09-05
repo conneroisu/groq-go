@@ -223,3 +223,9 @@ FodyWeavers.xsd
 *.msp
 *.sln.iml
 converage.out
+.idea/
+.idea
+.vscode/
+.vscode
+.history/
+.history
