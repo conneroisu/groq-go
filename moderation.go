@@ -51,20 +51,20 @@ const (
 
 var (
 	cateMap = map[string]HarmfulCategory{
-		"violent_crimes":            ViolentCrimes,
-		"non_violent_crimes":        NonViolentCrimes,
-		"sex_related_crimes":        SexRelatedCrimes,
-		"child_sexual_exploitation": ChildSexualExploitation,
-		"defamation":                Defamation,
-		"specialized_advice":        SpecializedAdvice,
-		"privacy":                   Privacy,
-		"intellectual_property":     IntellectualProperty,
-		"indiscriminate_weapons":    IndiscriminateWeapons,
-		"hate":                      Hate,
-		"suicide_and_self_harm":     SuicideNSelfHarm,
-		"sexual_content":            SexualContent,
-		"elections":                 Elections,
-		"code_interpreter_abuse":    CodeInterpreterAbuse,
+		"S1":  ViolentCrimes,
+		"S2":  NonViolentCrimes,
+		"S3":  SexRelatedCrimes,
+		"S4":  ChildSexualExploitation,
+		"S5":  Defamation,
+		"S6":  SpecializedAdvice,
+		"S7":  Privacy,
+		"S8":  IntellectualProperty,
+		"S9":  IndiscriminateWeapons,
+		"S10": Hate,
+		"S11": SuicideNSelfHarm,
+		"S12": SexualContent,
+		"S13": Elections,
+		"S14": CodeInterpreterAbuse,
 	}
 )
 

@@ -15,7 +15,7 @@ type CompletionStream struct {
 	*streamReader[CompletionResponse]
 }
 
-// CreateCompletionStream — API call to create a completion w/ streaming 
+// CreateCompletionStream — API call to create a completion w/ streaming
 // support.
 //
 // Recv receives a response from the stream.
