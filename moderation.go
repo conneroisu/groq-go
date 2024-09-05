@@ -69,11 +69,6 @@ var (
 	}
 )
 
-var validModerationModel = map[Model]struct{}{
-	ModerationTextStable: {},
-	ModerationTextLatest: {},
-}
-
 // ModerationRequest represents a request structure for moderation API.
 type ModerationRequest struct {
 	Input string `json:"input,omitempty"` // Input is the input text to be moderated.
@@ -92,8 +87,7 @@ func (c *Client) Moderate(
 	ctx context.Context,
 	request ModerationRequest,
 ) (response Moderation, err error) {
-	if _, ok := validModerationModel[request.Model]; len(request.Model) > 0 &&
-		!ok {
+	if !endpointSupportsModel(moderationsSuffix, request.Model) {
 		err = ErrChatCompletionInvalidModel{Model: request.Model}
 		return
 	}

@@ -18,6 +18,7 @@ const (
 	transcriptionsSuffix  Endpoint = "/audio/transcriptions"
 	translationsSuffix    Endpoint = "/audio/translations"
 	embeddingsSuffix      Endpoint = "/embeddings"
+	moderationsSuffix     Endpoint = "/moderations"
 	
 	{{- range $model := .Models }}
 		// {{ $model.Name }} is an AI {{if isTextModel $model}}text{{else}}audio{{end}} model provided by {{$model.OwnedBy}}. It has {{$model.ContextWindow}} context window.
@@ -39,6 +40,10 @@ var disabledModelsForEndpoints = map[Endpoint]map[Model]bool{
 	},
 	translationsSuffix: {
 	{{- range $model := .Models }} {{ if isTextModel $model }}
+			{{ $model.Name }}: true, {{- end }} {{- end }}
+	},
+	moderationsSuffix: {
+	{{- range $model := .Models }} {{ if isModerationModel $model }}
 			{{ $model.Name }}: true, {{- end }} {{- end }}
 	},
 }

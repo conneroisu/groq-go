@@ -76,7 +76,7 @@ func TestCreateChatCompletionStream(t *testing.T) {
 		context.Background(),
 		groq.ChatCompletionRequest{
 			MaxTokens: 5,
-			Model:     groq.Llama3_8b_8192,
+			Model:     groq.Llama38B8192,
 			Messages: []groq.ChatCompletionMessage{
 				{
 					Role:    groq.ChatMessageRoleUser,
@@ -94,7 +94,7 @@ func TestCreateChatCompletionStream(t *testing.T) {
 			ID:                "1",
 			Object:            "completion",
 			Created:           1598069254,
-			Model:             groq.Llama3_8b_8192,
+			Model:             groq.Llama38B8192,
 			SystemFingerprint: "fp_d9767fc5b9",
 			Choices: []groq.ChatCompletionStreamChoice{
 				{
@@ -109,7 +109,7 @@ func TestCreateChatCompletionStream(t *testing.T) {
 			ID:                "2",
 			Object:            "completion",
 			Created:           1598069255,
-			Model:             groq.Llama3_8b_8192,
+			Model:             groq.Llama38B8192,
 			SystemFingerprint: "fp_d9767fc5b9",
 			Choices: []groq.ChatCompletionStreamChoice{
 				{
@@ -199,7 +199,7 @@ func TestCreateChatCompletionStreamError(t *testing.T) {
 		context.Background(),
 		groq.ChatCompletionRequest{
 			MaxTokens: 5,
-			Model:     groq.Llama3_8b_8192,
+			Model:     groq.Llama38B8192,
 			Messages: []groq.ChatCompletionMessage{
 				{
 					Role:    groq.ChatMessageRoleUser,
@@ -249,7 +249,7 @@ func TestCreateChatCompletionStreamWithHeaders(t *testing.T) {
 		context.Background(),
 		groq.ChatCompletionRequest{
 			MaxTokens: 5,
-			Model:     groq.Llama3_8b_8192,
+			Model:     groq.Llama38B8192,
 			Messages: []groq.ChatCompletionMessage{
 				{
 					Role:    groq.ChatMessageRoleUser,
@@ -308,7 +308,7 @@ func TestCreateChatCompletionStreamWithRatelimitHeaders(t *testing.T) {
 		context.Background(),
 		groq.ChatCompletionRequest{
 			MaxTokens: 5,
-			Model:     groq.Llama3_8b_8192,
+			Model:     groq.Llama38B8192,
 			Messages: []groq.ChatCompletionMessage{
 				{
 					Role:    groq.ChatMessageRoleUser,
@@ -369,7 +369,7 @@ func TestCreateChatCompletionStreamErrorWithDataPrefix(t *testing.T) {
 		context.Background(),
 		groq.ChatCompletionRequest{
 			MaxTokens: 5,
-			Model:     groq.Llama3_8b_8192,
+			Model:     groq.Llama38B8192,
 			Messages: []groq.ChatCompletionMessage{
 				{
 					Role:    groq.ChatMessageRoleUser,
@@ -417,7 +417,7 @@ func TestCreateChatCompletionStreamRateLimitError(t *testing.T) {
 		context.Background(),
 		groq.ChatCompletionRequest{
 			MaxTokens: 5,
-			Model:     groq.Llama3_8b_8192,
+			Model:     groq.Llama38B8192,
 			Messages: []groq.ChatCompletionMessage{
 				{
 					Role:    groq.ChatMessageRoleUser,
@@ -468,7 +468,7 @@ func TestCreateChatCompletionStreamStreamOptions(t *testing.T) {
 		context.Background(),
 		groq.ChatCompletionRequest{
 			MaxTokens: 5,
-			Model:     groq.Llama3_8b_8192,
+			Model:     groq.Llama38B8192,
 			Messages: []groq.ChatCompletionMessage{
 				{
 					Role:    groq.ChatMessageRoleUser,
@@ -488,7 +488,7 @@ func TestCreateChatCompletionStreamStreamOptions(t *testing.T) {
 			ID:                "1",
 			Object:            "completion",
 			Created:           1598069254,
-			Model:             groq.Llama3_8b_8192,
+			Model:             groq.Llama38B8192,
 			SystemFingerprint: "fp_d9767fc5b9",
 			Choices: []groq.ChatCompletionStreamChoice{
 				{
@@ -503,7 +503,7 @@ func TestCreateChatCompletionStreamStreamOptions(t *testing.T) {
 			ID:                "2",
 			Object:            "completion",
 			Created:           1598069255,
-			Model:             groq.Llama3_8b_8192,
+			Model:             groq.Llama38B8192,
 			SystemFingerprint: "fp_d9767fc5b9",
 			Choices: []groq.ChatCompletionStreamChoice{
 				{
@@ -518,7 +518,7 @@ func TestCreateChatCompletionStreamStreamOptions(t *testing.T) {
 			ID:                "3",
 			Object:            "completion",
 			Created:           1598069256,
-			Model:             groq.Llama3_8b_8192,
+			Model:             groq.Llama38B8192,
 			SystemFingerprint: "fp_d9767fc5b9",
 			Choices:           []groq.ChatCompletionStreamChoice{},
 			Usage: &groq.Usage{

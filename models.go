@@ -18,68 +18,70 @@ const (
 	transcriptionsSuffix  Endpoint = "/audio/transcriptions"
 	translationsSuffix    Endpoint = "/audio/translations"
 	embeddingsSuffix      Endpoint = "/embeddings"
-	// Llama3_70b_8192 is an AI text model provided by Meta. It has 8192 context window.
-	Llama3_70b_8192 Model = "llama3-70b-8192"
-	// Gemma_7b_It is an AI text model provided by Google. It has 8192 context window.
-	Gemma_7b_It Model = "gemma-7b-it"
-	// Distil_Whisper_Large_V3_En is an AI audio model provided by Hugging Face. It has 448 context window.
-	Distil_Whisper_Large_V3_En Model = "distil-whisper-large-v3-en"
-	// Llama_3_1_8b_Instant is an AI text model provided by Meta. It has 131072 context window.
-	Llama_3_1_8b_Instant Model = "llama-3.1-8b-instant"
-	// Llama3_Groq_70b_8192_Tool_Use_Preview is an AI text model provided by Groq. It has 8192 context window.
-	Llama3_Groq_70b_8192_Tool_Use_Preview Model = "llama3-groq-70b-8192-tool-use-preview"
-	// Whisper_Large_V3 is an AI audio model provided by OpenAI. It has 448 context window.
-	Whisper_Large_V3 Model = "whisper-large-v3"
-	// Llama_3_1_70b_Versatile is an AI text model provided by Meta. It has 131072 context window.
-	Llama_3_1_70b_Versatile Model = "llama-3.1-70b-versatile"
-	// Llama3_Groq_8b_8192_Tool_Use_Preview is an AI text model provided by Groq. It has 8192 context window.
-	Llama3_Groq_8b_8192_Tool_Use_Preview Model = "llama3-groq-8b-8192-tool-use-preview"
-	// Llama3_8b_8192 is an AI text model provided by Meta. It has 8192 context window.
-	Llama3_8b_8192 Model = "llama3-8b-8192"
-	// Llava_V1_5_7b_4096_Preview is an AI text model provided by Other. It has 4096 context window.
-	Llava_V1_5_7b_4096_Preview Model = "llava-v1.5-7b-4096-preview"
-	// Gemma2_9b_It is an AI text model provided by Google. It has 8192 context window.
-	Gemma2_9b_It Model = "gemma2-9b-it"
-	// Llama_Guard_3_8b is an AI text model provided by Meta. It has 8192 context window.
-	Llama_Guard_3_8b Model = "llama-guard-3-8b"
-	// Mixtral_8x7b_32768 is an AI text model provided by Mistral AI. It has 32768 context window.
-	Mixtral_8x7b_32768 Model = "mixtral-8x7b-32768"
+	moderationsSuffix     Endpoint = "/moderations"
+	// Llama370B8192 is an AI text model provided by Meta. It has 8192 context window.
+	Llama370B8192 Model = "llama3-70b-8192"
+	// LlamaGuard38B is an AI audio model provided by Meta. It has 8192 context window.
+	LlamaGuard38B Model = "llama-guard-3-8b"
+	// LlavaV157B4096Preview is an AI text model provided by Other. It has 4096 context window.
+	LlavaV157B4096Preview Model = "llava-v1.5-7b-4096-preview"
+	// WhisperLargeV3 is an AI audio model provided by OpenAI. It has 448 context window.
+	WhisperLargeV3 Model = "whisper-large-v3"
+	// Mixtral8X7B32768 is an AI text model provided by Mistral AI. It has 32768 context window.
+	Mixtral8X7B32768 Model = "mixtral-8x7b-32768"
+	// Gemma29BIt is an AI text model provided by Google. It has 8192 context window.
+	Gemma29BIt Model = "gemma2-9b-it"
+	// Gemma7BIt is an AI text model provided by Google. It has 8192 context window.
+	Gemma7BIt Model = "gemma-7b-it"
+	// DistilWhisperLargeV3En is an AI audio model provided by Hugging Face. It has 448 context window.
+	DistilWhisperLargeV3En Model = "distil-whisper-large-v3-en"
+	// Llama3Groq8B8192ToolUsePreview is an AI text model provided by Groq. It has 8192 context window.
+	Llama3Groq8B8192ToolUsePreview Model = "llama3-groq-8b-8192-tool-use-preview"
+	// Llama38B8192 is an AI text model provided by Meta. It has 8192 context window.
+	Llama38B8192 Model = "llama3-8b-8192"
+	// Llama3170BVersatile is an AI text model provided by Meta. It has 131072 context window.
+	Llama3170BVersatile Model = "llama-3.1-70b-versatile"
+	// Llama318BInstant is an AI text model provided by Meta. It has 131072 context window.
+	Llama318BInstant Model = "llama-3.1-8b-instant"
+	// Llama3Groq70B8192ToolUsePreview is an AI text model provided by Groq. It has 8192 context window.
+	Llama3Groq70B8192ToolUsePreview Model = "llama3-groq-70b-8192-tool-use-preview"
 )
 
 var disabledModelsForEndpoints = map[Endpoint]map[Model]bool{
 	completionsSuffix: {
-		Distil_Whisper_Large_V3_En: true,
-		Whisper_Large_V3:           true,
+		WhisperLargeV3:         true,
+		DistilWhisperLargeV3En: true,
 	},
 	chatCompletionsSuffix: {
-		Distil_Whisper_Large_V3_En: true,
-		Whisper_Large_V3:           true,
+		WhisperLargeV3:         true,
+		DistilWhisperLargeV3En: true,
 	},
 	transcriptionsSuffix: {
-		Llama3_70b_8192:                       true,
-		Gemma_7b_It:                           true,
-		Llama_3_1_8b_Instant:                  true,
-		Llama3_Groq_70b_8192_Tool_Use_Preview: true,
-		Llama_3_1_70b_Versatile:               true,
-		Llama3_Groq_8b_8192_Tool_Use_Preview:  true,
-		Llama3_8b_8192:                        true,
-		Llava_V1_5_7b_4096_Preview:            true,
-		Gemma2_9b_It:                          true,
-		Llama_Guard_3_8b:                      true,
-		Mixtral_8x7b_32768:                    true,
+		Llama370B8192:                   true,
+		LlavaV157B4096Preview:           true,
+		Mixtral8X7B32768:                true,
+		Gemma29BIt:                      true,
+		Gemma7BIt:                       true,
+		Llama3Groq8B8192ToolUsePreview:  true,
+		Llama38B8192:                    true,
+		Llama3170BVersatile:             true,
+		Llama318BInstant:                true,
+		Llama3Groq70B8192ToolUsePreview: true,
 	},
 	translationsSuffix: {
-		Llama3_70b_8192:                       true,
-		Gemma_7b_It:                           true,
-		Llama_3_1_8b_Instant:                  true,
-		Llama3_Groq_70b_8192_Tool_Use_Preview: true,
-		Llama_3_1_70b_Versatile:               true,
-		Llama3_Groq_8b_8192_Tool_Use_Preview:  true,
-		Llama3_8b_8192:                        true,
-		Llava_V1_5_7b_4096_Preview:            true,
-		Gemma2_9b_It:                          true,
-		Llama_Guard_3_8b:                      true,
-		Mixtral_8x7b_32768:                    true,
+		Llama370B8192:                   true,
+		LlavaV157B4096Preview:           true,
+		Mixtral8X7B32768:                true,
+		Gemma29BIt:                      true,
+		Gemma7BIt:                       true,
+		Llama3Groq8B8192ToolUsePreview:  true,
+		Llama38B8192:                    true,
+		Llama3170BVersatile:             true,
+		Llama318BInstant:                true,
+		Llama3Groq70B8192ToolUsePreview: true,
+	},
+	moderationsSuffix: {
+		LlamaGuard38B: true,
 	},
 }
 
