@@ -10,14 +10,6 @@ import (
 	"net/http"
 )
 
-// ErrTooManyEmptyStreamMessages is returned when the stream has sent too many empty messages.
-type ErrTooManyEmptyStreamMessages struct{}
-
-// Error returns the error message.
-func (e ErrTooManyEmptyStreamMessages) Error() string {
-	return "stream has sent too many empty messages"
-}
-
 // CompletionStream is a stream of completions.
 type CompletionStream struct {
 	*streamReader[CompletionResponse]

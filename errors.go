@@ -207,3 +207,11 @@ func (e ErrCompletionRequestPromptTypeNotSupported) Error() string {
 	return fmt.Errorf("the type of CompletionRequest.Prompt only supports string and []string").
 		Error()
 }
+
+// ErrTooManyEmptyStreamMessages is returned when the stream has sent too many empty messages.
+type ErrTooManyEmptyStreamMessages struct{}
+
+// Error returns the error message.
+func (e ErrTooManyEmptyStreamMessages) Error() string {
+	return "stream has sent too many empty messages"
+}
