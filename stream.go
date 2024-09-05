@@ -73,7 +73,6 @@ func (stream *streamReader[T]) Recv() (response T, err error) {
 	return stream.processLines()
 }
 
-//nolint:gocognit
 func (stream *streamReader[T]) processLines() (T, error) {
 	var (
 		headerData  = []byte("data: ")

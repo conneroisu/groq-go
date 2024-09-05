@@ -222,3 +222,4 @@ FodyWeavers.xsd
 *.msm
 *.msp
 *.sln.iml
+converage.out

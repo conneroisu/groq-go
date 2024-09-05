@@ -57,12 +57,10 @@ func TestCreateChatCompletionStream(t *testing.T) {
 			// Send test responses
 			dataBytes := []byte{}
 			dataBytes = append(dataBytes, []byte("event: message\n")...)
-			//nolint:lll
 			data := `{"id":"1","object":"completion","created":1598069254,"model":"llama3-groq-70b-8192-tool-use-preview","system_fingerprint": "fp_d9767fc5b9","choices":[{"index":0,"delta":{"content":"response1"},"finish_reason":"max_tokens"}]}`
 			dataBytes = append(dataBytes, []byte("data: "+data+"\n\n")...)
 
 			dataBytes = append(dataBytes, []byte("event: message\n")...)
-			//nolint:lll
 			data = `{"id":"2","object":"completion","created":1598069255,"model":"llama3-groq-70b-8192-tool-use-preview","system_fingerprint": "fp_d9767fc5b9","choices":[{"index":0,"delta":{"content":"response2"},"finish_reason":"max_tokens"}]}`
 			dataBytes = append(dataBytes, []byte("data: "+data+"\n\n")...)
 
@@ -237,7 +235,6 @@ func TestCreateChatCompletionStreamWithHeaders(t *testing.T) {
 			w.Header().Set(xCustomHeader, xCustomHeaderValue)
 
 			// Send test responses
-			//nolint:lll
 			dataBytes := []byte(
 				`data: {"error":{"message":"The server had an error while processing your request. Sorry about that!", "type":"server_ error", "param":null,"code":null}}`,
 			)
@@ -297,7 +294,6 @@ func TestCreateChatCompletionStreamWithRatelimitHeaders(t *testing.T) {
 			}
 
 			// Send test responses
-			//nolint:lll
 			dataBytes := []byte(
 				`data: {"error":{"message":"The server had an error while processing your request. Sorry about that!", "type":"server_ error", "param":null,"code":null}}`,
 			)
@@ -359,7 +355,6 @@ func TestCreateChatCompletionStreamErrorWithDataPrefix(t *testing.T) {
 			w.Header().Set("Content-Type", "text/event-stream")
 
 			// Send test responses
-			//nolint:lll
 			dataBytes := []byte(
 				`data: {"error":{"message":"The server had an error while processing your request. Sorry about that!", "type":"server_ error", "param":null,"code":null}}`,
 			)
@@ -453,15 +448,12 @@ func TestCreateChatCompletionStreamStreamOptions(t *testing.T) {
 
 			// Send test responses
 			var dataBytes []byte
-			//nolint:lll
 			data := `{"id":"1","object":"completion","created":1598069254,"model":"llama3-groq-70b-8192-tool-use-preview","system_fingerprint": "fp_d9767fc5b9","choices":[{"index":0,"delta":{"content":"response1"},"finish_reason":"max_tokens"}],"usage":null}`
 			dataBytes = append(dataBytes, []byte("data: "+data+"\n\n")...)
 
-			//nolint:lll
 			data = `{"id":"2","object":"completion","created":1598069255,"model":"llama3-groq-70b-8192-tool-use-preview","system_fingerprint": "fp_d9767fc5b9","choices":[{"index":0,"delta":{"content":"response2"},"finish_reason":"max_tokens"}],"usage":null}`
 			dataBytes = append(dataBytes, []byte("data: "+data+"\n\n")...)
 
-			//nolint:lll
 			data = `{"id":"3","object":"completion","created":1598069256,"model":"llama3-groq-70b-8192-tool-use-preview","system_fingerprint": "fp_d9767fc5b9","choices":[],"usage":{"prompt_tokens":1,"completion_tokens":1,"total_tokens":2}}`
 			dataBytes = append(dataBytes, []byte("data: "+data+"\n\n")...)
 
