@@ -5,6 +5,39 @@ import (
 	"net/http"
 )
 
+// CreateCompletion — API call to create a completion. This is the main endpoint of the API. Returns new text as well
+// as, if requested, the probabilities over each alternative token at each position.
+//
+// If using a fine-tuned model, simply provide the model's ID in the CompletionRequest object,
+// and the server will use the model's parameters to generate the completion.
+func (c *Client) CreateCompletion(
+	ctx context.Context,
+	request CompletionRequest,
+) (response CompletionResponse, err error) {
+	if request.Stream {
+		err = ErrCompletionStreamNotSupported{}
+		return
+	}
+	if !endpointSupportsModel(completionsSuffix, request.Model) {
+		err = ErrCompletionUnsupportedModel{}
+		return
+	}
+	if !checkPromptType(request.Prompt) {
+		err = ErrCompletionRequestPromptTypeNotSupported{}
+		return
+	}
+	req, err := c.newRequest(
+		ctx,
+		http.MethodPost,
+		c.fullURL(completionsSuffix, withModel(request.Model)),
+		withBody(request))
+	if err != nil {
+		return
+	}
+	err = c.sendRequest(req, &response)
+	return
+}
+
 // CompletionRequest represents a request structure for completion API.
 type CompletionRequest struct {
 	Model            Model          `json:"model"`                       // Model is the model to use for the completion.
@@ -51,50 +84,12 @@ type CompletionResponse struct {
 	Choices []CompletionChoice `json:"choices"` // Choices is the choices of the completion.
 	Usage   Usage              `json:"usage"`   // Usage is the usage of the completion.
 
-	http.Header // Header is the header of the response.
+	Header http.Header // Header is the header of the response.
 }
 
 // SetHeader sets the header of the response.
 func (r *CompletionResponse) SetHeader(header http.Header) {
 	r.Header = header
-}
-
-// CreateCompletion — API call to create a completion. This is the main endpoint of the API. Returns new text as well
-// as, if requested, the probabilities over each alternative token at each position.
-//
-// If using a fine-tuned model, simply provide the model's ID in the CompletionRequest object,
-// and the server will use the model's parameters to generate the completion.
-func (c *Client) CreateCompletion(
-	ctx context.Context,
-	request CompletionRequest,
-) (response CompletionResponse, err error) {
-	if request.Stream {
-		err = ErrCompletionStreamNotSupported{}
-		return
-	}
-
-	if !endpointSupportsModel(completionsSuffix, request.Model) {
-		err = ErrCompletionUnsupportedModel{}
-		return
-	}
-
-	if !checkPromptType(request.Prompt) {
-		err = ErrCompletionRequestPromptTypeNotSupported{}
-		return
-	}
-
-	req, err := c.newRequest(
-		ctx,
-		http.MethodPost,
-		c.fullURL(completionsSuffix, withModel(request.Model)),
-		withBody(request),
-	)
-	if err != nil {
-		return
-	}
-
-	err = c.sendRequest(req, &response)
-	return
 }
 
 func checkPromptType(prompt any) bool {

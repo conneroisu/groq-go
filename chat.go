@@ -8,11 +8,11 @@ import (
 
 const (
 	url                                                                         = "https://api.groq.com/openai/v1/chat/completions" // url is the url of the chat completions endpoint.
-	ChatMessageRoleSystem                                                       = "system"                                          // ChatMessageRoleSystem is the system chat message role.
-	ChatMessageRoleUser                                                         = "user"                                            // ChatMessageRoleUser is the user chat message role.
-	ChatMessageRoleAssistant                                                    = "assistant"                                       // ChatMessageRoleAssistant is the assistant chat message role.
-	ChatMessageRoleFunction                                                     = "function"                                        // ChatMessageRoleFunction is the function chat message role.
-	ChatMessageRoleTool                                                         = "tool"                                            // ChatMessageRoleTool is the tool chat message role.
+	ChatMessageRoleSystem                      Role                             = "system"                                          // ChatMessageRoleSystem is the system chat message role.
+	ChatMessageRoleUser                        Role                             = "user"                                            // ChatMessageRoleUser is the user chat message role.
+	ChatMessageRoleAssistant                   Role                             = "assistant"                                       // ChatMessageRoleAssistant is the assistant chat message role.
+	ChatMessageRoleFunction                    Role                             = "function"                                        // ChatMessageRoleFunction is the function chat message role.
+	ChatMessageRoleTool                        Role                             = "tool"                                            // ChatMessageRoleTool is the tool chat message role.
 	ImageURLDetailHigh                         ImageURLDetail                   = "high"                                            // ImageURLDetailHigh is the high image url detail.
 	ImageURLDetailLow                          ImageURLDetail                   = "low"                                             // ImageURLDetailLow is the low image url detail.
 	ImageURLDetailAuto                         ImageURLDetail                   = "auto"                                            // ImageURLDetailAuto is the auto image url detail.
@@ -54,8 +54,14 @@ type ChatMessageImageURL struct {
 }
 
 // ChatMessagePartType is the chat message part type.
+//
 // string
 type ChatMessagePartType string
+
+// Role is the role of the chat completion message.
+//
+// string
+type Role string
 
 // ChatMessagePart represents the chat message part of a chat completion message.
 type ChatMessagePart struct {
@@ -66,7 +72,7 @@ type ChatMessagePart struct {
 
 // ChatCompletionMessage represents the chat completion message.
 type ChatCompletionMessage struct {
-	Role         string            `json:"role"`    // Role is the role of the chat completion message.
+	Role         Role              `json:"role"`    // Role is the role of the chat completion message.
 	Content      string            `json:"content"` // Content is the content of the chat completion message.
 	MultiContent []ChatMessagePart // MultiContent is the multi content of the chat completion message.
 
@@ -93,7 +99,7 @@ func (m ChatCompletionMessage) MarshalJSON() ([]byte, error) {
 	}
 	if len(m.MultiContent) > 0 {
 		msg := struct {
-			Role         string            `json:"role"`
+			Role         Role              `json:"role"`
 			Content      string            `json:"-"`
 			MultiContent []ChatMessagePart `json:"content,omitempty"`
 			Name         string            `json:"name,omitempty"`
@@ -104,7 +110,7 @@ func (m ChatCompletionMessage) MarshalJSON() ([]byte, error) {
 		return json.Marshal(msg)
 	}
 	msg := struct {
-		Role         string            `json:"role"`
+		Role         Role              `json:"role"`
 		Content      string            `json:"content"`
 		MultiContent []ChatMessagePart `json:"-"`
 		Name         string            `json:"name,omitempty"`
@@ -118,7 +124,7 @@ func (m ChatCompletionMessage) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON implements the json.Unmarshaler interface.
 func (m *ChatCompletionMessage) UnmarshalJSON(bs []byte) (err error) {
 	msg := struct {
-		Role         string `json:"role"`
+		Role         Role   `json:"role"`
 		Content      string `json:"content"`
 		MultiContent []ChatMessagePart
 		Name         string        `json:"name,omitempty"`
@@ -132,7 +138,7 @@ func (m *ChatCompletionMessage) UnmarshalJSON(bs []byte) (err error) {
 		return nil
 	}
 	multiMsg := struct {
-		Role         string `json:"role"`
+		Role         Role `json:"role"`
 		Content      string
 		MultiContent []ChatMessagePart `json:"content"`
 		Name         string            `json:"name,omitempty"`

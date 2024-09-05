@@ -51,4 +51,6 @@ func run(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	println(models.Data[0].ID)
+	return nil
 }
