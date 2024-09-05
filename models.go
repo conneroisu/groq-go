@@ -13,24 +13,37 @@ type Endpoint string
 type Model string
 
 const (
-	completionsSuffix                     Endpoint = "/completions"
-	chatCompletionsSuffix                 Endpoint = "/chat/completions"
-	transcriptionsSuffix                  Endpoint = "/audio/transcriptions"
-	translationsSuffix                    Endpoint = "/audio/translations"
-	embeddingsSuffix                      Endpoint = "/embeddings"
-	Gemma_7b_It                           Model    = "gemma-7b-it"
-	Llama_Guard_3_8b                      Model    = "llama-guard-3-8b"
-	Llama_3_1_8b_Instant                  Model    = "llama-3.1-8b-instant"
-	Gemma2_9b_It                          Model    = "gemma2-9b-it"
-	Mixtral_8x7b_32768                    Model    = "mixtral-8x7b-32768"
-	Llama3_Groq_8b_8192_Tool_Use_Preview  Model    = "llama3-groq-8b-8192-tool-use-preview"
-	Llava_V1_5_7b_4096_Preview            Model    = "llava-v1.5-7b-4096-preview"
-	Whisper_Large_V3                      Model    = "whisper-large-v3"
-	Llama_3_1_70b_Versatile               Model    = "llama-3.1-70b-versatile"
-	Distil_Whisper_Large_V3_En            Model    = "distil-whisper-large-v3-en"
-	Llama3_8b_8192                        Model    = "llama3-8b-8192"
-	Llama3_70b_8192                       Model    = "llama3-70b-8192"
-	Llama3_Groq_70b_8192_Tool_Use_Preview Model    = "llama3-groq-70b-8192-tool-use-preview"
+	completionsSuffix     Endpoint = "/completions"
+	chatCompletionsSuffix Endpoint = "/chat/completions"
+	transcriptionsSuffix  Endpoint = "/audio/transcriptions"
+	translationsSuffix    Endpoint = "/audio/translations"
+	embeddingsSuffix      Endpoint = "/embeddings"
+	// Llama3_70b_8192 is an AI text model provided by Meta. It has 8192 context window.
+	Llama3_70b_8192 Model = "llama3-70b-8192"
+	// Gemma_7b_It is an AI text model provided by Google. It has 8192 context window.
+	Gemma_7b_It Model = "gemma-7b-it"
+	// Distil_Whisper_Large_V3_En is an AI audio model provided by Hugging Face. It has 448 context window.
+	Distil_Whisper_Large_V3_En Model = "distil-whisper-large-v3-en"
+	// Llama_3_1_8b_Instant is an AI text model provided by Meta. It has 131072 context window.
+	Llama_3_1_8b_Instant Model = "llama-3.1-8b-instant"
+	// Llama3_Groq_70b_8192_Tool_Use_Preview is an AI text model provided by Groq. It has 8192 context window.
+	Llama3_Groq_70b_8192_Tool_Use_Preview Model = "llama3-groq-70b-8192-tool-use-preview"
+	// Whisper_Large_V3 is an AI audio model provided by OpenAI. It has 448 context window.
+	Whisper_Large_V3 Model = "whisper-large-v3"
+	// Llama_3_1_70b_Versatile is an AI text model provided by Meta. It has 131072 context window.
+	Llama_3_1_70b_Versatile Model = "llama-3.1-70b-versatile"
+	// Llama3_Groq_8b_8192_Tool_Use_Preview is an AI text model provided by Groq. It has 8192 context window.
+	Llama3_Groq_8b_8192_Tool_Use_Preview Model = "llama3-groq-8b-8192-tool-use-preview"
+	// Llama3_8b_8192 is an AI text model provided by Meta. It has 8192 context window.
+	Llama3_8b_8192 Model = "llama3-8b-8192"
+	// Llava_V1_5_7b_4096_Preview is an AI text model provided by Other. It has 4096 context window.
+	Llava_V1_5_7b_4096_Preview Model = "llava-v1.5-7b-4096-preview"
+	// Gemma2_9b_It is an AI text model provided by Google. It has 8192 context window.
+	Gemma2_9b_It Model = "gemma2-9b-it"
+	// Llama_Guard_3_8b is an AI text model provided by Meta. It has 8192 context window.
+	Llama_Guard_3_8b Model = "llama-guard-3-8b"
+	// Mixtral_8x7b_32768 is an AI text model provided by Mistral AI. It has 32768 context window.
+	Mixtral_8x7b_32768 Model = "mixtral-8x7b-32768"
 )
 
 // String returns the string representation of the Endpoint.
@@ -40,41 +53,65 @@ func (e Endpoint) String() string {
 
 var disabledModelsForEndpoints = map[Endpoint]map[Model]bool{
 	completionsSuffix: {
-		Whisper_Large_V3:           true,
 		Distil_Whisper_Large_V3_En: true,
+		Whisper_Large_V3:           true,
 	},
 	chatCompletionsSuffix: {
-		Whisper_Large_V3:           true,
 		Distil_Whisper_Large_V3_En: true,
+		Whisper_Large_V3:           true,
 	},
 	transcriptionsSuffix: {
-		Gemma_7b_It:                           true,
-		Llama_Guard_3_8b:                      true,
-		Llama_3_1_8b_Instant:                  true,
-		Gemma2_9b_It:                          true,
-		Mixtral_8x7b_32768:                    true,
-		Llama3_Groq_8b_8192_Tool_Use_Preview:  true,
-		Llava_V1_5_7b_4096_Preview:            true,
-		Llama_3_1_70b_Versatile:               true,
-		Llama3_8b_8192:                        true,
 		Llama3_70b_8192:                       true,
+		Gemma_7b_It:                           true,
+		Llama_3_1_8b_Instant:                  true,
 		Llama3_Groq_70b_8192_Tool_Use_Preview: true,
+		Llama_3_1_70b_Versatile:               true,
+		Llama3_Groq_8b_8192_Tool_Use_Preview:  true,
+		Llama3_8b_8192:                        true,
+		Llava_V1_5_7b_4096_Preview:            true,
+		Gemma2_9b_It:                          true,
+		Llama_Guard_3_8b:                      true,
+		Mixtral_8x7b_32768:                    true,
 	},
 	translationsSuffix: {
-		Gemma_7b_It:                           true,
-		Llama_Guard_3_8b:                      true,
-		Llama_3_1_8b_Instant:                  true,
-		Gemma2_9b_It:                          true,
-		Mixtral_8x7b_32768:                    true,
-		Llama3_Groq_8b_8192_Tool_Use_Preview:  true,
-		Llava_V1_5_7b_4096_Preview:            true,
-		Llama_3_1_70b_Versatile:               true,
-		Llama3_8b_8192:                        true,
 		Llama3_70b_8192:                       true,
+		Gemma_7b_It:                           true,
+		Llama_3_1_8b_Instant:                  true,
 		Llama3_Groq_70b_8192_Tool_Use_Preview: true,
+		Llama_3_1_70b_Versatile:               true,
+		Llama3_Groq_8b_8192_Tool_Use_Preview:  true,
+		Llama3_8b_8192:                        true,
+		Llava_V1_5_7b_4096_Preview:            true,
+		Gemma2_9b_It:                          true,
+		Llama_Guard_3_8b:                      true,
+		Mixtral_8x7b_32768:                    true,
 	},
 }
 
 func endpointSupportsModel(endpoint Endpoint, model Model) bool {
 	return !disabledModelsForEndpoints[endpoint][model]
 }
+
+// Whisper Defines the models provided by OpenAI to use when processing audio with OpenAI.
+const (
+	AudioResponseFormatJSON        AudioResponseFormat = "json"         // AudioResponseFormatJSON is the JSON format.
+	AudioResponseFormatText        AudioResponseFormat = "text"         // AudioResponseFormatText is the text format.
+	AudioResponseFormatSRT         AudioResponseFormat = "srt"          // AudioResponseFormatSRT is the SRT format.
+	AudioResponseFormatVerboseJSON AudioResponseFormat = "verbose_json" // AudioResponseFormatVerboseJSON is the verbose JSON format.
+	AudioResponseFormatVTT         AudioResponseFormat = "vtt"          // AudioResponseFormatVTT is the VTT format.
+
+	TranscriptionTimestampGranularityWord    TranscriptionTimestampGranularity = "word"    // TranscriptionTimestampGranularityWord is the word timestamp granularity.
+	TranscriptionTimestampGranularitySegment TranscriptionTimestampGranularity = "segment" // TranscriptionTimestampGranularitySegment is the segment timestamp granularity.
+)
+
+// AudioResponseFormat is the response format for the audio API.
+//
+// Response formats; Whisper uses AudioResponseFormatJSON by default.
+//
+// string
+type AudioResponseFormat string
+
+// TranscriptionTimestampGranularity is the timestamp granularity for the transcription.
+//
+// string
+type TranscriptionTimestampGranularity string

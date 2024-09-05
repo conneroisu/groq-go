@@ -19,8 +19,9 @@ const (
 	translationsSuffix    Endpoint = "/audio/translations"
 	embeddingsSuffix      Endpoint = "/embeddings"
 	
-{{- range $model := .Models }}
-	{{ $model.Name }} Model = "{{ $model.ID }}" {{- end }}
+	{{- range $model := .Models }}
+		// {{ $model.Name }} is an AI {{if isTextModel $model}}text{{else}}audio{{end}} model provided by {{$model.OwnedBy}}. It has {{$model.ContextWindow}} context window.
+		{{ $model.Name }} Model = "{{ $model.ID }}" {{- end }}
 )
 
 // String returns the string representation of the Endpoint.
@@ -51,3 +52,27 @@ func endpointSupportsModel(endpoint Endpoint, model Model) bool {
 	return !disabledModelsForEndpoints[endpoint][model]
 }
 
+
+// Whisper Defines the models provided by OpenAI to use when processing audio with OpenAI.
+const (
+	AudioResponseFormatJSON        AudioResponseFormat = "json"         // AudioResponseFormatJSON is the JSON format.
+	AudioResponseFormatText        AudioResponseFormat = "text"         // AudioResponseFormatText is the text format.
+	AudioResponseFormatSRT         AudioResponseFormat = "srt"          // AudioResponseFormatSRT is the SRT format.
+	AudioResponseFormatVerboseJSON AudioResponseFormat = "verbose_json" // AudioResponseFormatVerboseJSON is the verbose JSON format.
+	AudioResponseFormatVTT         AudioResponseFormat = "vtt"          // AudioResponseFormatVTT is the VTT format.
+
+	TranscriptionTimestampGranularityWord    TranscriptionTimestampGranularity = "word"    // TranscriptionTimestampGranularityWord is the word timestamp granularity.
+	TranscriptionTimestampGranularitySegment TranscriptionTimestampGranularity = "segment" // TranscriptionTimestampGranularitySegment is the segment timestamp granularity.
+)
+
+// AudioResponseFormat is the response format for the audio API.
+//
+// Response formats; Whisper uses AudioResponseFormatJSON by default.
+//
+// string
+type AudioResponseFormat string
+
+// TranscriptionTimestampGranularity is the timestamp granularity for the transcription.
+//
+// string
+type TranscriptionTimestampGranularity string

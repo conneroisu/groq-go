@@ -9,29 +9,6 @@ import (
 	"os"
 )
 
-// Whisper Defines the models provided by OpenAI to use when processing audio with OpenAI.
-const (
-	AudioResponseFormatJSON                  AudioResponseFormat               = "json"         // AudioResponseFormatJSON is the JSON format.
-	AudioResponseFormatText                  AudioResponseFormat               = "text"         // AudioResponseFormatText is the text format.
-	AudioResponseFormatSRT                   AudioResponseFormat               = "srt"          // AudioResponseFormatSRT is the SRT format.
-	AudioResponseFormatVerboseJSON           AudioResponseFormat               = "verbose_json" // AudioResponseFormatVerboseJSON is the verbose JSON format.
-	AudioResponseFormatVTT                   AudioResponseFormat               = "vtt"          // AudioResponseFormatVTT is the VTT format.
-	TranscriptionTimestampGranularityWord    TranscriptionTimestampGranularity = "word"         // TranscriptionTimestampGranularityWord is the word timestamp granularity.
-	TranscriptionTimestampGranularitySegment TranscriptionTimestampGranularity = "segment"      // TranscriptionTimestampGranularitySegment is the segment timestamp granularity.
-)
-
-// AudioResponseFormat is the response format for the audio API.
-//
-// Response formats; Whisper uses AudioResponseFormatJSON by default.
-//
-// string
-type AudioResponseFormat string
-
-// TranscriptionTimestampGranularity is the timestamp granularity for the transcription.
-//
-// string
-type TranscriptionTimestampGranularity string
-
 // AudioRequest represents a request structure for audio API.
 type AudioRequest struct {
 	Model                  Model                               // Model is the model to use for the transcription.

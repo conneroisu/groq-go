@@ -30,28 +30,10 @@ const (
 	FinishReasonNull                           FinishReason                     = "null"           // FinishReasonNull is the null finish reason.
 )
 
-// Message is a message in a chat request.
-type Message struct {
-	Role    string `json:"role"`
-	Content string `json:"content"`
-}
-
-// PromptAnnotation represents the prompt annotation.
-type PromptAnnotation struct {
-	PromptIndex          int                  `json:"prompt_index,omitempty"`
-	ContentFilterResults ContentFilterResults `json:"content_filter_results,omitempty"`
-}
-
 // ImageURLDetail is the image url detail.
 //
 // string
 type ImageURLDetail string
-
-// ChatMessageImageURL represents the chat message image url.
-type ChatMessageImageURL struct {
-	URL    string         `json:"url,omitempty"`    // URL is the url of the image.
-	Detail ImageURLDetail `json:"detail,omitempty"` // Detail is the detail of the image url.
-}
 
 // ChatMessagePartType is the chat message part type.
 //
@@ -62,6 +44,18 @@ type ChatMessagePartType string
 //
 // string
 type Role string
+
+// PromptAnnotation represents the prompt annotation.
+type PromptAnnotation struct {
+	PromptIndex          int                  `json:"prompt_index,omitempty"`
+	ContentFilterResults ContentFilterResults `json:"content_filter_results,omitempty"`
+}
+
+// ChatMessageImageURL represents the chat message image url.
+type ChatMessageImageURL struct {
+	URL    string         `json:"url,omitempty"`    // URL is the url of the image.
+	Detail ImageURLDetail `json:"detail,omitempty"` // Detail is the detail of the image url.
+}
 
 // ChatMessagePart represents the chat message part of a chat completion message.
 type ChatMessagePart struct {
