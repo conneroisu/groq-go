@@ -32,9 +32,7 @@ func TestCompletionsStreamWrongModel(t *testing.T) {
 	)
 	if !errors.Is(
 		err,
-		groq.ErrCompletionUnsupportedModel{
-			Model: groq.Whisper_Large_V3,
-		},
+		groq.ErrCompletionStreamNotSupported{},
 	) {
 		t.Fatalf(
 			"CreateCompletion should return ErrCompletionUnsupportedModel, but returned: %v",

@@ -181,7 +181,8 @@ func (e ErrContentFieldsMisused) Error() string {
 		Error()
 }
 
-// ErrCompletionUnsupportedModel is an error that occurs when the model is not supported with the CreateCompletion method.
+// ErrCompletionUnsupportedModel is an error that occurs when the model is not
+// supported with the CreateCompletion method.
 type ErrCompletionUnsupportedModel struct{ Model Model }
 
 // Error implements the error interface.

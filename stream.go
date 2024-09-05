@@ -25,7 +25,7 @@ func (c *Client) CreateCompletionStream(
 ) (*CompletionStream, error) {
 	var err error
 	if !endpointSupportsModel(completionsSuffix, request.Model) {
-		return nil, ErrCompletionUnsupportedModel{Model: request.Model}
+		return nil, ErrCompletionStreamNotSupported{}
 	}
 	if !checkPromptType(request.Prompt) {
 		return nil, ErrCompletionRequestPromptTypeNotSupported{}
