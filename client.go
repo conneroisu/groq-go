@@ -108,6 +108,7 @@ type Usage struct {
 	CompletionTokens int `json:"completion_tokens"`
 	TotalTokens      int `json:"total_tokens"`
 }
+
 type requestOptions struct {
 	body   any
 	header http.Header
