@@ -112,7 +112,11 @@ func run(ctx context.Context) error {
 	}
 	formatted, err := format.Source(buf.Bytes())
 	if err != nil {
-		return fmt.Errorf("error formatting output: %w : %s", err, buf.String())
+		return fmt.Errorf(
+			"error formatting output: %w : %s",
+			err,
+			buf.String(),
+		)
 	}
 	f, err := os.Create(outputFile)
 	if err != nil {
@@ -156,7 +160,11 @@ func nameModels(models []ResponseModel) {
 		if (models)[i].Name == "" {
 			filtered := strings.Replace(models[i].ID, "-", "_", -1)
 			filtered = strings.Replace(filtered, ".", "_", -1)
-			models[i].Name = strcase.ToGoCase(filtered, strcase.TitleCase, bytes.Runes([]byte("_"))[0])
+			models[i].Name = strcase.ToGoCase(
+				filtered,
+				strcase.TitleCase,
+				bytes.Runes([]byte("_"))[0],
+			)
 		}
 	}
 }

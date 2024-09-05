@@ -194,26 +194,6 @@ type RawResponse struct {
 	http.Header
 }
 
-func (c *Client) sendRequestRaw(
-	req *http.Request,
-) (response RawResponse, err error) {
-	resp, err := c.client.Do(
-		req,
-	) //nolint:bodyclose // body should be closed by outer function
-	if err != nil {
-		return
-	}
-
-	if isFailureStatusCode(resp) {
-		err = c.handleErrorResp(resp)
-		return
-	}
-
-	response.Header = resp.Header
-	response.ReadCloser = resp.Body
-	return
-}
-
 func sendRequestStream[T streamer](
 	client *Client,
 	req *http.Request,

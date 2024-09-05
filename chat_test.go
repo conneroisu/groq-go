@@ -577,7 +577,10 @@ func TestCreateChatCompletionStreamStreamOptions(t *testing.T) {
 }
 
 // Helper funcs.
-func compareChatResponses(t *testing.T, r1, r2 groq.ChatCompletionStreamResponse) bool {
+func compareChatResponses(
+	t *testing.T,
+	r1, r2 groq.ChatCompletionStreamResponse,
+) bool {
 	if r1.ID != r2.ID {
 		t.Logf("Not Equal ID: %v", r1.ID)
 		return false
