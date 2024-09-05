@@ -185,7 +185,7 @@ type ChatCompletionResponseFormatJSONSchema struct {
 
 // ChatCompletionRequest represents a request structure for the chat completion API.
 type ChatCompletionRequest struct {
-	Model            string                        `json:"model"`                       // Model is the model of the chat completion request.
+	Model            Model                         `json:"model"`                       // Model is the model of the chat completion request.
 	Messages         []ChatCompletionMessage       `json:"messages"`                    // Messages is the messages of the chat completion request.
 	MaxTokens        int                           `json:"max_tokens,omitempty"`        // MaxTokens is the max tokens of the chat completion request.
 	Temperature      float32                       `json:"temperature,omitempty"`       // Temperature is the temperature of the chat completion request.
@@ -346,7 +346,10 @@ func (c *Client) CreateChatCompletion(
 		}
 	}
 	if !endpointSupportsModel(chatCompletionsSuffix, request.Model) {
-		return response, ErrChatCompletionInvalidModel{Model: request.Model}
+		return response, ErrChatCompletionInvalidModel{
+			Model:    request.Model,
+			Endpoint: chatCompletionsSuffix,
+		}
 	}
 	req, err := c.newRequest(
 		ctx,
@@ -387,7 +390,7 @@ type ChatCompletionStreamResponse struct {
 	ID                  string                       `json:"id"`                              // ID is the identifier for the chat completion stream response.
 	Object              string                       `json:"object"`                          // Object is the object type of the chat completion stream response.
 	Created             int64                        `json:"created"`                         // Created is the creation time of the chat completion stream response.
-	Model               string                       `json:"model"`                           // Model is the model used for the chat completion stream response.
+	Model               Model                        `json:"model"`                           // Model is the model used for the chat completion stream response.
 	Choices             []ChatCompletionStreamChoice `json:"choices"`                         // Choices is the choices for the chat completion stream response.
 	SystemFingerprint   string                       `json:"system_fingerprint"`              // SystemFingerprint is the system fingerprint for the chat completion stream response.
 	PromptAnnotations   []PromptAnnotation           `json:"prompt_annotations,omitempty"`    // PromptAnnotations is the prompt annotations for the chat completion stream response.
@@ -415,18 +418,17 @@ func (c *Client) CreateChatCompletionStream(
 	ctx context.Context,
 	request ChatCompletionRequest,
 ) (stream *ChatCompletionStream, err error) {
-	urlSuffix := chatCompletionsSuffix
-	if !endpointSupportsModel(urlSuffix, request.Model) {
+	if !endpointSupportsModel(chatCompletionsSuffix, request.Model) {
 		return stream, ErrChatCompletionInvalidModel{
 			Model:    request.Model,
-			Endpoint: urlSuffix,
+			Endpoint: chatCompletionsSuffix,
 		}
 	}
 	request.Stream = true
 	req, err := c.newRequest(
 		ctx,
 		http.MethodPost,
-		c.fullURL(urlSuffix, withModel(request.Model)),
+		c.fullURL(chatCompletionsSuffix, withModel(request.Model)),
 		withBody(request),
 	)
 	if err != nil {

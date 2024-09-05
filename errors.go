@@ -151,8 +151,8 @@ func (e *RequestError) Unwrap() error {
 
 // ErrChatCompletionInvalidModel is an error that occurs when the model is not supported with the CreateChatCompletion method.
 type ErrChatCompletionInvalidModel struct {
-	Model    string
-	Endpoint string
+	Model    Model
+	Endpoint Endpoint
 }
 
 // Error implements the error interface.
@@ -167,7 +167,7 @@ func (e ErrChatCompletionInvalidModel) Error() string {
 
 // ErrChatCompletionStreamNotSupported is an error that occurs when streaming is not supported with the CreateChatCompletionStream method.
 type ErrChatCompletionStreamNotSupported struct {
-	model string
+	model Model
 }
 
 // Error implements the error interface.
@@ -188,7 +188,7 @@ func (e ErrContentFieldsMisused) Error() string {
 }
 
 // ErrCompletionUnsupportedModel is an error that occurs when the model is not supported with the CreateCompletion method.
-type ErrCompletionUnsupportedModel struct{ Model string }
+type ErrCompletionUnsupportedModel struct{ Model Model }
 
 // Error implements the error interface.
 func (e ErrCompletionUnsupportedModel) Error() string {

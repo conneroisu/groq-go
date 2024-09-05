@@ -32,12 +32,11 @@ const (
 
 // Client is a Groq api client.
 type Client struct {
-	groqAPIKey         string         // Groq API key
-	orgID              string         // OrgID is the organization ID for the client.
-	baseURL            string         // Base URL for the client.
-	client             *http.Client   // Client is the HTTP client to use
-	models             *ModelResponse // Models is the list of models available to the client.
-	EmptyMessagesLimit uint           // EmptyMessagesLimit is the limit for the empty messages.
+	groqAPIKey         string       // Groq API key
+	orgID              string       // OrgID is the organization ID for the client.
+	baseURL            string       // Base URL for the client.
+	client             *http.Client // Client is the HTTP client to use
+	EmptyMessagesLimit uint         // EmptyMessagesLimit is the limit for the empty messages.
 	requestBuilder     RequestBuilder
 	requestFormBuilder FormBuilder
 	createFormBuilder  func(body io.Writer) FormBuilder
@@ -61,10 +60,6 @@ func NewClient(groqAPIKey string, opts ...Opts) (*Client, error) {
 		},
 		requestBuilder: NewRequestBuilder(),
 	}
-	err := c.GetModels()
-	if err != nil {
-		return nil, err
-	}
 	for _, opt := range opts {
 		opt(c)
 	}
@@ -72,7 +67,7 @@ func NewClient(groqAPIKey string, opts ...Opts) (*Client, error) {
 }
 
 // fullURL returns full URL for request.
-func (c *Client) fullURL(suffix string, setters ...fullURLOption) string {
+func (c *Client) fullURL(suffix Endpoint, setters ...fullURLOption) string {
 	baseURL := strings.TrimRight(c.baseURL, "/")
 	args := fullURLOptions{}
 	for _, setter := range setters {
@@ -92,44 +87,43 @@ func (m *ModelResponse) contains(model string) bool {
 }
 
 // GetModels gets the list of models from the Groq API.
-func (c *Client) GetModels() error {
-	req, err := http.NewRequest("GET", c.baseURL+"/models", nil)
+func (c *Client) GetModels(ctx context.Context) (ModelResponse, error) {
+	req, err := http.NewRequestWithContext(ctx, "GET", c.baseURL+"/models", nil)
 	if err != nil {
-		return err
+		return ModelResponse{}, err
 	}
 	req.Header.Set("Authorization", "Bearer "+c.groqAPIKey)
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := c.client.Do(req)
 	if err != nil {
-		return err
+		return ModelResponse{}, err
 	}
 	defer resp.Body.Close()
 	bodyText, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return err
+		return ModelResponse{}, err
 	}
 	var modelsResponse ModelResponse
 	err = json.Unmarshal(bodyText, &modelsResponse)
 	if err != nil {
-		return err
+		return ModelResponse{}, err
 	}
-	c.models = &modelsResponse
-	return nil
+	return modelsResponse, nil
 }
 
 // ModelResponse is a response from the models endpoint.
 type ModelResponse struct {
-	Object string `json:"object"`
-	Data   []struct {
-		ID             string `json:"id"`
-		Object         string `json:"object"`
-		Created        int    `json:"created"`
-		OwnedBy        string `json:"owned_by"`
-		Active         bool   `json:"active"`
-		ContextWindow  int    `json:"context_window,omitempty"`
-		PublicApps     any    `json:"public_apps"`
-		ContextWindow0 int    `json:"context_ window,omitempty"`
-	} `json:"data"`
+	Object string          `json:"object"`
+	Data   []responseModel `json:"data"`
+}
+type responseModel struct {
+	ID            string `json:"id"`
+	Object        string `json:"object"`
+	Created       int    `json:"created"`
+	OwnedBy       string `json:"owned_by"`
+	Active        bool   `json:"active"`
+	ContextWindow int    `json:"context_window"`
+	PublicApps    any    `json:"public_apps"`
 }
 
 // Opts is a function that sets options for a Groq client.
@@ -268,7 +262,7 @@ func (c *Client) sendRequestRaw(
 	return
 }
 
-func sendRequestStream[T streamable](
+func sendRequestStream[T streamer](
 	client *Client,
 	req *http.Request,
 ) (*streamReader[T], error) {
@@ -334,12 +328,12 @@ func decodeString(body io.Reader, output *string) error {
 }
 
 type fullURLOptions struct {
-	model string
+	model Model
 }
 
 type fullURLOption func(*fullURLOptions)
 
-func withModel(model string) fullURLOption {
+func withModel(model Model) fullURLOption {
 	return func(args *fullURLOptions) {
 		args.model = model
 	}
@@ -388,26 +382,39 @@ func (r ResetTime) Time() time.Time {
 	return time.Now().Add(d)
 }
 
+// Endpoint is the endpoint for the groq api.
+// string
+type Endpoint string
+
+// Model is the type for models present on the groq api.
+// string
+type Model string
+
 // GPT3 Defines the models provided by OpenAI to use when generating
 // completions from OpenAI.
 //
 // GPT3 Models are designed for text-based tasks. For code-specific
 // tasks, please refer to the Codex series of models.
 const (
-	completionsSuffix     = "/completions"
-	chatCompletionsSuffix = "/chat/completions"
-	transcriptionsSuffix  = "/audio/transcriptions"
-	translationsSuffix    = "/audio/translations"
+	completionsSuffix     Endpoint = "/completions"
+	chatCompletionsSuffix Endpoint = "/chat/completions"
+	transcriptionsSuffix  Endpoint = "/audio/transcriptions"
+	translationsSuffix    Endpoint = "/audio/translations"
+	embeddingsSuffix      Endpoint = "/embeddings"
 
-	Gemma209B                    = "gemma2-9b-it"
-	Gemma207B                    = "gemma-7b-it"
-	Llama3070B8192ToolUsePreview = "llama3-groq-70b-8192-tool-use-preview"
-	Llama308B8192ToolUsePreview  = "llama3-groq-8b-8192-tool-use-preview"
-	WhisperLargeV3               = "whisper-large-v3"
-	WhisperDistilledLargeV3      = "distil-whisper-large-v3-en"
+	Gemma209B                    Model = "gemma2-9b-it"
+	Gemma207B                    Model = "gemma-7b-it"
+	Llama3070B8192ToolUsePreview Model = "llama3-groq-70b-8192-tool-use-preview"
+	Llama308B8192ToolUsePreview  Model = "llama3-groq-8b-8192-tool-use-preview"
+	WhisperLargeV3               Model = "whisper-large-v3"
+	WhisperDistilledLargeV3      Model = "distil-whisper-large-v3-en"
 )
 
-var disabledModelsForEndpoints = map[string]map[string]bool{
+func (e Endpoint) String() string {
+	return string(e)
+}
+
+var disabledModelsForEndpoints = map[Endpoint]map[Model]bool{
 	completionsSuffix: {
 		Llama3070B8192ToolUsePreview: true,
 		Llama308B8192ToolUsePreview:  true,
@@ -432,8 +439,12 @@ var disabledModelsForEndpoints = map[string]map[string]bool{
 		Gemma209B:                    true,
 		Gemma207B:                    true,
 	},
+	embeddingsSuffix: {
+		WhisperLargeV3:          true,
+		WhisperDistilledLargeV3: true,
+	},
 }
 
-func endpointSupportsModel(endpoint, model string) bool {
+func endpointSupportsModel(endpoint Endpoint, model Model) bool {
 	return !disabledModelsForEndpoints[endpoint][model]
 }

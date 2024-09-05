@@ -22,7 +22,7 @@ const (
 
 // ErrModerationInvalidModel is returned when the model is not supported with the moderation endpoint.
 type ErrModerationInvalidModel struct {
-	Model string
+	Model Model
 }
 
 // Error implements the error interface.
@@ -33,7 +33,7 @@ func (e ErrModerationInvalidModel) Error() string {
 	)
 }
 
-var validModerationModel = map[string]struct{}{
+var validModerationModel = map[Model]struct{}{
 	ModerationTextStable: {},
 	ModerationTextLatest: {},
 }
@@ -41,7 +41,7 @@ var validModerationModel = map[string]struct{}{
 // ModerationRequest represents a request structure for moderation API.
 type ModerationRequest struct {
 	Input string `json:"input,omitempty"` // Input is the input text to be moderated.
-	Model string `json:"model,omitempty"` // Model is the model to use for the moderation.
+	Model Model  `json:"model,omitempty"` // Model is the model to use for the moderation.
 }
 
 // Result represents one of possible moderation results.
@@ -116,7 +116,7 @@ type ResultCategoryScores struct {
 // ModerationResponse represents a response structure for moderation API.
 type ModerationResponse struct {
 	ID      string   `json:"id"`      // ID is the ID of the response.
-	Model   string   `json:"model"`   // Model is the model of the response.
+	Model   Model    `json:"model"`   // Model is the model of the response.
 	Results []Result `json:"results"` // Results is the results of the response.
 
 	http.Header // Header is the header of the response.

@@ -53,7 +53,7 @@ func TestModerations(t *testing.T) {
 func TestModerationsWithDifferentModelOptions(t *testing.T) {
 	a := assert.New(t)
 	var modelOptions []struct {
-		model  string
+		model  groq.Model
 		expect error
 	}
 	modelOptions = append(
@@ -91,12 +91,12 @@ func TestModerationsWithDifferentModelOptions(t *testing.T) {
 	}
 }
 
-func getModerationModelTestOption(model string, expect error) struct {
-	model  string
+func getModerationModelTestOption(model groq.Model, expect error) struct {
+	model  groq.Model
 	expect error
 } {
 	return struct {
-		model  string
+		model  groq.Model
 		expect error
 	}{model: model, expect: expect}
 }

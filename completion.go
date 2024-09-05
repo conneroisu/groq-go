@@ -7,7 +7,7 @@ import (
 
 // CompletionRequest represents a request structure for completion API.
 type CompletionRequest struct {
-	Model            string         `json:"model"`                       // Model is the model to use for the completion.
+	Model            Model          `json:"model"`                       // Model is the model to use for the completion.
 	Prompt           any            `json:"prompt,omitempty"`            // Prompt is the prompt for the completion.
 	BestOf           int            `json:"best_of,omitempty"`           // BestOf is the number of completions to generate.
 	Echo             bool           `json:"echo,omitempty"`              // Echo is whether to echo back the prompt in the completion.
@@ -47,7 +47,7 @@ type CompletionResponse struct {
 	ID      string             `json:"id"`      // ID is the ID of the completion.
 	Object  string             `json:"object"`  // Object is the object of the completion.
 	Created int64              `json:"created"` // Created is the created time of the completion.
-	Model   string             `json:"model"`   // Model is the model of the completion.
+	Model   Model              `json:"model"`   // Model is the model of the completion.
 	Choices []CompletionChoice `json:"choices"` // Choices is the choices of the completion.
 	Usage   Usage              `json:"usage"`   // Usage is the usage of the completion.
 
@@ -73,8 +73,7 @@ func (c *Client) CreateCompletion(
 		return
 	}
 
-	urlSuffix := "/completions"
-	if !endpointSupportsModel(urlSuffix, request.Model) {
+	if !endpointSupportsModel(completionsSuffix, request.Model) {
 		err = ErrCompletionUnsupportedModel{}
 		return
 	}
@@ -87,7 +86,7 @@ func (c *Client) CreateCompletion(
 	req, err := c.newRequest(
 		ctx,
 		http.MethodPost,
-		c.fullURL(urlSuffix, withModel(request.Model)),
+		c.fullURL(completionsSuffix, withModel(request.Model)),
 		withBody(request),
 	)
 	if err != nil {

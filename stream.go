@@ -32,8 +32,7 @@ func (c *Client) CreateCompletionStream(
 	request CompletionRequest,
 ) (*CompletionStream, error) {
 	var err error
-	urlSuffix := "/completions"
-	if !endpointSupportsModel(urlSuffix, request.Model) {
+	if !endpointSupportsModel(completionsSuffix, request.Model) {
 		return nil, ErrCompletionUnsupportedModel{Model: request.Model}
 	}
 	if !checkPromptType(request.Prompt) {
@@ -43,7 +42,7 @@ func (c *Client) CreateCompletionStream(
 	req, err := c.newRequest(
 		ctx,
 		http.MethodPost,
-		c.fullURL(urlSuffix, withModel(request.Model)),
+		c.fullURL(completionsSuffix, withModel(request.Model)),
 		withBody(request),
 	)
 	if err != nil {
@@ -63,11 +62,11 @@ var (
 	errorPrefix = []byte(`data: {"error":`)
 )
 
-type streamable interface {
+type streamer interface {
 	ChatCompletionStreamResponse | CompletionResponse
 }
 
-type streamReader[T streamable] struct {
+type streamReader[T streamer] struct {
 	emptyMessagesLimit uint
 	isFinished         bool
 

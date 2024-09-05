@@ -34,7 +34,7 @@ type TranscriptionTimestampGranularity string
 
 // AudioRequest represents a request structure for audio API.
 type AudioRequest struct {
-	Model                  string                              // Model is the model to use for the transcription.
+	Model                  Model                               // Model is the model to use for the transcription.
 	FilePath               string                              // FilePath is either an existing file in your filesystem or a filename representing the contents of Reader.
 	Reader                 io.Reader                           // Reader is an optional io.Reader when you do not want to use an existing file.
 	Prompt                 string                              // Prompt is the prompt for the transcription.
@@ -85,19 +85,20 @@ func (r *AudioResponse) SetHeader(header http.Header) {
 
 // audioTextResponse is the response structure for the audio API when the response format is text.
 type audioTextResponse struct {
-	Text        string `json:"text"` // Text is the text of the response.
-	http.Header        // Header is the header of the response.
+	Text   string      `json:"text"` // Text is the text of the response.
+	header http.Header // Header is the header of the response.
 }
 
+// SetHeader sets the header of the audio text response.
 func (r *audioTextResponse) SetHeader(header http.Header) {
-	r.Header = header
+	r.header = header
 }
 
 // ToAudioResponse converts the audio text response to an audio response.
 func (r *audioTextResponse) ToAudioResponse() AudioResponse {
 	return AudioResponse{
 		Text:   r.Text,
-		Header: r.Header,
+		Header: r.header,
 	}
 }
 
@@ -106,7 +107,7 @@ func (c *Client) CreateTranscription(
 	ctx context.Context,
 	request AudioRequest,
 ) (response AudioResponse, err error) {
-	return c.callAudioAPI(ctx, request, "transcriptions")
+	return c.callAudioAPI(ctx, request, transcriptionsSuffix)
 }
 
 // CreateTranslation — API call to translate audio into English.
@@ -114,14 +115,14 @@ func (c *Client) CreateTranslation(
 	ctx context.Context,
 	request AudioRequest,
 ) (response AudioResponse, err error) {
-	return c.callAudioAPI(ctx, request, "translations")
+	return c.callAudioAPI(ctx, request, translationsSuffix)
 }
 
 // callAudioAPI — API call to an audio endpoint.
 func (c *Client) callAudioAPI(
 	ctx context.Context,
 	request AudioRequest,
-	endpointSuffix string,
+	endpointSuffix Endpoint,
 ) (response AudioResponse, err error) {
 	var formBody bytes.Buffer
 	c.requestFormBuilder = c.createFormBuilder(&formBody)
@@ -129,11 +130,10 @@ func (c *Client) callAudioAPI(
 	if err != nil {
 		return AudioResponse{}, err
 	}
-	urlSuffix := fmt.Sprintf("/audio/%s", endpointSuffix)
 	req, err := c.newRequest(
 		ctx,
 		http.MethodPost,
-		c.fullURL(urlSuffix, withModel(request.Model)),
+		c.fullURL(endpointSuffix, withModel(request.Model)),
 		withBody(&formBody),
 		withContentType(c.requestFormBuilder.FormDataContentType()),
 	)
@@ -168,7 +168,7 @@ func audioMultipartForm(request AudioRequest, b FormBuilder) error {
 		return err
 	}
 
-	err = b.WriteField("model", request.Model)
+	err = b.WriteField("model", string(request.Model))
 	if err != nil {
 		return fmt.Errorf("writing model name: %w", err)
 	}
