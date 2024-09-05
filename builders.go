@@ -64,12 +64,10 @@ func (fb *DefaultFormBuilder) createFormFile(
 	if err != nil {
 		return err
 	}
-
 	_, err = io.Copy(fieldWriter, r)
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 

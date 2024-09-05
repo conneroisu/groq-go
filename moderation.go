@@ -19,52 +19,53 @@ const (
 	// ModerationTextLatest is the text-moderation-latest model.
 	ModerationTextLatest = "text-moderation-latest"
 
-	// ViolentCrimes (S1) is the violent crimes category. Responses that enable, encourage, or endorse the commission of violent crimes, including: (1) unlawful violence toward people (ex: terrorism, genocide, murder, hate-motivated violent crimes, child abuse, assault, battery, kidnapping) and (2) unlawful violence toward animals (ex: animal abuse)
-	ViolentCrimes HarmfulCategory = "violent_crimes"
-	// NonViolentCrimes (S2) is the non-violent crimes category.
-	NonViolentCrimes HarmfulCategory = "non_violent_crimes"
-	// SexRelatedCrimes (S3) is the sex-related crimes category.
-	SexRelatedCrimes HarmfulCategory = "sex_related_crimes"
-	// ChildSexualExploitation (S4) is the child sexual exploitation category. Responses that contain, describe, enable, encourage, or endorse the sexual abuse of children.
-	ChildSexualExploitation HarmfulCategory = "child_sexual_exploitation"
-	// Defamation (S5) is the defamation category. Responses that contain, describe, enable, encourage, or endorse defamation.
-	Defamation HarmfulCategory = "defamation"
-	// SpecializedAdvice (S6) is the specialized advice category. Responses that contain, describe, enable, encourage, or endorse specialized advice.
-	SpecializedAdvice HarmfulCategory = "specialized_advice"
-	// Privacy (S7) is the privacy category. Responses that contain, describe, enable, encourage, or endorse privacy.
-	Privacy HarmfulCategory = "privacy"
-	// IntellectualProperty (S8) is the intellectual property category. Responses that contain, describe, enable, encourage, or endorse intellectual property.
-	IntellectualProperty HarmfulCategory = "intellectual_property"
-	// IndiscriminateWeapons (S9) is the indiscriminate weapons category. Responses that contain, describe, enable, encourage, or endorse indiscriminate weapons.
-	IndiscriminateWeapons HarmfulCategory = "indiscriminate_weapons"
-	// Hate (S10) is the hate category. Responses that contain, describe, enable, encourage, or endorse hate.
-	Hate HarmfulCategory = "hate"
-	// SuicideNSelfHarm (S11) is the suicide/self-harm category. Responses that contain, describe, enable, encourage, or endorse suicide or self-harm.
-	SuicideNSelfHarm HarmfulCategory = "suicide_and_self_harm"
-	// SexualContent (S12) is the sexual content category. Responses that contain, describe, enable, encourage, or endorse sexual content.
-	SexualContent HarmfulCategory = "sexual_content"
-	// Elections (S13) is the elections category. Responses that contain factually incorrect information about electoral systems and processes, including in the time, place, or manner of voting in civic elections.
-	Elections HarmfulCategory = "elections"
-	// CodeInterpreterAbuse (S14) is the code interpreter abuse category. Responses that contain, describe, enable, encourage, or endorse code interpreter abuse.
-	CodeInterpreterAbuse HarmfulCategory = "code_interpreter_abuse"
+	// CategoryViolentCrimes (S1) is the violent crimes category. Responses that enable, encourage, or endorse the commission of violent crimes, including: (1) unlawful violence toward people (ex: terrorism, genocide, murder, hate-motivated violent crimes, child abuse, assault, battery, kidnapping) and (2) unlawful violence toward animals (ex: animal abuse)
+	CategoryViolentCrimes HarmfulCategory = "violent_crimes"
+	// CategoryNonviolentCrimes (S2) is the non-violent crimes category.
+	CategoryNonviolentCrimes HarmfulCategory = "non_violent_crimes"
+	// CategorySexRelatedCrimes (S3) is the sex-related crimes category.
+	CategorySexRelatedCrimes HarmfulCategory = "sex_related_crimes"
+	// CategoryChildSexualExploitation (S4) is the child sexual exploitation category. Responses that contain, describe, enable, encourage, or endorse the sexual abuse of children.
+	CategoryChildSexualExploitation HarmfulCategory = "child_sexual_exploitation"
+	// CategoryDefamation (S5) is the defamation category. Responses that contain, describe, enable, encourage, or endorse defamation.
+	CategoryDefamation HarmfulCategory = "defamation"
+	// CategorySpecializedAdvice (S6) is the specialized advice category. Responses that contain, describe, enable, encourage, or endorse specialized advice.
+	CategorySpecializedAdvice HarmfulCategory = "specialized_advice"
+	// CategoryPrivacy (S7) is the privacy category. Responses that contain, describe, enable, encourage, or endorse privacy.
+	CategoryPrivacy HarmfulCategory = "privacy"
+	// CategoryIntellectualProperty (S8) is the intellectual property category. Responses that contain, describe, enable, encourage, or endorse intellectual property.
+	CategoryIntellectualProperty HarmfulCategory = "intellectual_property"
+	// CategoryIndiscriminateWeapons (S9) is the indiscriminate weapons category. Responses that contain, describe, enable, encourage, or endorse indiscriminate weapons.
+	CategoryIndiscriminateWeapons HarmfulCategory = "indiscriminate_weapons"
+	// CategoryHate (S10) is the hate category. Responses that contain, describe, enable, encourage, or endorse hate.
+	CategoryHate HarmfulCategory = "hate"
+	// CategorySuicideAndSelfHarm (S11) is the suicide/self-harm category. Responses that contain, describe, enable, encourage, or endorse suicide or self-harm.
+	CategorySuicideAndSelfHarm HarmfulCategory = "suicide_and_self_harm"
+	// CategorySexualContent (S12) is the sexual content category. Responses that contain, describe, enable, encourage, or endorse sexual content.
+	CategorySexualContent HarmfulCategory = "sexual_content"
+	// CategoryElections (S13) is the elections category. Responses that contain factually incorrect information about electoral systems and processes, including in the time, place, or manner of voting in civic elections.
+	CategoryElections HarmfulCategory = "elections"
+	// CategoryCodeInterpreterAbuse (S14) is the code interpreter abuse category. Responses that contain, describe, enable, encourage, or endorse code interpreter abuse.
+	CategoryCodeInterpreterAbuse HarmfulCategory = "code_interpreter_abuse"
 )
 
 var (
-	cateMap = map[string]HarmfulCategory{
-		"S1":  ViolentCrimes,
-		"S2":  NonViolentCrimes,
-		"S3":  SexRelatedCrimes,
-		"S4":  ChildSexualExploitation,
-		"S5":  Defamation,
-		"S6":  SpecializedAdvice,
-		"S7":  Privacy,
-		"S8":  IntellectualProperty,
-		"S9":  IndiscriminateWeapons,
-		"S10": Hate,
-		"S11": SuicideNSelfHarm,
-		"S12": SexualContent,
-		"S13": Elections,
-		"S14": CodeInterpreterAbuse,
+	// SectionMap is a map of sections to categories.
+	SectionMap = map[string]HarmfulCategory{
+		"S1":  CategoryViolentCrimes,
+		"S2":  CategoryNonviolentCrimes,
+		"S3":  CategorySexRelatedCrimes,
+		"S4":  CategoryChildSexualExploitation,
+		"S5":  CategoryDefamation,
+		"S6":  CategorySpecializedAdvice,
+		"S7":  CategoryPrivacy,
+		"S8":  CategoryIntellectualProperty,
+		"S9":  CategoryIndiscriminateWeapons,
+		"S10": CategoryHate,
+		"S11": CategorySuicideAndSelfHarm,
+		"S12": CategorySexualContent,
+		"S13": CategoryElections,
+		"S14": CategoryCodeInterpreterAbuse,
 	}
 )
 
@@ -112,7 +113,7 @@ func (c *Client) Moderate(
 	}
 	if strings.Contains(resp.Choices[0].Message.Content, "unsafe") {
 		split := strings.Split(resp.Choices[0].Message.Content, "\n")[1]
-		response.Categories = cateMap[strings.TrimSpace(split)]
+		response.Categories = SectionMap[strings.TrimSpace(split)]
 		response.Flagged = true
 	}
 	return
