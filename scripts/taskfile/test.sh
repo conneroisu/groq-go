@@ -5,6 +5,7 @@
 #
 # usage: make test
 
+go clean -testcache
 gum spin --spinner dot --title "Running Tests" --show-output -- \
     go test -race -timeout 60s ./...
 
