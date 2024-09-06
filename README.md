@@ -6,7 +6,15 @@
 
 A community Go client implementation for the [Groq API](https://wow.groq.com/).
 
-Groq API is a super fast way to query open source llms.
+Groq is a super fast way to query open source llms.
+
+## Features
+
+- Supports all models from [Groq](https://wow.groq.com/) in a type-safe way.
+- Supports streaming.
+- Supports moderation.
+- Supports audio transcription.
+- Supports audio translation.
 
 ## Installation
 
