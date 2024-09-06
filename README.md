@@ -19,7 +19,7 @@ Groq is a super fast way to query open source llms.
 ## Installation
 
 ```bash
-go get github.com/conneroisu/go-groq
+go get github.com/conneroisu/groq-go
 ```
 
 ## Examples
