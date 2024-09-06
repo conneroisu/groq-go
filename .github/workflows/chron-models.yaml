@@ -33,6 +33,8 @@ jobs:
 
       # Step 5: Generate Go docs (assuming a script `make docs` exists)
       - name: Generate Go docs
+        env:
+          GROQ_KEY: ${{ secrets.GROQ_KEY }}
         run: |
           make docs
 
