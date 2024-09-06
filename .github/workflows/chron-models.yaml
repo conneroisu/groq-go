@@ -1,0 +1,55 @@
+name: Commit Go Mod, Go Work, and Docs
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+  schedule:
+    - cron: '0 10 * * 0'
+
+jobs:
+  update-go:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Step 2: Set up Go
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.23'
+
+      # Step 3: Run go mod download
+      - name: Run go mod download
+        run: go mod download
+
+      # Step 4: Run go work sync
+      - name: Run go work sync
+        run: go work sync
+
+      # Step 5: Generate Go docs (assuming a script `make docs` exists)
+      - name: Generate Go docs
+        run: |
+          make docs
+
+      # Step 6: Configure Git for commit
+      - name: Set up Git config
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      # Step 7: Commit changes if any
+      - name: Commit changes
+        run: |
+          git add .
+          git commit -m "Update Go modules, Go workspace, and docs" || echo "No changes to commit"
+
+      # Step 8: Push changes back to the repository
+      - name: Push changes
+        uses: ad-m/github-push-action@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
