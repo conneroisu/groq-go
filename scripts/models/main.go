@@ -11,7 +11,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strings"
 	"text/template"
 
 	"github.com/samber/lo"
@@ -132,20 +131,28 @@ func run(ctx context.Context) error {
 
 func fillTemplate(w io.Writer, models []ResponseModel) error {
 	funcMap := template.FuncMap{
+		// isTextModel returns true if the model has a context window
+		// greater than 1024 and is not specific models like
+		// llama-guard-3-8b.
 		"isTextModel": func(model ResponseModel) bool {
-			// if context window is greater than 1024 then it is a text model
 			if model.ID != "llama-guard-3-8b" {
 				return model.ContextWindow > 1024
 			}
 			return false
 		},
+		// isAudioModel returns true if the model has a context window
+		// less than 1024 and is not specific models like
+		// llama-guard-3-8b.
 		"isAudioModel": func(model ResponseModel) bool {
-			// if context window is less than 1024 then it is a audio model
 			if model.ID != "llama-guard-3-8b" {
 				return model.ContextWindow < 1024
 			}
 			return false
 		},
+		// isModerationModel returns true if the model is
+		// a model that can be used for moderation.
+		//
+		// llama-guard-3-8b is a moderation model.
 		"isModerationModel": func(model ResponseModel) bool {
 			// if the id of the model is llama-guard-3-8b
 			return model.ID == "llama-guard-3-8b"
@@ -164,13 +171,10 @@ func fillTemplate(w io.Writer, models []ResponseModel) error {
 	return nil
 }
 
-// nameModels
 func nameModels(models []ResponseModel) {
 	for i, _ := range models {
 		if (models)[i].Name == "" {
-			filtered := strings.Replace(models[i].ID, "-", "_", -1)
-			filtered = strings.Replace(filtered, ".", "_", -1)
-			models[i].Name = lo.PascalCase(filtered)
+			models[i].Name = lo.PascalCase(models[i].ID)
 		}
 	}
 }
