@@ -398,7 +398,7 @@ type AudioResponseFormat string
 ```
 
 <a name="ChatCompletionChoice"></a>
-## type [ChatCompletionChoice](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L305-L318>)
+## type [ChatCompletionChoice](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L300-L313>)
 
 ChatCompletionChoice represents the chat completion choice.
 
@@ -467,7 +467,7 @@ func (m *ChatCompletionMessage) UnmarshalJSON(bs []byte) (err error)
 UnmarshalJSON implements the json.Unmarshaler interface.
 
 <a name="ChatCompletionRequest"></a>
-## type [ChatCompletionRequest](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L187-L224>)
+## type [ChatCompletionRequest](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L187-L219>)
 
 ChatCompletionRequest represents a request structure for the chat completion API.
 
@@ -493,24 +493,22 @@ type ChatCompletionRequest struct {
     // If true, returns the log probabilities of each output token returned in the content of message.
     // This option is currently not available on the gpt-4-vision-preview model.
     LogProbs bool `json:"logprobs,omitempty"`
-    // TopLogProbs is an integer between 0 and 5 specifying the number of most 
-    // likely tokens to return at each // token position, each with an 
-    // associated log probability. LogProbs must be set to true if this 
-    // parameter is used.
-    TopLogProbs int    `json:"top_logprobs,omitempty"` // TopLogProbs is the top log probs of the chat completion message.
-    User        string `json:"user,omitempty"`        // User is the user of the chat completion message.
-    Tools        []Tool `json:"tools,omitempty"`       // Tools is the tools of the chat completion message.
-    ToolChoice any `json:"tool_choice,omitempty"` // ToolChoice is the tool choice of the chat completion message.
-    StreamOptions *StreamOptions `json:"stream_options,omitempty"` // StreamOptions is the stream options of the chat completion message. Only set this when you set stream: true.
-    // ParallelToolCalls is the parallel tool calls of the chat completion message.
-    //
-    // bool
-    ParallelToolCalls any `json:"parallel_tool_calls,omitempty"` 
+    // TopLogProbs is an integer between 0 and 5 specifying the number of most likely tokens to return at each
+    // token position, each with an associated log probability.
+    // logprobs must be set to true if this parameter is used.
+    TopLogProbs int    `json:"top_logprobs,omitempty"`
+    User        string `json:"user,omitempty"`
+    Tools       []Tool `json:"tools,omitempty"`       // Tools is the tools of the chat completion message.
+    ToolChoice  any    `json:"tool_choice,omitempty"` // ToolChoice is the tool choice of the chat completion message.
+    // Options for streaming response. Only set this when you set stream: true.
+    StreamOptions *StreamOptions `json:"stream_options,omitempty"`
+    // Disable the default behavior of parallel tool calls by setting it: false.
+    ParallelToolCalls any `json:"parallel_tool_calls,omitempty"`
 }
 ```
 
 <a name="ChatCompletionResponse"></a>
-## type [ChatCompletionResponse](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L321-L331>)
+## type [ChatCompletionResponse](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L316-L326>)
 
 ChatCompletionResponse represents a response structure for chat completion API.
 
@@ -529,7 +527,7 @@ type ChatCompletionResponse struct {
 ```
 
 <a name="ChatCompletionResponse.SetHeader"></a>
-### func \(\*ChatCompletionResponse\) [SetHeader](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L334>)
+### func \(\*ChatCompletionResponse\) [SetHeader](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L329>)
 
 ```go
 func (r *ChatCompletionResponse) SetHeader(h http.Header)
@@ -575,7 +573,7 @@ type ChatCompletionResponseFormatType string
 ```
 
 <a name="ChatCompletionStream"></a>
-## type [ChatCompletionStream](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L406-L408>)
+## type [ChatCompletionStream](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L401-L403>)
 
 ChatCompletionStream is a stream of ChatCompletionStreamResponse.
 
@@ -588,7 +586,7 @@ type ChatCompletionStream struct {
 ```
 
 <a name="ChatCompletionStreamChoice"></a>
-## type [ChatCompletionStreamChoice](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L375-L379>)
+## type [ChatCompletionStreamChoice](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L370-L374>)
 
 ChatCompletionStreamChoice represents a response structure for chat completion API.
 
@@ -601,7 +599,7 @@ type ChatCompletionStreamChoice struct {
 ```
 
 <a name="ChatCompletionStreamChoiceDelta"></a>
-## type [ChatCompletionStreamChoiceDelta](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L367-L372>)
+## type [ChatCompletionStreamChoiceDelta](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L362-L367>)
 
 ChatCompletionStreamChoiceDelta represents a response structure for chat completion API.
 
@@ -615,7 +613,7 @@ type ChatCompletionStreamChoiceDelta struct {
 ```
 
 <a name="ChatCompletionStreamResponse"></a>
-## type [ChatCompletionStreamResponse](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L387-L401>)
+## type [ChatCompletionStreamResponse](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L382-L396>)
 
 ChatCompletionStreamResponse represents a response structure for chat completion API.
 
@@ -695,7 +693,7 @@ func NewClient(groqAPIKey string, opts ...Opts) (*Client, error)
 NewClient creates a new Groq client.
 
 <a name="Client.CreateChatCompletion"></a>
-### func \(\*Client\) [CreateChatCompletion](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L339-L342>)
+### func \(\*Client\) [CreateChatCompletion](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L334-L337>)
 
 ```go
 func (c *Client) CreateChatCompletion(ctx context.Context, request ChatCompletionRequest) (response ChatCompletionResponse, err error)
@@ -704,7 +702,7 @@ func (c *Client) CreateChatCompletion(ctx context.Context, request ChatCompletio
 CreateChatCompletion is an API call to create a chat completion.
 
 <a name="Client.CreateChatCompletionStream"></a>
-### func \(\*Client\) [CreateChatCompletionStream](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L415-L418>)
+### func \(\*Client\) [CreateChatCompletionStream](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L410-L413>)
 
 ```go
 func (c *Client) CreateChatCompletionStream(ctx context.Context, request ChatCompletionRequest) (stream *ChatCompletionStream, err error)
@@ -1020,7 +1018,7 @@ func (e ErrTooManyEmptyStreamMessages) Error() string
 Error returns the error message.
 
 <a name="FinishReason"></a>
-## type [FinishReason](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L292>)
+## type [FinishReason](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L287>)
 
 FinishReason is the finish reason. string
 
@@ -1029,7 +1027,7 @@ type FinishReason string
 ```
 
 <a name="FinishReason.MarshalJSON"></a>
-### func \(FinishReason\) [MarshalJSON](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L295>)
+### func \(FinishReason\) [MarshalJSON](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L290>)
 
 ```go
 func (r FinishReason) MarshalJSON() ([]byte, error)
@@ -1072,7 +1070,7 @@ type FunctionCall struct {
 ```
 
 <a name="FunctionDefinition"></a>
-## type [FunctionDefinition](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L258-L268>)
+## type [FunctionDefinition](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L253-L263>)
 
 FunctionDefinition represents the function definition.
 
@@ -1157,7 +1155,7 @@ type ImageURLDetail string
 ```
 
 <a name="LogProb"></a>
-## type [LogProb](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L278-L283>)
+## type [LogProb](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L273-L278>)
 
 LogProb represents the probability information for a token.
 
@@ -1171,7 +1169,7 @@ type LogProb struct {
 ```
 
 <a name="LogProbs"></a>
-## type [LogProbs](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L286-L288>)
+## type [LogProbs](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L281-L283>)
 
 LogProbs is the top\-level structure containing the log probability information.
 
@@ -1276,7 +1274,7 @@ type PromptAnnotation struct {
 ```
 
 <a name="PromptFilterResult"></a>
-## type [PromptFilterResult](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L382-L384>)
+## type [PromptFilterResult](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L377-L379>)
 
 PromptFilterResult represents a response structure for chat completion API.
 
@@ -1375,7 +1373,7 @@ type Segments []struct {
 ```
 
 <a name="StreamOptions"></a>
-## type [StreamOptions](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L227-L233>)
+## type [StreamOptions](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L222-L228>)
 
 StreamOptions represents the stream options.
 
@@ -1390,7 +1388,7 @@ type StreamOptions struct {
 ```
 
 <a name="Tool"></a>
-## type [Tool](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L241-L244>)
+## type [Tool](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L236-L239>)
 
 Tool represents the tool.
 
@@ -1417,7 +1415,7 @@ type ToolCall struct {
 ```
 
 <a name="ToolChoice"></a>
-## type [ToolChoice](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L247-L250>)
+## type [ToolChoice](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L242-L245>)
 
 ToolChoice represents the tool choice.
 
@@ -1429,7 +1427,7 @@ type ToolChoice struct {
 ```
 
 <a name="ToolFunction"></a>
-## type [ToolFunction](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L253-L255>)
+## type [ToolFunction](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L248-L250>)
 
 ToolFunction represents the tool function.
 
@@ -1440,7 +1438,7 @@ type ToolFunction struct {
 ```
 
 <a name="ToolType"></a>
-## type [ToolType](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L238>)
+## type [ToolType](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L233>)
 
 ToolType is the tool type.
 
@@ -1451,7 +1449,7 @@ type ToolType string
 ```
 
 <a name="TopLogProbs"></a>
-## type [TopLogProbs](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L271-L275>)
+## type [TopLogProbs](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L266-L270>)
 
 TopLogProbs represents the top log probs.
 
