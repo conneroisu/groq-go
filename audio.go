@@ -71,15 +71,17 @@ func (r *audioTextResponse) SetHeader(header http.Header) {
 	r.header = header
 }
 
-// ToAudioResponse converts the audio text response to an audio response.
-func (r *audioTextResponse) ToAudioResponse() AudioResponse {
+// toAudioResponse converts the audio text response to an audio response.
+func (r *audioTextResponse) toAudioResponse() AudioResponse {
 	return AudioResponse{
 		Text:   r.Text,
 		Header: r.header,
 	}
 }
 
-// CreateTranscription — API call to create a transcription. Returns transcribed text.
+// CreateTranscription calls the transcriptions endpoint with the given request.
+//
+// Returns transcribed text in the response_format specified in the request.
 func (c *Client) CreateTranscription(
 	ctx context.Context,
 	request AudioRequest,
@@ -87,7 +89,9 @@ func (c *Client) CreateTranscription(
 	return c.callAudioAPI(ctx, request, transcriptionsSuffix)
 }
 
-// CreateTranslation — API call to translate audio into English.
+// CreateTranslation calls the translations endpoint with the given request.
+//
+// Returns the translated text in the response_format specified in the request.
 func (c *Client) CreateTranslation(
 	ctx context.Context,
 	request AudioRequest,
@@ -95,7 +99,6 @@ func (c *Client) CreateTranslation(
 	return c.callAudioAPI(ctx, request, translationsSuffix)
 }
 
-// callAudioAPI — API call to an audio endpoint.
 func (c *Client) callAudioAPI(
 	ctx context.Context,
 	request AudioRequest,
@@ -118,12 +121,12 @@ func (c *Client) callAudioAPI(
 		return AudioResponse{}, err
 	}
 
-	if request.HasJSONResponse() {
+	if request.hasJSONResponse() {
 		err = c.sendRequest(req, &response)
 	} else {
 		var textResponse audioTextResponse
 		err = c.sendRequest(req, &textResponse)
-		response = textResponse.ToAudioResponse()
+		response = textResponse.toAudioResponse()
 	}
 	if err != nil {
 		return AudioResponse{}, err
@@ -131,25 +134,22 @@ func (c *Client) callAudioAPI(
 	return
 }
 
-// HasJSONResponse returns true if the response format is JSON.
-func (r AudioRequest) HasJSONResponse() bool {
+func (r AudioRequest) hasJSONResponse() bool {
 	return r.Format == "" || r.Format == AudioResponseFormatJSON ||
 		r.Format == AudioResponseFormatVerboseJSON
 }
 
 // audioMultipartForm creates a form with audio file contents and the name of the model to use for
 // audio processing.
-func audioMultipartForm(request AudioRequest, b FormBuilder) error {
+func audioMultipartForm(request AudioRequest, b formBuilder) error {
 	err := createFileField(request, b)
 	if err != nil {
 		return err
 	}
-
 	err = b.WriteField("model", string(request.Model))
 	if err != nil {
 		return fmt.Errorf("writing model name: %w", err)
 	}
-
 	// Create a form field for the prompt (if provided)
 	if request.Prompt != "" {
 		err = b.WriteField("prompt", request.Prompt)
@@ -157,7 +157,6 @@ func audioMultipartForm(request AudioRequest, b FormBuilder) error {
 			return fmt.Errorf("writing prompt: %w", err)
 		}
 	}
-
 	// Create a form field for the format (if provided)
 	if request.Format != "" {
 		err = b.WriteField("response_format", string(request.Format))
@@ -165,7 +164,6 @@ func audioMultipartForm(request AudioRequest, b FormBuilder) error {
 			return fmt.Errorf("writing format: %w", err)
 		}
 	}
-
 	// Create a form field for the temperature (if provided)
 	if request.Temperature != 0 {
 		err = b.WriteField(
@@ -176,7 +174,6 @@ func audioMultipartForm(request AudioRequest, b FormBuilder) error {
 			return fmt.Errorf("writing temperature: %w", err)
 		}
 	}
-
 	// Create a form field for the language (if provided)
 	if request.Language != "" {
 		err = b.WriteField("language", request.Language)
@@ -184,7 +181,6 @@ func audioMultipartForm(request AudioRequest, b FormBuilder) error {
 			return fmt.Errorf("writing language: %w", err)
 		}
 	}
-
 	if len(request.TimestampGranularities) > 0 {
 		for _, tg := range request.TimestampGranularities {
 			err = b.WriteField("timestamp_granularities[]", string(tg))
@@ -193,14 +189,13 @@ func audioMultipartForm(request AudioRequest, b FormBuilder) error {
 			}
 		}
 	}
-	// Close the multipart writer
 	return b.Close()
 }
 
 // createFileField creates the "file" form field from either an existing file or by using the reader.
 func createFileField(
 	request AudioRequest,
-	b FormBuilder,
+	b formBuilder,
 ) (err error) {
 	if request.Reader != nil {
 		err := b.CreateFormFileReader("file", request.Reader, request.FilePath)

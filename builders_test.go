@@ -6,6 +6,7 @@ package groq // testing private field
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"io"
 	"net/http"
@@ -79,7 +80,7 @@ func TestFormBuilderWithFailingWriter(t *testing.T) {
 	defer file.Close()
 	defer os.Remove(file.Name())
 
-	builder := NewFormBuilder(&failingWriter{})
+	builder := newFormBuilder(&failingWriter{})
 	err = builder.CreateFormFile("file", file)
 	a.ErrorIs(
 		err,
@@ -102,7 +103,7 @@ func TestFormBuilderWithClosedFile(t *testing.T) {
 	defer os.Remove(file.Name())
 
 	body := &bytes.Buffer{}
-	builder := NewFormBuilder(body)
+	builder := newFormBuilder(body)
 	err = builder.CreateFormFile("file", file)
 	a.Error(err, "formbuilder should return error if file is closed")
 	a.ErrorIs(
@@ -115,13 +116,13 @@ func TestFormBuilderWithClosedFile(t *testing.T) {
 // TestRequestBuilderReturnsRequest  tests the request builder returns a
 // request.
 func TestRequestBuilderReturnsRequest(t *testing.T) {
-	b := NewRequestBuilder()
+	b := newRequestBuilder()
 	var (
 		ctx         = context.Background()
 		method      = http.MethodPost
 		url         = "/foo"
 		request     = map[string]string{"foo": "bar"}
-		reqBytes, _ = b.marshaller.Marshal(request)
+		reqBytes, _ = json.Marshal(request)
 		want, _     = http.NewRequestWithContext(
 			ctx,
 			method,
@@ -146,7 +147,7 @@ func TestRequestBuilderReturnsRequestWhenRequestOfArgsIsNil(t *testing.T) {
 		url     = "/foo"
 		want, _ = http.NewRequestWithContext(ctx, method, url, nil)
 	)
-	b := NewRequestBuilder()
+	b := newRequestBuilder()
 	got, _ := b.Build(ctx, method, url, nil, nil)
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("Build() got = %v, want %v", got, want)
