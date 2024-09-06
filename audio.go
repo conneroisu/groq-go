@@ -71,8 +71,8 @@ func (r *audioTextResponse) SetHeader(header http.Header) {
 	r.header = header
 }
 
-// ToAudioResponse converts the audio text response to an audio response.
-func (r *audioTextResponse) ToAudioResponse() AudioResponse {
+// toAudioResponse converts the audio text response to an audio response.
+func (r *audioTextResponse) toAudioResponse() AudioResponse {
 	return AudioResponse{
 		Text:   r.Text,
 		Header: r.header,
@@ -118,12 +118,12 @@ func (c *Client) callAudioAPI(
 		return AudioResponse{}, err
 	}
 
-	if request.HasJSONResponse() {
+	if request.hasJSONResponse() {
 		err = c.sendRequest(req, &response)
 	} else {
 		var textResponse audioTextResponse
 		err = c.sendRequest(req, &textResponse)
-		response = textResponse.ToAudioResponse()
+		response = textResponse.toAudioResponse()
 	}
 	if err != nil {
 		return AudioResponse{}, err
@@ -131,8 +131,8 @@ func (c *Client) callAudioAPI(
 	return
 }
 
-// HasJSONResponse returns true if the response format is JSON.
-func (r AudioRequest) HasJSONResponse() bool {
+// hasJSONResponse returns true if the response format is JSON.
+func (r AudioRequest) hasJSONResponse() bool {
 	return r.Format == "" || r.Format == AudioResponseFormatJSON ||
 		r.Format == AudioResponseFormatVerboseJSON
 }
@@ -144,12 +144,10 @@ func audioMultipartForm(request AudioRequest, b FormBuilder) error {
 	if err != nil {
 		return err
 	}
-
 	err = b.WriteField("model", string(request.Model))
 	if err != nil {
 		return fmt.Errorf("writing model name: %w", err)
 	}
-
 	// Create a form field for the prompt (if provided)
 	if request.Prompt != "" {
 		err = b.WriteField("prompt", request.Prompt)
@@ -157,7 +155,6 @@ func audioMultipartForm(request AudioRequest, b FormBuilder) error {
 			return fmt.Errorf("writing prompt: %w", err)
 		}
 	}
-
 	// Create a form field for the format (if provided)
 	if request.Format != "" {
 		err = b.WriteField("response_format", string(request.Format))
@@ -165,7 +162,6 @@ func audioMultipartForm(request AudioRequest, b FormBuilder) error {
 			return fmt.Errorf("writing format: %w", err)
 		}
 	}
-
 	// Create a form field for the temperature (if provided)
 	if request.Temperature != 0 {
 		err = b.WriteField(
@@ -176,7 +172,6 @@ func audioMultipartForm(request AudioRequest, b FormBuilder) error {
 			return fmt.Errorf("writing temperature: %w", err)
 		}
 	}
-
 	// Create a form field for the language (if provided)
 	if request.Language != "" {
 		err = b.WriteField("language", request.Language)
@@ -184,7 +179,6 @@ func audioMultipartForm(request AudioRequest, b FormBuilder) error {
 			return fmt.Errorf("writing language: %w", err)
 		}
 	}
-
 	if len(request.TimestampGranularities) > 0 {
 		for _, tg := range request.TimestampGranularities {
 			err = b.WriteField("timestamp_granularities[]", string(tg))
