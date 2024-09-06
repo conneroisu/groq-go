@@ -210,13 +210,8 @@ type ChatCompletionRequest struct {
 	// logprobs must be set to true if this parameter is used.
 	TopLogProbs int    `json:"top_logprobs,omitempty"`
 	User        string `json:"user,omitempty"`
-	// Deprecated: use Tools instead.
-	Functions []FunctionDefinition `json:"functions,omitempty"`
-	// Deprecated: use ToolChoice instead.
-	FunctionCall any    `json:"function_call,omitempty"`
-	Tools        []Tool `json:"tools,omitempty"`
-	// This can be either a string or an ToolChoice object.
-	ToolChoice any `json:"tool_choice,omitempty"`
+	Tools       []Tool `json:"tools,omitempty"`       // Tools is the tools of the chat completion message.
+	ToolChoice  any    `json:"tool_choice,omitempty"` // ToolChoice is the tool choice of the chat completion message.
 	// Options for streaming response. Only set this when you set stream: true.
 	StreamOptions *StreamOptions `json:"stream_options,omitempty"`
 	// Disable the default behavior of parallel tool calls by setting it: false.
