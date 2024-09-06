@@ -155,12 +155,12 @@ func (c *Client) newRequest(
 	return req, nil
 }
 
-// Response is an interface for a response.
-type Response interface {
+// response is an interface for a response.
+type response interface {
 	SetHeader(http.Header)
 }
 
-func (c *Client) sendRequest(req *http.Request, v Response) error {
+func (c *Client) sendRequest(req *http.Request, v response) error {
 	req.Header.Set("Accept", "application/json")
 
 	// Check whether Content-Type is already set, Upload Files API requires

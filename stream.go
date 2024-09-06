@@ -39,8 +39,7 @@ func (c *Client) CreateCompletionStream(
 		ctx,
 		http.MethodPost,
 		c.fullURL(completionsSuffix, withModel(request.Model)),
-		withBody(request),
-	)
+		withBody(request))
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +64,7 @@ type streamReader[T streamer] struct {
 	response       *http.Response
 	errAccumulator ErrorAccumulator
 
-	http.Header // Header is the header of the response.
+	Header http.Header // Header is the header of the response.
 }
 
 // Recv receives a response from the stream.
@@ -133,12 +132,10 @@ func (stream *streamReader[T]) unmarshalError() (errResp *ErrorResponse) {
 	if len(errBytes) == 0 {
 		return
 	}
-
 	err := json.Unmarshal(errBytes, &errResp)
 	if err != nil {
 		errResp = nil
 	}
-
 	return
 }
 
