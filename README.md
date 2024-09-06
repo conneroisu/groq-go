@@ -19,6 +19,9 @@ go get github.com/conneroisu/groq-go
 
 ## Examples
 
+For introductory examples, see the [examples](https://github.com/conneroisu/groq-go/tree/main/examples) directory.
+
+External Respositories using groq-go:
 - [Automatic Git Commit Message Generator](https://github.com/conneroisu/gita)
 
 ## Documentation
