@@ -223,8 +223,6 @@ func sendRequestStream[T streamer](
 }
 
 func (c *Client) setCommonHeaders(req *http.Request) {
-	// https://learn.microsoft.com/en-us/azure/cognitive-services/openai/reference#authentication
-	// Azure API Key authentication
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.groqAPIKey))
 	if c.orgID != "" {
 		req.Header.Set("OpenAI-Organization", c.orgID)
