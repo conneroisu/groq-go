@@ -12,8 +12,8 @@ import (
 	"path"
 )
 
-// FormBuilder is an interface for building a form.
-type FormBuilder interface {
+// formBuilder is an interface for building a form.
+type formBuilder interface {
 	CreateFormFile(fieldname string, file *os.File) error
 	CreateFormFileReader(fieldname string, r io.Reader, filename string) error
 	WriteField(fieldname, value string) error
@@ -21,28 +21,26 @@ type FormBuilder interface {
 	FormDataContentType() string
 }
 
-// DefaultFormBuilder is a default implementation of FormBuilder.
-type DefaultFormBuilder struct {
+// defaultFormBuilder is a default implementation of FormBuilder.
+type defaultFormBuilder struct {
 	writer *multipart.Writer
 }
 
-// NewFormBuilder creates a new DefaultFormBuilder.
-func NewFormBuilder(body io.Writer) *DefaultFormBuilder {
-	return &DefaultFormBuilder{
+// newFormBuilder creates a new DefaultFormBuilder.
+func newFormBuilder(body io.Writer) *defaultFormBuilder {
+	return &defaultFormBuilder{
 		writer: multipart.NewWriter(body),
 	}
 }
 
-// CreateFormFile creates a form file.
-func (fb *DefaultFormBuilder) CreateFormFile(
+func (fb *defaultFormBuilder) CreateFormFile(
 	fieldname string,
 	file *os.File,
 ) error {
 	return fb.createFormFile(fieldname, file, file.Name())
 }
 
-// CreateFormFileReader creates a form file from a reader.
-func (fb *DefaultFormBuilder) CreateFormFileReader(
+func (fb *defaultFormBuilder) CreateFormFileReader(
 	fieldname string,
 	r io.Reader,
 	filename string,
@@ -50,8 +48,7 @@ func (fb *DefaultFormBuilder) CreateFormFileReader(
 	return fb.createFormFile(fieldname, r, path.Base(filename))
 }
 
-// createFormFile creates a form file.
-func (fb *DefaultFormBuilder) createFormFile(
+func (fb *defaultFormBuilder) createFormFile(
 	fieldname string,
 	r io.Reader,
 	filename string,
@@ -71,23 +68,19 @@ func (fb *DefaultFormBuilder) createFormFile(
 	return nil
 }
 
-// WriteField writes a field to the form.
-func (fb *DefaultFormBuilder) WriteField(fieldname, value string) error {
+func (fb *defaultFormBuilder) WriteField(fieldname, value string) error {
 	return fb.writer.WriteField(fieldname, value)
 }
 
-// Close closes the form.
-func (fb *DefaultFormBuilder) Close() error {
+func (fb *defaultFormBuilder) Close() error {
 	return fb.writer.Close()
 }
 
-// FormDataContentType returns the content type of the form.
-func (fb *DefaultFormBuilder) FormDataContentType() string {
+func (fb *defaultFormBuilder) FormDataContentType() string {
 	return fb.writer.FormDataContentType()
 }
 
-// RequestBuilder is an interface that defines the Build method.
-type RequestBuilder interface {
+type requestBuilder interface {
 	Build(
 		ctx context.Context,
 		method, url string,
@@ -96,33 +89,13 @@ type RequestBuilder interface {
 	) (*http.Request, error)
 }
 
-// HTTPRequestBuilder is a struct that implements the RequestBuilder interface.
-type HTTPRequestBuilder struct {
-	marshaller Marshaller
+type httpRequestBuilder struct{}
+
+func newRequestBuilder() *httpRequestBuilder {
+	return &httpRequestBuilder{}
 }
 
-// Marshaller is an interface that defines the Marshal method.
-type Marshaller interface {
-	Marshal(v any) ([]byte, error)
-}
-
-// JSONMarshaller is a struct that implements the Marshaller interface.
-type JSONMarshaller struct{}
-
-// Marshal marshals the given value to JSON.
-func (j *JSONMarshaller) Marshal(v any) ([]byte, error) {
-	return json.Marshal(v)
-}
-
-// NewRequestBuilder returns a new HTTPRequestBuilder.
-func NewRequestBuilder() *HTTPRequestBuilder {
-	return &HTTPRequestBuilder{
-		marshaller: &JSONMarshaller{},
-	}
-}
-
-// Build builds a new request.
-func (b *HTTPRequestBuilder) Build(
+func (b *httpRequestBuilder) Build(
 	ctx context.Context,
 	method string,
 	url string,
@@ -135,7 +108,7 @@ func (b *HTTPRequestBuilder) Build(
 			bodyReader = v
 		} else {
 			var reqBytes []byte
-			reqBytes, err = b.marshaller.Marshal(body)
+			reqBytes, err = json.Marshal(body)
 			if err != nil {
 				return
 			}

@@ -39,9 +39,9 @@ type Client struct {
 	baseURL            string       // Base URL for the client.
 	client             *http.Client // Client is the HTTP client to use
 	EmptyMessagesLimit uint         // EmptyMessagesLimit is the limit for the empty messages.
-	requestBuilder     RequestBuilder
-	requestFormBuilder FormBuilder
-	createFormBuilder  func(body io.Writer) FormBuilder
+	requestBuilder     requestBuilder
+	requestFormBuilder formBuilder
+	createFormBuilder  func(body io.Writer) formBuilder
 	logger             zerolog.Logger // Logger is the logger for the client.
 }
 
@@ -57,10 +57,10 @@ func NewClient(groqAPIKey string, opts ...Opts) (*Client, error) {
 			Logger(),
 		baseURL:            groqAPIURLv1,
 		EmptyMessagesLimit: 10,
-		createFormBuilder: func(body io.Writer) FormBuilder {
-			return NewFormBuilder(body)
+		createFormBuilder: func(body io.Writer) formBuilder {
+			return newFormBuilder(body)
 		},
-		requestBuilder: NewRequestBuilder(),
+		requestBuilder: newRequestBuilder(),
 	}
 	for _, opt := range opts {
 		opt(c)
