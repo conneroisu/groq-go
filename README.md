@@ -1,4 +1,4 @@
-# go-groq
+# groq-go
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/conneroisu/groq-go.svg)](https://pkg.go.dev/github.com/conneroisu/groq-go)
 [![Go Report Card](https://goreportcard.com/badge/github.com/conneroisu/groq-go)](https://goreportcard.com/report/github.com/conneroisu/groq-go)
