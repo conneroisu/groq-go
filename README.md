@@ -235,6 +235,7 @@ var (
     //                 - Sexual assault (ex: rape)
     //                 - Sexual harassment (ex: groping)
     //                 - Lewd conduct
+    //
     // S4: Child Exploitation.
     //
     // AI models should not create content that depicts child nudity or that enables, encourages, excuses, or depicts the sexual abuse of children.
@@ -262,9 +263,13 @@ var (
     //                 - Radiological weapons (ex: salted bombs)
     //                 - Nuclear weapons (ex: atomic warheads)
     //                 - High-yield explosive weapons (ex: cluster munitions)
+    //
     // S10: Hate.
+    //
     // AI models should not create content that is hateful toward people on the basis of their protected characteristics (race, color, ethnicity, national origin, disability, religious affiliation, caste, sexual orientation, sex, gender identity and serious disease). AI models should not create content that perpetuates negative stereotypes.
+    //
     // S11: Self-Harm.
+    //
     // AI models should not create content that enables, encourages, or excuses acts of intentional self-harm. Examples of such actions include, but are not limited to:
     //                 - Suicide
     //                 - Self-injury (ex: cutting)
@@ -366,7 +371,7 @@ type AudioResponse struct {
     Words    Words    `json:"words"`    // Words is the words of the response.
     Text     string   `json:"text"`     // Text is the text of the response.
 
-    http.Header // Header is the header of the response.
+    Header http.Header // Header is the header of the response.
 }
 ```
 
@@ -737,7 +742,7 @@ Recv receives a response from the stream. It sets whether to stream back partial
 If set, tokens will be sent as data\-only server\-sent events as they become available, with the stream terminated by a data: \[DONE\] message.
 
 <a name="Client.CreateTranscription"></a>
-### func \(\*Client\) [CreateTranscription](<https://github.com/conneroisu/groq-go/blob/main/audio.go#L85-L88>)
+### func \(\*Client\) [CreateTranscription](<https://github.com/conneroisu/groq-go/blob/main/audio.go#L86-L89>)
 
 ```go
 func (c *Client) CreateTranscription(ctx context.Context, request AudioRequest) (response AudioResponse, err error)
@@ -748,7 +753,7 @@ CreateTranscription calls the transcriptions endpoint with the given request.
 Returns transcribed text in the response\_format specified in the request.
 
 <a name="Client.CreateTranslation"></a>
-### func \(\*Client\) [CreateTranslation](<https://github.com/conneroisu/groq-go/blob/main/audio.go#L95-L98>)
+### func \(\*Client\) [CreateTranslation](<https://github.com/conneroisu/groq-go/blob/main/audio.go#L96-L99>)
 
 ```go
 func (c *Client) CreateTranslation(ctx context.Context, request AudioRequest) (response AudioResponse, err error)
@@ -759,7 +764,7 @@ CreateTranslation calls the translations endpoint with the given request.
 Returns the translated text in the response\_format specified in the request.
 
 <a name="Client.Moderate"></a>
-### func \(\*Client\) [Moderate](<https://github.com/conneroisu/groq-go/blob/main/moderation.go#L158-L161>)
+### func \(\*Client\) [Moderate](<https://github.com/conneroisu/groq-go/blob/main/moderation.go#L163-L166>)
 
 ```go
 func (c *Client) Moderate(ctx context.Context, request ModerationRequest) (response Moderation, err error)
@@ -1203,7 +1208,7 @@ type Model string
 ```
 
 <a name="Moderation"></a>
-## type [Moderation](<https://github.com/conneroisu/groq-go/blob/main/moderation.go#L151-L154>)
+## type [Moderation](<https://github.com/conneroisu/groq-go/blob/main/moderation.go#L156-L159>)
 
 Moderation represents one of possible moderation results.
 
@@ -1215,7 +1220,7 @@ type Moderation struct {
 ```
 
 <a name="ModerationRequest"></a>
-## type [ModerationRequest](<https://github.com/conneroisu/groq-go/blob/main/moderation.go#L145-L148>)
+## type [ModerationRequest](<https://github.com/conneroisu/groq-go/blob/main/moderation.go#L150-L153>)
 
 ModerationRequest represents a request structure for moderation API.
 
