@@ -22,7 +22,7 @@ func TestModerate(t *testing.T) {
 	a := assert.New(t)
 	a.NoError(err, "Moderation error")
 	a.Equal(true, mod.Flagged)
-	a.Equal(mod.Categories, groq.CategoryViolentCrimes)
+	a.Equal(mod.Categories, []groq.HarmfulCategory{groq.CategoryViolentCrimes, groq.CategoryNonviolentCrimes})
 }
 
 func handleModerationEndpoint(w http.ResponseWriter, r *http.Request) {
@@ -35,7 +35,7 @@ func handleModerationEndpoint(w http.ResponseWriter, r *http.Request) {
 			{
 				Message: groq.ChatCompletionMessage{
 					Role:    groq.ChatMessageRoleAssistant,
-					Content: "unsafe\nS1",
+					Content: "unsafe\nS1,S2",
 				},
 				FinishReason: "stop",
 			},

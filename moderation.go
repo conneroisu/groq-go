@@ -129,8 +129,8 @@ type ModerationRequest struct {
 
 // Moderation represents one of possible moderation results.
 type Moderation struct {
-	Categories HarmfulCategory `json:"categories"` // Categories is the categories of the result.
-	Flagged    bool            `json:"flagged"`    // Flagged is the flagged of the result.
+	Categories []HarmfulCategory `json:"categories"` // Categories is the categories of the result.
+	Flagged    bool              `json:"flagged"`    // Flagged is the flagged of the result.
 }
 
 // Moderate — perform a moderation api call over a string.
@@ -157,10 +157,14 @@ func (c *Client) Moderate(
 	if err != nil {
 		return
 	}
-	if strings.Contains(resp.Choices[0].Message.Content, "unsafe") {
-		split := strings.Split(resp.Choices[0].Message.Content, "\n")[1]
-		response.Categories = SectionMap[strings.TrimSpace(split)]
+	content := resp.Choices[0].Message.Content
+	println(content)
+	if strings.Contains(content, "unsafe") {
 		response.Flagged = true
+		split := strings.Split(strings.Split(content, "\n")[1], ",")
+		for _, s := range split {
+			response.Categories = append(response.Categories, SectionMap[strings.TrimSpace(s)])
+		}
 	}
 	return
 }
