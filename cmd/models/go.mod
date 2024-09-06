@@ -1,4 +1,4 @@
-module github.com/conneroisu/groq-go/scripts/models
+module github.com/conneroisu/groq-go/cmd/models
 
 go 1.23.0
 

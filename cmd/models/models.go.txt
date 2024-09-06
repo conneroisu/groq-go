@@ -42,8 +42,8 @@ const (
 	TranscriptionTimestampGranularitySegment TranscriptionTimestampGranularity = "segment" // TranscriptionTimestampGranularitySegment is the segment timestamp granularity.
 	
 	{{- range $model := .Models }}
-		// {{ $model.Name }} is an AI {{if isTextModel $model}}text{{else}}audio{{end}} model provided by {{$model.OwnedBy}}. It has {{$model.ContextWindow}} context window.
-		{{ $model.Name }} Model = "{{ $model.ID }}" {{- end }}
+		{{ $model.Name }} Model = "{{ $model.ID }}" // {{ $model.Name }} is an AI {{if isTextModel $model}}text{{else if isAudioModel $model}}audio{{else if isModerationModel $model}}moderation{{end}} model provided by {{$model.OwnedBy}}. It has {{$model.ContextWindow}} context window.
+		{{- end }}
 )
 
 var disabledModelsForEndpoints = map[Endpoint]map[Model]bool{

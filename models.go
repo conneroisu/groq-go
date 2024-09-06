@@ -38,68 +38,55 @@ const (
 	AudioResponseFormatVerboseJSON AudioResponseFormat = "verbose_json" // AudioResponseFormatVerboseJSON is the verbose JSON format of some audio.
 	AudioResponseFormatVTT         AudioResponseFormat = "vtt"          // AudioResponseFormatVTT is the VTT format of some audio.
 
-	TranscriptionTimestampGranularityWord    TranscriptionTimestampGranularity = "word"    // TranscriptionTimestampGranularityWord is the word timestamp granularity.
-	TranscriptionTimestampGranularitySegment TranscriptionTimestampGranularity = "segment" // TranscriptionTimestampGranularitySegment is the segment timestamp granularity.
-	// DistilWhisperLargeV3En is an AI audio model provided by Hugging Face. It has 448 context window.
-	DistilWhisperLargeV3En Model = "distil-whisper-large-v3-en"
-	// Gemma7BIt is an AI text model provided by Google. It has 8192 context window.
-	Gemma7BIt Model = "gemma-7b-it"
-	// Mixtral8X7B32768 is an AI text model provided by Mistral AI. It has 32768 context window.
-	Mixtral8X7B32768 Model = "mixtral-8x7b-32768"
-	// Gemma29BIt is an AI text model provided by Google. It has 8192 context window.
-	Gemma29BIt Model = "gemma2-9b-it"
-	// LlavaV157B4096Preview is an AI text model provided by Other. It has 4096 context window.
-	LlavaV157B4096Preview Model = "llava-v1.5-7b-4096-preview"
-	// WhisperLargeV3 is an AI audio model provided by OpenAI. It has 448 context window.
-	WhisperLargeV3 Model = "whisper-large-v3"
-	// Llama38B8192 is an AI text model provided by Meta. It has 8192 context window.
-	Llama38B8192 Model = "llama3-8b-8192"
-	// Llama370B8192 is an AI text model provided by Meta. It has 8192 context window.
-	Llama370B8192 Model = "llama3-70b-8192"
-	// Llama3Groq8B8192ToolUsePreview is an AI text model provided by Groq. It has 8192 context window.
-	Llama3Groq8B8192ToolUsePreview Model = "llama3-groq-8b-8192-tool-use-preview"
-	// Llama318BInstant is an AI text model provided by Meta. It has 131072 context window.
-	Llama318BInstant Model = "llama-3.1-8b-instant"
-	// LlamaGuard38B is an AI audio model provided by Meta. It has 8192 context window.
-	LlamaGuard38B Model = "llama-guard-3-8b"
-	// Llama3170BVersatile is an AI text model provided by Meta. It has 131072 context window.
-	Llama3170BVersatile Model = "llama-3.1-70b-versatile"
-	// Llama3Groq70B8192ToolUsePreview is an AI text model provided by Groq. It has 8192 context window.
-	Llama3Groq70B8192ToolUsePreview Model = "llama3-groq-70b-8192-tool-use-preview"
+	TranscriptionTimestampGranularityWord    TranscriptionTimestampGranularity = "word"                                  // TranscriptionTimestampGranularityWord is the word timestamp granularity.
+	TranscriptionTimestampGranularitySegment TranscriptionTimestampGranularity = "segment"                               // TranscriptionTimestampGranularitySegment is the segment timestamp granularity.
+	Llama3Groq70B8192ToolUsePreview          Model                             = "llama3-groq-70b-8192-tool-use-preview" // Llama3Groq70B8192ToolUsePreview is an AI text model provided by Groq. It has 8192 context window.
+	LlamaGuard38B                            Model                             = "llama-guard-3-8b"                      // LlamaGuard38B is an AI moderation model provided by Meta. It has 8192 context window.
+	Gemma29BIt                               Model                             = "gemma2-9b-it"                          // Gemma29BIt is an AI text model provided by Google. It has 8192 context window.
+	Llama3170BVersatile                      Model                             = "llama-3.1-70b-versatile"               // Llama3170BVersatile is an AI text model provided by Meta. It has 131072 context window.
+	Llama3Groq8B8192ToolUsePreview           Model                             = "llama3-groq-8b-8192-tool-use-preview"  // Llama3Groq8B8192ToolUsePreview is an AI text model provided by Groq. It has 8192 context window.
+	Gemma7BIt                                Model                             = "gemma-7b-it"                           // Gemma7BIt is an AI text model provided by Google. It has 8192 context window.
+	Mixtral8X7B32768                         Model                             = "mixtral-8x7b-32768"                    // Mixtral8X7B32768 is an AI text model provided by Mistral AI. It has 32768 context window.
+	Llama370B8192                            Model                             = "llama3-70b-8192"                       // Llama370B8192 is an AI text model provided by Meta. It has 8192 context window.
+	Llama38B8192                             Model                             = "llama3-8b-8192"                        // Llama38B8192 is an AI text model provided by Meta. It has 8192 context window.
+	Llama318BInstant                         Model                             = "llama-3.1-8b-instant"                  // Llama318BInstant is an AI text model provided by Meta. It has 131072 context window.
+	WhisperLargeV3                           Model                             = "whisper-large-v3"                      // WhisperLargeV3 is an AI audio model provided by OpenAI. It has 448 context window.
+	DistilWhisperLargeV3En                   Model                             = "distil-whisper-large-v3-en"            // DistilWhisperLargeV3En is an AI audio model provided by Hugging Face. It has 448 context window.
+	LlavaV157B4096Preview                    Model                             = "llava-v1.5-7b-4096-preview"            // LlavaV157B4096Preview is an AI text model provided by Other. It has 4096 context window.
 )
 
 var disabledModelsForEndpoints = map[Endpoint]map[Model]bool{
 	completionsSuffix: {
-		DistilWhisperLargeV3En: true,
 		WhisperLargeV3:         true,
+		DistilWhisperLargeV3En: true,
 	},
 	chatCompletionsSuffix: {
-		DistilWhisperLargeV3En: true,
 		WhisperLargeV3:         true,
+		DistilWhisperLargeV3En: true,
 	},
 	transcriptionsSuffix: {
+		Llama3Groq70B8192ToolUsePreview: true,
+		Gemma29BIt:                      true,
+		Llama3170BVersatile:             true,
+		Llama3Groq8B8192ToolUsePreview:  true,
 		Gemma7BIt:                       true,
 		Mixtral8X7B32768:                true,
-		Gemma29BIt:                      true,
-		LlavaV157B4096Preview:           true,
-		Llama38B8192:                    true,
 		Llama370B8192:                   true,
-		Llama3Groq8B8192ToolUsePreview:  true,
+		Llama38B8192:                    true,
 		Llama318BInstant:                true,
-		Llama3170BVersatile:             true,
-		Llama3Groq70B8192ToolUsePreview: true,
+		LlavaV157B4096Preview:           true,
 	},
 	translationsSuffix: {
+		Llama3Groq70B8192ToolUsePreview: true,
+		Gemma29BIt:                      true,
+		Llama3170BVersatile:             true,
+		Llama3Groq8B8192ToolUsePreview:  true,
 		Gemma7BIt:                       true,
 		Mixtral8X7B32768:                true,
-		Gemma29BIt:                      true,
-		LlavaV157B4096Preview:           true,
-		Llama38B8192:                    true,
 		Llama370B8192:                   true,
-		Llama3Groq8B8192ToolUsePreview:  true,
+		Llama38B8192:                    true,
 		Llama318BInstant:                true,
-		Llama3170BVersatile:             true,
-		Llama3Groq70B8192ToolUsePreview: true,
+		LlavaV157B4096Preview:           true,
 	},
 	moderationsSuffix: {
 		LlamaGuard38B: true,
