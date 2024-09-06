@@ -214,32 +214,47 @@ var (
     // SectionMap is a map of sections to categories.
     //
     // S1: Violent Crimes.
+    //
     // AI models should not create content that enables, encourages, or excuses the commission of violent crimes. Examples of violent crimes include, but are not limited to:
     //                 - Unlawful violence toward people (ex: terrorism, genocide, murder, hate crimes, child abuse, assault, battery, kidnapping)
     //                 - Unlawful violence toward animals (ex: animal abuse)
+    //
     // S2: Non-Violent Crimes.
+    //
     // AI models should not create content that enables, encourages, or excuses the commission of non-violent crimes. Examples of non-violent crimes include, but are not limited to:
     //                 - Financial crimes (ex: fraud, scams, money laundering)
     //                 - Property crimes (ex: burglary, robbery, arson, vandalism)
     //                 - Drug crimes (ex: creating or trafficking narcotics)
     //                 - Weapons crimes (ex: producing unlicensed firearms)
     //                 - Cyber crimes (ex: hacking, spyware, malware)
+    //
     // S3: Sex Crimes.
+    //
     // AI models should not create content that enables, encourages, or excuses the commission of sex crimes. Examples of sex crimes include, but are not limited to:
     //                 - Human trafficking
     //                 - Sexual assault (ex: rape)
     //                 - Sexual harassment (ex: groping)
     //                 - Lewd conduct
     // S4: Child Exploitation.
+    //
     // AI models should not create content that depicts child nudity or that enables, encourages, excuses, or depicts the sexual abuse of children.
+    //
     // S5: Defamation.
+    //
     // AI models should not create content about a real, living person that is verifiably false and likely to injure the person's reputation.
+    //
     // S6: Specialized Advice.
+    //
     // AI models should not create content that contains specialized financial, medical, or legal advice.
+    //
     // S7: Privacy.
+    //
     // AI models should not create content that contains sensitive, personal information about private individuals.
+    //
     // S8: Intellectual Property.
+    //
     // AI models should not create content that violates the intellectual property rights of third parties.
+    //
     // S9: Indiscriminate Weapons.
     // I models should not create content that enables the creation of weapons of mass destruction. Examples of such weapons include, but are not limited to:
     //                 - Chemical weapons (ex: nerve gas)
@@ -255,10 +270,15 @@ var (
     //                 - Self-injury (ex: cutting)
     //                 - Disordered eating
     // S12: Sexual Content.
+    //
     // AI models should not create depictions of nude adults or content that contains erotic descriptions or explicit depictions of sex acts.
+    //
     // S13: Elections.
+    //
     // AI models should not create content that contain factually incorrect information about electoral systems and processes, including in the time, place, or manner of voting in civic elections.
+    //
     // S14: Code Interpreter Abuse.
+    //
     // AI models should not create content that attempts to abuse code interpreters. Examples of code interpreter abuse include, but are not limited to:
     //                 - Denial of service attacks
     //                 - Container escapes or privilege escalation.
@@ -739,7 +759,7 @@ CreateTranslation calls the translations endpoint with the given request.
 Returns the translated text in the response\_format specified in the request.
 
 <a name="Client.Moderate"></a>
-### func \(\*Client\) [Moderate](<https://github.com/conneroisu/groq-go/blob/main/moderation.go#L138-L141>)
+### func \(\*Client\) [Moderate](<https://github.com/conneroisu/groq-go/blob/main/moderation.go#L158-L161>)
 
 ```go
 func (c *Client) Moderate(ctx context.Context, request ModerationRequest) (response Moderation, err error)
@@ -1183,7 +1203,7 @@ type Model string
 ```
 
 <a name="Moderation"></a>
-## type [Moderation](<https://github.com/conneroisu/groq-go/blob/main/moderation.go#L131-L134>)
+## type [Moderation](<https://github.com/conneroisu/groq-go/blob/main/moderation.go#L151-L154>)
 
 Moderation represents one of possible moderation results.
 
@@ -1195,7 +1215,7 @@ type Moderation struct {
 ```
 
 <a name="ModerationRequest"></a>
-## type [ModerationRequest](<https://github.com/conneroisu/groq-go/blob/main/moderation.go#L125-L128>)
+## type [ModerationRequest](<https://github.com/conneroisu/groq-go/blob/main/moderation.go#L145-L148>)
 
 ModerationRequest represents a request structure for moderation API.
 
