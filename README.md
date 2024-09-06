@@ -10,13 +10,13 @@ Groq is a super fast way to query open source llms.
 
 ## Features
 
-- Supports all models from [Groq](https://wow.groq.com/) in a type-safe way.
-- Supports streaming.
-- Supports moderation.
-- Supports audio transcription.
-- Supports audio translation.
-- Supports Tool Use.
-- Supports Function Calling.
+- [!] Supports all models from [Groq](https://wow.groq.com/) in a type-safe way.
+- [!] Supports streaming.
+- [!] Supports moderation.
+- [!] Supports audio transcription.
+- [!] Supports audio translation.
+- [!] Supports Tool Use.
+- [!] Supports Function Calling.
 
 ## Installation
 
