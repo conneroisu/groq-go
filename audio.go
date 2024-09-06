@@ -139,8 +139,8 @@ func (r AudioRequest) hasJSONResponse() bool {
 		r.Format == AudioResponseFormatVerboseJSON
 }
 
-// audioMultipartForm creates a form with audio file contents and the name of the model to use for
-// audio processing.
+// audioMultipartForm creates a form with audio file contents and the name of
+// the model to use for audio processing.
 func audioMultipartForm(request AudioRequest, b formBuilder) error {
 	err := createFileField(request, b)
 	if err != nil {

@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"text/template"
+	"time"
 
 	"github.com/samber/lo"
 )
@@ -156,6 +157,9 @@ func fillTemplate(w io.Writer, models []ResponseModel) error {
 		"isModerationModel": func(model ResponseModel) bool {
 			// if the id of the model is llama-guard-3-8b
 			return model.ID == "llama-guard-3-8b"
+		},
+		"getCurrentDate": func() string {
+			return time.Now().Format("2006-01-02 15:04:05")
 		},
 	}
 	tmpla, err := template.New("output").
