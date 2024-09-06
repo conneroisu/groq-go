@@ -1,3 +1,5 @@
+// Package main demonstrates how to use groq-go to create a chat application
+// using the groq api accessable through the terminal.
 package main
 
 import (
@@ -101,7 +103,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.textarea.SetValue(m.textarea.Value() + "\n")
 			m.viewport.LineDown(1)
 			m.viewport.TotalLineCount()
-			_ = os.WriteFile("chat.txt", []byte(m.textarea.Value()), 0644)
 		case tea.KeyEnter:
 			message := m.textarea.Value()
 			if strings.TrimSpace(m.textarea.Value()) == "" {
