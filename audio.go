@@ -30,7 +30,7 @@ type AudioResponse struct {
 	Words    Words    `json:"words"`    // Words is the words of the response.
 	Text     string   `json:"text"`     // Text is the text of the response.
 
-	http.Header // Header is the header of the response.
+	Header http.Header // Header is the header of the response.
 }
 
 // Words is the words of the response.
@@ -60,7 +60,8 @@ func (r *AudioResponse) SetHeader(header http.Header) {
 	r.Header = header
 }
 
-// audioTextResponse is the response structure for the audio API when the response format is text.
+// audioTextResponse is the response structure for the audio API when the
+// response format is text.
 type audioTextResponse struct {
 	Text   string      `json:"text"` // Text is the text of the response.
 	header http.Header // Header is the header of the response.
@@ -99,6 +100,9 @@ func (c *Client) CreateTranslation(
 	return c.callAudioAPI(ctx, request, translationsSuffix)
 }
 
+// callAudioAPI calls the audio API with the given request.
+//
+// Currently supports both the transcription and translation APIs.
 func (c *Client) callAudioAPI(
 	ctx context.Context,
 	request AudioRequest,
@@ -192,7 +196,8 @@ func audioMultipartForm(request AudioRequest, b formBuilder) error {
 	return b.Close()
 }
 
-// createFileField creates the "file" form field from either an existing file or by using the reader.
+// createFileField creates the "file" form field from either an existing file
+// or by using the reader.
 func createFileField(
 	request AudioRequest,
 	b formBuilder,

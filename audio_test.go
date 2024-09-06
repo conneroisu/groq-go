@@ -88,18 +88,15 @@ func TestCreateFileField(t *testing.T) {
 		defer cleanup()
 		path := filepath.Join(dir, "fake.mp3")
 		test.CreateTestFile(t, path)
-
 		req := AudioRequest{
 			FilePath: path,
 		}
-
 		mockFailedErr := fmt.Errorf("mock form builder fail")
 		mockBuilder := &mockFormBuilder{
 			mockCreateFormFile: func(string, *os.File) error {
 				return mockFailedErr
 			},
 		}
-
 		err := createFileField(req, mockBuilder)
 		a.ErrorIs(
 			err,
