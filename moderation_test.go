@@ -22,7 +22,13 @@ func TestModerate(t *testing.T) {
 	a := assert.New(t)
 	a.NoError(err, "Moderation error")
 	a.Equal(true, mod.Flagged)
-	a.Equal(mod.Categories, []groq.HarmfulCategory{groq.CategoryViolentCrimes, groq.CategoryNonviolentCrimes})
+	a.Equal(
+		mod.Categories,
+		[]groq.HarmfulCategory{
+			groq.CategoryViolentCrimes,
+			groq.CategoryNonviolentCrimes,
+		},
+	)
 }
 
 func handleModerationEndpoint(w http.ResponseWriter, r *http.Request) {
