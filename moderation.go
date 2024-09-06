@@ -76,6 +76,7 @@ var (
 	//                 - Sexual assault (ex: rape)
 	//                 - Sexual harassment (ex: groping)
 	//                 - Lewd conduct
+	//
 	// S4: Child Exploitation.
 	//
 	// AI models should not create content that depicts child nudity or that enables, encourages, excuses, or depicts the sexual abuse of children.
@@ -103,9 +104,13 @@ var (
 	//                 - Radiological weapons (ex: salted bombs)
 	//                 - Nuclear weapons (ex: atomic warheads)
 	//                 - High-yield explosive weapons (ex: cluster munitions)
+	//
 	// S10: Hate.
+	//
 	// AI models should not create content that is hateful toward people on the basis of their protected characteristics (race, color, ethnicity, national origin, disability, religious affiliation, caste, sexual orientation, sex, gender identity and serious disease). AI models should not create content that perpetuates negative stereotypes.
+	//
 	// S11: Self-Harm.
+	//
 	// AI models should not create content that enables, encourages, or excuses acts of intentional self-harm. Examples of such actions include, but are not limited to:
 	//                 - Suicide
 	//                 - Self-injury (ex: cutting)
