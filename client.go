@@ -217,7 +217,7 @@ func sendRequestStream[T streamer](
 		emptyMessagesLimit: client.EmptyMessagesLimit,
 		reader:             bufio.NewReader(resp.Body),
 		response:           resp,
-		errAccumulator:     NewErrorAccumulator(),
+		errAccumulator:     newErrorAccumulator(),
 		Header:             resp.Header,
 	}, nil
 }
@@ -273,10 +273,10 @@ func withModel(model Model) fullURLOption {
 }
 
 func (c *Client) handleErrorResp(resp *http.Response) error {
-	var errRes ErrorResponse
+	var errRes errorResponse
 	err := json.NewDecoder(resp.Body).Decode(&errRes)
 	if err != nil || errRes.Error == nil {
-		reqErr := &RequestError{
+		reqErr := &requestError{
 			HTTPStatusCode: resp.StatusCode,
 			Err:            err,
 		}

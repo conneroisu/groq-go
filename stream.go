@@ -62,7 +62,7 @@ type streamReader[T streamer] struct {
 
 	reader         *bufio.Reader
 	response       *http.Response
-	errAccumulator ErrorAccumulator
+	errAccumulator errorAccumulator
 
 	Header http.Header // Header is the header of the response.
 }
@@ -127,7 +127,7 @@ func (stream *streamReader[T]) processLines() (T, error) {
 	}
 }
 
-func (stream *streamReader[T]) unmarshalError() (errResp *ErrorResponse) {
+func (stream *streamReader[T]) unmarshalError() (errResp *errorResponse) {
 	errBytes := stream.errAccumulator.Bytes()
 	if len(errBytes) == 0 {
 		return

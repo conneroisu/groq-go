@@ -12,7 +12,7 @@ import (
 // TestStreamReaderReturnsUnmarshalerErrors tests the stream reader returns an unmarshaler error.
 func TestStreamReaderReturnsUnmarshalerErrors(t *testing.T) {
 	stream := &streamReader[ChatCompletionStreamResponse]{
-		errAccumulator: NewErrorAccumulator(),
+		errAccumulator: newErrorAccumulator(),
 	}
 
 	respErr := stream.unmarshalError()
@@ -39,7 +39,7 @@ func TestStreamReaderReturnsErrTooManyEmptyStreamMessages(t *testing.T) {
 		reader: bufio.NewReader(
 			bytes.NewReader([]byte("\n\n\n\n")),
 		),
-		errAccumulator: NewErrorAccumulator(),
+		errAccumulator: newErrorAccumulator(),
 	}
 	_, err := stream.Recv()
 	a.ErrorIs(

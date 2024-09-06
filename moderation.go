@@ -163,7 +163,10 @@ func (c *Client) Moderate(
 		response.Flagged = true
 		split := strings.Split(strings.Split(content, "\n")[1], ",")
 		for _, s := range split {
-			response.Categories = append(response.Categories, SectionMap[strings.TrimSpace(s)])
+			response.Categories = append(
+				response.Categories,
+				SectionMap[strings.TrimSpace(s)],
+			)
 		}
 	}
 	return
