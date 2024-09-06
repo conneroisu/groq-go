@@ -79,7 +79,9 @@ func (r *audioTextResponse) toAudioResponse() AudioResponse {
 	}
 }
 
-// CreateTranscription — API call to create a transcription. Returns transcribed text.
+// CreateTranscription calls the transcriptions endpoint with the given request.
+//
+// Returns transcribed text in the response_format specified in the request.
 func (c *Client) CreateTranscription(
 	ctx context.Context,
 	request AudioRequest,
@@ -87,7 +89,9 @@ func (c *Client) CreateTranscription(
 	return c.callAudioAPI(ctx, request, transcriptionsSuffix)
 }
 
-// CreateTranslation — API call to translate audio into English.
+// CreateTranslation calls the translations endpoint with the given request.
+//
+// Returns the translated text in the response_format specified in the request.
 func (c *Client) CreateTranslation(
 	ctx context.Context,
 	request AudioRequest,
@@ -95,7 +99,6 @@ func (c *Client) CreateTranslation(
 	return c.callAudioAPI(ctx, request, translationsSuffix)
 }
 
-// callAudioAPI — API call to an audio endpoint.
 func (c *Client) callAudioAPI(
 	ctx context.Context,
 	request AudioRequest,
@@ -131,7 +134,6 @@ func (c *Client) callAudioAPI(
 	return
 }
 
-// hasJSONResponse returns true if the response format is JSON.
 func (r AudioRequest) hasJSONResponse() bool {
 	return r.Format == "" || r.Format == AudioResponseFormatJSON ||
 		r.Format == AudioResponseFormatVerboseJSON
@@ -187,7 +189,6 @@ func audioMultipartForm(request AudioRequest, b FormBuilder) error {
 			}
 		}
 	}
-	// Close the multipart writer
 	return b.Close()
 }
 
