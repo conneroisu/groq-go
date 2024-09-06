@@ -6,6 +6,4 @@
 # 
 # Usage: make docs
 
-mkdir docs
-golds -s -gen -wdpkgs-listing=promoted -dir=./docs -footer=verbose+qrcode
-xdg-open ./docs/index.html
+gomarkdoc -o README.md -e .
