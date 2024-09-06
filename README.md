@@ -15,6 +15,8 @@ Groq is a super fast way to query open source llms.
 - Supports moderation.
 - Supports audio transcription.
 - Supports audio translation.
+- Supports Tool Use.
+- Supports Function Calling.
 
 ## Installation
 
