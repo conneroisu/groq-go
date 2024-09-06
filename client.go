@@ -14,7 +14,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-//go:generate go run ./scripts/models/main.go
+//go:generate go run ./cmd/models/main.go
 
 // Format is the format of a response.
 // string
