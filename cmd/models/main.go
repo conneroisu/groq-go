@@ -1,3 +1,6 @@
+// Package main is the main package for the groq-modeler.
+//
+// It is used to generate the models for the groq-go library.
 package main
 
 import (
@@ -55,7 +58,7 @@ type ResponseModel struct {
 }
 
 // run runs the main function.
-func run(ctx context.Context) error {
+func run(_ context.Context) error {
 	client := &http.Client{}
 	req, err := http.NewRequest(
 		"GET",
