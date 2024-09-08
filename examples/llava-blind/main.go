@@ -32,17 +32,19 @@ func run(
 		Model: groq.LlavaV157B4096Preview,
 		Messages: []groq.ChatCompletionMessage{
 			{
-				Role:    groq.ChatMessageRoleSystem,
-				Content: "You are a helpful assistant asked to identify the contents of user given image..",
-			},
-			{
 				Role: groq.ChatMessageRoleUser,
 				MultiContent: []groq.ChatMessagePart{
 					{
-						Type:     groq.ChatMessagePartTypeImageURL,
-						ImageURL: &groq.ChatMessageImageURL{URL: "https://cdnimg.webstaurantstore.com/images/products/large/87539/251494.jpg"},
+						Type: groq.ChatMessagePartTypeText,
+						Text: "What is the contents of the image?",
 					},
-				},
+					{
+						Type: groq.ChatMessagePartTypeImageURL,
+						ImageURL: &groq.ChatMessageImageURL{
+							URL:    "https://cdnimg.webstaurantstore.com/images/products/large/87539/251494.jpg",
+							Detail: "auto",
+						},
+					}},
 			},
 		},
 		MaxTokens: 2000,
