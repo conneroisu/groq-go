@@ -472,18 +472,16 @@ func (c *Client) CreateChatCompletionJSON(
 	if err != nil {
 		return
 	}
-	if output != nil {
-		err = json.Unmarshal(
-			[]byte(response.Choices[0].Message.Content),
-			output,
+	err = json.Unmarshal(
+		[]byte(response.Choices[0].Message.Content),
+		&output,
+	)
+	if err != nil {
+		return fmt.Errorf(
+			"error unmarshalling response (%s) to output: %v",
+			response.Choices[0].Message.Content,
+			err,
 		)
-		if err != nil {
-			return fmt.Errorf(
-				"error unmarshalling response (%s) to output: %v",
-				response.Choices[0].Message.Content,
-				err,
-			)
-		}
 	}
 	return
 }

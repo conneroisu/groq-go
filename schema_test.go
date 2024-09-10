@@ -1,15 +1,14 @@
-package groq_test
+package groq
 
 import (
 	"testing"
 
-	"github.com/conneroisu/groq-go"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestID(t *testing.T) {
 	base := "https://github.com/conneroisu/groq-go/schema"
-	id := groq.ID(base)
+	id := ID(base)
 
 	assert.Equal(t, base, id.String())
 
@@ -27,7 +26,7 @@ func TestID(t *testing.T) {
 }
 
 func TestIDValidation(t *testing.T) {
-	id := groq.ID("https://invopop.com/schema/user")
+	id := ID("https://invopop.com/schema/user")
 	assert.NoError(t, id.Validate())
 
 	id = "https://encoding/json"
