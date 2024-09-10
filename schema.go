@@ -42,7 +42,37 @@ type Schema struct {
 	Ref         string      `json:"$ref,omitempty"`        // section 8.2.3.1
 	DynamicRef  string      `json:"$dynamicRef,omitempty"` // section 8.2.3.2
 	Definitions Definitions `json:"$defs,omitempty"`       // section 8.2.4
-	Comments    string      `json:"$comment,omitempty"`    // section 8.3
+	// Comments specifies a comment for the schema as
+	// specified RFC draft-bhutton-json-schema-00 section 8.3
+	//
+	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-00#section-8.3
+	//
+	// The value of this field MUST be a string.  Implementations MUST NOT
+	// present this string to end users.  Tools for editing schemas SHOULD
+	// support displaying and editing this field.  The value of this
+	// field MAY be used in debug or error output which is intended for
+	// developers making use of schemas.
+	//
+	// Schema vocabularies SHOULD allow "$comment" within any object
+	// containing vocabulary fields.  Implementations MAY assume
+	// "$comment" is allowed unless the vocabulary specifically forbids it.
+	// Vocabularies MUST NOT specify any effect of "$comment" beyond what is
+	// described in this specification.
+	//
+	// Tools that translate other media types or programming languages to
+	// and from application/schema+json MAY choose to convert that media
+	// type or programming language's native comments to or from "$comment"
+	// values.  The behavior of such translation when both native comments
+	// and "$comment" properties are present is implementation-dependent.
+	//
+	// Implementations MAY strip "$comment" values at any point during
+	// processing.  In particular, this allows for shortening schemas when
+	// the size of deployed schemas is a concern.
+	//
+	// Implementations MUST NOT take any other action based on the presence,
+	// absence, or contents of "$comment" properties.  In particular, the
+	// value of "$comment" MUST NOT be collected as an annotation result.
+	Comments string `json:"$comment,omitempty"` // section 8.3
 	// AllOf specifies that the schema is an all of of the schema as
 	// specifified RFC draft-bhutton-json-schema-00 section 10.2.1
 	//
@@ -50,13 +80,13 @@ type Schema struct {
 	//
 	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-00#section-10.2.1
 	//
-	// The value of this keyword MUST be an array.  Elements in the array
+	// The value of this field MUST be an array.  Elements in the array
 	// MUST be objects.  Each object MUST be a valid JSON Schema.
 	//
-	// An instance validates successfully against this keyword if it
+	// An instance validates successfully against this field if it
 	// validates successfully against all schemas defined by "allOf".
 	//
-	// Omitting this keyword has the same behavior as an empty array.
+	// Omitting this field has the same behavior as an empty array.
 	AllOf []*Schema `json:"allOf,omitempty"` // section 10.2.1.1
 	AnyOf []*Schema `json:"anyOf,omitempty"` // section 10.2.1.2
 	OneOf []*Schema `json:"oneOf,omitempty"` // section 10.2.1.3
@@ -91,12 +121,12 @@ type Schema struct {
 	//
 	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-validation-00#section-6.3.2
 	//
-	// The value of this keyword MUST be a non-negative integer.
+	// The value of this field MUST be a non-negative integer.
 	//
 	// A string instance is valid against "minLength" if its length is
-	// greater than, or equal to, the value of this keyword.
+	// greater than, or equal to, the value of this field.
 	//
-	// Omitting this keyword has the same behavior as a value of 0.
+	// Omitting this field has the same behavior as a value of 0.
 	MinLength *uint64 `json:"minLength,omitempty"` // section 6.3.2
 	// Pattern specifies the regular expression pattern of the schema as
 	// specified in section 6.3.3 of RFC
@@ -104,7 +134,7 @@ type Schema struct {
 	//
 	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-validation-00#section-6.3.3
 	//
-	// The value of this keyword MUST be a string.  This string SHOULD be a
+	// The value of this field MUST be a string.  This string SHOULD be a
 	// valid regular expression, according to the ECMA-262 regular
 	// expression dialect.
 	//
@@ -118,12 +148,12 @@ type Schema struct {
 	//
 	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-validation-00#section-6.4.1
 	//
-	// The value of this keyword MUST be a non-negative integer.
+	// The value of this field MUST be a non-negative integer.
 	//
 	// An array instance is valid against "maxItems" if its size is less
-	// than, or equal to, the value of this keyword.
+	// than, or equal to, the value of this field.
 	//
-	// Omitting this keyword has the same behavior as a value of an
+	// Omitting this field has the same behavior as a value of an
 	// implementation-defined number.
 	MaxItems *uint64 `json:"maxItems,omitempty"` // section 6.4.1
 	// MinItems specifies the minimum number of items in the array as
@@ -132,12 +162,12 @@ type Schema struct {
 	//
 	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-validation-00#section-6.4.2
 	//
-	// The value of this keyword MUST be a non-negative integer.
+	// The value of this field MUST be a non-negative integer.
 	//
 	// An array instance is valid against "minItems" if its size is greater
-	// than, or equal to, the value of this keyword.
+	// than, or equal to, the value of this field.
 	//
-	// Omitting this keyword has the same behavior as a value of 0.
+	// Omitting this field has the same behavior as a value of 0.
 	MinItems *uint64 `json:"minItems,omitempty"` // section 6.4.2
 	// UniqueItems specifies that the instance array is unique as specified
 	// in section 6.4.3 of RFC
@@ -145,9 +175,9 @@ type Schema struct {
 	//
 	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-validation-00#section-6.4.3
 	//
-	// The value of this keyword MUST be a boolean.
+	// The value of this field MUST be a boolean.
 	//
-	// If this keyword has boolean value false, the instance validates
+	// If this field has boolean value false, the instance validates
 	// successfully.  If it has boolean value true, the instance validates
 	// successfully if all of its elements are unique.
 	UniqueItems bool `json:"uniqueItems,omitempty"` // section 6.4.3
@@ -157,14 +187,14 @@ type Schema struct {
 	//
 	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-validation-00#section-6.4.4
 	//
-	// The value of this keyword MUST be a non-negative integer.
+	// The value of this field MUST be a non-negative integer.
 	//
 	// If "contains" is not present within the same schema object, then this
-	// keyword has no effect.
+	// field has no effect.
 	//
 	// An instance array is valid against "maxContains" in two ways,
 	// depending on the form of the annotation result of an adjacent
-	// "contains" [json-schema] keyword.  The first way is if the annotation
+	// "contains" [json-schema] field.  The first way is if the annotation
 	// result is an array and the length of that array is less than or equal
 	// to the "maxContains" value.  The second way is if the annotation
 	// result is a boolean "true" and the instance array length is less than
@@ -176,14 +206,14 @@ type Schema struct {
 	//
 	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-validation-00#section-6.4.5
 	//
-	// The value of this keyword MUST be a non-negative integer.
+	// The value of this field MUST be a non-negative integer.
 	//
 	// If "contains" is not present within the same schema object, then this
-	// keyword has no effect.
+	// field has no effect.
 	//
 	// An instance array is valid against "minContains" in two ways,
 	// depending on the form of the annotation result of an adjacent
-	// "contains" [json-schema] keyword.  The first way is if the annotation
+	// "contains" [json-schema] field.  The first way is if the annotation
 	// result is an array and the length of that array is greater than or
 	// equal to the "minContains" value.  The second way is if the
 	// annotation result is a boolean "true" and the instance array length
@@ -199,12 +229,12 @@ type Schema struct {
 	//
 	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-validation-00#section-6.5.1
 	//
-	// The value of this keyword MUST be a non-negative integer.
+	// The value of this field MUST be a non-negative integer.
 	//
 	// An object instance is valid against "maxProperties" if its number of
-	// properties is less than, or equal to, the value of this keyword.
+	// properties is less than, or equal to, the value of this field.
 	//
-	// Omitting this keyword has the same behavior as a value of an
+	// Omitting this field has the same behavior as a value of an
 	// implementation-defined number.
 	MaxProperties *uint64 `json:"maxProperties,omitempty"`
 	// MinProperties specifies the minimum number of properties of the
@@ -213,12 +243,12 @@ type Schema struct {
 	//
 	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-validation-00#section-6.5.2
 	//
-	// The value of this keyword MUST be a non-negative integer.
+	// The value of this field MUST be a non-negative integer.
 	//
 	// An object instance is valid against "minProperties" if its number of
-	// properties is greater than, or equal to, the value of this keyword.
+	// properties is greater than, or equal to, the value of this field.
 	//
-	// Omitting this keyword has the same behavior as a value of 0.
+	// Omitting this field has the same behavior as a value of 0.
 	MinProperties *uint64 `json:"minProperties,omitempty"`
 	// Required specifies the required properties of the schema as
 	// specified in section 6.5.3 of RFC
@@ -226,19 +256,19 @@ type Schema struct {
 	//
 	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-validation-00#section-6.5.4
 	//
-	// The value of this keyword MUST be an object.  Properties in this
+	// The value of this field MUST be an object.  Properties in this
 	// object, if any, MUST be arrays.  Elements in each array, if any, MUST
 	// be strings, and MUST be unique.
 	//
-	// This keyword specifies properties that are required if a specific
+	// This field specifies properties that are required if a specific
 	// other property is present.  Their requirement is dependent on the
 	// presence of the other property.
 	//
 	// Validation succeeds if, for each name that appears in both the
-	// instance and as a name within this keyword's value, every item in the
+	// instance and as a name within this field's value, every item in the
 	// corresponding array is also the name of a property in the instance.
 	//
-	// Omitting this keyword has the same behavior as an empty object.
+	// Omitting this field has the same behavior as an empty object.
 	Required []string `json:"required,omitempty"`
 	// DependentRequired is the dependent required of the schema.
 	//
@@ -246,19 +276,19 @@ type Schema struct {
 	//
 	// url: https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-validation-00#section-6.5.4
 	//
-	// The value of this keyword MUST be an object.  Properties in this
+	// The value of this field MUST be an object.  Properties in this
 	// object, if any, MUST be arrays.  Elements in each array, if any, MUST
 	// be strings, and MUST be unique.
 	//
-	// This keyword specifies properties that are required if a specific
+	// This field specifies properties that are required if a specific
 	// other property is present.  Their requirement is dependent on the
 	// presence of the other property.
 	//
 	// Validation succeeds if, for each name that appears in both the
-	// instance and as a name within this keyword's value, every item in the
+	// instance and as a name within this field's value, every item in the
 	// corresponding array is also the name of a property in the instance.
 	//
-	// Omitting this keyword has the same behavior as an empty object.
+	// Omitting this field has the same behavior as an empty object.
 	DependentRequired map[string][]string `json:"dependentRequired,omitempty"` // section 6.5.4
 	// Format specifies the format of the schema as specified in section
 	// 7.3 of RFC draft-bhutton-json-schema-validation-00.
@@ -267,10 +297,10 @@ type Schema struct {
 	//
 	// TODO: add type for format and all the possible formats
 	//
-	// The value of this keyword MUST be a string.  Implementations that
+	// The value of this field MUST be a string.  Implementations that
 	// use a subset of JSON as their input format, such as JSON Hyper-Schema
 	// or JSON Schema Hyper-Schema, MAY implement validation against
-	// meta-schemas that define format-specific keywords that describe
+	// meta-schemas that define format-specific fields that describe
 	// additional constraints beyond those specified herein.
 	Format string `json:"format,omitempty"` // RFC draft-bhutton-json-schema-validation-00, section 7
 	// RFC draft-bhutton-json-schema-validation-00, section 8
@@ -290,11 +320,11 @@ type Schema struct {
 	// "base64" is defined in both RFCs, the definition from RFC 4648 SHOULD
 	// be assumed unless the string is specifically intended for use in a
 	// MIME context.  Note that all of these encodings result in strings
-	// consisting only of 7-bit ASCII characters.  Therefore, this keyword
+	// consisting only of 7-bit ASCII characters.  Therefore, this field
 	// has no meaning for strings containing characters outside of that
 	// range.
 	//
-	// If this keyword is absent, but "contentMediaType" is present, this
+	// If this field is absent, but "contentMediaType" is present, this
 	// indicates that the encoding is the identity encoding, meaning that no
 	// transformation was needed in order to represent the content in a
 	// UTF-8 string.
@@ -323,7 +353,7 @@ type Schema struct {
 	// this property contains a schema which describes the structure of the
 	// string.
 	//
-	// This keyword MAY be used with any media type that can be mapped into
+	// This field MAY be used with any media type that can be mapped into
 	// JSON Schema's data model.
 	//
 	// The value of this property MUST be a valid JSON schema.  It SHOULD be
