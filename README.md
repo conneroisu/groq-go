@@ -68,6 +68,8 @@ Features:
 
 - [Constants](<#constants>)
 - [Variables](<#variables>)
+- [func NewProperties\(\) \*orderedmap.OrderedMap\[string, \*Schema\]](<#NewProperties>)
+- [func ToSnakeCase\(str string\) string](<#ToSnakeCase>)
 - [type APIError](<#APIError>)
   - [func \(e \*APIError\) Error\(\) string](<#APIError.Error>)
   - [func \(e \*APIError\) UnmarshalJSON\(data \[\]byte\) \(err error\)](<#APIError.UnmarshalJSON>)
@@ -95,6 +97,7 @@ Features:
 - [type Client](<#Client>)
   - [func NewClient\(groqAPIKey string, opts ...Opts\) \(\*Client, error\)](<#NewClient>)
   - [func \(c \*Client\) CreateChatCompletion\(ctx context.Context, request ChatCompletionRequest\) \(response ChatCompletionResponse, err error\)](<#Client.CreateChatCompletion>)
+  - [func \(c \*Client\) CreateChatCompletionJSON\(ctx context.Context, request ChatCompletionRequest, output json.Marshaler\) \(err error\)](<#Client.CreateChatCompletionJSON>)
   - [func \(c \*Client\) CreateChatCompletionStream\(ctx context.Context, request ChatCompletionRequest\) \(stream \*ChatCompletionStream, err error\)](<#Client.CreateChatCompletionStream>)
   - [func \(c \*Client\) CreateCompletion\(ctx context.Context, request CompletionRequest\) \(response CompletionResponse, err error\)](<#Client.CreateCompletion>)
   - [func \(c \*Client\) CreateCompletionStream\(ctx context.Context, request CompletionRequest\) \(\*CompletionStream, error\)](<#Client.CreateCompletionStream>)
@@ -109,6 +112,7 @@ Features:
 - [type DefaultErrorAccumulator](<#DefaultErrorAccumulator>)
   - [func \(e \*DefaultErrorAccumulator\) Bytes\(\) \(errBytes \[\]byte\)](<#DefaultErrorAccumulator.Bytes>)
   - [func \(e \*DefaultErrorAccumulator\) Write\(p \[\]byte\) error](<#DefaultErrorAccumulator.Write>)
+- [type Definitions](<#Definitions>)
 - [type Endpoint](<#Endpoint>)
 - [type ErrChatCompletionInvalidModel](<#ErrChatCompletionInvalidModel>)
   - [func \(e ErrChatCompletionInvalidModel\) Error\(\) string](<#ErrChatCompletionInvalidModel.Error>)
@@ -130,6 +134,13 @@ Features:
 - [type FunctionCall](<#FunctionCall>)
 - [type FunctionDefinition](<#FunctionDefinition>)
 - [type HarmfulCategory](<#HarmfulCategory>)
+- [type ID](<#ID>)
+  - [func \(id ID\) Add\(path string\) ID](<#ID.Add>)
+  - [func \(id ID\) Anchor\(name string\) ID](<#ID.Anchor>)
+  - [func \(id ID\) Base\(\) ID](<#ID.Base>)
+  - [func \(id ID\) Def\(name string\) ID](<#ID.Def>)
+  - [func \(id ID\) String\(\) string](<#ID.String>)
+  - [func \(id ID\) Validate\(\) error](<#ID.Validate>)
 - [type ImageURLDetail](<#ImageURLDetail>)
 - [type LogProb](<#LogProb>)
 - [type LogProbs](<#LogProbs>)
@@ -145,10 +156,19 @@ Features:
 - [type PromptFilterResult](<#PromptFilterResult>)
 - [type RateLimitHeaders](<#RateLimitHeaders>)
 - [type RawResponse](<#RawResponse>)
+- [type Reflector](<#Reflector>)
+  - [func \(r \*Reflector\) Reflect\(v any\) \*Schema](<#Reflector.Reflect>)
+  - [func \(r \*Reflector\) ReflectFromType\(t reflect.Type\) \*Schema](<#Reflector.ReflectFromType>)
+  - [func \(r \*Reflector\) SetBaseSchemaID\(id string\)](<#Reflector.SetBaseSchemaID>)
 - [type ResetTime](<#ResetTime>)
   - [func \(r ResetTime\) String\(\) string](<#ResetTime.String>)
   - [func \(r ResetTime\) Time\(\) time.Time](<#ResetTime.Time>)
 - [type Role](<#Role>)
+- [type Schema](<#Schema>)
+  - [func Reflect\(v any\) \*Schema](<#Reflect>)
+  - [func ReflectFromType\(t reflect.Type\) \*Schema](<#ReflectFromType>)
+  - [func \(t \*Schema\) MarshalJSON\(\) \(\[\]byte, error\)](<#Schema.MarshalJSON>)
+  - [func \(t \*Schema\) UnmarshalJSON\(data \[\]byte\) error](<#Schema.UnmarshalJSON>)
 - [type Segments](<#Segments>)
 - [type StreamOptions](<#StreamOptions>)
 - [type Tool](<#Tool>)
@@ -221,6 +241,17 @@ const (
 ```
 
 ## Variables
+
+<a name="TrueSchema"></a>
+
+```go
+var (
+    // TrueSchema defines a schema with a true value
+    TrueSchema = &Schema{boolean: &[]bool{true}[0]}
+    // FalseSchema defines a schema with a false value
+    FalseSchema = &Schema{boolean: &[]bool{false}[0]}
+)
+```
 
 <a name="SectionMap"></a>
 
@@ -321,6 +352,30 @@ var (
 )
 ```
 
+<a name="Version"></a>Version is the JSON Schema version.
+
+```go
+var Version = "https://json-schema.org/draft/2020-12/schema"
+```
+
+<a name="NewProperties"></a>
+## func [NewProperties](<https://github.com/conneroisu/groq-go/blob/main/schema.go#L25>)
+
+```go
+func NewProperties() *orderedmap.OrderedMap[string, *Schema]
+```
+
+NewProperties is a helper method to instantiate a new properties ordered map.
+
+<a name="ToSnakeCase"></a>
+## func [ToSnakeCase](<https://github.com/conneroisu/groq-go/blob/main/schema.go#L17>)
+
+```go
+func ToSnakeCase(str string) string
+```
+
+ToSnakeCase converts the provided string into snake case using dashes. This is useful for Schema IDs and definitions to be coherent with common JSON Schema examples.
+
 <a name="APIError"></a>
 ## type [APIError](<https://github.com/conneroisu/groq-go/blob/main/errors.go#L17-L23>)
 
@@ -355,7 +410,7 @@ func (e *APIError) UnmarshalJSON(data []byte) (err error)
 UnmarshalJSON implements the json.Unmarshaler interface.
 
 <a name="AudioRequest"></a>
-## type [AudioRequest](<https://github.com/conneroisu/groq-go/blob/main/audio.go#L13-L22>)
+## type [AudioRequest](<https://github.com/conneroisu/groq-go/blob/main/audio.go#L33-L42>)
 
 AudioRequest represents a request structure for audio API.
 
@@ -373,7 +428,7 @@ type AudioRequest struct {
 ```
 
 <a name="AudioResponse"></a>
-## type [AudioResponse](<https://github.com/conneroisu/groq-go/blob/main/audio.go#L25-L34>)
+## type [AudioResponse](<https://github.com/conneroisu/groq-go/blob/main/audio.go#L45-L54>)
 
 AudioResponse represents a response structure for audio API.
 
@@ -391,7 +446,7 @@ type AudioResponse struct {
 ```
 
 <a name="AudioResponse.SetHeader"></a>
-### func \(\*AudioResponse\) [SetHeader](<https://github.com/conneroisu/groq-go/blob/main/audio.go#L59>)
+### func \(\*AudioResponse\) [SetHeader](<https://github.com/conneroisu/groq-go/blob/main/audio.go#L79>)
 
 ```go
 func (r *AudioResponse) SetHeader(header http.Header)
@@ -413,7 +468,7 @@ type AudioResponseFormat string
 ```
 
 <a name="ChatCompletionChoice"></a>
-## type [ChatCompletionChoice](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L300-L313>)
+## type [ChatCompletionChoice](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L301-L314>)
 
 ChatCompletionChoice represents the chat completion choice.
 
@@ -435,7 +490,7 @@ type ChatCompletionChoice struct {
 ```
 
 <a name="ChatCompletionMessage"></a>
-## type [ChatCompletionMessage](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L67-L87>)
+## type [ChatCompletionMessage](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L68-L87>)
 
 ChatCompletionMessage represents the chat completion message.
 
@@ -447,9 +502,8 @@ type ChatCompletionMessage struct {
 
     // This property isn't in the official documentation, but it's in
     // the documentation for the official library for python:
-    //
-    //	- https://github.com/openai/openai-python/blob/main/chatml.md
-    //	- https://github.com/openai/openai-cookbook/blob/main/examples/How_to_count_tokens_with_tiktoken.ipynb
+    // - https://github.com/openai/openai-python/blob/main/chatml.md
+    // - https://github.com/openai/openai-cookbook/blob/main/examples/How_to_count_tokens_with_tiktoken.ipynb
     Name string `json:"name,omitempty"`
 
     // FunctionCall setting for Role=assistant prompts this may be set to the function call generated by the model.
@@ -482,7 +536,7 @@ func (m *ChatCompletionMessage) UnmarshalJSON(bs []byte) (err error)
 UnmarshalJSON implements the json.Unmarshaler interface.
 
 <a name="ChatCompletionRequest"></a>
-## type [ChatCompletionRequest](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L187-L219>)
+## type [ChatCompletionRequest](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L187-L220>)
 
 ChatCompletionRequest represents a request structure for the chat completion API.
 
@@ -513,8 +567,9 @@ type ChatCompletionRequest struct {
     // logprobs must be set to true if this parameter is used.
     TopLogProbs int    `json:"top_logprobs,omitempty"`
     User        string `json:"user,omitempty"`
-    Tools       []Tool `json:"tools,omitempty"`       // Tools is the tools of the chat completion message.
-    ToolChoice  any    `json:"tool_choice,omitempty"` // ToolChoice is the tool choice of the chat completion message.
+    Tools       []Tool `json:"tools,omitempty"`
+    // This can be either a string or an ToolChoice object.
+    ToolChoice any `json:"tool_choice,omitempty"`
     // Options for streaming response. Only set this when you set stream: true.
     StreamOptions *StreamOptions `json:"stream_options,omitempty"`
     // Disable the default behavior of parallel tool calls by setting it: false.
@@ -523,7 +578,7 @@ type ChatCompletionRequest struct {
 ```
 
 <a name="ChatCompletionResponse"></a>
-## type [ChatCompletionResponse](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L316-L326>)
+## type [ChatCompletionResponse](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L317-L327>)
 
 ChatCompletionResponse represents a response structure for chat completion API.
 
@@ -542,7 +597,7 @@ type ChatCompletionResponse struct {
 ```
 
 <a name="ChatCompletionResponse.SetHeader"></a>
-### func \(\*ChatCompletionResponse\) [SetHeader](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L329>)
+### func \(\*ChatCompletionResponse\) [SetHeader](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L330>)
 
 ```go
 func (r *ChatCompletionResponse) SetHeader(h http.Header)
@@ -588,7 +643,7 @@ type ChatCompletionResponseFormatType string
 ```
 
 <a name="ChatCompletionStream"></a>
-## type [ChatCompletionStream](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L401-L403>)
+## type [ChatCompletionStream](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L403-L405>)
 
 ChatCompletionStream is a stream of ChatCompletionStreamResponse.
 
@@ -601,7 +656,7 @@ type ChatCompletionStream struct {
 ```
 
 <a name="ChatCompletionStreamChoice"></a>
-## type [ChatCompletionStreamChoice](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L370-L374>)
+## type [ChatCompletionStreamChoice](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L372-L376>)
 
 ChatCompletionStreamChoice represents a response structure for chat completion API.
 
@@ -614,7 +669,7 @@ type ChatCompletionStreamChoice struct {
 ```
 
 <a name="ChatCompletionStreamChoiceDelta"></a>
-## type [ChatCompletionStreamChoiceDelta](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L362-L367>)
+## type [ChatCompletionStreamChoiceDelta](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L364-L369>)
 
 ChatCompletionStreamChoiceDelta represents a response structure for chat completion API.
 
@@ -628,7 +683,7 @@ type ChatCompletionStreamChoiceDelta struct {
 ```
 
 <a name="ChatCompletionStreamResponse"></a>
-## type [ChatCompletionStreamResponse](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L382-L396>)
+## type [ChatCompletionStreamResponse](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L384-L398>)
 
 ChatCompletionStreamResponse represents a response structure for chat completion API.
 
@@ -651,7 +706,7 @@ type ChatCompletionStreamResponse struct {
 ```
 
 <a name="ChatMessageImageURL"></a>
-## type [ChatMessageImageURL](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L54-L57>)
+## type [ChatMessageImageURL](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L55-L58>)
 
 ChatMessageImageURL represents the chat message image url.
 
@@ -663,7 +718,7 @@ type ChatMessageImageURL struct {
 ```
 
 <a name="ChatMessagePart"></a>
-## type [ChatMessagePart](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L60-L64>)
+## type [ChatMessagePart](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L61-L65>)
 
 ChatMessagePart represents the chat message part of a chat completion message.
 
@@ -676,7 +731,7 @@ type ChatMessagePart struct {
 ```
 
 <a name="ChatMessagePartType"></a>
-## type [ChatMessagePartType](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L41>)
+## type [ChatMessagePartType](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L42>)
 
 ChatMessagePartType is the chat message part type.
 
@@ -708,7 +763,7 @@ func NewClient(groqAPIKey string, opts ...Opts) (*Client, error)
 NewClient creates a new Groq client.
 
 <a name="Client.CreateChatCompletion"></a>
-### func \(\*Client\) [CreateChatCompletion](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L334-L337>)
+### func \(\*Client\) [CreateChatCompletion](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L335-L338>)
 
 ```go
 func (c *Client) CreateChatCompletion(ctx context.Context, request ChatCompletionRequest) (response ChatCompletionResponse, err error)
@@ -716,8 +771,17 @@ func (c *Client) CreateChatCompletion(ctx context.Context, request ChatCompletio
 
 CreateChatCompletion is an API call to create a chat completion.
 
+<a name="Client.CreateChatCompletionJSON"></a>
+### func \(\*Client\) [CreateChatCompletionJSON](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L443-L447>)
+
+```go
+func (c *Client) CreateChatCompletionJSON(ctx context.Context, request ChatCompletionRequest, output json.Marshaler) (err error)
+```
+
+CreateChatCompletionJSON is an API call to create a chat completion w/ object output.
+
 <a name="Client.CreateChatCompletionStream"></a>
-### func \(\*Client\) [CreateChatCompletionStream](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L410-L413>)
+### func \(\*Client\) [CreateChatCompletionStream](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L412-L415>)
 
 ```go
 func (c *Client) CreateChatCompletionStream(ctx context.Context, request ChatCompletionRequest) (stream *ChatCompletionStream, err error)
@@ -728,13 +792,13 @@ CreateChatCompletionStream is an API call to create a chat completion w/ streami
 If set, tokens will be sent as data\-only server\-sent events as they become available, with the stream terminated by a data: \[DONE\] message.
 
 <a name="Client.CreateCompletion"></a>
-### func \(\*Client\) [CreateCompletion](<https://github.com/conneroisu/groq-go/blob/main/completion.go#L13-L16>)
+### func \(\*Client\) [CreateCompletion](<https://github.com/conneroisu/groq-go/blob/main/completion.go#L15-L18>)
 
 ```go
 func (c *Client) CreateCompletion(ctx context.Context, request CompletionRequest) (response CompletionResponse, err error)
 ```
 
-CreateCompletion — API call to create a completion. This is the main endpoint of the API. Returns new text as well as, if requested, the probabilities over each alternative token at each position.
+CreateCompletion call the Groq API to create a completion. This is the main endpoint of the API. Returns new text as well as, if requested, the probabilities over each alternative token at each position.
 
 If using a fine\-tuned model, simply provide the model's ID in the CompletionRequest object, and the server will use the model's parameters to generate the completion.
 
@@ -752,7 +816,7 @@ Recv receives a response from the stream. It sets whether to stream back partial
 If set, tokens will be sent as data\-only server\-sent events as they become available, with the stream terminated by a data: \[DONE\] message.
 
 <a name="Client.CreateTranscription"></a>
-### func \(\*Client\) [CreateTranscription](<https://github.com/conneroisu/groq-go/blob/main/audio.go#L86-L89>)
+### func \(\*Client\) [CreateTranscription](<https://github.com/conneroisu/groq-go/blob/main/audio.go#L15-L18>)
 
 ```go
 func (c *Client) CreateTranscription(ctx context.Context, request AudioRequest) (response AudioResponse, err error)
@@ -763,7 +827,7 @@ CreateTranscription calls the transcriptions endpoint with the given request.
 Returns transcribed text in the response\_format specified in the request.
 
 <a name="Client.CreateTranslation"></a>
-### func \(\*Client\) [CreateTranslation](<https://github.com/conneroisu/groq-go/blob/main/audio.go#L96-L99>)
+### func \(\*Client\) [CreateTranslation](<https://github.com/conneroisu/groq-go/blob/main/audio.go#L25-L28>)
 
 ```go
 func (c *Client) CreateTranslation(ctx context.Context, request AudioRequest) (response AudioResponse, err error)
@@ -783,7 +847,7 @@ func (c *Client) Moderate(ctx context.Context, request ModerationRequest) (respo
 Moderate — perform a moderation api call over a string. Input can be an array or slice but a string will reduce the complexity.
 
 <a name="CompletionChoice"></a>
-## type [CompletionChoice](<https://github.com/conneroisu/groq-go/blob/main/completion.go#L63-L68>)
+## type [CompletionChoice](<https://github.com/conneroisu/groq-go/blob/main/completion.go#L65-L70>)
 
 CompletionChoice represents one of possible completions.
 
@@ -797,7 +861,7 @@ type CompletionChoice struct {
 ```
 
 <a name="CompletionRequest"></a>
-## type [CompletionRequest](<https://github.com/conneroisu/groq-go/blob/main/completion.go#L42-L60>)
+## type [CompletionRequest](<https://github.com/conneroisu/groq-go/blob/main/completion.go#L44-L62>)
 
 CompletionRequest represents a request structure for completion API.
 
@@ -824,7 +888,7 @@ type CompletionRequest struct {
 ```
 
 <a name="CompletionResponse"></a>
-## type [CompletionResponse](<https://github.com/conneroisu/groq-go/blob/main/completion.go#L79-L88>)
+## type [CompletionResponse](<https://github.com/conneroisu/groq-go/blob/main/completion.go#L81-L90>)
 
 CompletionResponse represents a response structure for completion API.
 
@@ -842,7 +906,7 @@ type CompletionResponse struct {
 ```
 
 <a name="CompletionResponse.SetHeader"></a>
-### func \(\*CompletionResponse\) [SetHeader](<https://github.com/conneroisu/groq-go/blob/main/completion.go#L91>)
+### func \(\*CompletionResponse\) [SetHeader](<https://github.com/conneroisu/groq-go/blob/main/completion.go#L93>)
 
 ```go
 func (r *CompletionResponse) SetHeader(header http.Header)
@@ -889,6 +953,15 @@ func (e *DefaultErrorAccumulator) Write(p []byte) error
 ```
 
 Write writes bytes to the error accumulator.
+
+<a name="Definitions"></a>
+## type [Definitions](<https://github.com/conneroisu/groq-go/blob/main/schema.go#L114>)
+
+Definitions hold schema definitions. http://json-schema.org/latest/json-schema-validation.html#rfc.section.5.26 RFC draft\-wright\-json\-schema\-validation\-00, section 5.26
+
+```go
+type Definitions map[string]*Schema
+```
 
 <a name="Endpoint"></a>
 ## type [Endpoint](<https://github.com/conneroisu/groq-go/blob/main/models.go#L11>)
@@ -1033,7 +1106,7 @@ func (e ErrTooManyEmptyStreamMessages) Error() string
 Error returns the error message.
 
 <a name="FinishReason"></a>
-## type [FinishReason](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L287>)
+## type [FinishReason](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L288>)
 
 FinishReason is the finish reason. string
 
@@ -1042,7 +1115,7 @@ type FinishReason string
 ```
 
 <a name="FinishReason.MarshalJSON"></a>
-### func \(FinishReason\) [MarshalJSON](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L290>)
+### func \(FinishReason\) [MarshalJSON](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L291>)
 
 ```go
 func (r FinishReason) MarshalJSON() ([]byte, error)
@@ -1085,7 +1158,7 @@ type FunctionCall struct {
 ```
 
 <a name="FunctionDefinition"></a>
-## type [FunctionDefinition](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L253-L263>)
+## type [FunctionDefinition](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L254-L264>)
 
 FunctionDefinition represents the function definition.
 
@@ -1158,8 +1231,77 @@ const (
 )
 ```
 
+<a name="ID"></a>
+## type [ID](<https://github.com/conneroisu/groq-go/blob/main/id.go#L12>)
+
+ID represents a Schema ID type which should always be a URI. See draft\-bhutton\-json\-schema\-00 section 8.2.1
+
+```go
+type ID string
+```
+
+<a name="EmptyID"></a>EmptyID is used to explicitly define an ID with no value.
+
+```go
+const EmptyID ID = ""
+```
+
+<a name="ID.Add"></a>
+### func \(ID\) [Add](<https://github.com/conneroisu/groq-go/blob/main/id.go#L54>)
+
+```go
+func (id ID) Add(path string) ID
+```
+
+Add appends the provided path to the id, and removes any anchor data that might be there.
+
+<a name="ID.Anchor"></a>
+### func \(ID\) [Anchor](<https://github.com/conneroisu/groq-go/blob/main/id.go#L41>)
+
+```go
+func (id ID) Anchor(name string) ID
+```
+
+Anchor sets the anchor part of the schema URI.
+
+<a name="ID.Base"></a>
+### func \(ID\) [Base](<https://github.com/conneroisu/groq-go/blob/main/id.go#L63>)
+
+```go
+func (id ID) Base() ID
+```
+
+Base removes any anchor information from the schema
+
+<a name="ID.Def"></a>
+### func \(ID\) [Def](<https://github.com/conneroisu/groq-go/blob/main/id.go#L47>)
+
+```go
+func (id ID) Def(name string) ID
+```
+
+Def adds or replaces a definition identifier.
+
+<a name="ID.String"></a>
+### func \(ID\) [String](<https://github.com/conneroisu/groq-go/blob/main/id.go#L74>)
+
+```go
+func (id ID) String() string
+```
+
+String provides string version of ID
+
+<a name="ID.Validate"></a>
+### func \(ID\) [Validate](<https://github.com/conneroisu/groq-go/blob/main/id.go#L20>)
+
+```go
+func (id ID) Validate() error
+```
+
+Validate is used to check if the ID looks like a proper schema. This is done by parsing the ID as a URL and checking it has all the relevant parts.
+
 <a name="ImageURLDetail"></a>
-## type [ImageURLDetail](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L36>)
+## type [ImageURLDetail](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L37>)
 
 ImageURLDetail is the image url detail.
 
@@ -1170,7 +1312,7 @@ type ImageURLDetail string
 ```
 
 <a name="LogProb"></a>
-## type [LogProb](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L273-L278>)
+## type [LogProb](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L274-L279>)
 
 LogProb represents the probability information for a token.
 
@@ -1184,7 +1326,7 @@ type LogProb struct {
 ```
 
 <a name="LogProbs"></a>
-## type [LogProbs](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L281-L283>)
+## type [LogProbs](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L282-L284>)
 
 LogProbs is the top\-level structure containing the log probability information.
 
@@ -1195,7 +1337,7 @@ type LogProbs struct {
 ```
 
 <a name="LogprobResult"></a>
-## type [LogprobResult](<https://github.com/conneroisu/groq-go/blob/main/completion.go#L71-L76>)
+## type [LogprobResult](<https://github.com/conneroisu/groq-go/blob/main/completion.go#L73-L78>)
 
 LogprobResult represents logprob result of Choice.
 
@@ -1278,7 +1420,7 @@ func WithLogger(logger zerolog.Logger) Opts
 WithLogger sets the logger for the Groq client.
 
 <a name="PromptAnnotation"></a>
-## type [PromptAnnotation](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L49-L51>)
+## type [PromptAnnotation](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L50-L52>)
 
 PromptAnnotation represents the prompt annotation.
 
@@ -1289,7 +1431,7 @@ type PromptAnnotation struct {
 ```
 
 <a name="PromptFilterResult"></a>
-## type [PromptFilterResult](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L377-L379>)
+## type [PromptFilterResult](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L379-L381>)
 
 PromptFilterResult represents a response structure for chat completion API.
 
@@ -1328,6 +1470,130 @@ type RawResponse struct {
 }
 ```
 
+<a name="Reflector"></a>
+## type [Reflector](<https://github.com/conneroisu/groq-go/blob/main/reflect.go#L67-L155>)
+
+A Reflector reflects values into a Schema.
+
+```go
+type Reflector struct {
+    // BaseSchemaID defines the URI that will be used as a base to determine Schema
+    // IDs for models. For example, a base Schema ID of `https://invopop.com/schemas`
+    // when defined with a struct called `User{}`, will result in a schema with an
+    // ID set to `https://invopop.com/schemas/user`.
+    //
+    // If no `BaseSchemaID` is provided, we'll take the type's complete package path
+    // and use that as a base instead. Set `Anonymous` to try if you do not want to
+    // include a schema ID.
+    BaseSchemaID ID
+
+    // Anonymous when true will hide the auto-generated Schema ID and provide what is
+    // known as an "anonymous schema". As a rule, this is not recommended.
+    Anonymous bool
+
+    // AssignAnchor when true will use the original struct's name as an anchor inside
+    // every definition, including the root schema. These can be useful for having a
+    // reference to the original struct's name in CamelCase instead of the snake-case used
+    // by default for URI compatibility.
+    //
+    // Anchors do not appear to be widely used out in the wild, so at this time the
+    // anchors themselves will not be used inside generated schema.
+    AssignAnchor bool
+
+    // AllowAdditionalProperties will cause the Reflector to generate a schema
+    // without additionalProperties set to 'false' for all struct types. This means
+    // the presence of additional keys in JSON objects will not cause validation
+    // to fail. Note said additional keys will simply be dropped when the
+    // validated JSON is unmarshaled.
+    AllowAdditionalProperties bool
+
+    // RequiredFromJSONSchemaTags will cause the Reflector to generate a schema
+    // that requires any key tagged with `jsonschema:required`, overriding the
+    // default of requiring any key *not* tagged with `json:,omitempty`.
+    RequiredFromJSONSchemaTags bool
+
+    // Do not reference definitions. This will remove the top-level $defs map and
+    // instead cause the entire structure of types to be output in one tree. The
+    // list of type definitions (`$defs`) will not be included.
+    DoNotReference bool
+
+    // ExpandedStruct when true will include the reflected type's definition in the
+    // root as opposed to a definition with a reference.
+    ExpandedStruct bool
+
+    // FieldNameTag will change the tag used to get field names. json tags are used by default.
+    FieldNameTag string
+
+    // IgnoredTypes defines a slice of types that should be ignored in the schema,
+    // switching to just allowing additional properties instead.
+    IgnoredTypes []any
+
+    // Lookup allows a function to be defined that will provide a custom mapping of
+    // types to Schema IDs. This allows existing schema documents to be referenced
+    // by their ID instead of being embedded into the current schema definitions.
+    // Reflected types will never be pointers, only underlying elements.
+    Lookup func(reflect.Type) ID
+
+    // Mapper is a function that can be used to map custom Go types to jsonschema schemas.
+    Mapper func(reflect.Type) *Schema
+
+    // Namer allows customizing of type names. The default is to use the type's name
+    // provided by the reflect package.
+    Namer func(reflect.Type) string
+
+    // KeyNamer allows customizing of key names.
+    // The default is to use the key's name as is, or the json tag if present.
+    // If a json tag is present, KeyNamer will receive the tag's name as an argument, not the original key name.
+    KeyNamer func(string) string
+
+    // AdditionalFields allows adding structfields for a given type
+    AdditionalFields func(reflect.Type) []reflect.StructField
+
+    // CommentMap is a dictionary of fully qualified go types and fields to comment
+    // strings that will be used if a description has not already been provided in
+    // the tags. Types and fields are added to the package path using "." as a
+    // separator.
+    //
+    // Type descriptions should be defined like:
+    //
+    //   map[string]string{"github.com/conneroisu/groq.Reflector": "A Reflector reflects values into a Schema."}
+    //
+    // And Fields defined as:
+    //
+    //   map[string]string{"github.com/conneroisu/groq.Reflector.DoNotReference": "Do not reference definitions."}
+    //
+    // See also: AddGoComments
+    CommentMap map[string]string
+}
+```
+
+<a name="Reflector.Reflect"></a>
+### func \(\*Reflector\) [Reflect](<https://github.com/conneroisu/groq-go/blob/main/reflect.go#L158>)
+
+```go
+func (r *Reflector) Reflect(v any) *Schema
+```
+
+Reflect reflects to Schema from a value.
+
+<a name="Reflector.ReflectFromType"></a>
+### func \(\*Reflector\) [ReflectFromType](<https://github.com/conneroisu/groq-go/blob/main/reflect.go#L163>)
+
+```go
+func (r *Reflector) ReflectFromType(t reflect.Type) *Schema
+```
+
+ReflectFromType generates root schema
+
+<a name="Reflector.SetBaseSchemaID"></a>
+### func \(\*Reflector\) [SetBaseSchemaID](<https://github.com/conneroisu/groq-go/blob/main/reflect.go#L227>)
+
+```go
+func (r *Reflector) SetBaseSchemaID(id string)
+```
+
+SetBaseSchemaID is a helper use to be able to set the reflectors base schema ID from a string as opposed to then ID instance.
+
 <a name="ResetTime"></a>
 ## type [ResetTime](<https://github.com/conneroisu/groq-go/blob/main/client.go#L303>)
 
@@ -1356,7 +1622,7 @@ func (r ResetTime) Time() time.Time
 Time returns the time.Time representation of the ResetTime.
 
 <a name="Role"></a>
-## type [Role](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L46>)
+## type [Role](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L47>)
 
 Role is the role of the chat completion message.
 
@@ -1366,8 +1632,119 @@ string
 type Role string
 ```
 
+<a name="Schema"></a>
+## type [Schema](<https://github.com/conneroisu/groq-go/blob/main/schema.go#L34-L102>)
+
+Schema represents a JSON Schema object type. RFC draft\-bhutton\-json\-schema\-00 section 4.3
+
+```go
+type Schema struct {
+    // RFC draft-bhutton-json-schema-00
+    Version     string      `json:"$schema,omitempty"`     // section 8.1.1
+    ID          ID          `json:"$id,omitempty"`         // section 8.2.1
+    Anchor      string      `json:"$anchor,omitempty"`     // section 8.2.2
+    Ref         string      `json:"$ref,omitempty"`        // section 8.2.3.1
+    DynamicRef  string      `json:"$dynamicRef,omitempty"` // section 8.2.3.2
+    Definitions Definitions `json:"$defs,omitempty"`       // section 8.2.4
+    Comments    string      `json:"$comment,omitempty"`    // section 8.3
+    // RFC draft-bhutton-json-schema-00 section 10.2.1 (Sub-schemas with logic)
+    AllOf []*Schema `json:"allOf,omitempty"` // section 10.2.1.1
+    AnyOf []*Schema `json:"anyOf,omitempty"` // section 10.2.1.2
+    OneOf []*Schema `json:"oneOf,omitempty"` // section 10.2.1.3
+    Not   *Schema   `json:"not,omitempty"`   // section 10.2.1.4
+    // RFC draft-bhutton-json-schema-00 section 10.2.2 (Apply sub-schemas conditionally)
+    If               *Schema            `json:"if,omitempty"`               // section 10.2.2.1
+    Then             *Schema            `json:"then,omitempty"`             // section 10.2.2.2
+    Else             *Schema            `json:"else,omitempty"`             // section 10.2.2.3
+    DependentSchemas map[string]*Schema `json:"dependentSchemas,omitempty"` // section 10.2.2.4
+    // RFC draft-bhutton-json-schema-00 section 10.3.1 (arrays)
+    PrefixItems []*Schema `json:"prefixItems,omitempty"` // section 10.3.1.1
+    Items       *Schema   `json:"items,omitempty"`       // section 10.3.1.2  (replaces additionalItems)
+    Contains    *Schema   `json:"contains,omitempty"`    // section 10.3.1.3
+    // RFC draft-bhutton-json-schema-00 section 10.3.2 (sub-schemas)
+    Properties           *orderedmap.OrderedMap[string, *Schema] `json:"properties,omitempty"`           // section 10.3.2.1
+    PatternProperties    map[string]*Schema                      `json:"patternProperties,omitempty"`    // section 10.3.2.2
+    AdditionalProperties *Schema                                 `json:"additionalProperties,omitempty"` // section 10.3.2.3
+    PropertyNames        *Schema                                 `json:"propertyNames,omitempty"`        // section 10.3.2.4
+    // RFC draft-bhutton-json-schema-validation-00, section 6
+    Type              string              `json:"type,omitempty"`              // section 6.1.1
+    Enum              []any               `json:"enum,omitempty"`              // section 6.1.2
+    Const             any                 `json:"const,omitempty"`             // section 6.1.3
+    MultipleOf        json.Number         `json:"multipleOf,omitempty"`        // section 6.2.1
+    Maximum           json.Number         `json:"maximum,omitempty"`           // section 6.2.2
+    ExclusiveMaximum  json.Number         `json:"exclusiveMaximum,omitempty"`  // section 6.2.3
+    Minimum           json.Number         `json:"minimum,omitempty"`           // section 6.2.4
+    ExclusiveMinimum  json.Number         `json:"exclusiveMinimum,omitempty"`  // section 6.2.5
+    MaxLength         *uint64             `json:"maxLength,omitempty"`         // section 6.3.1
+    MinLength         *uint64             `json:"minLength,omitempty"`         // section 6.3.2
+    Pattern           string              `json:"pattern,omitempty"`           // section 6.3.3
+    MaxItems          *uint64             `json:"maxItems,omitempty"`          // section 6.4.1
+    MinItems          *uint64             `json:"minItems,omitempty"`          // section 6.4.2
+    UniqueItems       bool                `json:"uniqueItems,omitempty"`       // section 6.4.3
+    MaxContains       *uint64             `json:"maxContains,omitempty"`       // section 6.4.4
+    MinContains       *uint64             `json:"minContains,omitempty"`       // section 6.4.5
+    MaxProperties     *uint64             `json:"maxProperties,omitempty"`     // section 6.5.1
+    MinProperties     *uint64             `json:"minProperties,omitempty"`     // section 6.5.2
+    Required          []string            `json:"required,omitempty"`          // section 6.5.3
+    DependentRequired map[string][]string `json:"dependentRequired,omitempty"` // section 6.5.4
+    // RFC draft-bhutton-json-schema-validation-00, section 7
+    Format string `json:"format,omitempty"`
+    // RFC draft-bhutton-json-schema-validation-00, section 8
+    ContentEncoding  string  `json:"contentEncoding,omitempty"`  // section 8.3
+    ContentMediaType string  `json:"contentMediaType,omitempty"` // section 8.4
+    ContentSchema    *Schema `json:"contentSchema,omitempty"`    // section 8.5
+    // RFC draft-bhutton-json-schema-validation-00, section 9
+    Title       string `json:"title,omitempty"`       // section 9.1
+    Description string `json:"description,omitempty"` // section 9.1
+    Default     any    `json:"default,omitempty"`     // section 9.2
+    Deprecated  bool   `json:"deprecated,omitempty"`  // section 9.3
+    ReadOnly    bool   `json:"readOnly,omitempty"`    // section 9.4
+    WriteOnly   bool   `json:"writeOnly,omitempty"`   // section 9.4
+    Examples    []any  `json:"examples,omitempty"`    // section 9.5
+
+    Extras map[string]any `json:"-"`
+    // contains filtered or unexported fields
+}
+```
+
+<a name="Reflect"></a>
+### func [Reflect](<https://github.com/conneroisu/groq-go/blob/main/reflect.go#L56>)
+
+```go
+func Reflect(v any) *Schema
+```
+
+Reflect reflects to Schema from a value using the default Reflector
+
+<a name="ReflectFromType"></a>
+### func [ReflectFromType](<https://github.com/conneroisu/groq-go/blob/main/reflect.go#L61>)
+
+```go
+func ReflectFromType(t reflect.Type) *Schema
+```
+
+ReflectFromType generates root schema using the default Reflector
+
+<a name="Schema.MarshalJSON"></a>
+### func \(\*Schema\) [MarshalJSON](<https://github.com/conneroisu/groq-go/blob/main/reflect.go#L1079>)
+
+```go
+func (t *Schema) MarshalJSON() ([]byte, error)
+```
+
+MarshalJSON is used to serialize a schema object or boolean.
+
+<a name="Schema.UnmarshalJSON"></a>
+### func \(\*Schema\) [UnmarshalJSON](<https://github.com/conneroisu/groq-go/blob/main/reflect.go#L1061>)
+
+```go
+func (t *Schema) UnmarshalJSON(data []byte) error
+```
+
+UnmarshalJSON is used to parse a schema object or boolean.
+
 <a name="Segments"></a>
-## type [Segments](<https://github.com/conneroisu/groq-go/blob/main/audio.go#L44-L56>)
+## type [Segments](<https://github.com/conneroisu/groq-go/blob/main/audio.go#L64-L76>)
 
 Segments is the segments of the response.
 
@@ -1388,7 +1765,7 @@ type Segments []struct {
 ```
 
 <a name="StreamOptions"></a>
-## type [StreamOptions](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L222-L228>)
+## type [StreamOptions](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L223-L229>)
 
 StreamOptions represents the stream options.
 
@@ -1403,7 +1780,7 @@ type StreamOptions struct {
 ```
 
 <a name="Tool"></a>
-## type [Tool](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L236-L239>)
+## type [Tool](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L237-L240>)
 
 Tool represents the tool.
 
@@ -1430,7 +1807,7 @@ type ToolCall struct {
 ```
 
 <a name="ToolChoice"></a>
-## type [ToolChoice](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L242-L245>)
+## type [ToolChoice](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L243-L246>)
 
 ToolChoice represents the tool choice.
 
@@ -1442,7 +1819,7 @@ type ToolChoice struct {
 ```
 
 <a name="ToolFunction"></a>
-## type [ToolFunction](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L248-L250>)
+## type [ToolFunction](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L249-L251>)
 
 ToolFunction represents the tool function.
 
@@ -1453,7 +1830,7 @@ type ToolFunction struct {
 ```
 
 <a name="ToolType"></a>
-## type [ToolType](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L233>)
+## type [ToolType](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L234>)
 
 ToolType is the tool type.
 
@@ -1464,7 +1841,7 @@ type ToolType string
 ```
 
 <a name="TopLogProbs"></a>
-## type [TopLogProbs](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L266-L270>)
+## type [TopLogProbs](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L267-L271>)
 
 TopLogProbs represents the top log probs.
 
@@ -1501,7 +1878,7 @@ type Usage struct {
 ```
 
 <a name="Words"></a>
-## type [Words](<https://github.com/conneroisu/groq-go/blob/main/audio.go#L37-L41>)
+## type [Words](<https://github.com/conneroisu/groq-go/blob/main/audio.go#L57-L61>)
 
 Words is the words of the response.
 

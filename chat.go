@@ -3,6 +3,7 @@ package groq
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 )
 
@@ -434,6 +435,55 @@ func (c *Client) CreateChatCompletionStream(
 	}
 	stream = &ChatCompletionStream{
 		streamReader: resp,
+	}
+	return
+}
+
+// CreateChatCompletionJSON is an API call to create a chat completion w/ object output.
+func (c *Client) CreateChatCompletionJSON(
+	ctx context.Context,
+	request ChatCompletionRequest,
+	output json.Marshaler,
+) (err error) {
+	request.ResponseFormat.JSONSchema = &ChatCompletionResponseFormatJSONSchema{
+		Name:        "output",
+		Description: "output of the users query",
+		Schema:      output,
+		Strict:      true,
+	}
+	if !endpointSupportsModel(chatCompletionsSuffix, request.Model) {
+		err = ErrChatCompletionInvalidModel{
+			Model:    request.Model,
+			Endpoint: chatCompletionsSuffix,
+		}
+		return
+	}
+	req, err := c.newRequest(
+		ctx,
+		http.MethodPost,
+		c.fullURL(chatCompletionsSuffix, withModel(request.Model)),
+		withBody(request),
+	)
+	if err != nil {
+		return
+	}
+	var response ChatCompletionResponse
+	err = c.sendRequest(req, &response)
+	if err != nil {
+		return
+	}
+	if output != nil {
+		err = json.Unmarshal(
+			[]byte(response.Choices[0].Message.Content),
+			output,
+		)
+		if err != nil {
+			return fmt.Errorf(
+				"error unmarshalling response (%s) to output: %v",
+				response.Choices[0].Message.Content,
+				err,
+			)
+		}
 	}
 	return
 }
