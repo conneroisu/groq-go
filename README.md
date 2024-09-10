@@ -27,6 +27,21 @@ For introductory examples, see the [examples](https://github.com/conneroisu/groq
 External Repositories using groq-go:
 - [Automatic Git Commit Message Generator](https://github.com/conneroisu/gita)
 
+
+## Development
+
+To run the tests:
+
+Make sure you have a groq key set in the environment variable `GROQ_KEY`.
+```bash
+task test
+```
+
+To run the linter:
+
+```bash
+task lint
+```
 ## Documentation
 
 <!-- gomarkdoc:embed:start -->

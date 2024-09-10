@@ -9,6 +9,26 @@ import (
 	"os"
 )
 
+// CreateTranscription calls the transcriptions endpoint with the given request.
+//
+// Returns transcribed text in the response_format specified in the request.
+func (c *Client) CreateTranscription(
+	ctx context.Context,
+	request AudioRequest,
+) (response AudioResponse, err error) {
+	return c.callAudioAPI(ctx, request, transcriptionsSuffix)
+}
+
+// CreateTranslation calls the translations endpoint with the given request.
+//
+// Returns the translated text in the response_format specified in the request.
+func (c *Client) CreateTranslation(
+	ctx context.Context,
+	request AudioRequest,
+) (response AudioResponse, err error) {
+	return c.callAudioAPI(ctx, request, translationsSuffix)
+}
+
 // AudioRequest represents a request structure for audio API.
 type AudioRequest struct {
 	Model                  Model                               // Model is the model to use for the transcription.
@@ -78,26 +98,6 @@ func (r *audioTextResponse) toAudioResponse() AudioResponse {
 		Text:   r.Text,
 		Header: r.header,
 	}
-}
-
-// CreateTranscription calls the transcriptions endpoint with the given request.
-//
-// Returns transcribed text in the response_format specified in the request.
-func (c *Client) CreateTranscription(
-	ctx context.Context,
-	request AudioRequest,
-) (response AudioResponse, err error) {
-	return c.callAudioAPI(ctx, request, transcriptionsSuffix)
-}
-
-// CreateTranslation calls the translations endpoint with the given request.
-//
-// Returns the translated text in the response_format specified in the request.
-func (c *Client) CreateTranslation(
-	ctx context.Context,
-	request AudioRequest,
-) (response AudioResponse, err error) {
-	return c.callAudioAPI(ctx, request, translationsSuffix)
 }
 
 // callAudioAPI calls the audio API with the given request.
