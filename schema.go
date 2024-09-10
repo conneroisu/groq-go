@@ -2,6 +2,9 @@ package groq
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
+	"net/url"
 	"regexp"
 	"strings"
 
@@ -60,25 +63,42 @@ type Schema struct {
 	AdditionalProperties *Schema                                 `json:"additionalProperties,omitempty"` // section 10.3.2.3
 	PropertyNames        *Schema                                 `json:"propertyNames,omitempty"`        // section 10.3.2.4
 	// RFC draft-bhutton-json-schema-validation-00, section 6
-	Type              string              `json:"type,omitempty"`              // section 6.1.1
-	Enum              []any               `json:"enum,omitempty"`              // section 6.1.2
-	Const             any                 `json:"const,omitempty"`             // section 6.1.3
-	MultipleOf        json.Number         `json:"multipleOf,omitempty"`        // section 6.2.1
-	Maximum           json.Number         `json:"maximum,omitempty"`           // section 6.2.2
-	ExclusiveMaximum  json.Number         `json:"exclusiveMaximum,omitempty"`  // section 6.2.3
-	Minimum           json.Number         `json:"minimum,omitempty"`           // section 6.2.4
-	ExclusiveMinimum  json.Number         `json:"exclusiveMinimum,omitempty"`  // section 6.2.5
-	MaxLength         *uint64             `json:"maxLength,omitempty"`         // section 6.3.1
-	MinLength         *uint64             `json:"minLength,omitempty"`         // section 6.3.2
-	Pattern           string              `json:"pattern,omitempty"`           // section 6.3.3
-	MaxItems          *uint64             `json:"maxItems,omitempty"`          // section 6.4.1
-	MinItems          *uint64             `json:"minItems,omitempty"`          // section 6.4.2
-	UniqueItems       bool                `json:"uniqueItems,omitempty"`       // section 6.4.3
-	MaxContains       *uint64             `json:"maxContains,omitempty"`       // section 6.4.4
-	MinContains       *uint64             `json:"minContains,omitempty"`       // section 6.4.5
-	MaxProperties     *uint64             `json:"maxProperties,omitempty"`     // section 6.5.1
-	MinProperties     *uint64             `json:"minProperties,omitempty"`     // section 6.5.2
-	Required          []string            `json:"required,omitempty"`          // section 6.5.3
+	Type             string      `json:"type,omitempty"`             // section 6.1.1
+	Enum             []any       `json:"enum,omitempty"`             // section 6.1.2
+	Const            any         `json:"const,omitempty"`            // section 6.1.3
+	MultipleOf       json.Number `json:"multipleOf,omitempty"`       // section 6.2.1
+	Maximum          json.Number `json:"maximum,omitempty"`          // section 6.2.2
+	ExclusiveMaximum json.Number `json:"exclusiveMaximum,omitempty"` // section 6.2.3
+	Minimum          json.Number `json:"minimum,omitempty"`          // section 6.2.4
+	ExclusiveMinimum json.Number `json:"exclusiveMinimum,omitempty"` // section 6.2.5
+	MaxLength        *uint64     `json:"maxLength,omitempty"`        // section 6.3.1
+	MinLength        *uint64     `json:"minLength,omitempty"`        // section 6.3.2
+	Pattern          string      `json:"pattern,omitempty"`          // section 6.3.3
+	MaxItems         *uint64     `json:"maxItems,omitempty"`         // section 6.4.1
+	MinItems         *uint64     `json:"minItems,omitempty"`         // section 6.4.2
+	UniqueItems      bool        `json:"uniqueItems,omitempty"`      // section 6.4.3
+	MaxContains      *uint64     `json:"maxContains,omitempty"`      // section 6.4.4
+	MinContains      *uint64     `json:"minContains,omitempty"`      // section 6.4.5
+	MaxProperties    *uint64     `json:"maxProperties,omitempty"`    // section 6.5.1
+	MinProperties    *uint64     `json:"minProperties,omitempty"`    // section 6.5.2
+	// Required is the required of the schema. section 6.5.3 of RFC draft-bhutton-json-schema-validation-00
+	//
+	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-validation-00#section-6.5.4
+	//
+	// The value of this keyword MUST be an object.  Properties in this
+	// object, if any, MUST be arrays.  Elements in each array, if any, MUST
+	// be strings, and MUST be unique.
+	//
+	// This keyword specifies properties that are required if a specific
+	// other property is present.  Their requirement is dependent on the
+	// presence of the other property.
+	//
+	// Validation succeeds if, for each name that appears in both the
+	// instance and as a name within this keyword's value, every item in the
+	// corresponding array is also the name of a property in the instance.
+	//
+	// Omitting this keyword has the same behavior as an empty object.
+	Required          []string            `json:"required,omitempty"`
 	DependentRequired map[string][]string `json:"dependentRequired,omitempty"` // section 6.5.4
 	// RFC draft-bhutton-json-schema-validation-00, section 7
 	Format string `json:"format,omitempty"`
@@ -109,6 +129,76 @@ var (
 )
 
 // Definitions hold schema definitions.
+//
 // http://json-schema.org/latest/json-schema-validation.html#rfc.section.5.26
+//
 // RFC draft-wright-json-schema-validation-00, section 5.26
 type Definitions map[string]*Schema
+
+// ID represents a Schema ID type which should always be a URI.
+// See draft-bhutton-json-schema-00 section 8.2.1
+type ID string
+
+// EmptyID is used to explicitly define an ID with no value.
+const EmptyID ID = ""
+
+// Validate is used to check if the ID looks like a proper schema.
+// This is done by parsing the ID as a URL and checking it has all the
+// relevant parts.
+func (id ID) Validate() error {
+	u, err := url.Parse(id.String())
+	if err != nil {
+		return fmt.Errorf("invalid URL: %w", err)
+	}
+	if u.Hostname() == "" {
+		return errors.New("missing hostname")
+	}
+	if !strings.Contains(u.Hostname(), ".") {
+		return errors.New("hostname does not look valid")
+	}
+	if u.Path == "" {
+		return errors.New("path is expected")
+	}
+	if u.Scheme != "https" && u.Scheme != "http" {
+		return errors.New("unexpected schema")
+	}
+	return nil
+}
+
+// Anchor sets the anchor part of the schema URI.
+func (id ID) Anchor(name string) ID {
+	b := id.Base()
+	return ID(b.String() + "#" + name)
+}
+
+// Def adds or replaces a definition identifier.
+func (id ID) Def(name string) ID {
+	b := id.Base()
+	return ID(b.String() + "#/$defs/" + name)
+}
+
+// Add appends the provided path to the id, and removes any
+// anchor data that might be there.
+func (id ID) Add(path string) ID {
+	b := id.Base()
+	if !strings.HasPrefix(path, "/") {
+		path = "/" + path
+	}
+	return ID(b.String() + path)
+}
+
+// Base removes any anchor information from the schema
+func (id ID) Base() ID {
+	s := id.String()
+	i := strings.LastIndex(s, "#")
+	if i != -1 {
+		s = s[0:i]
+	}
+	s = strings.TrimRight(s, "/")
+	return ID(s)
+}
+
+// String provides string version of ID
+func (id ID) String() string {
+	return string(id)
+}

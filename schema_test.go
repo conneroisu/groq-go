@@ -8,7 +8,7 @@ import (
 )
 
 func TestID(t *testing.T) {
-	base := "https://invopop.com/schema"
+	base := "https://github.com/conneroisu/groq-go/schema"
 	id := groq.ID(base)
 
 	assert.Equal(t, base, id.String())

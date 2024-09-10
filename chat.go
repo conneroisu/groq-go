@@ -86,7 +86,7 @@ type ChatCompletionMessage struct {
 	ToolCallID string `json:"tool_call_id,omitempty"`
 }
 
-// MarshalJSON implements the json.Marshaler interface.
+// MarshalJSON method implements the json.Marshaler interface.
 func (m ChatCompletionMessage) MarshalJSON() ([]byte, error) {
 	if m.Content != "" && m.MultiContent != nil {
 		return nil, &ErrContentFieldsMisused{field: "Content"}
@@ -115,7 +115,7 @@ func (m ChatCompletionMessage) MarshalJSON() ([]byte, error) {
 	return json.Marshal(msg)
 }
 
-// UnmarshalJSON implements the json.Unmarshaler interface.
+// UnmarshalJSON method implements the json.Unmarshaler interface.
 func (m *ChatCompletionMessage) UnmarshalJSON(bs []byte) (err error) {
 	msg := struct {
 		Role         Role   `json:"role"`
@@ -177,10 +177,10 @@ type ChatCompletionResponseFormat struct {
 // ChatCompletionResponseFormatJSONSchema is the chat completion response format
 // json schema.
 type ChatCompletionResponseFormatJSONSchema struct {
-	Name        string         `json:"name"`                  // Name is the name of the chat completion response format json schema.
-	Description string         `json:"description,omitempty"` // Description is the description of the chat completion response format json schema.
-	Schema      json.Marshaler `json:"schema"`                // Schema is the schema of the chat completion response format json schema.
-	Strict      bool           `json:"strict"`                // Strict is the strict of the chat completion response format json schema.
+	Name        string `json:"name"`                  // Name is the name of the chat completion response format json schema.
+	Description string `json:"description,omitempty"` // Description is the description of the chat completion response format json schema.
+	Schema      Schema `json:"schema"`                // Schema is the schema of the chat completion response format json schema.
+	Strict      bool   `json:"strict"`                // Strict is the strict of the chat completion response format json schema.
 }
 
 // ChatCompletionRequest represents a request structure for the chat completion API.
@@ -331,7 +331,7 @@ func (r *ChatCompletionResponse) SetHeader(h http.Header) {
 	r.Header = h
 }
 
-// CreateChatCompletion is an API call to create a chat completion.
+// CreateChatCompletion method is an API call to create a chat completion.
 func (c *Client) CreateChatCompletion(
 	ctx context.Context,
 	request ChatCompletionRequest,
@@ -404,7 +404,7 @@ type ChatCompletionStream struct {
 	*streamReader[ChatCompletionStreamResponse]
 }
 
-// CreateChatCompletionStream is an API call to create a chat completion w/ streaming
+// CreateChatCompletionStream method is an API call to create a chat completion w/ streaming
 // support.
 //
 // If set, tokens will be sent as data-only server-sent events as they become
@@ -439,11 +439,11 @@ func (c *Client) CreateChatCompletionStream(
 	return
 }
 
-// CreateChatCompletionJSON is an API call to create a chat completion w/ object output.
+// CreateChatCompletionJSON method is an API call to create a chat completion w/ object output.
 func (c *Client) CreateChatCompletionJSON(
 	ctx context.Context,
 	request ChatCompletionRequest,
-	output json.Marshaler,
+	output Schema,
 ) (err error) {
 	request.ResponseFormat.JSONSchema = &ChatCompletionResponseFormatJSONSchema{
 		Name:        "output",

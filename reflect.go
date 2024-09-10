@@ -202,6 +202,9 @@ func (r *Reflector) ReflectFromType(t reflect.Type) *Schema {
 }
 
 // Available Go defined types for JSON Schema Validation.
+//
+// https://datatracker.ietf.org/doc/html/draft-wright-json-schema-validation-00#section-7.3
+//
 // RFC draft-wright-json-schema-validation-00, section 7.3
 var (
 	timeType = reflect.TypeOf(time.Time{}) // date-time RFC section 7.3.1
@@ -624,7 +627,7 @@ func (t *Schema) structKeywordsFromTags(f reflect.StructField, parent *Schema, p
 	t.extraKeywords(extras)
 }
 
-// read struct tags for generic keywords
+// genericKeywords reads struct tags for generic keywords
 func (t *Schema) genericKeywords(tags []string, parent *Schema, propertyName string) []string { //nolint:gocyclo
 	unprocessed := make([]string, 0, len(tags))
 	for _, tag := range tags {
@@ -814,22 +817,6 @@ func (t *Schema) numericalKeywords(tags []string) {
 	}
 }
 
-// read struct tags for object type keywords
-// func (t *Type) objectKeywords(tags []string) {
-//     for _, tag := range tags{
-//         nameValue := strings.Split(tag, "=")
-//         name, val := nameValue[0], nameValue[1]
-//         switch name{
-//             case "dependencies":
-//                 t.Dependencies = val
-//                 break;
-//             case "patternProperties":
-//                 t.PatternProperties = val
-//                 break;
-//         }
-//     }
-// }
-
 // read struct tags for array type keywords
 func (t *Schema) arrayKeywords(tags []string) {
 	var defaultValues []any
@@ -1007,16 +994,13 @@ func (r *Reflector) fieldNameTag() string {
 func (r *Reflector) reflectFieldName(f reflect.StructField) (string, bool, bool, bool) {
 	jsonTagString := f.Tag.Get(r.fieldNameTag())
 	jsonTags := strings.Split(jsonTagString, ",")
-
 	if ignoredByJSONTags(jsonTags) {
 		return "", false, false, false
 	}
-
 	schemaTags := strings.Split(f.Tag.Get("jsonschema"), ",")
 	if ignoredByJSONSchemaTags(schemaTags) {
 		return "", false, false, false
 	}
-
 	var required bool
 	if !r.RequiredFromJSONSchemaTags {
 		requiredFromJSONTags(jsonTags, &required)
@@ -1092,7 +1076,7 @@ func (t *Schema) MarshalJSON() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	if t.Extras == nil || len(t.Extras) == 0 {
+	if len(t.Extras) == 0 {
 		return b, nil
 	}
 	m, err := json.Marshal(t.Extras)
@@ -1128,7 +1112,6 @@ func splitOnUnescapedCommas(tagString string) []string {
 			i++
 			continue
 		}
-
 		if ret[i][len(ret[i])-1] == '\\' {
 			ret[i] = ret[i][:len(ret[i])-1] + "," + nextTag
 		} else {
@@ -1136,7 +1119,6 @@ func splitOnUnescapedCommas(tagString string) []string {
 			i++
 		}
 	}
-
 	return ret
 }
 
