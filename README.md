@@ -68,7 +68,6 @@ Features:
 
 - [Constants](<#constants>)
 - [Variables](<#variables>)
-- [func NewProperties\(\) \*orderedmap.OrderedMap\[string, \*Schema\]](<#NewProperties>)
 - [func ToSnakeCase\(str string\) string](<#ToSnakeCase>)
 - [type APIError](<#APIError>)
   - [func \(e \*APIError\) Error\(\) string](<#APIError.Error>)
@@ -97,7 +96,7 @@ Features:
 - [type Client](<#Client>)
   - [func NewClient\(groqAPIKey string, opts ...Opts\) \(\*Client, error\)](<#NewClient>)
   - [func \(c \*Client\) CreateChatCompletion\(ctx context.Context, request ChatCompletionRequest\) \(response ChatCompletionResponse, err error\)](<#Client.CreateChatCompletion>)
-  - [func \(c \*Client\) CreateChatCompletionJSON\(ctx context.Context, request ChatCompletionRequest, output json.Marshaler\) \(err error\)](<#Client.CreateChatCompletionJSON>)
+  - [func \(c \*Client\) CreateChatCompletionJSON\(ctx context.Context, request ChatCompletionRequest, output any\) \(err error\)](<#Client.CreateChatCompletionJSON>)
   - [func \(c \*Client\) CreateChatCompletionStream\(ctx context.Context, request ChatCompletionRequest\) \(stream \*ChatCompletionStream, err error\)](<#Client.CreateChatCompletionStream>)
   - [func \(c \*Client\) CreateCompletion\(ctx context.Context, request CompletionRequest\) \(response CompletionResponse, err error\)](<#Client.CreateCompletion>)
   - [func \(c \*Client\) CreateCompletionStream\(ctx context.Context, request CompletionRequest\) \(\*CompletionStream, error\)](<#Client.CreateCompletionStream>)
@@ -112,7 +111,6 @@ Features:
 - [type DefaultErrorAccumulator](<#DefaultErrorAccumulator>)
   - [func \(e \*DefaultErrorAccumulator\) Bytes\(\) \(errBytes \[\]byte\)](<#DefaultErrorAccumulator.Bytes>)
   - [func \(e \*DefaultErrorAccumulator\) Write\(p \[\]byte\) error](<#DefaultErrorAccumulator.Write>)
-- [type Definitions](<#Definitions>)
 - [type Endpoint](<#Endpoint>)
 - [type ErrChatCompletionInvalidModel](<#ErrChatCompletionInvalidModel>)
   - [func \(e ErrChatCompletionInvalidModel\) Error\(\) string](<#ErrChatCompletionInvalidModel.Error>)
@@ -134,13 +132,6 @@ Features:
 - [type FunctionCall](<#FunctionCall>)
 - [type FunctionDefinition](<#FunctionDefinition>)
 - [type HarmfulCategory](<#HarmfulCategory>)
-- [type ID](<#ID>)
-  - [func \(id ID\) Add\(path string\) ID](<#ID.Add>)
-  - [func \(id ID\) Anchor\(name string\) ID](<#ID.Anchor>)
-  - [func \(id ID\) Base\(\) ID](<#ID.Base>)
-  - [func \(id ID\) Def\(name string\) ID](<#ID.Def>)
-  - [func \(id ID\) String\(\) string](<#ID.String>)
-  - [func \(id ID\) Validate\(\) error](<#ID.Validate>)
 - [type ImageURLDetail](<#ImageURLDetail>)
 - [type LogProb](<#LogProb>)
 - [type LogProbs](<#LogProbs>)
@@ -156,19 +147,10 @@ Features:
 - [type PromptFilterResult](<#PromptFilterResult>)
 - [type RateLimitHeaders](<#RateLimitHeaders>)
 - [type RawResponse](<#RawResponse>)
-- [type Reflector](<#Reflector>)
-  - [func \(r \*Reflector\) Reflect\(v any\) \*Schema](<#Reflector.Reflect>)
-  - [func \(r \*Reflector\) ReflectFromType\(t reflect.Type\) \*Schema](<#Reflector.ReflectFromType>)
-  - [func \(r \*Reflector\) SetBaseSchemaID\(id string\)](<#Reflector.SetBaseSchemaID>)
 - [type ResetTime](<#ResetTime>)
   - [func \(r ResetTime\) String\(\) string](<#ResetTime.String>)
   - [func \(r ResetTime\) Time\(\) time.Time](<#ResetTime.Time>)
 - [type Role](<#Role>)
-- [type Schema](<#Schema>)
-  - [func Reflect\(v any\) \*Schema](<#Reflect>)
-  - [func ReflectFromType\(t reflect.Type\) \*Schema](<#ReflectFromType>)
-  - [func \(t \*Schema\) MarshalJSON\(\) \(\[\]byte, error\)](<#Schema.MarshalJSON>)
-  - [func \(t \*Schema\) UnmarshalJSON\(data \[\]byte\) error](<#Schema.UnmarshalJSON>)
 - [type Segments](<#Segments>)
 - [type StreamOptions](<#StreamOptions>)
 - [type Tool](<#Tool>)
@@ -241,17 +223,6 @@ const (
 ```
 
 ## Variables
-
-<a name="TrueSchema"></a>
-
-```go
-var (
-    // TrueSchema defines a schema with a true value
-    TrueSchema = &Schema{boolean: &[]bool{true}[0]}
-    // FalseSchema defines a schema with a false value
-    FalseSchema = &Schema{boolean: &[]bool{false}[0]}
-)
-```
 
 <a name="SectionMap"></a>
 
@@ -352,23 +323,8 @@ var (
 )
 ```
 
-<a name="Version"></a>Version is the JSON Schema version.
-
-```go
-var Version = "https://json-schema.org/draft/2020-12/schema"
-```
-
-<a name="NewProperties"></a>
-## func [NewProperties](<https://github.com/conneroisu/groq-go/blob/main/schema.go#L25>)
-
-```go
-func NewProperties() *orderedmap.OrderedMap[string, *Schema]
-```
-
-NewProperties is a helper method to instantiate a new properties ordered map.
-
 <a name="ToSnakeCase"></a>
-## func [ToSnakeCase](<https://github.com/conneroisu/groq-go/blob/main/schema.go#L17>)
+## func [ToSnakeCase](<https://github.com/conneroisu/groq-go/blob/main/schema.go#L1136>)
 
 ```go
 func ToSnakeCase(str string) string
@@ -468,13 +424,14 @@ type AudioResponseFormat string
 ```
 
 <a name="ChatCompletionChoice"></a>
-## type [ChatCompletionChoice](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L301-L314>)
+## type [ChatCompletionChoice](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L303-L320>)
 
 ChatCompletionChoice represents the chat completion choice.
 
 ```go
 type ChatCompletionChoice struct {
-    Index   int                   `json:"index"`   // Index is the index of the choice.
+    Index int `json:"index"` // Index is the index of the choice.
+    // Message is the chat completion message of the choice.
     Message ChatCompletionMessage `json:"message"` // Message is the chat completion message of the choice.
     // FinishReason is the finish reason of the choice.
     //
@@ -484,13 +441,16 @@ type ChatCompletionChoice struct {
     // function_call: The model decided to call a function
     // content_filter: Omitted content due to a flag from our content filters
     // null: API response still in progress or incomplete
-    FinishReason FinishReason `json:"finish_reason"`      // FinishReason is the finish reason of the choice.
-    LogProbs     *LogProbs    `json:"logprobs,omitempty"` // LogProbs is the log probs of the choice.
+    FinishReason FinishReason `json:"finish_reason"` // FinishReason is the finish reason of the choice.
+    // LogProbs is the log probs of the choice.
+    //
+    // This is basically the probability of the model choosing the token.
+    LogProbs *LogProbs `json:"logprobs,omitempty"` // LogProbs is the log probs of the choice.
 }
 ```
 
 <a name="ChatCompletionMessage"></a>
-## type [ChatCompletionMessage](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L68-L87>)
+## type [ChatCompletionMessage](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L70-L89>)
 
 ChatCompletionMessage represents the chat completion message.
 
@@ -518,67 +478,55 @@ type ChatCompletionMessage struct {
 ```
 
 <a name="ChatCompletionMessage.MarshalJSON"></a>
-### func \(ChatCompletionMessage\) [MarshalJSON](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L90>)
+### func \(ChatCompletionMessage\) [MarshalJSON](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L92>)
 
 ```go
 func (m ChatCompletionMessage) MarshalJSON() ([]byte, error)
 ```
 
-MarshalJSON implements the json.Marshaler interface.
+MarshalJSON method implements the json.Marshaler interface.
 
 <a name="ChatCompletionMessage.UnmarshalJSON"></a>
-### func \(\*ChatCompletionMessage\) [UnmarshalJSON](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L119>)
+### func \(\*ChatCompletionMessage\) [UnmarshalJSON](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L121>)
 
 ```go
 func (m *ChatCompletionMessage) UnmarshalJSON(bs []byte) (err error)
 ```
 
-UnmarshalJSON implements the json.Unmarshaler interface.
+UnmarshalJSON method implements the json.Unmarshaler interface.
 
 <a name="ChatCompletionRequest"></a>
-## type [ChatCompletionRequest](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L187-L220>)
+## type [ChatCompletionRequest](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L201-L222>)
 
 ChatCompletionRequest represents a request structure for the chat completion API.
 
 ```go
 type ChatCompletionRequest struct {
-    Model            Model                         `json:"model"`                       // Model is the model of the chat completion request.
-    Messages         []ChatCompletionMessage       `json:"messages"`                    // Messages is the messages of the chat completion request.
-    MaxTokens        int                           `json:"max_tokens,omitempty"`        // MaxTokens is the max tokens of the chat completion request.
-    Temperature      float32                       `json:"temperature,omitempty"`       // Temperature is the temperature of the chat completion request.
-    TopP             float32                       `json:"top_p,omitempty"`             // TopP is the top p of the chat completion request.
-    N                int                           `json:"n,omitempty"`                 // N is the n of the chat completion request.
-    Stream           bool                          `json:"stream,omitempty"`            // Stream is the stream of the chat completion request.
-    Stop             []string                      `json:"stop,omitempty"`              // Stop is the stop of the chat completion request.
-    PresencePenalty  float32                       `json:"presence_penalty,omitempty"`  // PresencePenalty is the presence penalty of the chat completion request.
-    ResponseFormat   *ChatCompletionResponseFormat `json:"response_format,omitempty"`   // ResponseFormat is the response format of the chat completion request.
-    Seed             *int                          `json:"seed,omitempty"`              // Seed is the seed of the chat completion request.
-    FrequencyPenalty float32                       `json:"frequency_penalty,omitempty"` // FrequencyPenalty is the frequency penalty of the chat completion request.
-    // LogitBias is must be a token id string (specified by their token ID in the tokenizer), not a word string.
-    // incorrect: `"logit_bias":{"You": 6}`, correct: `"logit_bias":{"1639": 6}`
-    // refs: https://platform.openai.com/docs/api-reference/chat/create#chat/create-logit_bias
-    LogitBias map[string]int `json:"logit_bias,omitempty"`
-    // LogProbs indicates whether to return log probabilities of the output tokens or not.
-    // If true, returns the log probabilities of each output token returned in the content of message.
-    // This option is currently not available on the gpt-4-vision-preview model.
-    LogProbs bool `json:"logprobs,omitempty"`
-    // TopLogProbs is an integer between 0 and 5 specifying the number of most likely tokens to return at each
-    // token position, each with an associated log probability.
-    // logprobs must be set to true if this parameter is used.
-    TopLogProbs int    `json:"top_logprobs,omitempty"`
-    User        string `json:"user,omitempty"`
-    Tools       []Tool `json:"tools,omitempty"`
-    // This can be either a string or an ToolChoice object.
-    ToolChoice any `json:"tool_choice,omitempty"`
-    // Options for streaming response. Only set this when you set stream: true.
-    StreamOptions *StreamOptions `json:"stream_options,omitempty"`
-    // Disable the default behavior of parallel tool calls by setting it: false.
-    ParallelToolCalls any `json:"parallel_tool_calls,omitempty"`
+    Model             Model                         `json:"model"`                         // Model is the model of the chat completion request.
+    Messages          []ChatCompletionMessage       `json:"messages"`                      // Messages is the messages of the chat completion request. These act as the prompt for the model.
+    MaxTokens         int                           `json:"max_tokens,omitempty"`          // MaxTokens is the max tokens of the chat completion request.
+    Temperature       float32                       `json:"temperature,omitempty"`         // Temperature is the temperature of the chat completion request.
+    TopP              float32                       `json:"top_p,omitempty"`               // TopP is the top p of the chat completion request.
+    N                 int                           `json:"n,omitempty"`                   // N is the n of the chat completion request.
+    Stream            bool                          `json:"stream,omitempty"`              // Stream is the stream of the chat completion request.
+    Stop              []string                      `json:"stop,omitempty"`                // Stop is the stop of the chat completion request.
+    PresencePenalty   float32                       `json:"presence_penalty,omitempty"`    // PresencePenalty is the presence penalty of the chat completion request.
+    ResponseFormat    *ChatCompletionResponseFormat `json:"response_format,omitempty"`     // ResponseFormat is the response format of the chat completion request.
+    Seed              *int                          `json:"seed,omitempty"`                // Seed is the seed of the chat completion request.
+    FrequencyPenalty  float32                       `json:"frequency_penalty,omitempty"`   // FrequencyPenalty is the frequency penalty of the chat completion request.
+    LogitBias         map[string]int                `json:"logit_bias,omitempty"`          // LogitBias is must be a token id string (specified by their token ID in the tokenizer), not a word string. incorrect: `"logit_bias":{ "You": 6}`, correct: `"logit_bias":{"1639": 6}` refs: https://platform.openai.com/docs/api-reference/chat/create#chat/create-logit_bias
+    LogProbs          bool                          `json:"logprobs,omitempty"`            // LogProbs indicates whether to return log probabilities of the output tokens or not. If true, returns the log probabilities of each output token returned in the content of message. This option is currently not available on the gpt-4-vision-preview model.
+    TopLogProbs       int                           `json:"top_logprobs,omitempty"`        // TopLogProbs is an integer between 0 and 5 specifying the number of most likely tokens to return at each token position, each with an associated log probability. logprobs must be set to true if this parameter is used.
+    User              string                        `json:"user,omitempty"`                // User is the user of the chat completion request.
+    Tools             []Tool                        `json:"tools,omitempty"`               // Tools is the tools of the chat completion request.
+    ToolChoice        any                           `json:"tool_choice,omitempty"`         // This can be either a string or an ToolChoice object.
+    StreamOptions     *StreamOptions                `json:"stream_options,omitempty"`      // Options for streaming response. Only set this when you set stream: true.
+    ParallelToolCalls any                           `json:"parallel_tool_calls,omitempty"` // Disable the default behavior of parallel tool calls by setting it: false.
 }
 ```
 
 <a name="ChatCompletionResponse"></a>
-## type [ChatCompletionResponse](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L317-L327>)
+## type [ChatCompletionResponse](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L323-L333>)
 
 ChatCompletionResponse represents a response structure for chat completion API.
 
@@ -597,7 +545,7 @@ type ChatCompletionResponse struct {
 ```
 
 <a name="ChatCompletionResponse.SetHeader"></a>
-### func \(\*ChatCompletionResponse\) [SetHeader](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L330>)
+### func \(\*ChatCompletionResponse\) [SetHeader](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L336>)
 
 ```go
 func (r *ChatCompletionResponse) SetHeader(h http.Header)
@@ -606,33 +554,45 @@ func (r *ChatCompletionResponse) SetHeader(h http.Header)
 SetHeader sets the header of the response.
 
 <a name="ChatCompletionResponseFormat"></a>
-## type [ChatCompletionResponseFormat](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L172-L175>)
+## type [ChatCompletionResponseFormat](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L174-L179>)
 
 ChatCompletionResponseFormat is the chat completion response format.
 
 ```go
 type ChatCompletionResponseFormat struct {
-    Type       ChatCompletionResponseFormatType        `json:"type,omitempty"`        // Type is the type of the chat completion response format.
-    JSONSchema *ChatCompletionResponseFormatJSONSchema `json:"json_schema,omitempty"` // JSONSchema is the json schema of the chat completion response format.
+    // Type is the type of the chat completion response format.
+    Type ChatCompletionResponseFormatType `json:"type,omitempty"`
+    // JSONSchema is the json schema of the chat completion response format.
+    JSONSchema *ChatCompletionResponseFormatJSONSchema `json:"json_schema,omitempty"`
 }
 ```
 
 <a name="ChatCompletionResponseFormatJSONSchema"></a>
-## type [ChatCompletionResponseFormatJSONSchema](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L179-L184>)
+## type [ChatCompletionResponseFormatJSONSchema](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L183-L198>)
 
 ChatCompletionResponseFormatJSONSchema is the chat completion response format json schema.
 
 ```go
 type ChatCompletionResponseFormatJSONSchema struct {
-    Name        string         `json:"name"`                  // Name is the name of the chat completion response format json schema.
-    Description string         `json:"description,omitempty"` // Description is the description of the chat completion response format json schema.
-    Schema      json.Marshaler `json:"schema"`                // Schema is the schema of the chat completion response format json schema.
-    Strict      bool           `json:"strict"`                // Strict is the strict of the chat completion response format json schema.
+    // Name is the name of the chat completion response format json schema.
+    //
+    // it is used to further identify the schema in the response.
+    Name string `json:"name"`
+    // response format json schema.
+    // Description is the description of the chat completion response format
+    // json schema.
+    Description string `json:"description,omitempty"`
+    // description of the chat completion response format json schema.
+    // Schema is the schema of the chat completion response format json schema.
+    Schema schema `json:"schema"`
+    // Strict determines whether to enforce the schema upon the generated
+    // content.
+    Strict bool `json:"strict"`
 }
 ```
 
 <a name="ChatCompletionResponseFormatType"></a>
-## type [ChatCompletionResponseFormatType](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L169>)
+## type [ChatCompletionResponseFormatType](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L171>)
 
 ChatCompletionResponseFormatType is the chat completion response format type.
 
@@ -643,7 +603,7 @@ type ChatCompletionResponseFormatType string
 ```
 
 <a name="ChatCompletionStream"></a>
-## type [ChatCompletionStream](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L403-L405>)
+## type [ChatCompletionStream](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L409-L411>)
 
 ChatCompletionStream is a stream of ChatCompletionStreamResponse.
 
@@ -656,7 +616,7 @@ type ChatCompletionStream struct {
 ```
 
 <a name="ChatCompletionStreamChoice"></a>
-## type [ChatCompletionStreamChoice](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L372-L376>)
+## type [ChatCompletionStreamChoice](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L378-L382>)
 
 ChatCompletionStreamChoice represents a response structure for chat completion API.
 
@@ -669,7 +629,7 @@ type ChatCompletionStreamChoice struct {
 ```
 
 <a name="ChatCompletionStreamChoiceDelta"></a>
-## type [ChatCompletionStreamChoiceDelta](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L364-L369>)
+## type [ChatCompletionStreamChoiceDelta](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L370-L375>)
 
 ChatCompletionStreamChoiceDelta represents a response structure for chat completion API.
 
@@ -683,7 +643,7 @@ type ChatCompletionStreamChoiceDelta struct {
 ```
 
 <a name="ChatCompletionStreamResponse"></a>
-## type [ChatCompletionStreamResponse](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L384-L398>)
+## type [ChatCompletionStreamResponse](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L390-L404>)
 
 ChatCompletionStreamResponse represents a response structure for chat completion API.
 
@@ -706,7 +666,7 @@ type ChatCompletionStreamResponse struct {
 ```
 
 <a name="ChatMessageImageURL"></a>
-## type [ChatMessageImageURL](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L55-L58>)
+## type [ChatMessageImageURL](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L57-L60>)
 
 ChatMessageImageURL represents the chat message image url.
 
@@ -718,7 +678,7 @@ type ChatMessageImageURL struct {
 ```
 
 <a name="ChatMessagePart"></a>
-## type [ChatMessagePart](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L61-L65>)
+## type [ChatMessagePart](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L63-L67>)
 
 ChatMessagePart represents the chat message part of a chat completion message.
 
@@ -731,7 +691,7 @@ type ChatMessagePart struct {
 ```
 
 <a name="ChatMessagePartType"></a>
-## type [ChatMessagePartType](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L42>)
+## type [ChatMessagePartType](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L44>)
 
 ChatMessagePartType is the chat message part type.
 
@@ -763,31 +723,31 @@ func NewClient(groqAPIKey string, opts ...Opts) (*Client, error)
 NewClient creates a new Groq client.
 
 <a name="Client.CreateChatCompletion"></a>
-### func \(\*Client\) [CreateChatCompletion](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L335-L338>)
+### func \(\*Client\) [CreateChatCompletion](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L341-L344>)
 
 ```go
 func (c *Client) CreateChatCompletion(ctx context.Context, request ChatCompletionRequest) (response ChatCompletionResponse, err error)
 ```
 
-CreateChatCompletion is an API call to create a chat completion.
+CreateChatCompletion method is an API call to create a chat completion.
 
 <a name="Client.CreateChatCompletionJSON"></a>
-### func \(\*Client\) [CreateChatCompletionJSON](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L443-L447>)
+### func \(\*Client\) [CreateChatCompletionJSON](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L449-L453>)
 
 ```go
-func (c *Client) CreateChatCompletionJSON(ctx context.Context, request ChatCompletionRequest, output json.Marshaler) (err error)
+func (c *Client) CreateChatCompletionJSON(ctx context.Context, request ChatCompletionRequest, output any) (err error)
 ```
 
-CreateChatCompletionJSON is an API call to create a chat completion w/ object output.
+CreateChatCompletionJSON method is an API call to create a chat completion w/ object output.
 
 <a name="Client.CreateChatCompletionStream"></a>
-### func \(\*Client\) [CreateChatCompletionStream](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L412-L415>)
+### func \(\*Client\) [CreateChatCompletionStream](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L418-L421>)
 
 ```go
 func (c *Client) CreateChatCompletionStream(ctx context.Context, request ChatCompletionRequest) (stream *ChatCompletionStream, err error)
 ```
 
-CreateChatCompletionStream is an API call to create a chat completion w/ streaming support.
+CreateChatCompletionStream method is an API call to create a chat completion w/ streaming support.
 
 If set, tokens will be sent as data\-only server\-sent events as they become available, with the stream terminated by a data: \[DONE\] message.
 
@@ -954,15 +914,6 @@ func (e *DefaultErrorAccumulator) Write(p []byte) error
 
 Write writes bytes to the error accumulator.
 
-<a name="Definitions"></a>
-## type [Definitions](<https://github.com/conneroisu/groq-go/blob/main/schema.go#L114>)
-
-Definitions hold schema definitions. http://json-schema.org/latest/json-schema-validation.html#rfc.section.5.26 RFC draft\-wright\-json\-schema\-validation\-00, section 5.26
-
-```go
-type Definitions map[string]*Schema
-```
-
 <a name="Endpoint"></a>
 ## type [Endpoint](<https://github.com/conneroisu/groq-go/blob/main/models.go#L11>)
 
@@ -1106,7 +1057,7 @@ func (e ErrTooManyEmptyStreamMessages) Error() string
 Error returns the error message.
 
 <a name="FinishReason"></a>
-## type [FinishReason](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L288>)
+## type [FinishReason](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L290>)
 
 FinishReason is the finish reason. string
 
@@ -1115,7 +1066,7 @@ type FinishReason string
 ```
 
 <a name="FinishReason.MarshalJSON"></a>
-### func \(FinishReason\) [MarshalJSON](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L291>)
+### func \(FinishReason\) [MarshalJSON](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L293>)
 
 ```go
 func (r FinishReason) MarshalJSON() ([]byte, error)
@@ -1146,7 +1097,7 @@ const (
 ```
 
 <a name="FunctionCall"></a>
-## type [FunctionCall](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L161-L164>)
+## type [FunctionCall](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L163-L166>)
 
 FunctionCall represents a function call.
 
@@ -1158,7 +1109,7 @@ type FunctionCall struct {
 ```
 
 <a name="FunctionDefinition"></a>
-## type [FunctionDefinition](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L254-L264>)
+## type [FunctionDefinition](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L256-L266>)
 
 FunctionDefinition represents the function definition.
 
@@ -1231,77 +1182,8 @@ const (
 )
 ```
 
-<a name="ID"></a>
-## type [ID](<https://github.com/conneroisu/groq-go/blob/main/id.go#L12>)
-
-ID represents a Schema ID type which should always be a URI. See draft\-bhutton\-json\-schema\-00 section 8.2.1
-
-```go
-type ID string
-```
-
-<a name="EmptyID"></a>EmptyID is used to explicitly define an ID with no value.
-
-```go
-const EmptyID ID = ""
-```
-
-<a name="ID.Add"></a>
-### func \(ID\) [Add](<https://github.com/conneroisu/groq-go/blob/main/id.go#L54>)
-
-```go
-func (id ID) Add(path string) ID
-```
-
-Add appends the provided path to the id, and removes any anchor data that might be there.
-
-<a name="ID.Anchor"></a>
-### func \(ID\) [Anchor](<https://github.com/conneroisu/groq-go/blob/main/id.go#L41>)
-
-```go
-func (id ID) Anchor(name string) ID
-```
-
-Anchor sets the anchor part of the schema URI.
-
-<a name="ID.Base"></a>
-### func \(ID\) [Base](<https://github.com/conneroisu/groq-go/blob/main/id.go#L63>)
-
-```go
-func (id ID) Base() ID
-```
-
-Base removes any anchor information from the schema
-
-<a name="ID.Def"></a>
-### func \(ID\) [Def](<https://github.com/conneroisu/groq-go/blob/main/id.go#L47>)
-
-```go
-func (id ID) Def(name string) ID
-```
-
-Def adds or replaces a definition identifier.
-
-<a name="ID.String"></a>
-### func \(ID\) [String](<https://github.com/conneroisu/groq-go/blob/main/id.go#L74>)
-
-```go
-func (id ID) String() string
-```
-
-String provides string version of ID
-
-<a name="ID.Validate"></a>
-### func \(ID\) [Validate](<https://github.com/conneroisu/groq-go/blob/main/id.go#L20>)
-
-```go
-func (id ID) Validate() error
-```
-
-Validate is used to check if the ID looks like a proper schema. This is done by parsing the ID as a URL and checking it has all the relevant parts.
-
 <a name="ImageURLDetail"></a>
-## type [ImageURLDetail](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L37>)
+## type [ImageURLDetail](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L39>)
 
 ImageURLDetail is the image url detail.
 
@@ -1312,7 +1194,7 @@ type ImageURLDetail string
 ```
 
 <a name="LogProb"></a>
-## type [LogProb](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L274-L279>)
+## type [LogProb](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L276-L281>)
 
 LogProb represents the probability information for a token.
 
@@ -1326,7 +1208,7 @@ type LogProb struct {
 ```
 
 <a name="LogProbs"></a>
-## type [LogProbs](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L282-L284>)
+## type [LogProbs](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L284-L286>)
 
 LogProbs is the top\-level structure containing the log probability information.
 
@@ -1420,7 +1302,7 @@ func WithLogger(logger zerolog.Logger) Opts
 WithLogger sets the logger for the Groq client.
 
 <a name="PromptAnnotation"></a>
-## type [PromptAnnotation](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L50-L52>)
+## type [PromptAnnotation](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L52-L54>)
 
 PromptAnnotation represents the prompt annotation.
 
@@ -1431,7 +1313,7 @@ type PromptAnnotation struct {
 ```
 
 <a name="PromptFilterResult"></a>
-## type [PromptFilterResult](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L379-L381>)
+## type [PromptFilterResult](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L385-L387>)
 
 PromptFilterResult represents a response structure for chat completion API.
 
@@ -1470,130 +1352,6 @@ type RawResponse struct {
 }
 ```
 
-<a name="Reflector"></a>
-## type [Reflector](<https://github.com/conneroisu/groq-go/blob/main/reflect.go#L67-L155>)
-
-A Reflector reflects values into a Schema.
-
-```go
-type Reflector struct {
-    // BaseSchemaID defines the URI that will be used as a base to determine Schema
-    // IDs for models. For example, a base Schema ID of `https://invopop.com/schemas`
-    // when defined with a struct called `User{}`, will result in a schema with an
-    // ID set to `https://invopop.com/schemas/user`.
-    //
-    // If no `BaseSchemaID` is provided, we'll take the type's complete package path
-    // and use that as a base instead. Set `Anonymous` to try if you do not want to
-    // include a schema ID.
-    BaseSchemaID ID
-
-    // Anonymous when true will hide the auto-generated Schema ID and provide what is
-    // known as an "anonymous schema". As a rule, this is not recommended.
-    Anonymous bool
-
-    // AssignAnchor when true will use the original struct's name as an anchor inside
-    // every definition, including the root schema. These can be useful for having a
-    // reference to the original struct's name in CamelCase instead of the snake-case used
-    // by default for URI compatibility.
-    //
-    // Anchors do not appear to be widely used out in the wild, so at this time the
-    // anchors themselves will not be used inside generated schema.
-    AssignAnchor bool
-
-    // AllowAdditionalProperties will cause the Reflector to generate a schema
-    // without additionalProperties set to 'false' for all struct types. This means
-    // the presence of additional keys in JSON objects will not cause validation
-    // to fail. Note said additional keys will simply be dropped when the
-    // validated JSON is unmarshaled.
-    AllowAdditionalProperties bool
-
-    // RequiredFromJSONSchemaTags will cause the Reflector to generate a schema
-    // that requires any key tagged with `jsonschema:required`, overriding the
-    // default of requiring any key *not* tagged with `json:,omitempty`.
-    RequiredFromJSONSchemaTags bool
-
-    // Do not reference definitions. This will remove the top-level $defs map and
-    // instead cause the entire structure of types to be output in one tree. The
-    // list of type definitions (`$defs`) will not be included.
-    DoNotReference bool
-
-    // ExpandedStruct when true will include the reflected type's definition in the
-    // root as opposed to a definition with a reference.
-    ExpandedStruct bool
-
-    // FieldNameTag will change the tag used to get field names. json tags are used by default.
-    FieldNameTag string
-
-    // IgnoredTypes defines a slice of types that should be ignored in the schema,
-    // switching to just allowing additional properties instead.
-    IgnoredTypes []any
-
-    // Lookup allows a function to be defined that will provide a custom mapping of
-    // types to Schema IDs. This allows existing schema documents to be referenced
-    // by their ID instead of being embedded into the current schema definitions.
-    // Reflected types will never be pointers, only underlying elements.
-    Lookup func(reflect.Type) ID
-
-    // Mapper is a function that can be used to map custom Go types to jsonschema schemas.
-    Mapper func(reflect.Type) *Schema
-
-    // Namer allows customizing of type names. The default is to use the type's name
-    // provided by the reflect package.
-    Namer func(reflect.Type) string
-
-    // KeyNamer allows customizing of key names.
-    // The default is to use the key's name as is, or the json tag if present.
-    // If a json tag is present, KeyNamer will receive the tag's name as an argument, not the original key name.
-    KeyNamer func(string) string
-
-    // AdditionalFields allows adding structfields for a given type
-    AdditionalFields func(reflect.Type) []reflect.StructField
-
-    // CommentMap is a dictionary of fully qualified go types and fields to comment
-    // strings that will be used if a description has not already been provided in
-    // the tags. Types and fields are added to the package path using "." as a
-    // separator.
-    //
-    // Type descriptions should be defined like:
-    //
-    //   map[string]string{"github.com/conneroisu/groq.Reflector": "A Reflector reflects values into a Schema."}
-    //
-    // And Fields defined as:
-    //
-    //   map[string]string{"github.com/conneroisu/groq.Reflector.DoNotReference": "Do not reference definitions."}
-    //
-    // See also: AddGoComments
-    CommentMap map[string]string
-}
-```
-
-<a name="Reflector.Reflect"></a>
-### func \(\*Reflector\) [Reflect](<https://github.com/conneroisu/groq-go/blob/main/reflect.go#L158>)
-
-```go
-func (r *Reflector) Reflect(v any) *Schema
-```
-
-Reflect reflects to Schema from a value.
-
-<a name="Reflector.ReflectFromType"></a>
-### func \(\*Reflector\) [ReflectFromType](<https://github.com/conneroisu/groq-go/blob/main/reflect.go#L163>)
-
-```go
-func (r *Reflector) ReflectFromType(t reflect.Type) *Schema
-```
-
-ReflectFromType generates root schema
-
-<a name="Reflector.SetBaseSchemaID"></a>
-### func \(\*Reflector\) [SetBaseSchemaID](<https://github.com/conneroisu/groq-go/blob/main/reflect.go#L227>)
-
-```go
-func (r *Reflector) SetBaseSchemaID(id string)
-```
-
-SetBaseSchemaID is a helper use to be able to set the reflectors base schema ID from a string as opposed to then ID instance.
-
 <a name="ResetTime"></a>
 ## type [ResetTime](<https://github.com/conneroisu/groq-go/blob/main/client.go#L303>)
 
@@ -1622,7 +1380,7 @@ func (r ResetTime) Time() time.Time
 Time returns the time.Time representation of the ResetTime.
 
 <a name="Role"></a>
-## type [Role](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L47>)
+## type [Role](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L49>)
 
 Role is the role of the chat completion message.
 
@@ -1631,117 +1389,6 @@ string
 ```go
 type Role string
 ```
-
-<a name="Schema"></a>
-## type [Schema](<https://github.com/conneroisu/groq-go/blob/main/schema.go#L34-L102>)
-
-Schema represents a JSON Schema object type. RFC draft\-bhutton\-json\-schema\-00 section 4.3
-
-```go
-type Schema struct {
-    // RFC draft-bhutton-json-schema-00
-    Version     string      `json:"$schema,omitempty"`     // section 8.1.1
-    ID          ID          `json:"$id,omitempty"`         // section 8.2.1
-    Anchor      string      `json:"$anchor,omitempty"`     // section 8.2.2
-    Ref         string      `json:"$ref,omitempty"`        // section 8.2.3.1
-    DynamicRef  string      `json:"$dynamicRef,omitempty"` // section 8.2.3.2
-    Definitions Definitions `json:"$defs,omitempty"`       // section 8.2.4
-    Comments    string      `json:"$comment,omitempty"`    // section 8.3
-    // RFC draft-bhutton-json-schema-00 section 10.2.1 (Sub-schemas with logic)
-    AllOf []*Schema `json:"allOf,omitempty"` // section 10.2.1.1
-    AnyOf []*Schema `json:"anyOf,omitempty"` // section 10.2.1.2
-    OneOf []*Schema `json:"oneOf,omitempty"` // section 10.2.1.3
-    Not   *Schema   `json:"not,omitempty"`   // section 10.2.1.4
-    // RFC draft-bhutton-json-schema-00 section 10.2.2 (Apply sub-schemas conditionally)
-    If               *Schema            `json:"if,omitempty"`               // section 10.2.2.1
-    Then             *Schema            `json:"then,omitempty"`             // section 10.2.2.2
-    Else             *Schema            `json:"else,omitempty"`             // section 10.2.2.3
-    DependentSchemas map[string]*Schema `json:"dependentSchemas,omitempty"` // section 10.2.2.4
-    // RFC draft-bhutton-json-schema-00 section 10.3.1 (arrays)
-    PrefixItems []*Schema `json:"prefixItems,omitempty"` // section 10.3.1.1
-    Items       *Schema   `json:"items,omitempty"`       // section 10.3.1.2  (replaces additionalItems)
-    Contains    *Schema   `json:"contains,omitempty"`    // section 10.3.1.3
-    // RFC draft-bhutton-json-schema-00 section 10.3.2 (sub-schemas)
-    Properties           *orderedmap.OrderedMap[string, *Schema] `json:"properties,omitempty"`           // section 10.3.2.1
-    PatternProperties    map[string]*Schema                      `json:"patternProperties,omitempty"`    // section 10.3.2.2
-    AdditionalProperties *Schema                                 `json:"additionalProperties,omitempty"` // section 10.3.2.3
-    PropertyNames        *Schema                                 `json:"propertyNames,omitempty"`        // section 10.3.2.4
-    // RFC draft-bhutton-json-schema-validation-00, section 6
-    Type              string              `json:"type,omitempty"`              // section 6.1.1
-    Enum              []any               `json:"enum,omitempty"`              // section 6.1.2
-    Const             any                 `json:"const,omitempty"`             // section 6.1.3
-    MultipleOf        json.Number         `json:"multipleOf,omitempty"`        // section 6.2.1
-    Maximum           json.Number         `json:"maximum,omitempty"`           // section 6.2.2
-    ExclusiveMaximum  json.Number         `json:"exclusiveMaximum,omitempty"`  // section 6.2.3
-    Minimum           json.Number         `json:"minimum,omitempty"`           // section 6.2.4
-    ExclusiveMinimum  json.Number         `json:"exclusiveMinimum,omitempty"`  // section 6.2.5
-    MaxLength         *uint64             `json:"maxLength,omitempty"`         // section 6.3.1
-    MinLength         *uint64             `json:"minLength,omitempty"`         // section 6.3.2
-    Pattern           string              `json:"pattern,omitempty"`           // section 6.3.3
-    MaxItems          *uint64             `json:"maxItems,omitempty"`          // section 6.4.1
-    MinItems          *uint64             `json:"minItems,omitempty"`          // section 6.4.2
-    UniqueItems       bool                `json:"uniqueItems,omitempty"`       // section 6.4.3
-    MaxContains       *uint64             `json:"maxContains,omitempty"`       // section 6.4.4
-    MinContains       *uint64             `json:"minContains,omitempty"`       // section 6.4.5
-    MaxProperties     *uint64             `json:"maxProperties,omitempty"`     // section 6.5.1
-    MinProperties     *uint64             `json:"minProperties,omitempty"`     // section 6.5.2
-    Required          []string            `json:"required,omitempty"`          // section 6.5.3
-    DependentRequired map[string][]string `json:"dependentRequired,omitempty"` // section 6.5.4
-    // RFC draft-bhutton-json-schema-validation-00, section 7
-    Format string `json:"format,omitempty"`
-    // RFC draft-bhutton-json-schema-validation-00, section 8
-    ContentEncoding  string  `json:"contentEncoding,omitempty"`  // section 8.3
-    ContentMediaType string  `json:"contentMediaType,omitempty"` // section 8.4
-    ContentSchema    *Schema `json:"contentSchema,omitempty"`    // section 8.5
-    // RFC draft-bhutton-json-schema-validation-00, section 9
-    Title       string `json:"title,omitempty"`       // section 9.1
-    Description string `json:"description,omitempty"` // section 9.1
-    Default     any    `json:"default,omitempty"`     // section 9.2
-    Deprecated  bool   `json:"deprecated,omitempty"`  // section 9.3
-    ReadOnly    bool   `json:"readOnly,omitempty"`    // section 9.4
-    WriteOnly   bool   `json:"writeOnly,omitempty"`   // section 9.4
-    Examples    []any  `json:"examples,omitempty"`    // section 9.5
-
-    Extras map[string]any `json:"-"`
-    // contains filtered or unexported fields
-}
-```
-
-<a name="Reflect"></a>
-### func [Reflect](<https://github.com/conneroisu/groq-go/blob/main/reflect.go#L56>)
-
-```go
-func Reflect(v any) *Schema
-```
-
-Reflect reflects to Schema from a value using the default Reflector
-
-<a name="ReflectFromType"></a>
-### func [ReflectFromType](<https://github.com/conneroisu/groq-go/blob/main/reflect.go#L61>)
-
-```go
-func ReflectFromType(t reflect.Type) *Schema
-```
-
-ReflectFromType generates root schema using the default Reflector
-
-<a name="Schema.MarshalJSON"></a>
-### func \(\*Schema\) [MarshalJSON](<https://github.com/conneroisu/groq-go/blob/main/reflect.go#L1079>)
-
-```go
-func (t *Schema) MarshalJSON() ([]byte, error)
-```
-
-MarshalJSON is used to serialize a schema object or boolean.
-
-<a name="Schema.UnmarshalJSON"></a>
-### func \(\*Schema\) [UnmarshalJSON](<https://github.com/conneroisu/groq-go/blob/main/reflect.go#L1061>)
-
-```go
-func (t *Schema) UnmarshalJSON(data []byte) error
-```
-
-UnmarshalJSON is used to parse a schema object or boolean.
 
 <a name="Segments"></a>
 ## type [Segments](<https://github.com/conneroisu/groq-go/blob/main/audio.go#L64-L76>)
@@ -1765,7 +1412,7 @@ type Segments []struct {
 ```
 
 <a name="StreamOptions"></a>
-## type [StreamOptions](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L223-L229>)
+## type [StreamOptions](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L225-L231>)
 
 StreamOptions represents the stream options.
 
@@ -1780,7 +1427,7 @@ type StreamOptions struct {
 ```
 
 <a name="Tool"></a>
-## type [Tool](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L237-L240>)
+## type [Tool](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L239-L242>)
 
 Tool represents the tool.
 
@@ -1792,7 +1439,7 @@ type Tool struct {
 ```
 
 <a name="ToolCall"></a>
-## type [ToolCall](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L152-L158>)
+## type [ToolCall](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L154-L160>)
 
 ToolCall represents a tool call.
 
@@ -1807,7 +1454,7 @@ type ToolCall struct {
 ```
 
 <a name="ToolChoice"></a>
-## type [ToolChoice](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L243-L246>)
+## type [ToolChoice](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L245-L248>)
 
 ToolChoice represents the tool choice.
 
@@ -1819,7 +1466,7 @@ type ToolChoice struct {
 ```
 
 <a name="ToolFunction"></a>
-## type [ToolFunction](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L249-L251>)
+## type [ToolFunction](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L251-L253>)
 
 ToolFunction represents the tool function.
 
@@ -1830,7 +1477,7 @@ type ToolFunction struct {
 ```
 
 <a name="ToolType"></a>
-## type [ToolType](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L234>)
+## type [ToolType](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L236>)
 
 ToolType is the tool type.
 
@@ -1841,7 +1488,7 @@ type ToolType string
 ```
 
 <a name="TopLogProbs"></a>
-## type [TopLogProbs](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L267-L271>)
+## type [TopLogProbs](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L269-L273>)
 
 TopLogProbs represents the top log probs.
 
