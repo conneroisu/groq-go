@@ -27,10 +27,6 @@ jobs:
       - name: Run go mod download
         run: go mod download
 
-      # Step 4: Run go work sync
-      - name: Run go work sync
-        run: go work sync
-
       # Step 5: Generate Go docs (assuming a script `make docs` exists)
       - name: Generate Go docs
         env:
