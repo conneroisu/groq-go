@@ -3,7 +3,6 @@ package groq
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net"
 	"net/url"
@@ -1844,16 +1843,16 @@ func (i schemaID) Validate() error {
 		return fmt.Errorf("invalid URL: %w", err)
 	}
 	if u.Hostname() == "" {
-		return errors.New("missing hostname")
+		return fmt.Errorf("missing hostname: %s", u.Hostname())
 	}
 	if !strings.Contains(u.Hostname(), ".") {
-		return errors.New("hostname does not look valid")
+		return fmt.Errorf("hostname does not look valid: %s", u.Hostname())
 	}
 	if u.Path == "" {
-		return errors.New("path is expected")
+		return fmt.Errorf("path is expected: %s", u.Path)
 	}
 	if u.Scheme != "https" && u.Scheme != "http" {
-		return errors.New("unexpected schema")
+		return fmt.Errorf("unexpected schema: %s", u.Scheme)
 	}
 	return nil
 }
