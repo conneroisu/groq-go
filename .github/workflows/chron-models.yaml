@@ -1,9 +1,6 @@
 name: Commit Go Mod, Go Work, and Docs
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
   schedule:
     - cron: '0 10 * * 0'
