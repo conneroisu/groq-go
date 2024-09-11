@@ -1252,8 +1252,47 @@ type schema struct {
 	Items       *schema   `json:"items,omitempty"`       // section 10.3.1.2  (replaces additionalItems)
 	Contains    *schema   `json:"contains,omitempty"`    // section 10.3.1.3
 	// RFC draft-bhutton-json-schema-00 section 10.3.2 (sub-schemas)
-	Properties        *orderedmap.OrderedMap[string, *schema] `json:"properties,omitempty"`        // section 10.3.2.1
-	PatternProperties map[string]*schema                      `json:"patternProperties,omitempty"` // section 10.3.2.2
+	// Properties are the properties of the schema as specified in section 10.3.2.1 of RFC
+	// draft-bhutton-json-schema-00.
+	//
+	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-00#section-10.3.2.1
+	//
+	// The value of "properties" MUST be an object.  Each value of this
+	// object MUST be a valid JSON Schema.
+	//
+	// Validation succeeds if, for each name that appears in both the
+	// instance and as a name within this field's value, the child
+	// instance for that name successfully validates against the
+	// corresponding schema.
+	//
+	// The annotation result of this field is the set of instance property
+	// names matched by this keyword.
+	//
+	// Omitting this field has the same assertion behavior as an empty
+	// object.
+	Properties *orderedmap.OrderedMap[string, *schema] `json:"properties,omitempty"`
+	// PatternProperties are the pattern properties of the schema as specified in section 10.3.2.2 of RFC
+	// draft-bhutton-json-schema-00.
+	//
+	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-00#section-10.3.2.2
+	//
+	// The value of "patternProperties" MUST be an object.  Each property
+	// name of this object SHOULD be a valid regular expression, according
+	// to the ECMA-262 regular expression dialect.  Each property value of
+	// this object MUST be a valid JSON Schema.
+	//
+	// Validation succeeds if, for each instance name that matches any
+	// regular expressions that appear as a property name in this field's
+	// value, the child instance for that name successfully validates
+	// against each schema that corresponds to a matching regular
+	// expression.
+	//
+	// The annotation result of this field is the set of instance property
+	// names matched by this keyword.
+	//
+	// Omitting this field has the same assertion behavior as an empty
+	// object.
+	PatternProperties map[string]*schema `json:"patternProperties,omitempty"` // section 10.3.2.2
 	// AdditionalProperties is the additional properties of the schema as
 	// specified in section 10.3.2.3 of RFC
 	// draft-bhutton-json-schema-00.
