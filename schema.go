@@ -59,13 +59,8 @@ var customStructGetFieldDocString = reflect.TypeOf((*customSchemaGetFieldDocStri
 
 // Reflect reflects to Schema from a value using the default Reflector
 func Reflect(v any) *Schema {
-	return ReflectFromType(reflect.TypeOf(v))
-}
-
-// ReflectFromType generates root schema using the default Reflector
-func ReflectFromType(t reflect.Type) *Schema {
 	r := &Reflector{}
-	return r.ReflectFromType(t)
+	return r.ReflectFromType(reflect.TypeOf(v))
 }
 
 // A Reflector reflects values into a Schema.

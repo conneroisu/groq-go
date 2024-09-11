@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 )
 
 const (
@@ -443,12 +444,14 @@ func (c *Client) CreateChatCompletionStream(
 func (c *Client) CreateChatCompletionJSON(
 	ctx context.Context,
 	request ChatCompletionRequest,
-	output Schema,
+	output any,
 ) (err error) {
+	schema := Reflect(output)
+	request.ResponseFormat = &ChatCompletionResponseFormat{}
 	request.ResponseFormat.JSONSchema = &ChatCompletionResponseFormatJSONSchema{
-		Name:        "output",
-		Description: "output of the users query",
-		Schema:      output,
+		Name:        schema.Title,
+		Description: schema.Description,
+		Schema:      *schema,
 		Strict:      true,
 	}
 	if !endpointSupportsModel(chatCompletionsSuffix, request.Model) {
@@ -472,8 +475,13 @@ func (c *Client) CreateChatCompletionJSON(
 	if err != nil {
 		return
 	}
+	content := response.Choices[0].Message.Content
+	split := strings.Split(content, "```")
+	if len(split) > 1 {
+		content = split[1]
+	}
 	err = json.Unmarshal(
-		[]byte(response.Choices[0].Message.Content),
+		[]byte(content),
 		&output,
 	)
 	if err != nil {
