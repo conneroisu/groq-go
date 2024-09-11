@@ -16,17 +16,20 @@ import (
 	orderedmap "github.com/wk8/go-ordered-map/v2"
 )
 
+// version is the JSON Schema version.
+var version = "https://json-schema.org/draft/2020-12/schema"
+
 // customSchemaImpl is used to detect if the type provides it's own
 // custom Schema Type definition to use instead. Very useful for situations
 // where there are custom JSON Marshal and Unmarshal methods.
 type customSchemaImpl interface {
-	JSONSchema() *Schema
+	JSONSchema() *schema
 }
 
 // Function to be run after the schema has been generated.
 // this will let you modify a schema afterwards
 type extendSchemaImpl interface {
-	JSONSchemaExtend(*Schema)
+	JSONSchemaExtend(*schema)
 }
 
 // If the object to be reflected defines a `JSONSchemaAlias` method, its type will
@@ -57,14 +60,8 @@ type customGetFieldDocString func(fieldName string) string
 
 var customStructGetFieldDocString = reflect.TypeOf((*customSchemaGetFieldDocString)(nil)).Elem()
 
-// Reflect reflects to Schema from a value using the default Reflector
-func Reflect(v any) *Schema {
-	r := &Reflector{}
-	return r.ReflectFromType(reflect.TypeOf(v))
-}
-
-// A Reflector reflects values into a Schema.
-type Reflector struct {
+// A reflector reflects values into a Schema.
+type reflector struct {
 	// BaseSchemaID defines the URI that will be used as a base to determine Schema
 	// IDs for models. For example, a base Schema ID of `https://invopop.com/schemas`
 	// when defined with a struct called `User{}`, will result in a schema with an
@@ -73,7 +70,7 @@ type Reflector struct {
 	// If no `BaseSchemaID` is provided, we'll take the type's complete package path
 	// and use that as a base instead. Set `Anonymous` to try if you do not want to
 	// include a schema ID.
-	BaseSchemaID ID
+	BaseSchemaID id
 
 	// Anonymous when true will hide the auto-generated Schema ID and provide what is
 	// known as an "anonymous schema". As a rule, this is not recommended.
@@ -120,10 +117,10 @@ type Reflector struct {
 	// types to Schema IDs. This allows existing schema documents to be referenced
 	// by their ID instead of being embedded into the current schema definitions.
 	// Reflected types will never be pointers, only underlying elements.
-	Lookup func(reflect.Type) ID
+	Lookup func(reflect.Type) id
 
 	// Mapper is a function that can be used to map custom Go types to jsonschema schemas.
-	Mapper func(reflect.Type) *Schema
+	Mapper func(reflect.Type) *schema
 
 	// Namer allows customizing of type names. The default is to use the type's name
 	// provided by the reflect package.
@@ -155,20 +152,20 @@ type Reflector struct {
 }
 
 // Reflect reflects to Schema from a value.
-func (r *Reflector) Reflect(v any) *Schema {
+func (r *reflector) Reflect(v any) *schema {
 	return r.ReflectFromType(reflect.TypeOf(v))
 }
 
 // ReflectFromType generates root schema
-func (r *Reflector) ReflectFromType(t reflect.Type) *Schema {
+func (r *reflector) ReflectFromType(t reflect.Type) *schema {
 	if t.Kind() == reflect.Ptr {
 		t = t.Elem() // re-assign from pointer
 	}
 
 	name := r.typeName(t)
 
-	s := new(Schema)
-	definitions := Definitions{}
+	s := new(schema)
+	definitions := definitions{}
 	s.Definitions = definitions
 	bs := r.reflectTypeToSchemaWithID(definitions, t)
 	if r.ExpandedStruct {
@@ -182,10 +179,10 @@ func (r *Reflector) ReflectFromType(t reflect.Type) *Schema {
 	if !r.Anonymous && s.ID == EmptyID {
 		baseSchemaID := r.BaseSchemaID
 		if baseSchemaID == EmptyID {
-			id := ID("https://" + t.PkgPath())
-			if err := id.Validate(); err == nil {
+			i := id("https://" + t.PkgPath())
+			if err := i.Validate(); err == nil {
 				// it's okay to silently ignore URL errors
-				baseSchemaID = id
+				baseSchemaID = i
 			}
 		}
 		if baseSchemaID != EmptyID {
@@ -193,7 +190,7 @@ func (r *Reflector) ReflectFromType(t reflect.Type) *Schema {
 		}
 	}
 
-	s.Version = Version
+	s.Version = version
 	if !r.DoNotReference {
 		s.Definitions = definitions
 	}
@@ -227,14 +224,14 @@ var protoEnumType = reflect.TypeOf((*protoEnum)(nil)).Elem()
 
 // SetBaseSchemaID is a helper use to be able to set the reflectors base
 // schema ID from a string as opposed to then ID instance.
-func (r *Reflector) SetBaseSchemaID(id string) {
-	r.BaseSchemaID = ID(id)
+func (r *reflector) SetBaseSchemaID(identifier string) {
+	r.BaseSchemaID = id(identifier)
 }
 
-func (r *Reflector) refOrReflectTypeToSchema(definitions Definitions, t reflect.Type) *Schema {
+func (r *reflector) refOrReflectTypeToSchema(definitions definitions, t reflect.Type) *schema {
 	id := r.lookupID(t)
 	if id != EmptyID {
-		return &Schema{
+		return &schema{
 			Ref: id.String(),
 		}
 	}
@@ -247,20 +244,20 @@ func (r *Reflector) refOrReflectTypeToSchema(definitions Definitions, t reflect.
 	return r.reflectTypeToSchemaWithID(definitions, t)
 }
 
-func (r *Reflector) reflectTypeToSchemaWithID(defs Definitions, t reflect.Type) *Schema {
+func (r *reflector) reflectTypeToSchemaWithID(defs definitions, t reflect.Type) *schema {
 	s := r.reflectTypeToSchema(defs, t)
 	if s != nil {
 		if r.Lookup != nil {
-			id := r.Lookup(t)
-			if id != EmptyID {
-				s.ID = id
+			identifier := r.Lookup(t)
+			if identifier != EmptyID {
+				s.ID = identifier
 			}
 		}
 	}
 	return s
 }
 
-func (r *Reflector) reflectTypeToSchema(definitions Definitions, t reflect.Type) *Schema {
+func (r *reflector) reflectTypeToSchema(definitions definitions, t reflect.Type) *schema {
 	// only try to reflect non-pointers
 	if t.Kind() == reflect.Ptr {
 		return r.refOrReflectTypeToSchema(definitions, t.Elem())
@@ -286,12 +283,12 @@ func (r *Reflector) reflectTypeToSchema(definitions Definitions, t reflect.Type)
 	}
 
 	// Prepare a base to which details can be added
-	st := new(Schema)
+	st := new(schema)
 
 	// jsonpb will marshal protobuf enum options as either strings or integers.
 	// It will unmarshal either.
 	if t.Implements(protoEnumType) {
-		st.OneOf = []*Schema{
+		st.OneOf = []*schema{
 			{Type: "string"},
 			{Type: "integer"},
 		}
@@ -348,7 +345,7 @@ func (r *Reflector) reflectTypeToSchema(definitions Definitions, t reflect.Type)
 	return st
 }
 
-func (r *Reflector) reflectCustomSchema(definitions Definitions, t reflect.Type) *Schema {
+func (r *reflector) reflectCustomSchema(definitions definitions, t reflect.Type) *schema {
 	if t.Kind() == reflect.Ptr {
 		return r.reflectCustomSchema(definitions, t.Elem())
 	}
@@ -367,7 +364,7 @@ func (r *Reflector) reflectCustomSchema(definitions Definitions, t reflect.Type)
 	return nil
 }
 
-func (r *Reflector) reflectSchemaExtend(definitions Definitions, t reflect.Type, s *Schema) *Schema {
+func (r *reflector) reflectSchemaExtend(definitions definitions, t reflect.Type, s *schema) *schema {
 	if t.Implements(extendType) {
 		v := reflect.New(t)
 		o := v.Interface().(extendSchemaImpl)
@@ -380,7 +377,7 @@ func (r *Reflector) reflectSchemaExtend(definitions Definitions, t reflect.Type,
 	return s
 }
 
-func (r *Reflector) reflectSliceOrArray(definitions Definitions, t reflect.Type, st *Schema) {
+func (r *reflector) reflectSliceOrArray(definitions definitions, t reflect.Type, st *schema) {
 	if t == rawMessageType {
 		return
 	}
@@ -406,7 +403,7 @@ func (r *Reflector) reflectSliceOrArray(definitions Definitions, t reflect.Type,
 	}
 }
 
-func (r *Reflector) reflectMap(definitions Definitions, t reflect.Type, st *Schema) {
+func (r *reflector) reflectMap(definitions definitions, t reflect.Type, st *schema) {
 	r.addDefinition(definitions, t, st)
 
 	st.Type = "object"
@@ -416,10 +413,10 @@ func (r *Reflector) reflectMap(definitions Definitions, t reflect.Type, st *Sche
 
 	switch t.Key().Kind() {
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		st.PatternProperties = map[string]*Schema{
+		st.PatternProperties = map[string]*schema{
 			"^[0-9]+$": r.refOrReflectTypeToSchema(definitions, t.Elem()),
 		}
-		st.AdditionalProperties = FalseSchema
+		st.AdditionalProperties = falseSchema
 		return
 	}
 	if t.Elem().Kind() != reflect.Interface {
@@ -428,7 +425,7 @@ func (r *Reflector) reflectMap(definitions Definitions, t reflect.Type, st *Sche
 }
 
 // Reflects a struct to a JSON Schema type.
-func (r *Reflector) reflectStruct(definitions Definitions, t reflect.Type, s *Schema) {
+func (r *reflector) reflectStruct(definitions definitions, t reflect.Type, s *schema) {
 	// Handle special types
 	switch t {
 	case timeType: // date-time RFC section 7.3.1
@@ -443,13 +440,13 @@ func (r *Reflector) reflectStruct(definitions Definitions, t reflect.Type, s *Sc
 
 	r.addDefinition(definitions, t, s)
 	s.Type = "object"
-	s.Properties = NewProperties()
+	s.Properties = newProperties()
 	s.Description = r.lookupComment(t, "")
 	if r.AssignAnchor {
 		s.Anchor = t.Name()
 	}
 	if !r.AllowAdditionalProperties && s.AdditionalProperties == nil {
-		s.AdditionalProperties = FalseSchema
+		s.AdditionalProperties = falseSchema
 	}
 
 	ignored := false
@@ -464,7 +461,7 @@ func (r *Reflector) reflectStruct(definitions Definitions, t reflect.Type, s *Sc
 	}
 }
 
-func (r *Reflector) reflectStructFields(st *Schema, definitions Definitions, t reflect.Type) {
+func (r *reflector) reflectStructFields(st *schema, definitions definitions, t reflect.Type) {
 	if t.Kind() == reflect.Ptr {
 		t = t.Elem()
 	}
@@ -501,7 +498,7 @@ func (r *Reflector) reflectStructFields(st *Schema, definitions Definitions, t r
 
 		// If a JSONSchemaAlias(prop string) method is defined, attempt to use
 		// the provided object's type instead of the field's type.
-		var property *Schema
+		var property *schema
 		if alias := customPropertyMethod(name); alias != nil {
 			property = r.refOrReflectTypeToSchema(definitions, reflect.TypeOf(alias))
 		} else {
@@ -517,8 +514,8 @@ func (r *Reflector) reflectStructFields(st *Schema, definitions Definitions, t r
 		}
 
 		if nullable {
-			property = &Schema{
-				OneOf: []*Schema{
+			property = &schema{
+				OneOf: []*schema{
 					property,
 					{
 						Type: "null",
@@ -555,7 +552,7 @@ func appendUniqueString(base []string, value string) []string {
 	return append(base, value)
 }
 
-func (r *Reflector) lookupComment(t reflect.Type, name string) string {
+func (r *reflector) lookupComment(t reflect.Type, name string) string {
 	if r.CommentMap == nil {
 		return ""
 	}
@@ -569,7 +566,7 @@ func (r *Reflector) lookupComment(t reflect.Type, name string) string {
 }
 
 // addDefinition will append the provided schema. If needed, an ID and anchor will also be added.
-func (r *Reflector) addDefinition(definitions Definitions, t reflect.Type, s *Schema) {
+func (r *reflector) addDefinition(definitions definitions, t reflect.Type, s *schema) {
 	name := r.typeName(t)
 	if name == "" {
 		return
@@ -578,7 +575,7 @@ func (r *Reflector) addDefinition(definitions Definitions, t reflect.Type, s *Sc
 }
 
 // refDefinition will provide a schema with a reference to an existing definition.
-func (r *Reflector) refDefinition(definitions Definitions, t reflect.Type) *Schema {
+func (r *reflector) refDefinition(definitions definitions, t reflect.Type) *schema {
 	if r.DoNotReference {
 		return nil
 	}
@@ -589,12 +586,12 @@ func (r *Reflector) refDefinition(definitions Definitions, t reflect.Type) *Sche
 	if _, ok := definitions[name]; !ok {
 		return nil
 	}
-	return &Schema{
+	return &schema{
 		Ref: "#/$defs/" + name,
 	}
 }
 
-func (r *Reflector) lookupID(t reflect.Type) ID {
+func (r *reflector) lookupID(t reflect.Type) id {
 	if r.Lookup != nil {
 		if t.Kind() == reflect.Ptr {
 			t = t.Elem()
@@ -605,7 +602,7 @@ func (r *Reflector) lookupID(t reflect.Type) ID {
 	return EmptyID
 }
 
-func (t *Schema) structKeywordsFromTags(f reflect.StructField, parent *Schema, propertyName string) {
+func (t *schema) structKeywordsFromTags(f reflect.StructField, parent *schema, propertyName string) {
 	t.Description = f.Tag.Get("jsonschema_description")
 
 	tags := splitOnUnescapedCommas(f.Tag.Get("jsonschema"))
@@ -628,7 +625,11 @@ func (t *Schema) structKeywordsFromTags(f reflect.StructField, parent *Schema, p
 }
 
 // genericKeywords reads struct tags for generic keywords
-func (t *Schema) genericKeywords(tags []string, parent *Schema, propertyName string) []string { //nolint:gocyclo
+func (t *schema) genericKeywords(
+	tags []string,
+	parent *schema,
+	propertyName string,
+) []string {
 	unprocessed := make([]string, 0, len(tags))
 	for _, tag := range tags {
 		nameValue := strings.SplitN(tag, "=", 2)
@@ -644,14 +645,14 @@ func (t *Schema) genericKeywords(tags []string, parent *Schema, propertyName str
 			case "anchor":
 				t.Anchor = val
 			case "oneof_required":
-				var typeFound *Schema
+				var typeFound *schema
 				for i := range parent.OneOf {
 					if parent.OneOf[i].Title == nameValue[1] {
 						typeFound = parent.OneOf[i]
 					}
 				}
 				if typeFound == nil {
-					typeFound = &Schema{
+					typeFound = &schema{
 						Title:    nameValue[1],
 						Required: []string{},
 					}
@@ -659,14 +660,14 @@ func (t *Schema) genericKeywords(tags []string, parent *Schema, propertyName str
 				}
 				typeFound.Required = append(typeFound.Required, propertyName)
 			case "anyof_required":
-				var typeFound *Schema
+				var typeFound *schema
 				for i := range parent.AnyOf {
 					if parent.AnyOf[i].Title == nameValue[1] {
 						typeFound = parent.AnyOf[i]
 					}
 				}
 				if typeFound == nil {
-					typeFound = &Schema{
+					typeFound = &schema{
 						Title:    nameValue[1],
 						Required: []string{},
 					}
@@ -679,23 +680,23 @@ func (t *Schema) genericKeywords(tags []string, parent *Schema, propertyName str
 					subSchema = t.Items
 				}
 				if subSchema.OneOf == nil {
-					subSchema.OneOf = make([]*Schema, 0, 1)
+					subSchema.OneOf = make([]*schema, 0, 1)
 				}
 				subSchema.Ref = ""
 				refs := strings.Split(nameValue[1], ";")
 				for _, r := range refs {
-					subSchema.OneOf = append(subSchema.OneOf, &Schema{
+					subSchema.OneOf = append(subSchema.OneOf, &schema{
 						Ref: r,
 					})
 				}
 			case "oneof_type":
 				if t.OneOf == nil {
-					t.OneOf = make([]*Schema, 0, 1)
+					t.OneOf = make([]*schema, 0, 1)
 				}
 				t.Type = ""
 				types := strings.Split(nameValue[1], ";")
 				for _, ty := range types {
-					t.OneOf = append(t.OneOf, &Schema{
+					t.OneOf = append(t.OneOf, &schema{
 						Type: ty,
 					})
 				}
@@ -705,23 +706,23 @@ func (t *Schema) genericKeywords(tags []string, parent *Schema, propertyName str
 					subSchema = t.Items
 				}
 				if subSchema.AnyOf == nil {
-					subSchema.AnyOf = make([]*Schema, 0, 1)
+					subSchema.AnyOf = make([]*schema, 0, 1)
 				}
 				subSchema.Ref = ""
 				refs := strings.Split(nameValue[1], ";")
 				for _, r := range refs {
-					subSchema.AnyOf = append(subSchema.AnyOf, &Schema{
+					subSchema.AnyOf = append(subSchema.AnyOf, &schema{
 						Ref: r,
 					})
 				}
 			case "anyof_type":
 				if t.AnyOf == nil {
-					t.AnyOf = make([]*Schema, 0, 1)
+					t.AnyOf = make([]*schema, 0, 1)
 				}
 				t.Type = ""
 				types := strings.Split(nameValue[1], ";")
 				for _, ty := range types {
-					t.AnyOf = append(t.AnyOf, &Schema{
+					t.AnyOf = append(t.AnyOf, &schema{
 						Type: ty,
 					})
 				}
@@ -734,7 +735,7 @@ func (t *Schema) genericKeywords(tags []string, parent *Schema, propertyName str
 }
 
 // read struct tags for boolean type keywords
-func (t *Schema) booleanKeywords(tags []string) {
+func (t *schema) booleanKeywords(tags []string) {
 	for _, tag := range tags {
 		nameValue := strings.Split(tag, "=")
 		if len(nameValue) != 2 {
@@ -752,7 +753,7 @@ func (t *Schema) booleanKeywords(tags []string) {
 }
 
 // read struct tags for string type keywords
-func (t *Schema) stringKeywords(tags []string) {
+func (t *schema) stringKeywords(tags []string) {
 	for _, tag := range tags {
 		nameValue := strings.SplitN(tag, "=", 2)
 		if len(nameValue) == 2 {
@@ -784,7 +785,7 @@ func (t *Schema) stringKeywords(tags []string) {
 }
 
 // read struct tags for numerical type keywords
-func (t *Schema) numericalKeywords(tags []string) {
+func (t *schema) numericalKeywords(tags []string) {
 	for _, tag := range tags {
 		nameValue := strings.Split(tag, "=")
 		if len(nameValue) == 2 {
@@ -818,7 +819,7 @@ func (t *Schema) numericalKeywords(tags []string) {
 }
 
 // read struct tags for array type keywords
-func (t *Schema) arrayKeywords(tags []string) {
+func (t *schema) arrayKeywords(tags []string) {
 	var defaultValues []any
 
 	unprocessed := make([]string, 0, len(tags))
@@ -867,7 +868,7 @@ func (t *Schema) arrayKeywords(tags []string) {
 	}
 }
 
-func (t *Schema) extraKeywords(tags []string) {
+func (t *schema) extraKeywords(tags []string) {
 	for _, tag := range tags {
 		nameValue := strings.SplitN(tag, "=", 2)
 		if len(nameValue) == 2 {
@@ -876,7 +877,7 @@ func (t *Schema) extraKeywords(tags []string) {
 	}
 }
 
-func (t *Schema) setExtra(key, val string) {
+func (t *schema) setExtra(key, val string) {
 	if t.Extras == nil {
 		t.Extras = map[string]any{}
 	}
@@ -984,14 +985,14 @@ func parseUint(num string) *uint64 {
 	return &val
 }
 
-func (r *Reflector) fieldNameTag() string {
+func (r *reflector) fieldNameTag() string {
 	if r.FieldNameTag != "" {
 		return r.FieldNameTag
 	}
 	return "json"
 }
 
-func (r *Reflector) reflectFieldName(f reflect.StructField) (string, bool, bool, bool) {
+func (r *reflector) reflectFieldName(f reflect.StructField) (string, bool, bool, bool) {
 	jsonTagString := f.Tag.Get(r.fieldNameTag())
 	jsonTags := strings.Split(jsonTagString, ",")
 	if ignoredByJSONTags(jsonTags) {
@@ -1042,15 +1043,15 @@ func (r *Reflector) reflectFieldName(f reflect.StructField) (string, bool, bool,
 }
 
 // UnmarshalJSON is used to parse a schema object or boolean.
-func (t *Schema) UnmarshalJSON(data []byte) error {
+func (t *schema) UnmarshalJSON(data []byte) error {
 	if bytes.Equal(data, []byte("true")) {
-		*t = *TrueSchema
+		*t = *trueSchema
 		return nil
 	} else if bytes.Equal(data, []byte("false")) {
-		*t = *FalseSchema
+		*t = *falseSchema
 		return nil
 	}
-	type SchemaAlt Schema
+	type SchemaAlt schema
 	aux := &struct {
 		*SchemaAlt
 	}{
@@ -1060,18 +1061,18 @@ func (t *Schema) UnmarshalJSON(data []byte) error {
 }
 
 // MarshalJSON is used to serialize a schema object or boolean.
-func (t *Schema) MarshalJSON() ([]byte, error) {
+func (t *schema) MarshalJSON() ([]byte, error) {
 	if t.boolean != nil {
 		if *t.boolean {
 			return []byte("true"), nil
 		}
 		return []byte("false"), nil
 	}
-	if reflect.DeepEqual(&Schema{}, t) {
+	if reflect.DeepEqual(&schema{}, t) {
 		// Don't bother returning empty schemas
 		return []byte("true"), nil
 	}
-	type SchemaAlt Schema
+	type SchemaAlt schema
 	b, err := json.Marshal((*SchemaAlt)(t))
 	if err != nil {
 		return nil, err
@@ -1090,7 +1091,7 @@ func (t *Schema) MarshalJSON() ([]byte, error) {
 	return append(b, m[1:]...), nil
 }
 
-func (r *Reflector) typeName(t reflect.Type) string {
+func (r *reflector) typeName(t reflect.Type) string {
 	if r.Namer != nil {
 		if name := r.Namer(t); name != "" {
 			return name
@@ -1138,25 +1139,22 @@ func ToSnakeCase(str string) string {
 	return strings.ToLower(snake)
 }
 
-// NewProperties is a helper method to instantiate a new properties ordered
+// newProperties is a helper method to instantiate a new properties ordered
 // map.
-func NewProperties() *orderedmap.OrderedMap[string, *Schema] {
-	return orderedmap.New[string, *Schema]()
+func newProperties() *orderedmap.OrderedMap[string, *schema] {
+	return orderedmap.New[string, *schema]()
 }
 
-// Version is the JSON Schema version.
-var Version = "https://json-schema.org/draft/2020-12/schema"
-
-// Schema represents a JSON Schema object type.
+// schema represents a JSON schema object type.
 // RFC draft-bhutton-json-schema-00 section 4.3
-type Schema struct {
+type schema struct {
 	// RFC draft-bhutton-json-schema-00
 	Version     string      `json:"$schema,omitempty"`     // section 8.1.1
-	ID          ID          `json:"$id,omitempty"`         // section 8.2.1
+	ID          id          `json:"$id,omitempty"`         // section 8.2.1
 	Anchor      string      `json:"$anchor,omitempty"`     // section 8.2.2
 	Ref         string      `json:"$ref,omitempty"`        // section 8.2.3.1
 	DynamicRef  string      `json:"$dynamicRef,omitempty"` // section 8.2.3.2
-	Definitions Definitions `json:"$defs,omitempty"`       // section 8.2.4
+	Definitions definitions `json:"$defs,omitempty"`       // section 8.2.4
 	// Comments specifies a comment for the schema as
 	// specified RFC draft-bhutton-json-schema-00 section 8.3
 	//
@@ -1187,7 +1185,7 @@ type Schema struct {
 	// Implementations MUST NOT take any other action based on the presence,
 	// absence, or contents of "$comment" properties.  In particular, the
 	// value of "$comment" MUST NOT be collected as an annotation result.
-	Comments string `json:"$comment,omitempty"` // section 8.3
+	Comments string `json:"$comment,omitempty"`
 	// AllOf specifies that the schema is an all of of the schema as
 	// specifified RFC draft-bhutton-json-schema-00 section 10.2.1
 	//
@@ -1202,34 +1200,232 @@ type Schema struct {
 	// validates successfully against all schemas defined by "allOf".
 	//
 	// Omitting this field has the same behavior as an empty array.
-	AllOf []*Schema `json:"allOf,omitempty"` // section 10.2.1.1
-	AnyOf []*Schema `json:"anyOf,omitempty"` // section 10.2.1.2
-	OneOf []*Schema `json:"oneOf,omitempty"` // section 10.2.1.3
-	Not   *Schema   `json:"not,omitempty"`   // section 10.2.1.4
+	AllOf []*schema `json:"allOf,omitempty"`
+	// AnyOf is the any of of the schema as specified in section 10.2.1.2
+	// of RFC draft-bhutton-json-schema-00.
+	//
+	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-00#section-10.2.1.2
+	//
+	// The value of this field MUST be an array.  Elements in the array
+	// MUST be objects.  Each object MUST be a valid JSON Schema.
+	//
+	// An instance validates successfully against this field if it
+	// validates successfully against at least one schema defined by
+	// "anyOf".
+	//
+	// Omitting this field has the same behavior as an empty array.
+	AnyOf []*schema `json:"anyOf,omitempty"`
+	// OneOf is the one of of the schema as specified in section 10.2.1.3
+	// of RFC draft-bhutton-json-schema-00.
+	//
+	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-00#section-10.2.1.3
+	//
+	// The value of this field MUST be an array.  Elements in the array
+	// MUST be objects.  Each object MUST be a valid JSON Schema.
+	//
+	// An instance validates successfully against this field if it
+	// validates successfully against exactly one schema defined by
+	// "oneOf".
+	//
+	// Omitting this field has the same behavior as an empty array.
+	OneOf []*schema `json:"oneOf,omitempty"`
+	// Not is the not of the schema as specified in section 10.2.1.4 of
+	// RFC draft-bhutton-json-schema-00.
+	//
+	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-00#section-10.2.1.4
+	//
+	// The value of this field MUST be an object.  This object MUST be a
+	// valid JSON Schema.
+	//
+	// An instance validates successfully against this field if it
+	// validates successfully against the schema defined by "not".
+	//
+	// Omitting this field has the same behavior as an empty object.
+	Not *schema `json:"not,omitempty"`
 	// RFC draft-bhutton-json-schema-00 section 10.2.2 (Apply sub-schemas conditionally)
-	If               *Schema            `json:"if,omitempty"`               // section 10.2.2.1
-	Then             *Schema            `json:"then,omitempty"`             // section 10.2.2.2
-	Else             *Schema            `json:"else,omitempty"`             // section 10.2.2.3
-	DependentSchemas map[string]*Schema `json:"dependentSchemas,omitempty"` // section 10.2.2.4
+	If               *schema            `json:"if,omitempty"`               // section 10.2.2.1
+	Then             *schema            `json:"then,omitempty"`             // section 10.2.2.2
+	Else             *schema            `json:"else,omitempty"`             // section 10.2.2.3
+	DependentSchemas map[string]*schema `json:"dependentSchemas,omitempty"` // section 10.2.2.4
 	// RFC draft-bhutton-json-schema-00 section 10.3.1 (arrays)
-	PrefixItems []*Schema `json:"prefixItems,omitempty"` // section 10.3.1.1
-	Items       *Schema   `json:"items,omitempty"`       // section 10.3.1.2  (replaces additionalItems)
-	Contains    *Schema   `json:"contains,omitempty"`    // section 10.3.1.3
+	PrefixItems []*schema `json:"prefixItems,omitempty"` // section 10.3.1.1
+	Items       *schema   `json:"items,omitempty"`       // section 10.3.1.2  (replaces additionalItems)
+	Contains    *schema   `json:"contains,omitempty"`    // section 10.3.1.3
 	// RFC draft-bhutton-json-schema-00 section 10.3.2 (sub-schemas)
-	Properties           *orderedmap.OrderedMap[string, *Schema] `json:"properties,omitempty"`           // section 10.3.2.1
-	PatternProperties    map[string]*Schema                      `json:"patternProperties,omitempty"`    // section 10.3.2.2
-	AdditionalProperties *Schema                                 `json:"additionalProperties,omitempty"` // section 10.3.2.3
-	PropertyNames        *Schema                                 `json:"propertyNames,omitempty"`        // section 10.3.2.4
-	// RFC draft-bhutton-json-schema-validation-00, section 6
-	Type             string      `json:"type,omitempty"`             // section 6.1.1
-	Enum             []any       `json:"enum,omitempty"`             // section 6.1.2
-	Const            any         `json:"const,omitempty"`            // section 6.1.3
-	MultipleOf       json.Number `json:"multipleOf,omitempty"`       // section 6.2.1
-	Maximum          json.Number `json:"maximum,omitempty"`          // section 6.2.2
-	ExclusiveMaximum json.Number `json:"exclusiveMaximum,omitempty"` // section 6.2.3
-	Minimum          json.Number `json:"minimum,omitempty"`          // section 6.2.4
+	Properties        *orderedmap.OrderedMap[string, *schema] `json:"properties,omitempty"`        // section 10.3.2.1
+	PatternProperties map[string]*schema                      `json:"patternProperties,omitempty"` // section 10.3.2.2
+	// AdditionalProperties is the additional properties of the schema as
+	// specified in section 10.3.2.3 of RFC
+	// draft-bhutton-json-schema-00.
+	//
+	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-00#section-10.3.2.3
+	//
+	//
+	// The value of "additionalProperties" MUST be a valid JSON Schema.
+	//
+	// The behavior of this keyword depends on the presence and annotation
+	// results of "properties" and "patternProperties" within the same
+	// schema object.  Validation with "additionalProperties" applies only
+	// to the child values of instance names that do not appear in the
+	// annotation results of either "properties" or "patternProperties".
+	//
+	// For all such properties, validation succeeds if the child instance
+	// validates against the "additionalProperties" schema.
+	//
+	// The annotation result of this keyword is the set of instance property
+	// names validated by this keyword's subschema.
+	//
+	// Omitting this keyword has the same assertion behavior as an empty
+	// schema.
+	//
+	// Implementations MAY choose to implement or optimize this keyword in
+	// another way that produces the same effect, such as by directly
+	// checking the names in "properties" and the patterns in
+	// "patternProperties" against the instance property set.
+	// Implementations that do not support annotation collection MUST do so.
+	AdditionalProperties *schema `json:"additionalProperties,omitempty"` // section 10.3.2.3
+	// PropertyNames is the property names of the schema as specified in
+	// section 10.3.2.4 of RFC
+	// draft-bhutton-json-schema-00.
+	//
+	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-00#section-10.3.2.4
+	//
+	// The value of this field MUST be an object.  Properties in this
+	// object, if any, MUST be arrays.  Elements in each array, if any,
+	// MUST be strings, and MUST be unique.
+	//
+	// This field specifies properties that are required if a specific
+	// other property is present.  Their requirement is dependent on the
+	// presence of the other property.
+	//
+	// Validation succeeds if, for each name that appears in both the
+	// instance and as a name within this field's value, every item in the
+	// corresponding array is also the name of a property in the instance.
+	//
+	// Omitting this field has the same behavior as an empty object.
+	PropertyNames *schema `json:"propertyNames,omitempty"` // section 10.3.2.4
+	// Type is the type of the schema as specified in section 6.1.1 of
+	// RFC draft-bhutton-json-schema-validation-00.
+	//
+	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-validation-00#section-6.1.1
+	//
+	// The value of this field MUST be a string.  This string SHOULD be a
+	// valid JSON Schema type.
+	//
+	// Omitting this field has the same behavior as an empty string.
+	Type string `json:"type,omitempty"` // section 6.1.1
+	// Enum is the enum of the schema as specified in section 6.1.2 of
+	// RFC draft-bhutton-json-schema-validation-00.
+	//
+	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-validation-00#section-6.1.2
+	//
+	// The value of this field MUST be an array.  Elements in the array,
+	// if any, MUST be unique.
+	//
+	// A numeric instance is valid against "enum" if its value is equal
+	// to one of the values in the array.
+	//
+	// Omitting this field has the same behavior as an empty array.
+	Enum []any `json:"enum,omitempty"`
+	// Const is the const of the schema as specified in section 6.1.3 of
+	// RFC draft-bhutton-json-schema-validation-00.
+	//
+	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-validation-00#section-6.1.3
+	//
+	// The value of this field MUST be an instance of the data type
+	// defined by the "type" keyword.
+	//
+	// A numeric instance is valid against "const" if its value is equal
+	// to the value of this keyword.
+	//
+	// Omitting this field has the same behavior as an empty value.
+	Const any `json:"const,omitempty"`
+	// MultipleOf specifies the multiple of the schema as specified in
+	// section 6.2.1 of RFC draft-bhutton-json-schema-validation-00.
+	//
+	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-validation-00#section-6.2.1
+	//
+	// The value of this field MUST be a JSON number, representing an
+	// instance of the data type defined by the "type" keyword.
+	//
+	// A numeric instance is valid against "multipleOf" if the result of
+	// the division of the instance by this keyword's value leaves no
+	// remainder.
+	//
+	// Omitting this field has the same behavior as an empty value.
+	MultipleOf json.Number `json:"multipleOf,omitempty"`
+	// Maximum is the maximum of the schema as specified in section 6.2.2
+	// of RFC draft-bhutton-json-schema-validation-00.
+	//
+	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-validation-00#section-6.2.2
+	//
+	// The value of this field MUST be a JSON number, representing an
+	// instance of the data type defined by the "type" keyword.
+	//
+	// A numeric instance is valid against "maximum" if it has a value
+	// less than the value of "exclusiveMaximum" and it has a value
+	// greater than the value of "minimum".
+	//
+	// Omitting this field has the same behavior as an empty value.
+	Maximum json.Number `json:"maximum,omitempty"`
+	// ExclusiveMaximum is the exclusive maximum of the schema as specified
+	// in section 6.2.3 of RFC
+	// draft-bhutton-json-schema-validation-00.
+	//
+	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-validation-00#section-6.2.3
+	//
+	// The value of this field MUST be a JSON number, representing an
+	// instance of the data type defined by the "type" keyword.
+	//
+	// A numeric instance is valid against "exclusiveMaximum" if it has a
+	// value less than the value of "minimum" and it has a value greater
+	// than the value of "exclusiveMinimum".
+	//
+	// Omitting this field has the same behavior as an empty value.
+	ExclusiveMaximum json.Number `json:"exclusiveMaximum,omitempty"`
+	// Minimum is the minimum of the schema as specified in section 6.2.4
+	// of RFC draft-bhutton-json-schema-validation-00.
+	//
+	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-validation-00#section-6.2.4
+	//
+	// The value of this field MUST be a JSON number, representing an
+	// instance of the data type defined by the "type" keyword.
+	//
+	// A numeric instance is valid against "minimum" if it has a value
+	// greater than the value of "exclusiveMinimum" and it has a value
+	// less than the value of "maximum".
+	//
+	// Omitting this field has the same behavior as an empty value.
+	Minimum json.Number `json:"minimum,omitempty"` // section 6.2.4
+	// ExclusiveMinimum is the exclusive minimum of the schema as specified
+	// in section 6.2.5 of RFC
+	// draft-bhutton-json-schema-validation-00.
+	//
+	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-validation-00#section-6.2.5
+	//
+	// The value of this field MUST be a JSON number, representing an
+	// instance of the data type defined by the "type" keyword.
+	//
+	// A numeric instance is valid against "exclusiveMinimum" if it has a
+	// value less than the value of "minimum" and it has a value greater
+	// than the value of "exclusiveMaximum".
+	//
+	// Omitting this field has the same behavior as an empty value.
 	ExclusiveMinimum json.Number `json:"exclusiveMinimum,omitempty"` // section 6.2.5
-	MaxLength        *uint64     `json:"maxLength,omitempty"`        // section 6.3.1
+	// MaxLength specifies the maximum length of the string as specified in
+	// section 6.3.1 of RFC
+	// draft-bhutton-json-schema-validation-00.
+	//
+	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-validation-00#section-6.3.1
+	//
+	// The value of this field MUST be a non-negative integer.
+	//
+	// A string instance is valid against "maxLength" if its length is
+	// less than, or equal to, the value of this field.
+	//
+	// Omitting this field has the same behavior as a value of an
+	// implementation-defined number.
+	MaxLength *uint64 `json:"maxLength,omitempty"` // section 6.3.1
 	// MinLength specifies the minimum length of the string as specified in
 	// section 6.3.2 of RFC
 	// draft-bhutton-json-schema-validation-00.
@@ -1404,7 +1600,7 @@ type Schema struct {
 	// corresponding array is also the name of a property in the instance.
 	//
 	// Omitting this field has the same behavior as an empty object.
-	DependentRequired map[string][]string `json:"dependentRequired,omitempty"` // section 6.5.4
+	DependentRequired map[string][]string `json:"dependentRequired,omitempty"`
 	// Format specifies the format of the schema as specified in section
 	// 7.3 of RFC draft-bhutton-json-schema-validation-00.
 	//
@@ -1417,7 +1613,7 @@ type Schema struct {
 	// or JSON Schema Hyper-Schema, MAY implement validation against
 	// meta-schemas that define format-specific fields that describe
 	// additional constraints beyond those specified herein.
-	Format string `json:"format,omitempty"` // RFC draft-bhutton-json-schema-validation-00, section 7
+	Format string `json:"format,omitempty"`
 	// RFC draft-bhutton-json-schema-validation-00, section 8
 	// ContentEncoding specifies the content encoding of the schema as
 	// specified in section 8.3 of RFC
@@ -1443,7 +1639,7 @@ type Schema struct {
 	// indicates that the encoding is the identity encoding, meaning that no
 	// transformation was needed in order to represent the content in a
 	// UTF-8 string.
-	ContentEncoding string `json:"contentEncoding,omitempty"` // section 8.3
+	ContentEncoding string `json:"contentEncoding,omitempty"`
 	// ContentMediaType specifies the content media type of the schema as
 	// specified in section 8.4 of RFC
 	// draft-bhutton-json-schema-validation-00.
@@ -1456,7 +1652,7 @@ type Schema struct {
 	//
 	// The value of this property MUST be a string, which MUST be a media
 	// type, as defined by RFC 2046 [RFC2046].
-	ContentMediaType string `json:"contentMediaType,omitempty"` // section 8.4
+	ContentMediaType string `json:"contentMediaType,omitempty"`
 	// ContentSchema specifies the content schema of the schema as
 	// specified in section 8.5 of RFC
 	// draft-bhutton-json-schema-validation-00.
@@ -1473,15 +1669,82 @@ type Schema struct {
 	//
 	// The value of this property MUST be a valid JSON schema.  It SHOULD be
 	// ignored if "contentMediaType" is not present.
-	ContentSchema *Schema `json:"contentSchema,omitempty"` // section 8.5
-	// RFC draft-bhutton-json-schema-validation-00, section 9
-	Title       string `json:"title,omitempty"`       // section 9.1
-	Description string `json:"description,omitempty"` // section 9.1
-	Default     any    `json:"default,omitempty"`     // section 9.2
-	Deprecated  bool   `json:"deprecated,omitempty"`  // section 9.3
-	ReadOnly    bool   `json:"readOnly,omitempty"`    // section 9.4
-	WriteOnly   bool   `json:"writeOnly,omitempty"`   // section 9.4
-	Examples    []any  `json:"examples,omitempty"`    // section 9.5
+	ContentSchema *schema `json:"contentSchema,omitempty"`
+	// Title is the title of the schema as specified in section 9.1 of
+	// RFC draft-bhutton-json-schema-validation-00.
+	//
+	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-validation-00#section-9.1
+	//
+	// The value of this field MUST be a string.  This string SHOULD be a
+	// short description of the schema.  The value of this field SHOULD be
+	// true when the instance described by this schema is a boolean.
+	//
+	// Omitting this field has the same behavior as an empty string.
+	Title string `json:"title,omitempty"`
+	// Description is the description of the schema as specified in section 9.1
+	// of RFC draft-bhutton-json-schema-validation-00.
+	//
+	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-validation-00#section-9.1
+	//
+	// The value of this field MUST be a string.  This string SHOULD be a
+	// description of the schema.  The value of this field SHOULD be
+	// true when the instance described by this schema is a boolean.
+	//
+	// Omitting this field has the same behavior as an empty string.
+	Description string `json:"description,omitempty"`
+	// Default is the default of the schema as specified in section 9.2 of
+	// RFC draft-bhutton-json-schema-validation-00.
+	//
+	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-validation-00#section-9.2
+	//
+	// The value of this field MUST be an instance of the data type defined
+	// by the "type" keyword.  This instance SHOULD be used as the default
+	// value of the instance if the instance is undefined or its value is
+	// equal to null.
+	//
+	// Omitting this field has the same behavior as an empty value.
+	Default any `json:"default,omitempty"`
+	// Deprecated is the deprecated of the schema as specified in section 9.3
+	// of RFC draft-bhutton-json-schema-validation-00.
+	//
+	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-validation-00#section-9.3
+	//
+	// The value of this field MUST be a boolean.  This boolean SHOULD be
+	// true when the instance described by this schema is deprecated.
+	//
+	// Omitting this field has the same behavior as false.
+	Deprecated bool `json:"deprecated,omitempty"`
+	// ReadOnly is the read only of the schema as specified in section 9.4
+	// of RFC draft-bhutton-json-schema-validation-00.
+	//
+	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-validation-00#section-9.4
+	//
+	// The value of this field MUST be a boolean.  This boolean SHOULD be
+	// true when the instance described by this schema is read only.
+	//
+	// Omitting this field has the same behavior as false.
+	ReadOnly bool `json:"readOnly,omitempty"` // section 9.4
+	// WriteOnly is the write only of the schema as specified in section 9.4
+	// of RFC draft-bhutton-json-schema-validation-00.
+	//
+	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-validation-00#section-9.4
+	//
+	// The value of this field MUST be a boolean.  This boolean SHOULD be
+	// true when the instance described by this schema is write only.
+	//
+	// Omitting this field has the same behavior as false.
+	WriteOnly bool `json:"writeOnly,omitempty"`
+	// Examples is the examples of the schema as specified in section 9.5
+	// of RFC draft-bhutton-json-schema-validation-00.
+	//
+	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-validation-00#section-9.5
+	//
+	// The value of this field MUST be an array.  Elements in this array,
+	// if any, MUST be valid against the "items" schema that describes
+	// the type of the array.
+	//
+	// Omitting this field has the same behavior as an empty array.
+	Examples []any `json:"examples,omitempty"`
 
 	Extras map[string]any `json:"-"`
 
@@ -1490,31 +1753,31 @@ type Schema struct {
 }
 
 var (
-	// TrueSchema defines a schema with a true value
-	TrueSchema = &Schema{boolean: &[]bool{true}[0]}
-	// FalseSchema defines a schema with a false value
-	FalseSchema = &Schema{boolean: &[]bool{false}[0]}
+	// trueSchema defines a schema with a true value
+	trueSchema = &schema{boolean: &[]bool{true}[0]}
+	// falseSchema defines a schema with a false value
+	falseSchema = &schema{boolean: &[]bool{false}[0]}
 )
 
-// Definitions hold schema definitions.
+// definitions hold schema definitions.
 //
 // http://json-schema.org/latest/json-schema-validation.html#rfc.section.5.26
 //
 // RFC draft-wright-json-schema-validation-00, section 5.26
-type Definitions map[string]*Schema
+type definitions map[string]*schema
 
-// ID represents a Schema ID type which should always be a URI.
+// id represents a Schema id type which should always be a URI.
 // See draft-bhutton-json-schema-00 section 8.2.1
-type ID string
+type id string
 
 // EmptyID is used to explicitly define an ID with no value.
-const EmptyID ID = ""
+const EmptyID id = ""
 
 // Validate is used to check if the ID looks like a proper schema.
 // This is done by parsing the ID as a URL and checking it has all the
 // relevant parts.
-func (id ID) Validate() error {
-	u, err := url.Parse(id.String())
+func (i id) Validate() error {
+	u, err := url.Parse(i.String())
 	if err != nil {
 		return fmt.Errorf("invalid URL: %w", err)
 	}
@@ -1534,39 +1797,39 @@ func (id ID) Validate() error {
 }
 
 // Anchor sets the anchor part of the schema URI.
-func (id ID) Anchor(name string) ID {
-	b := id.Base()
-	return ID(b.String() + "#" + name)
+func (i id) Anchor(name string) id {
+	b := i.Base()
+	return id(b.String() + "#" + name)
 }
 
 // Def adds or replaces a definition identifier.
-func (id ID) Def(name string) ID {
-	b := id.Base()
-	return ID(b.String() + "#/$defs/" + name)
+func (i id) Def(name string) id {
+	b := i.Base()
+	return id(b.String() + "#/$defs/" + name)
 }
 
 // Add appends the provided path to the id, and removes any
 // anchor data that might be there.
-func (id ID) Add(path string) ID {
-	b := id.Base()
+func (i id) Add(path string) id {
+	b := i.Base()
 	if !strings.HasPrefix(path, "/") {
 		path = "/" + path
 	}
-	return ID(b.String() + path)
+	return id(b.String() + path)
 }
 
 // Base removes any anchor information from the schema
-func (id ID) Base() ID {
-	s := id.String()
-	i := strings.LastIndex(s, "#")
-	if i != -1 {
-		s = s[0:i]
+func (i id) Base() id {
+	s := i.String()
+	li := strings.LastIndex(s, "#")
+	if li != -1 {
+		s = s[0:li]
 	}
 	s = strings.TrimRight(s, "/")
-	return ID(s)
+	return id(s)
 }
 
 // String provides string version of ID
-func (id ID) String() string {
-	return string(id)
+func (i id) String() string {
+	return string(i)
 }

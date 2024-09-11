@@ -209,8 +209,8 @@ type CustomTypeFieldWithInterface struct {
 	CreatedAt CustomTimeWithInterface
 }
 
-func (CustomTimeWithInterface) JSONSchema() *Schema {
-	return &Schema{
+func (CustomTimeWithInterface) JSONSchema() *schema {
+	return &schema{
 		Type:   "string",
 		Format: "date-time",
 	}
@@ -294,8 +294,8 @@ type UserWithAnchor struct {
 	Name string `json:"name" jsonschema:"anchor=Name"`
 }
 
-func (CompactDate) JSONSchema() *Schema {
-	return &Schema{
+func (CompactDate) JSONSchema() *schema {
+	return &schema{
 		Type:        "string",
 		Title:       "Compact Date",
 		Description: "Short date that only includes year and month",
@@ -341,13 +341,13 @@ type CustomSliceOuter struct {
 
 type CustomSliceType []string
 
-func (CustomSliceType) JSONSchema() *Schema {
-	return &Schema{
-		OneOf: []*Schema{{
+func (CustomSliceType) JSONSchema() *schema {
+	return &schema{
+		OneOf: []*schema{{
 			Type: "string",
 		}, {
 			Type: "array",
-			Items: &Schema{
+			Items: &schema{
 				Type: "string",
 			},
 		}},
@@ -356,17 +356,17 @@ func (CustomSliceType) JSONSchema() *Schema {
 
 type CustomMapType map[string]string
 
-func (CustomMapType) JSONSchema() *Schema {
-	properties := NewProperties()
-	properties.Set("key", &Schema{
+func (CustomMapType) JSONSchema() *schema {
+	properties := newProperties()
+	properties.Set("key", &schema{
 		Type: "string",
 	})
-	properties.Set("value", &Schema{
+	properties.Set("value", &schema{
 		Type: "string",
 	})
-	return &Schema{
+	return &schema{
 		Type: "array",
-		Items: &Schema{
+		Items: &schema{
 			Type:       "object",
 			Properties: properties,
 			Required:   []string{"key", "value"},
@@ -411,7 +411,7 @@ type SchemaExtendTest struct {
 	SchemaExtendTestBase `json:",inline"`
 }
 
-func (SchemaExtendTest) JSONSchemaExtend(base *Schema) {
+func (SchemaExtendTest) JSONSchemaExtend(base *schema) {
 	base.Properties.Delete("FirstName")
 	base.Properties.Delete("age")
 	val, _ := base.Properties.Get("LastName")
@@ -429,14 +429,14 @@ type PatternEqualsTest struct {
 }
 
 func TestReflector(t *testing.T) {
-	r := new(Reflector)
+	r := new(reflector)
 	s := "http://example.com/schema"
 	r.SetBaseSchemaID(s)
 	assert.EqualValues(t, s, r.BaseSchemaID)
 }
 
 func TestReflectFromType(t *testing.T) {
-	r := new(Reflector)
+	r := new(reflector)
 	tu := new(TestUser)
 	typ := reflect.TypeOf(tu)
 
@@ -456,24 +456,24 @@ func TestReflectFromType(t *testing.T) {
 func TestSchemaGeneration(t *testing.T) {
 	tests := []struct {
 		typ       any
-		reflector *Reflector
+		reflector *reflector
 		fixture   string
 	}{
-		{&TestUser{}, &Reflector{}, "testdata/test_user.json"},
-		{&UserWithAnchor{}, &Reflector{}, "testdata/user_with_anchor.json"},
-		{&TestUser{}, &Reflector{AssignAnchor: true}, "testdata/test_user_assign_anchor.json"},
-		{&TestUser{}, &Reflector{AllowAdditionalProperties: true}, "testdata/allow_additional_props.json"},
-		{&TestUser{}, &Reflector{RequiredFromJSONSchemaTags: true}, "testdata/required_from_jsontags.json"},
-		{&TestUser{}, &Reflector{ExpandedStruct: true}, "testdata/defaults_expanded_toplevel.json"},
-		{&TestUser{}, &Reflector{IgnoredTypes: []any{GrandfatherType{}}}, "testdata/ignore_type.json"},
-		{&TestUser{}, &Reflector{DoNotReference: true}, "testdata/no_reference.json"},
-		{&TestUser{}, &Reflector{DoNotReference: true, AssignAnchor: true}, "testdata/no_reference_anchor.json"},
-		{&RootOneOf{}, &Reflector{RequiredFromJSONSchemaTags: true}, "testdata/oneof.json"},
-		{&RootAnyOf{}, &Reflector{RequiredFromJSONSchemaTags: true}, "testdata/anyof.json"},
-		{&CustomTypeField{}, &Reflector{
-			Mapper: func(i reflect.Type) *Schema {
+		{&TestUser{}, &reflector{}, "testdata/test_user.json"},
+		{&UserWithAnchor{}, &reflector{}, "testdata/user_with_anchor.json"},
+		{&TestUser{}, &reflector{AssignAnchor: true}, "testdata/test_user_assign_anchor.json"},
+		{&TestUser{}, &reflector{AllowAdditionalProperties: true}, "testdata/allow_additional_props.json"},
+		{&TestUser{}, &reflector{RequiredFromJSONSchemaTags: true}, "testdata/required_from_jsontags.json"},
+		{&TestUser{}, &reflector{ExpandedStruct: true}, "testdata/defaults_expanded_toplevel.json"},
+		{&TestUser{}, &reflector{IgnoredTypes: []any{GrandfatherType{}}}, "testdata/ignore_type.json"},
+		{&TestUser{}, &reflector{DoNotReference: true}, "testdata/no_reference.json"},
+		{&TestUser{}, &reflector{DoNotReference: true, AssignAnchor: true}, "testdata/no_reference_anchor.json"},
+		{&RootOneOf{}, &reflector{RequiredFromJSONSchemaTags: true}, "testdata/oneof.json"},
+		{&RootAnyOf{}, &reflector{RequiredFromJSONSchemaTags: true}, "testdata/anyof.json"},
+		{&CustomTypeField{}, &reflector{
+			Mapper: func(i reflect.Type) *schema {
 				if i == reflect.TypeOf(CustomTime{}) {
-					return &Schema{
+					return &schema{
 						Type:   "string",
 						Format: "date-time",
 					}
@@ -481,8 +481,8 @@ func TestSchemaGeneration(t *testing.T) {
 				return nil
 			},
 		}, "testdata/custom_type.json"},
-		{LookupUser{}, &Reflector{BaseSchemaID: "https://example.com/schemas"}, "testdata/base_schema_id.json"},
-		{LookupUser{}, &Reflector{
+		{LookupUser{}, &reflector{BaseSchemaID: "https://example.com/schemas"}, "testdata/base_schema_id.json"},
+		{LookupUser{}, &reflector{
 			Lookup: func(i reflect.Type) ID {
 				switch i {
 				case reflect.TypeOf(LookupUser{}):
@@ -493,7 +493,7 @@ func TestSchemaGeneration(t *testing.T) {
 				return EmptyID
 			},
 		}, "testdata/lookup.json"},
-		{&LookupUser{}, &Reflector{
+		{&LookupUser{}, &reflector{
 			BaseSchemaID:   "https://example.com/schemas",
 			ExpandedStruct: true,
 			AssignAnchor:   true,
@@ -507,14 +507,14 @@ func TestSchemaGeneration(t *testing.T) {
 				return EmptyID
 			},
 		}, "testdata/lookup_expanded.json"},
-		{&Outer{}, &Reflector{ExpandedStruct: true}, "testdata/inlining_inheritance.json"},
-		{&OuterNamed{}, &Reflector{ExpandedStruct: true}, "testdata/inlining_embedded.json"},
-		{&OuterNamed{}, &Reflector{ExpandedStruct: true, AssignAnchor: true}, "testdata/inlining_embedded_anchored.json"},
-		{&OuterInlined{}, &Reflector{ExpandedStruct: true}, "testdata/inlining_tag.json"},
-		{&OuterPtr{}, &Reflector{ExpandedStruct: true}, "testdata/inlining_ptr.json"},
-		{&MinValue{}, &Reflector{}, "testdata/schema_with_minimum.json"},
-		{&TestNullable{}, &Reflector{}, "testdata/nullable.json"},
-		{&GrandfatherType{}, &Reflector{
+		{&Outer{}, &reflector{ExpandedStruct: true}, "testdata/inlining_inheritance.json"},
+		{&OuterNamed{}, &reflector{ExpandedStruct: true}, "testdata/inlining_embedded.json"},
+		{&OuterNamed{}, &reflector{ExpandedStruct: true, AssignAnchor: true}, "testdata/inlining_embedded_anchored.json"},
+		{&OuterInlined{}, &reflector{ExpandedStruct: true}, "testdata/inlining_tag.json"},
+		{&OuterPtr{}, &reflector{ExpandedStruct: true}, "testdata/inlining_ptr.json"},
+		{&MinValue{}, &reflector{}, "testdata/schema_with_minimum.json"},
+		{&TestNullable{}, &reflector{}, "testdata/nullable.json"},
+		{&GrandfatherType{}, &reflector{
 			AdditionalFields: func(_ reflect.Type) []reflect.StructField {
 				return []reflect.StructField{
 					{
@@ -526,14 +526,14 @@ func TestSchemaGeneration(t *testing.T) {
 				}
 			},
 		}, "testdata/custom_additional.json"},
-		{&TestDescriptionOverride{}, &Reflector{}, "testdata/test_description_override.json"},
-		{&CompactDate{}, &Reflector{}, "testdata/compact_date.json"},
-		{&CustomSliceOuter{}, &Reflector{}, "testdata/custom_slice_type.json"},
-		{&CustomMapOuter{}, &Reflector{}, "testdata/custom_map_type.json"},
-		{&CustomTypeFieldWithInterface{}, &Reflector{}, "testdata/custom_type_with_interface.json"},
-		{&PatternTest{}, &Reflector{}, "testdata/commas_in_pattern.json"},
-		{&RecursiveExample{}, &Reflector{}, "testdata/recursive.json"},
-		{&KeyNamed{}, &Reflector{
+		{&TestDescriptionOverride{}, &reflector{}, "testdata/test_description_override.json"},
+		{&CompactDate{}, &reflector{}, "testdata/compact_date.json"},
+		{&CustomSliceOuter{}, &reflector{}, "testdata/custom_slice_type.json"},
+		{&CustomMapOuter{}, &reflector{}, "testdata/custom_map_type.json"},
+		{&CustomTypeFieldWithInterface{}, &reflector{}, "testdata/custom_type_with_interface.json"},
+		{&PatternTest{}, &reflector{}, "testdata/commas_in_pattern.json"},
+		{&RecursiveExample{}, &reflector{}, "testdata/recursive.json"},
+		{&KeyNamed{}, &reflector{
 			KeyNamer: func(s string) string {
 				switch s {
 				case "ThisWasLeftAsIs":
@@ -556,11 +556,11 @@ func TestSchemaGeneration(t *testing.T) {
 				return "unknown case"
 			},
 		}, "testdata/keynamed.json"},
-		{MapType{}, &Reflector{}, "testdata/map_type.json"},
-		{ArrayType{}, &Reflector{}, "testdata/array_type.json"},
-		{SchemaExtendTest{}, &Reflector{}, "testdata/custom_type_extend.json"},
-		{Expression{}, &Reflector{}, "testdata/schema_with_expression.json"},
-		{PatternEqualsTest{}, &Reflector{}, "testdata/equals_in_pattern.json"},
+		{MapType{}, &reflector{}, "testdata/map_type.json"},
+		{ArrayType{}, &reflector{}, "testdata/array_type.json"},
+		{SchemaExtendTest{}, &reflector{}, "testdata/custom_type_extend.json"},
+		{Expression{}, &reflector{}, "testdata/schema_with_expression.json"},
+		{PatternEqualsTest{}, &reflector{}, "testdata/equals_in_pattern.json"},
 	}
 
 	for _, tt := range tests {
@@ -574,11 +574,11 @@ func TestSchemaGeneration(t *testing.T) {
 }
 
 func TestBaselineUnmarshal(t *testing.T) {
-	r := &Reflector{}
+	r := &reflector{}
 	compareSchemaOutput(t, "testdata/test_user.json", r, &TestUser{})
 }
 
-func compareSchemaOutput(t *testing.T, f string, r *Reflector, obj any) {
+func compareSchemaOutput(t *testing.T, f string, r *reflector, obj any) {
 	t.Helper()
 	expectedJSON, err := os.ReadFile(f)
 	require.NoError(t, err)
@@ -627,7 +627,7 @@ func TestArrayExtraTags(t *testing.T) {
 		TestURIs []string `jsonschema:"type=array,format=uri,pattern=^https://.*"`
 	}
 
-	r := new(Reflector)
+	r := new(reflector)
 	schema := r.Reflect(&URIArray{})
 	d := schema.Definitions["URIArray"]
 	require.NotNil(t, d)
@@ -648,7 +648,7 @@ func TestFieldNameTag(t *testing.T) {
 		Count int    `yaml:"count"`
 	}
 
-	r := Reflector{
+	r := reflector{
 		FieldNameTag: "yaml",
 	}
 	compareSchemaOutput(t, "testdata/test_config.json", &r, &Config{})
@@ -662,7 +662,7 @@ func TestFieldOneOfRef(t *testing.T) {
 		IPAddressesAny []any `json:"ip_addresses_any,omitempty" jsonschema:"anyof_ref=#/$defs/ipv4;#/$defs/ipv6"`
 	}
 
-	r := &Reflector{}
+	r := &reflector{}
 	compareSchemaOutput(t, "testdata/oneof_ref.json", r, &Server{})
 }
 
@@ -672,7 +672,7 @@ func TestNumberHandling(t *testing.T) {
 		Float32 float32 `json:"float32" jsonschema:"default=12.5"`
 	}
 
-	r := &Reflector{}
+	r := &reflector{}
 	compareSchemaOutput(t, "testdata/number_handling.json", r, &NumberHandler{})
 	fixtureContains(t, "testdata/number_handling.json", `"default": 12`)
 	fixtureContains(t, "testdata/number_handling.json", `"default": 12.5`)
@@ -684,7 +684,7 @@ func TestArrayHandling(t *testing.T) {
 		MinVal []float64 `json:"min_val" jsonschema:"minimum=2.5"`
 	}
 
-	r := &Reflector{}
+	r := &reflector{}
 	compareSchemaOutput(t, "testdata/array_handling.json", r, &ArrayHandler{})
 	fixtureContains(t, "testdata/array_handling.json", `"minLength": 2`)
 	fixtureContains(t, "testdata/array_handling.json", `"minimum": 2.5`)
@@ -698,7 +698,7 @@ func TestUnsignedIntHandling(t *testing.T) {
 		MaxItems []string `json:"max_items" jsonschema:"maxItems=0"`
 	}
 
-	r := &Reflector{}
+	r := &reflector{}
 	compareSchemaOutput(t, "testdata/unsigned_int_handling.json", r, &UnsignedIntHandler{})
 	fixtureContains(t, "testdata/unsigned_int_handling.json", `"minLength": 0`)
 	fixtureContains(t, "testdata/unsigned_int_handling.json", `"maxLength": 0`)
@@ -712,7 +712,7 @@ func TestJSONSchemaFormat(t *testing.T) {
 		Odds  []string `json:"odds" jsonschema:"format=odd"`
 	}
 
-	r := &Reflector{}
+	r := &reflector{}
 	compareSchemaOutput(t, "testdata/with_custom_format.json", r, &WithCustomFormat{})
 	fixtureContains(t, "testdata/with_custom_format.json", `"format": "date"`)
 	fixtureContains(t, "testdata/with_custom_format.json", `"format": "odd"`)
@@ -743,12 +743,12 @@ func (AliasObjectB) JSONSchemaAlias() any {
 }
 
 func TestJSONSchemaProperty(t *testing.T) {
-	r := &Reflector{}
+	r := &reflector{}
 	compareSchemaOutput(t, "testdata/schema_property_alias.json", r, &AliasPropertyObjectBase{})
 }
 
 func TestJSONSchemaAlias(t *testing.T) {
-	r := &Reflector{}
+	r := &reflector{}
 	compareSchemaOutput(t, "testdata/schema_alias.json", r, &AliasObjectB{})
 	compareSchemaOutput(t, "testdata/schema_alias_2.json", r, &AliasObjectC{})
 }

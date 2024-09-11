@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"reflect"
 	"strings"
 )
 
@@ -180,7 +181,7 @@ type ChatCompletionResponseFormat struct {
 type ChatCompletionResponseFormatJSONSchema struct {
 	Name        string `json:"name"`                  // Name is the name of the chat completion response format json schema.
 	Description string `json:"description,omitempty"` // Description is the description of the chat completion response format json schema.
-	Schema      Schema `json:"schema"`                // Schema is the schema of the chat completion response format json schema.
+	Schema      schema `json:"schema"`                // Schema is the schema of the chat completion response format json schema.
 	Strict      bool   `json:"strict"`                // Strict is the strict of the chat completion response format json schema.
 }
 
@@ -446,7 +447,8 @@ func (c *Client) CreateChatCompletionJSON(
 	request ChatCompletionRequest,
 	output any,
 ) (err error) {
-	schema := Reflect(output)
+	r := &reflector{}
+	schema := r.ReflectFromType(reflect.TypeOf(output))
 	request.ResponseFormat = &ChatCompletionResponseFormat{}
 	request.ResponseFormat.JSONSchema = &ChatCompletionResponseFormatJSONSchema{
 		Name:        schema.Title,
