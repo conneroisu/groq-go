@@ -13,6 +13,7 @@
 - [x] Supports audio translation.
 - [x] Supports Tool Use.
 - [x] Supports Function Calling.
+- [x] JSON Schema Generation from structs.
 
 ## Installation
 
