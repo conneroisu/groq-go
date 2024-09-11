@@ -3,7 +3,6 @@ package groq
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net"
 	"net/url"
@@ -17,7 +16,36 @@ import (
 )
 
 // version is the JSON Schema version.
-var version = "https://json-schema.org/draft/2020-12/schema"
+const version = "https://json-schema.org/draft/2020-12/schema"
+
+// Available Go defined types for JSON Schema Validation.
+//
+// https://datatracker.ietf.org/doc/html/draft-wright-json-schema-validation-00#section-7.3
+//
+// RFC draft-wright-json-schema-validation-00, section 7.3
+var (
+	// trueSchema defines a schema with a true value
+	trueSchema = &schema{boolean: &[]bool{true}[0]}
+	// falseSchema defines a schema with a false value
+	falseSchema = &schema{boolean: &[]bool{false}[0]}
+
+	timeType = reflect.TypeOf(time.Time{}) // date-time RFC section 7.3.1
+	ipType   = reflect.TypeOf(net.IP{})    // ipv4 and ipv6 RFC section 7.3.4, 7.3.5
+	uriType  = reflect.TypeOf(url.URL{})   // uri RFC section 7.3.6
+
+	byteSliceType  = reflect.TypeOf([]byte(nil))
+	rawMessageType = reflect.TypeOf(json.RawMessage{})
+
+	customType                    = reflect.TypeOf((*customSchemaImpl)(nil)).Elem()
+	extendType                    = reflect.TypeOf((*extendSchemaImpl)(nil)).Elem()
+	customStructGetFieldDocString = reflect.TypeOf((*customSchemaGetFieldDocString)(nil)).Elem()
+	protoEnumType                 = reflect.TypeOf((*protoEnum)(nil)).Elem()
+	matchFirstCap                 = regexp.MustCompile("(.)([A-Z][a-z]+)")
+	matchAllCap                   = regexp.MustCompile("([a-z0-9])([A-Z])")
+
+	customAliasSchema         = reflect.TypeOf((*aliasSchemaImpl)(nil)).Elem()
+	customPropertyAliasSchema = reflect.TypeOf((*propertyAliasSchemaImpl)(nil)).Elem()
+)
 
 // customSchemaImpl is used to detect if the type provides it's own
 // custom Schema Type definition to use instead. Very useful for situations
@@ -45,20 +73,12 @@ type propertyAliasSchemaImpl interface {
 	JSONSchemaProperty(prop string) any
 }
 
-var customAliasSchema = reflect.TypeOf((*aliasSchemaImpl)(nil)).Elem()
-var customPropertyAliasSchema = reflect.TypeOf((*propertyAliasSchemaImpl)(nil)).Elem()
-
-var customType = reflect.TypeOf((*customSchemaImpl)(nil)).Elem()
-var extendType = reflect.TypeOf((*extendSchemaImpl)(nil)).Elem()
-
 // customSchemaGetFieldDocString
 type customSchemaGetFieldDocString interface {
 	GetFieldDocString(fieldName string) string
 }
 
 type customGetFieldDocString func(fieldName string) string
-
-var customStructGetFieldDocString = reflect.TypeOf((*customSchemaGetFieldDocString)(nil)).Elem()
 
 // A reflector reflects values into a Schema.
 type reflector struct {
@@ -70,7 +90,7 @@ type reflector struct {
 	// If no `BaseSchemaID` is provided, we'll take the type's complete package path
 	// and use that as a base instead. Set `Anonymous` to try if you do not want to
 	// include a schema ID.
-	BaseSchemaID id
+	BaseSchemaID schemaID
 
 	// Anonymous when true will hide the auto-generated Schema ID and provide what is
 	// known as an "anonymous schema". As a rule, this is not recommended.
@@ -117,7 +137,7 @@ type reflector struct {
 	// types to Schema IDs. This allows existing schema documents to be referenced
 	// by their ID instead of being embedded into the current schema definitions.
 	// Reflected types will never be pointers, only underlying elements.
-	Lookup func(reflect.Type) id
+	Lookup func(reflect.Type) schemaID
 
 	// Mapper is a function that can be used to map custom Go types to jsonschema schemas.
 	Mapper func(reflect.Type) *schema
@@ -165,7 +185,7 @@ func (r *reflector) ReflectFromType(t reflect.Type) *schema {
 	name := r.typeName(t)
 
 	s := new(schema)
-	definitions := definitions{}
+	definitions := schemaDefinitions{}
 	s.Definitions = definitions
 	bs := r.reflectTypeToSchemaWithID(definitions, t)
 	if r.ExpandedStruct {
@@ -179,7 +199,7 @@ func (r *reflector) ReflectFromType(t reflect.Type) *schema {
 	if !r.Anonymous && s.ID == EmptyID {
 		baseSchemaID := r.BaseSchemaID
 		if baseSchemaID == EmptyID {
-			i := id("https://" + t.PkgPath())
+			i := schemaID("https://" + t.PkgPath())
 			if err := i.Validate(); err == nil {
 				// it's okay to silently ignore URL errors
 				baseSchemaID = i
@@ -198,37 +218,21 @@ func (r *reflector) ReflectFromType(t reflect.Type) *schema {
 	return s
 }
 
-// Available Go defined types for JSON Schema Validation.
-//
-// https://datatracker.ietf.org/doc/html/draft-wright-json-schema-validation-00#section-7.3
-//
-// RFC draft-wright-json-schema-validation-00, section 7.3
-var (
-	timeType = reflect.TypeOf(time.Time{}) // date-time RFC section 7.3.1
-	ipType   = reflect.TypeOf(net.IP{})    // ipv4 and ipv6 RFC section 7.3.4, 7.3.5
-	uriType  = reflect.TypeOf(url.URL{})   // uri RFC section 7.3.6
-)
-
-// Byte slices will be encoded as base64
-var byteSliceType = reflect.TypeOf([]byte(nil))
-
-// Except for json.RawMessage
-var rawMessageType = reflect.TypeOf(json.RawMessage{})
-
 // Go code generated from protobuf enum types should fulfil this interface.
 type protoEnum interface {
 	EnumDescriptor() ([]byte, []int)
 }
 
-var protoEnumType = reflect.TypeOf((*protoEnum)(nil)).Elem()
-
 // SetBaseSchemaID is a helper use to be able to set the reflectors base
 // schema ID from a string as opposed to then ID instance.
 func (r *reflector) SetBaseSchemaID(identifier string) {
-	r.BaseSchemaID = id(identifier)
+	r.BaseSchemaID = schemaID(identifier)
 }
 
-func (r *reflector) refOrReflectTypeToSchema(definitions definitions, t reflect.Type) *schema {
+func (r *reflector) refOrReflectTypeToSchema(
+	definitions schemaDefinitions,
+	t reflect.Type,
+) *schema {
 	id := r.lookupID(t)
 	if id != EmptyID {
 		return &schema{
@@ -244,7 +248,10 @@ func (r *reflector) refOrReflectTypeToSchema(definitions definitions, t reflect.
 	return r.reflectTypeToSchemaWithID(definitions, t)
 }
 
-func (r *reflector) reflectTypeToSchemaWithID(defs definitions, t reflect.Type) *schema {
+func (r *reflector) reflectTypeToSchemaWithID(
+	defs schemaDefinitions,
+	t reflect.Type,
+) *schema {
 	s := r.reflectTypeToSchema(defs, t)
 	if s != nil {
 		if r.Lookup != nil {
@@ -257,7 +264,10 @@ func (r *reflector) reflectTypeToSchemaWithID(defs definitions, t reflect.Type) 
 	return s
 }
 
-func (r *reflector) reflectTypeToSchema(definitions definitions, t reflect.Type) *schema {
+func (r *reflector) reflectTypeToSchema(
+	definitions schemaDefinitions,
+	t reflect.Type,
+) *schema {
 	// only try to reflect non-pointers
 	if t.Kind() == reflect.Ptr {
 		return r.refOrReflectTypeToSchema(definitions, t.Elem())
@@ -345,7 +355,10 @@ func (r *reflector) reflectTypeToSchema(definitions definitions, t reflect.Type)
 	return st
 }
 
-func (r *reflector) reflectCustomSchema(definitions definitions, t reflect.Type) *schema {
+func (r *reflector) reflectCustomSchema(
+	definitions schemaDefinitions,
+	t reflect.Type,
+) *schema {
 	if t.Kind() == reflect.Ptr {
 		return r.reflectCustomSchema(definitions, t.Elem())
 	}
@@ -364,7 +377,11 @@ func (r *reflector) reflectCustomSchema(definitions definitions, t reflect.Type)
 	return nil
 }
 
-func (r *reflector) reflectSchemaExtend(definitions definitions, t reflect.Type, s *schema) *schema {
+func (r *reflector) reflectSchemaExtend(
+	definitions schemaDefinitions,
+	t reflect.Type,
+	s *schema,
+) *schema {
 	if t.Implements(extendType) {
 		v := reflect.New(t)
 		o := v.Interface().(extendSchemaImpl)
@@ -377,7 +394,11 @@ func (r *reflector) reflectSchemaExtend(definitions definitions, t reflect.Type,
 	return s
 }
 
-func (r *reflector) reflectSliceOrArray(definitions definitions, t reflect.Type, st *schema) {
+func (r *reflector) reflectSliceOrArray(
+	definitions schemaDefinitions,
+	t reflect.Type,
+	st *schema,
+) {
 	if t == rawMessageType {
 		return
 	}
@@ -397,13 +418,17 @@ func (r *reflector) reflectSliceOrArray(definitions definitions, t reflect.Type,
 		st.Type = "string"
 		// NOTE: ContentMediaType is not set here
 		st.ContentEncoding = "base64"
-	} else {
-		st.Type = "array"
-		st.Items = r.refOrReflectTypeToSchema(definitions, t.Elem())
+		return
 	}
+	st.Type = "array"
+	st.Items = r.refOrReflectTypeToSchema(definitions, t.Elem())
 }
 
-func (r *reflector) reflectMap(definitions definitions, t reflect.Type, st *schema) {
+func (r *reflector) reflectMap(
+	definitions schemaDefinitions,
+	t reflect.Type,
+	st *schema,
+) {
 	r.addDefinition(definitions, t, st)
 
 	st.Type = "object"
@@ -425,7 +450,11 @@ func (r *reflector) reflectMap(definitions definitions, t reflect.Type, st *sche
 }
 
 // Reflects a struct to a JSON Schema type.
-func (r *reflector) reflectStruct(definitions definitions, t reflect.Type, s *schema) {
+func (r *reflector) reflectStruct(
+	definitions schemaDefinitions,
+	t reflect.Type,
+	s *schema,
+) {
 	// Handle special types
 	switch t {
 	case timeType: // date-time RFC section 7.3.1
@@ -461,7 +490,11 @@ func (r *reflector) reflectStruct(definitions definitions, t reflect.Type, s *sc
 	}
 }
 
-func (r *reflector) reflectStructFields(st *schema, definitions definitions, t reflect.Type) {
+func (r *reflector) reflectStructFields(
+	st *schema,
+	definitions schemaDefinitions,
+	t reflect.Type,
+) {
 	if t.Kind() == reflect.Ptr {
 		t = t.Elem()
 	}
@@ -505,7 +538,7 @@ func (r *reflector) reflectStructFields(st *schema, definitions definitions, t r
 			property = r.refOrReflectTypeToSchema(definitions, f.Type)
 		}
 
-		property.structKeywordsFromTags(f, st, name)
+		property.keywordsFromTags(f, st, name)
 		if property.Description == "" {
 			property.Description = r.lookupComment(t, f.Name)
 		}
@@ -566,7 +599,7 @@ func (r *reflector) lookupComment(t reflect.Type, name string) string {
 }
 
 // addDefinition will append the provided schema. If needed, an ID and anchor will also be added.
-func (r *reflector) addDefinition(definitions definitions, t reflect.Type, s *schema) {
+func (r *reflector) addDefinition(definitions schemaDefinitions, t reflect.Type, s *schema) {
 	name := r.typeName(t)
 	if name == "" {
 		return
@@ -575,7 +608,7 @@ func (r *reflector) addDefinition(definitions definitions, t reflect.Type, s *sc
 }
 
 // refDefinition will provide a schema with a reference to an existing definition.
-func (r *reflector) refDefinition(definitions definitions, t reflect.Type) *schema {
+func (r *reflector) refDefinition(definitions schemaDefinitions, t reflect.Type) *schema {
 	if r.DoNotReference {
 		return nil
 	}
@@ -591,7 +624,7 @@ func (r *reflector) refDefinition(definitions definitions, t reflect.Type) *sche
 	}
 }
 
-func (r *reflector) lookupID(t reflect.Type) id {
+func (r *reflector) lookupID(t reflect.Type) schemaID {
 	if r.Lookup != nil {
 		if t.Kind() == reflect.Ptr {
 			t = t.Elem()
@@ -602,7 +635,7 @@ func (r *reflector) lookupID(t reflect.Type) id {
 	return EmptyID
 }
 
-func (t *schema) structKeywordsFromTags(f reflect.StructField, parent *schema, propertyName string) {
+func (t *schema) keywordsFromTags(f reflect.StructField, parent *schema, propertyName string) {
 	t.Description = f.Tag.Get("jsonschema_description")
 
 	tags := splitOnUnescapedCommas(f.Tag.Get("jsonschema"))
@@ -850,7 +883,6 @@ func (t *schema) arrayKeywords(tags []string) {
 	}
 
 	if len(unprocessed) == 0 {
-		// we don't have anything else to process
 		return
 	}
 
@@ -892,21 +924,21 @@ func (t *schema) setExtra(key, val string) {
 		case bool:
 			t.Extras[key] = (val == "true" || val == "t")
 		}
-	} else {
-		switch key {
-		case "minimum":
-			t.Extras[key], _ = strconv.Atoi(val)
-		default:
-			var x any
-			if val == "true" {
-				x = true
-			} else if val == "false" {
-				x = false
-			} else {
-				x = val
-			}
-			t.Extras[key] = x
+		return
+	}
+	switch key {
+	case "minimum":
+		t.Extras[key], _ = strconv.Atoi(val)
+	default:
+		var x any
+		if val == "true" {
+			x = true
+		} else if val == "false" {
+			x = false
+		} else {
+			x = val
 		}
+		t.Extras[key] = x
 	}
 }
 
@@ -1115,10 +1147,10 @@ func splitOnUnescapedCommas(tagString string) []string {
 		}
 		if ret[i][len(ret[i])-1] == '\\' {
 			ret[i] = ret[i][:len(ret[i])-1] + "," + nextTag
-		} else {
-			ret = append(ret, nextTag)
-			i++
+			continue
 		}
+		ret = append(ret, nextTag)
+		i++
 	}
 	return ret
 }
@@ -1126,9 +1158,6 @@ func splitOnUnescapedCommas(tagString string) []string {
 func fullyQualifiedTypeName(t reflect.Type) string {
 	return t.PkgPath() + "." + t.Name()
 }
-
-var matchFirstCap = regexp.MustCompile("(.)([A-Z][a-z]+)")
-var matchAllCap = regexp.MustCompile("([a-z0-9])([A-Z])")
 
 // ToSnakeCase converts the provided string into snake case using dashes.
 // This is useful for Schema IDs and definitions to be coherent with
@@ -1149,12 +1178,12 @@ func newProperties() *orderedmap.OrderedMap[string, *schema] {
 // RFC draft-bhutton-json-schema-00 section 4.3
 type schema struct {
 	// RFC draft-bhutton-json-schema-00
-	Version     string      `json:"$schema,omitempty"`     // section 8.1.1
-	ID          id          `json:"$id,omitempty"`         // section 8.2.1
-	Anchor      string      `json:"$anchor,omitempty"`     // section 8.2.2
-	Ref         string      `json:"$ref,omitempty"`        // section 8.2.3.1
-	DynamicRef  string      `json:"$dynamicRef,omitempty"` // section 8.2.3.2
-	Definitions definitions `json:"$defs,omitempty"`       // section 8.2.4
+	Version     string            `json:"$schema,omitempty"`     // section 8.1.1
+	ID          schemaID          `json:"$id,omitempty"`         // section 8.2.1
+	Anchor      string            `json:"$anchor,omitempty"`     // section 8.2.2
+	Ref         string            `json:"$ref,omitempty"`        // section 8.2.3.1
+	DynamicRef  string            `json:"$dynamicRef,omitempty"` // section 8.2.3.2
+	Definitions schemaDefinitions `json:"$defs,omitempty"`       // section 8.2.4
 	// Comments specifies a comment for the schema as
 	// specified RFC draft-bhutton-json-schema-00 section 8.3
 	//
@@ -1252,8 +1281,47 @@ type schema struct {
 	Items       *schema   `json:"items,omitempty"`       // section 10.3.1.2  (replaces additionalItems)
 	Contains    *schema   `json:"contains,omitempty"`    // section 10.3.1.3
 	// RFC draft-bhutton-json-schema-00 section 10.3.2 (sub-schemas)
-	Properties        *orderedmap.OrderedMap[string, *schema] `json:"properties,omitempty"`        // section 10.3.2.1
-	PatternProperties map[string]*schema                      `json:"patternProperties,omitempty"` // section 10.3.2.2
+	// Properties are the properties of the schema as specified in section 10.3.2.1 of RFC
+	// draft-bhutton-json-schema-00.
+	//
+	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-00#section-10.3.2.1
+	//
+	// The value of "properties" MUST be an object.  Each value of this
+	// object MUST be a valid JSON Schema.
+	//
+	// Validation succeeds if, for each name that appears in both the
+	// instance and as a name within this field's value, the child
+	// instance for that name successfully validates against the
+	// corresponding schema.
+	//
+	// The annotation result of this field is the set of instance property
+	// names matched by this keyword.
+	//
+	// Omitting this field has the same assertion behavior as an empty
+	// object.
+	Properties *orderedmap.OrderedMap[string, *schema] `json:"properties,omitempty"`
+	// PatternProperties are the pattern properties of the schema as specified in section 10.3.2.2 of RFC
+	// draft-bhutton-json-schema-00.
+	//
+	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-00#section-10.3.2.2
+	//
+	// The value of "patternProperties" MUST be an object.  Each property
+	// name of this object SHOULD be a valid regular expression, according
+	// to the ECMA-262 regular expression dialect.  Each property value of
+	// this object MUST be a valid JSON Schema.
+	//
+	// Validation succeeds if, for each instance name that matches any
+	// regular expressions that appear as a property name in this field's
+	// value, the child instance for that name successfully validates
+	// against each schema that corresponds to a matching regular
+	// expression.
+	//
+	// The annotation result of this field is the set of instance property
+	// names matched by this keyword.
+	//
+	// Omitting this field has the same assertion behavior as an empty
+	// object.
+	PatternProperties map[string]*schema `json:"patternProperties,omitempty"` // section 10.3.2.2
 	// AdditionalProperties is the additional properties of the schema as
 	// specified in section 10.3.2.3 of RFC
 	// draft-bhutton-json-schema-00.
@@ -1752,84 +1820,77 @@ type schema struct {
 	boolean *bool
 }
 
-var (
-	// trueSchema defines a schema with a true value
-	trueSchema = &schema{boolean: &[]bool{true}[0]}
-	// falseSchema defines a schema with a false value
-	falseSchema = &schema{boolean: &[]bool{false}[0]}
-)
-
-// definitions hold schema definitions.
+// schemaDefinitions hold schema schemaDefinitions.
 //
 // http://json-schema.org/latest/json-schema-validation.html#rfc.section.5.26
 //
 // RFC draft-wright-json-schema-validation-00, section 5.26
-type definitions map[string]*schema
+type schemaDefinitions map[string]*schema
 
-// id represents a Schema id type which should always be a URI.
+// schemaID represents a Schema schemaID type which should always be a URI.
 // See draft-bhutton-json-schema-00 section 8.2.1
-type id string
+type schemaID string
 
 // EmptyID is used to explicitly define an ID with no value.
-const EmptyID id = ""
+const EmptyID schemaID = ""
 
 // Validate is used to check if the ID looks like a proper schema.
 // This is done by parsing the ID as a URL and checking it has all the
 // relevant parts.
-func (i id) Validate() error {
+func (i schemaID) Validate() error {
 	u, err := url.Parse(i.String())
 	if err != nil {
 		return fmt.Errorf("invalid URL: %w", err)
 	}
 	if u.Hostname() == "" {
-		return errors.New("missing hostname")
+		return fmt.Errorf("missing hostname: %s", u.Hostname())
 	}
 	if !strings.Contains(u.Hostname(), ".") {
-		return errors.New("hostname does not look valid")
+		return fmt.Errorf("hostname does not look valid: %s", u.Hostname())
 	}
 	if u.Path == "" {
-		return errors.New("path is expected")
+		return fmt.Errorf("path is expected: %s", u.Path)
 	}
 	if u.Scheme != "https" && u.Scheme != "http" {
-		return errors.New("unexpected schema")
+		return fmt.Errorf("unexpected schema: %s", u.Scheme)
 	}
 	return nil
 }
 
 // Anchor sets the anchor part of the schema URI.
-func (i id) Anchor(name string) id {
+func (i schemaID) Anchor(name string) schemaID {
 	b := i.Base()
-	return id(b.String() + "#" + name)
+	return schemaID(b.String() + "#" + name)
 }
 
 // Def adds or replaces a definition identifier.
-func (i id) Def(name string) id {
+func (i schemaID) Def(name string) schemaID {
 	b := i.Base()
-	return id(b.String() + "#/$defs/" + name)
+	return schemaID(b.String() + "#/$defs/" + name)
 }
 
 // Add appends the provided path to the id, and removes any
 // anchor data that might be there.
-func (i id) Add(path string) id {
+func (i schemaID) Add(path string) schemaID {
 	b := i.Base()
 	if !strings.HasPrefix(path, "/") {
 		path = "/" + path
 	}
-	return id(b.String() + path)
+	return schemaID(b.String() + path)
 }
 
 // Base removes any anchor information from the schema
-func (i id) Base() id {
+func (i schemaID) Base() schemaID {
 	s := i.String()
 	li := strings.LastIndex(s, "#")
 	if li != -1 {
 		s = s[0:li]
 	}
 	s = strings.TrimRight(s, "/")
-	return id(s)
+	return schemaID(s)
 }
 
 // String provides string version of ID
-func (i id) String() string {
+func (i schemaID) String() string {
 	return string(i)
 }
