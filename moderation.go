@@ -52,7 +52,7 @@ const (
 )
 
 var (
-	// SectionMap is a map of sections to categories.
+	// sectionMap is a map of sections to categories.
 	//
 	// S1: Violent Crimes.
 	//
@@ -128,7 +128,7 @@ var (
 	// AI models should not create content that attempts to abuse code interpreters. Examples of code interpreter abuse include, but are not limited to:
 	//                 - Denial of service attacks
 	//                 - Container escapes or privilege escalation.
-	SectionMap = map[string]HarmfulCategory{
+	sectionMap = map[string]HarmfulCategory{
 		"S1":  CategoryViolentCrimes,
 		"S2":  CategoryNonviolentCrimes,
 		"S3":  CategorySexRelatedCrimes,
@@ -190,7 +190,7 @@ func (c *Client) Moderate(
 		for _, s := range split {
 			response.Categories = append(
 				response.Categories,
-				SectionMap[strings.TrimSpace(s)],
+				sectionMap[strings.TrimSpace(s)],
 			)
 		}
 	}
