@@ -13,32 +13,26 @@ import (
 )
 
 func main() {
-	ctx := context.Background()
-	if err := run(ctx); err != nil {
+	if err := run(context.Background()); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 }
 
-// Response is a response from the models endpoint.
-type Response struct {
+// Responses is a response from the models endpoint.
+type Responses []struct {
 	Title string `json:"title" jsonschema:"title=Poem Title,description=Title of the poem, minLength=1, maxLength=20"`
 	Text  string `json:"text" jsonschema:"title=Poem Text,description=Text of the poem, minLength=10, maxLength=200"`
 }
-type resps []Response
 
-func (r *resps) MarshalJSON() ([]byte, error) {
-	return json.Marshal(r)
-}
 func run(
 	ctx context.Context,
 ) error {
-	key := os.Getenv("GROQ_KEY")
-	client, err := groq.NewClient(key)
+	client, err := groq.NewClient(os.Getenv("GROQ_KEY"))
 	if err != nil {
 		return err
 	}
-	resp := resps{}
+	resp := &Responses{}
 	err = client.CreateChatCompletionJSON(ctx, groq.ChatCompletionRequest{
 		Model: groq.Llama3Groq70B8192ToolUsePreview,
 		Messages: []groq.ChatCompletionMessage{
@@ -48,7 +42,7 @@ func run(
 			},
 		},
 		MaxTokens: 2000,
-	}, &resp)
+	}, resp)
 	if err != nil {
 		return err
 	}
