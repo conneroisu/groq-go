@@ -19,7 +19,7 @@ import (
 
 func TestID(t *testing.T) {
 	base := "https://github.com/conneroisu/groq-go/schema"
-	id := id(base)
+	id := schemaID(base)
 
 	assert.Equal(t, base, id.String())
 
@@ -37,7 +37,7 @@ func TestID(t *testing.T) {
 }
 
 func TestIDValidation(t *testing.T) {
-	id := id("https://invopop.com/schema/user")
+	id := schemaID("https://invopop.com/schema/user")
 	assert.NoError(t, id.Validate())
 
 	id = "https://encoding/json"
@@ -483,12 +483,12 @@ func TestSchemaGeneration(t *testing.T) {
 		}, "testdata/custom_type.json"},
 		{LookupUser{}, &reflector{BaseSchemaID: "https://example.com/schemas"}, "testdata/base_schema_id.json"},
 		{LookupUser{}, &reflector{
-			Lookup: func(i reflect.Type) id {
+			Lookup: func(i reflect.Type) schemaID {
 				switch i {
 				case reflect.TypeOf(LookupUser{}):
-					return id("https://example.com/schemas/lookup-user")
+					return schemaID("https://example.com/schemas/lookup-user")
 				case reflect.TypeOf(LookupName{}):
-					return id("https://example.com/schemas/lookup-name")
+					return schemaID("https://example.com/schemas/lookup-name")
 				}
 				return EmptyID
 			},
@@ -497,12 +497,12 @@ func TestSchemaGeneration(t *testing.T) {
 			BaseSchemaID:   "https://example.com/schemas",
 			ExpandedStruct: true,
 			AssignAnchor:   true,
-			Lookup: func(i reflect.Type) id {
+			Lookup: func(i reflect.Type) schemaID {
 				switch i {
 				case reflect.TypeOf(LookupUser{}):
-					return id("https://example.com/schemas/lookup-user")
+					return schemaID("https://example.com/schemas/lookup-user")
 				case reflect.TypeOf(LookupName{}):
-					return id("https://example.com/schemas/lookup-name")
+					return schemaID("https://example.com/schemas/lookup-name")
 				}
 				return EmptyID
 			},
