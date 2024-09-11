@@ -17,7 +17,36 @@ import (
 )
 
 // version is the JSON Schema version.
-var version = "https://json-schema.org/draft/2020-12/schema"
+const version = "https://json-schema.org/draft/2020-12/schema"
+
+// Available Go defined types for JSON Schema Validation.
+//
+// https://datatracker.ietf.org/doc/html/draft-wright-json-schema-validation-00#section-7.3
+//
+// RFC draft-wright-json-schema-validation-00, section 7.3
+var (
+	// trueSchema defines a schema with a true value
+	trueSchema = &schema{boolean: &[]bool{true}[0]}
+	// falseSchema defines a schema with a false value
+	falseSchema = &schema{boolean: &[]bool{false}[0]}
+
+	timeType = reflect.TypeOf(time.Time{}) // date-time RFC section 7.3.1
+	ipType   = reflect.TypeOf(net.IP{})    // ipv4 and ipv6 RFC section 7.3.4, 7.3.5
+	uriType  = reflect.TypeOf(url.URL{})   // uri RFC section 7.3.6
+
+	byteSliceType  = reflect.TypeOf([]byte(nil))
+	rawMessageType = reflect.TypeOf(json.RawMessage{})
+
+	customType                    = reflect.TypeOf((*customSchemaImpl)(nil)).Elem()
+	extendType                    = reflect.TypeOf((*extendSchemaImpl)(nil)).Elem()
+	customStructGetFieldDocString = reflect.TypeOf((*customSchemaGetFieldDocString)(nil)).Elem()
+	protoEnumType                 = reflect.TypeOf((*protoEnum)(nil)).Elem()
+	matchFirstCap                 = regexp.MustCompile("(.)([A-Z][a-z]+)")
+	matchAllCap                   = regexp.MustCompile("([a-z0-9])([A-Z])")
+
+	customAliasSchema         = reflect.TypeOf((*aliasSchemaImpl)(nil)).Elem()
+	customPropertyAliasSchema = reflect.TypeOf((*propertyAliasSchemaImpl)(nil)).Elem()
+)
 
 // customSchemaImpl is used to detect if the type provides it's own
 // custom Schema Type definition to use instead. Very useful for situations
@@ -45,20 +74,12 @@ type propertyAliasSchemaImpl interface {
 	JSONSchemaProperty(prop string) any
 }
 
-var customAliasSchema = reflect.TypeOf((*aliasSchemaImpl)(nil)).Elem()
-var customPropertyAliasSchema = reflect.TypeOf((*propertyAliasSchemaImpl)(nil)).Elem()
-
-var customType = reflect.TypeOf((*customSchemaImpl)(nil)).Elem()
-var extendType = reflect.TypeOf((*extendSchemaImpl)(nil)).Elem()
-
 // customSchemaGetFieldDocString
 type customSchemaGetFieldDocString interface {
 	GetFieldDocString(fieldName string) string
 }
 
 type customGetFieldDocString func(fieldName string) string
-
-var customStructGetFieldDocString = reflect.TypeOf((*customSchemaGetFieldDocString)(nil)).Elem()
 
 // A reflector reflects values into a Schema.
 type reflector struct {
@@ -198,29 +219,10 @@ func (r *reflector) ReflectFromType(t reflect.Type) *schema {
 	return s
 }
 
-// Available Go defined types for JSON Schema Validation.
-//
-// https://datatracker.ietf.org/doc/html/draft-wright-json-schema-validation-00#section-7.3
-//
-// RFC draft-wright-json-schema-validation-00, section 7.3
-var (
-	timeType = reflect.TypeOf(time.Time{}) // date-time RFC section 7.3.1
-	ipType   = reflect.TypeOf(net.IP{})    // ipv4 and ipv6 RFC section 7.3.4, 7.3.5
-	uriType  = reflect.TypeOf(url.URL{})   // uri RFC section 7.3.6
-)
-
-// Byte slices will be encoded as base64
-var byteSliceType = reflect.TypeOf([]byte(nil))
-
-// Except for json.RawMessage
-var rawMessageType = reflect.TypeOf(json.RawMessage{})
-
 // Go code generated from protobuf enum types should fulfil this interface.
 type protoEnum interface {
 	EnumDescriptor() ([]byte, []int)
 }
-
-var protoEnumType = reflect.TypeOf((*protoEnum)(nil)).Elem()
 
 // SetBaseSchemaID is a helper use to be able to set the reflectors base
 // schema ID from a string as opposed to then ID instance.
@@ -417,10 +419,10 @@ func (r *reflector) reflectSliceOrArray(
 		st.Type = "string"
 		// NOTE: ContentMediaType is not set here
 		st.ContentEncoding = "base64"
-	} else {
-		st.Type = "array"
-		st.Items = r.refOrReflectTypeToSchema(definitions, t.Elem())
+		return
 	}
+	st.Type = "array"
+	st.Items = r.refOrReflectTypeToSchema(definitions, t.Elem())
 }
 
 func (r *reflector) reflectMap(
@@ -882,7 +884,6 @@ func (t *schema) arrayKeywords(tags []string) {
 	}
 
 	if len(unprocessed) == 0 {
-		// we don't have anything else to process
 		return
 	}
 
@@ -924,21 +925,21 @@ func (t *schema) setExtra(key, val string) {
 		case bool:
 			t.Extras[key] = (val == "true" || val == "t")
 		}
-	} else {
-		switch key {
-		case "minimum":
-			t.Extras[key], _ = strconv.Atoi(val)
-		default:
-			var x any
-			if val == "true" {
-				x = true
-			} else if val == "false" {
-				x = false
-			} else {
-				x = val
-			}
-			t.Extras[key] = x
+		return
+	}
+	switch key {
+	case "minimum":
+		t.Extras[key], _ = strconv.Atoi(val)
+	default:
+		var x any
+		if val == "true" {
+			x = true
+		} else if val == "false" {
+			x = false
+		} else {
+			x = val
 		}
+		t.Extras[key] = x
 	}
 }
 
@@ -1147,10 +1148,10 @@ func splitOnUnescapedCommas(tagString string) []string {
 		}
 		if ret[i][len(ret[i])-1] == '\\' {
 			ret[i] = ret[i][:len(ret[i])-1] + "," + nextTag
-		} else {
-			ret = append(ret, nextTag)
-			i++
+			continue
 		}
+		ret = append(ret, nextTag)
+		i++
 	}
 	return ret
 }
@@ -1158,9 +1159,6 @@ func splitOnUnescapedCommas(tagString string) []string {
 func fullyQualifiedTypeName(t reflect.Type) string {
 	return t.PkgPath() + "." + t.Name()
 }
-
-var matchFirstCap = regexp.MustCompile("(.)([A-Z][a-z]+)")
-var matchAllCap = regexp.MustCompile("([a-z0-9])([A-Z])")
 
 // ToSnakeCase converts the provided string into snake case using dashes.
 // This is useful for Schema IDs and definitions to be coherent with
@@ -1822,13 +1820,6 @@ type schema struct {
 	// Special boolean representation of the Schema - section 4.3.2
 	boolean *bool
 }
-
-var (
-	// trueSchema defines a schema with a true value
-	trueSchema = &schema{boolean: &[]bool{true}[0]}
-	// falseSchema defines a schema with a false value
-	falseSchema = &schema{boolean: &[]bool{false}[0]}
-)
 
 // schemaDefinitions hold schema schemaDefinitions.
 //
