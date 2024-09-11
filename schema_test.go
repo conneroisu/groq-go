@@ -121,13 +121,11 @@ type SomeBaseType struct {
 	// The jsonschema required tag is nonsensical for private and ignored properties.
 	// Their presence here tests that the fields *will not* be required in the output
 	// schema, even if they are tagged required.
-	somePrivateBaseProperty   string          `jsonschema:"required"` //nolint:unused
 	SomeIgnoredBaseProperty   string          `json:"-" jsonschema:"required"`
 	SomeSchemaIgnoredProperty string          `jsonschema:"-,required"`
 	Grandfather               GrandfatherType `json:"grand"`
 
-	SomeUntaggedBaseProperty           bool `jsonschema:"required"`
-	someUnexportedUntaggedBaseProperty bool //nolint:unused
+	SomeUntaggedBaseProperty bool `jsonschema:"required"`
 }
 
 type MapType map[string]any
@@ -135,8 +133,7 @@ type MapType map[string]any
 type ArrayType []string
 
 type nonExported struct {
-	PublicNonExported  int
-	privateNonExported int // nolint:unused
+	PublicNonExported int
 }
 
 type ProtoEnum int32
@@ -518,7 +515,7 @@ func TestSchemaGeneration(t *testing.T) {
 		{&MinValue{}, &Reflector{}, "testdata/schema_with_minimum.json"},
 		{&TestNullable{}, &Reflector{}, "testdata/nullable.json"},
 		{&GrandfatherType{}, &Reflector{
-			AdditionalFields: func(r reflect.Type) []reflect.StructField {
+			AdditionalFields: func(_ reflect.Type) []reflect.StructField {
 				return []reflect.StructField{
 					{
 						Name:      "Addr",
