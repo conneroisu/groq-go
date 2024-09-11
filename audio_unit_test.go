@@ -12,7 +12,7 @@ import (
 	"strings"
 	"testing"
 
-	groq "github.com/conneroisu/groq-go"
+	"github.com/conneroisu/groq-go"
 	"github.com/conneroisu/groq-go/internal/test"
 	"github.com/stretchr/testify/assert"
 )
