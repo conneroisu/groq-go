@@ -47,6 +47,9 @@ type Client struct {
 
 // NewClient creates a new Groq client.
 func NewClient(groqAPIKey string, opts ...Opts) (*Client, error) {
+	if groqAPIKey == "" {
+		return nil, fmt.Errorf("groq api key is required")
+	}
 	c := &Client{
 		groqAPIKey: groqAPIKey,
 		client:     http.DefaultClient,

@@ -1,6 +1,6 @@
 module github.com/conneroisu/groq-go/tools
 
-go 1.23.0
+go 1.23.1
 
 require github.com/charmbracelet/gum v0.14.5
 

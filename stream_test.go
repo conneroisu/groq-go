@@ -3,6 +3,8 @@ package groq //nolint:testpackage // testing private field
 import (
 	"bufio"
 	"bytes"
+	"io"
+	"net/http"
 	"testing"
 
 	"github.com/conneroisu/groq-go/internal/test"
@@ -66,4 +68,38 @@ func TestStreamReaderReturnsErrTestErrorAccumulatorWriteFailed(t *testing.T) {
 		"Did not return error when write failed",
 		err.Error(),
 	)
+}
+
+// Helper function to create a new `streamReader` for testing
+func newStreamReader[T streamer](data string) *streamReader[T] {
+	resp := &http.Response{
+		Body: io.NopCloser(bytes.NewBufferString(data)),
+	}
+	reader := bufio.NewReader(resp.Body)
+
+	return &streamReader[T]{
+		emptyMessagesLimit: 5,
+		isFinished:         false,
+		reader:             reader,
+		response:           resp,
+		errAccumulator:     newErrorAccumulator(),
+		Header:             resp.Header,
+	}
+}
+
+// Test the `Recv` method with multiple empty messages triggering an error
+func TestStreamReader_TooManyEmptyMessages(t *testing.T) {
+	data := "\n\n\n\n\n\n"
+	stream := newStreamReader[ChatCompletionStreamResponse](data)
+
+	_, err := stream.Recv()
+	assert.ErrorIs(t, err, ErrTooManyEmptyStreamMessages{})
+}
+
+// Test the `Close` method
+func TestStreamReader_Close(t *testing.T) {
+	stream := newStreamReader[ChatCompletionStreamResponse]("")
+
+	err := stream.Close()
+	assert.NoError(t, err)
 }
