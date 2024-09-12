@@ -63,13 +63,7 @@ API Documentation: https://console.groq.com/docs/quickstart
 
 Features:
 
-- All models from \[Groq\]\(https://wow.groq.com/\) in a type\-safe way.
-- Streaming. 
-- Moderation. 
-- Audio transcription. 
-- Audio translation. 
-- Tool Use. 
-- Function Calling.
+\- Supports all models from \[Groq\]\(https://wow.groq.com/\) in a type\-safe way. \- Supports streaming. \- Supports moderation. \- Supports audio transcription. \- Supports audio translation. \- Supports Tool Use. \- Supports Function Calling.
 
 ## Index
 
@@ -229,7 +223,7 @@ const (
 ```
 
 <a name="ToSnakeCase"></a>
-## func [ToSnakeCase](<https://github.com/conneroisu/groq-go/blob/main/schema.go#L1136>)
+## func [ToSnakeCase](<https://github.com/conneroisu/groq-go/blob/main/schema.go#L1165>)
 
 ```go
 func ToSnakeCase(str string) string
@@ -1171,7 +1165,7 @@ type ModerationRequest struct {
 ```
 
 <a name="Opts"></a>
-## type [Opts](<https://github.com/conneroisu/groq-go/blob/main/client.go#L82>)
+## type [Opts](<https://github.com/conneroisu/groq-go/blob/main/client.go#L85>)
 
 Opts is a function that sets options for a Groq client.
 
@@ -1180,7 +1174,7 @@ type Opts func(*Client)
 ```
 
 <a name="WithBaseURL"></a>
-### func [WithBaseURL](<https://github.com/conneroisu/groq-go/blob/main/client.go#L92>)
+### func [WithBaseURL](<https://github.com/conneroisu/groq-go/blob/main/client.go#L95>)
 
 ```go
 func WithBaseURL(baseURL string) Opts
@@ -1189,7 +1183,7 @@ func WithBaseURL(baseURL string) Opts
 WithBaseURL sets the base URL for the Groq client.
 
 <a name="WithClient"></a>
-### func [WithClient](<https://github.com/conneroisu/groq-go/blob/main/client.go#L85>)
+### func [WithClient](<https://github.com/conneroisu/groq-go/blob/main/client.go#L88>)
 
 ```go
 func WithClient(client *http.Client) Opts
@@ -1198,7 +1192,7 @@ func WithClient(client *http.Client) Opts
 WithClient sets the client for the Groq client.
 
 <a name="WithLogger"></a>
-### func [WithLogger](<https://github.com/conneroisu/groq-go/blob/main/client.go#L99>)
+### func [WithLogger](<https://github.com/conneroisu/groq-go/blob/main/client.go#L102>)
 
 ```go
 func WithLogger(logger zerolog.Logger) Opts
@@ -1229,7 +1223,7 @@ type PromptFilterResult struct {
 ```
 
 <a name="RateLimitHeaders"></a>
-## type [RateLimitHeaders](<https://github.com/conneroisu/groq-go/blob/main/client.go#L292-L299>)
+## type [RateLimitHeaders](<https://github.com/conneroisu/groq-go/blob/main/client.go#L295-L302>)
 
 RateLimitHeaders struct represents Groq rate limits headers.
 
@@ -1245,7 +1239,7 @@ type RateLimitHeaders struct {
 ```
 
 <a name="RawResponse"></a>
-## type [RawResponse](<https://github.com/conneroisu/groq-go/blob/main/client.go#L192-L196>)
+## type [RawResponse](<https://github.com/conneroisu/groq-go/blob/main/client.go#L195-L199>)
 
 RawResponse is a response from the raw endpoint.
 
@@ -1258,7 +1252,7 @@ type RawResponse struct {
 ```
 
 <a name="ResetTime"></a>
-## type [ResetTime](<https://github.com/conneroisu/groq-go/blob/main/client.go#L303>)
+## type [ResetTime](<https://github.com/conneroisu/groq-go/blob/main/client.go#L306>)
 
 ResetTime is a time.Time wrapper for the rate limit reset time. string
 
@@ -1267,7 +1261,7 @@ type ResetTime string
 ```
 
 <a name="ResetTime.String"></a>
-### func \(ResetTime\) [String](<https://github.com/conneroisu/groq-go/blob/main/client.go#L306>)
+### func \(ResetTime\) [String](<https://github.com/conneroisu/groq-go/blob/main/client.go#L309>)
 
 ```go
 func (r ResetTime) String() string
@@ -1276,7 +1270,7 @@ func (r ResetTime) String() string
 String returns the string representation of the ResetTime.
 
 <a name="ResetTime.Time"></a>
-### func \(ResetTime\) [Time](<https://github.com/conneroisu/groq-go/blob/main/client.go#L311>)
+### func \(ResetTime\) [Time](<https://github.com/conneroisu/groq-go/blob/main/client.go#L314>)
 
 ```go
 func (r ResetTime) Time() time.Time
@@ -1417,7 +1411,7 @@ type TranscriptionTimestampGranularity string
 ```
 
 <a name="Usage"></a>
-## type [Usage](<https://github.com/conneroisu/groq-go/blob/main/client.go#L106-L110>)
+## type [Usage](<https://github.com/conneroisu/groq-go/blob/main/client.go#L109-L113>)
 
 Usage Represents the total token usage per request to Groq.
 
