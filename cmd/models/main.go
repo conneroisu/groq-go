@@ -14,6 +14,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"sort"
 	"text/template"
 	"time"
 
@@ -168,4 +169,8 @@ func nameModels(models []ResponseModel) {
 			models[i].Name = lo.PascalCase(models[i].ID)
 		}
 	}
+	// sort models by name alphabetically
+	sort.Slice(models, func(i, j int) bool {
+		return models[i].Name < models[j].Name
+	})
 }
