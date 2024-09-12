@@ -11,10 +11,14 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// TestModerate tests the Moderate method of the client.
 func TestModerate(t *testing.T) {
 	client, server, teardown := setupGroqTestServer()
 	defer teardown()
-	server.RegisterHandler("/v1/chat/completions", handleModerationEndpoint)
+	server.RegisterHandler(
+		"/v1/chat/completions",
+		handleModerationEndpoint,
+	)
 	mod, err := client.Moderate(context.Background(), groq.ModerationRequest{
 		Model: groq.ModerationTextStable,
 		Input: "I want to kill them.",
@@ -31,6 +35,7 @@ func TestModerate(t *testing.T) {
 	)
 }
 
+// handleModerationEndpoint handles the moderation endpoint.
 func handleModerationEndpoint(w http.ResponseWriter, r *http.Request) {
 	response := groq.ChatCompletionResponse{
 		ID:      "chatcmpl-123",

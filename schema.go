@@ -538,7 +538,7 @@ func (r *reflector) reflectStructFields(
 			property = r.refOrReflectTypeToSchema(definitions, f.Type)
 		}
 
-		property.keywordsFromTags(f, st, name)
+		property.fieldsFromTags(f, st, name)
 		if property.Description == "" {
 			property.Description = r.lookupComment(t, f.Name)
 		}
@@ -635,30 +635,30 @@ func (r *reflector) lookupID(t reflect.Type) schemaID {
 	return EmptyID
 }
 
-func (t *schema) keywordsFromTags(f reflect.StructField, parent *schema, propertyName string) {
+func (t *schema) fieldsFromTags(f reflect.StructField, parent *schema, propertyName string) {
 	t.Description = f.Tag.Get("jsonschema_description")
 
 	tags := splitOnUnescapedCommas(f.Tag.Get("jsonschema"))
-	tags = t.genericKeywords(tags, parent, propertyName)
+	tags = t.genericfields(tags, parent, propertyName)
 
 	switch t.Type {
 	case "string":
-		t.stringKeywords(tags)
+		t.stringfields(tags)
 	case "number":
-		t.numericalKeywords(tags)
+		t.numericalfields(tags)
 	case "integer":
-		t.numericalKeywords(tags)
+		t.numericalfields(tags)
 	case "array":
-		t.arrayKeywords(tags)
+		t.arrayfields(tags)
 	case "boolean":
-		t.booleanKeywords(tags)
+		t.booleanfields(tags)
 	}
 	extras := strings.Split(f.Tag.Get("jsonschema_extras"), ",")
-	t.extraKeywords(extras)
+	t.extrafields(extras)
 }
 
-// genericKeywords reads struct tags for generic keywords
-func (t *schema) genericKeywords(
+// genericfields reads struct tags for generic keywords
+func (t *schema) genericfields(
 	tags []string,
 	parent *schema,
 	propertyName string,
@@ -767,8 +767,8 @@ func (t *schema) genericKeywords(
 	return unprocessed
 }
 
-// read struct tags for boolean type keywords
-func (t *schema) booleanKeywords(tags []string) {
+// read struct tags for boolean type fields
+func (t *schema) booleanfields(tags []string) {
 	for _, tag := range tags {
 		nameValue := strings.Split(tag, "=")
 		if len(nameValue) != 2 {
@@ -785,8 +785,8 @@ func (t *schema) booleanKeywords(tags []string) {
 	}
 }
 
-// read struct tags for string type keywords
-func (t *schema) stringKeywords(tags []string) {
+// read struct tags for string type fields
+func (t *schema) stringfields(tags []string) {
 	for _, tag := range tags {
 		nameValue := strings.SplitN(tag, "=", 2)
 		if len(nameValue) == 2 {
@@ -817,8 +817,8 @@ func (t *schema) stringKeywords(tags []string) {
 	}
 }
 
-// read struct tags for numerical type keywords
-func (t *schema) numericalKeywords(tags []string) {
+// read struct tags for numerical type fields
+func (t *schema) numericalfields(tags []string) {
 	for _, tag := range tags {
 		nameValue := strings.Split(tag, "=")
 		if len(nameValue) == 2 {
@@ -851,8 +851,8 @@ func (t *schema) numericalKeywords(tags []string) {
 	}
 }
 
-// read struct tags for array type keywords
-func (t *schema) arrayKeywords(tags []string) {
+// read struct tags for array type fields
+func (t *schema) arrayfields(tags []string) {
 	var defaultValues []any
 
 	unprocessed := make([]string, 0, len(tags))
@@ -888,19 +888,19 @@ func (t *schema) arrayKeywords(tags []string) {
 
 	switch t.Items.Type {
 	case "string":
-		t.Items.stringKeywords(unprocessed)
+		t.Items.stringfields(unprocessed)
 	case "number":
-		t.Items.numericalKeywords(unprocessed)
+		t.Items.numericalfields(unprocessed)
 	case "integer":
-		t.Items.numericalKeywords(unprocessed)
+		t.Items.numericalfields(unprocessed)
 	case "array":
 		// explicitly don't support traversal for the [][]..., as it's unclear where the array tags belong
 	case "boolean":
-		t.Items.booleanKeywords(unprocessed)
+		t.Items.booleanfields(unprocessed)
 	}
 }
 
-func (t *schema) extraKeywords(tags []string) {
+func (t *schema) extrafields(tags []string) {
 	for _, tag := range tags {
 		nameValue := strings.SplitN(tag, "=", 2)
 		if len(nameValue) == 2 {
@@ -1279,7 +1279,20 @@ type schema struct {
 	// RFC draft-bhutton-json-schema-00 section 10.3.1 (arrays)
 	PrefixItems []*schema `json:"prefixItems,omitempty"` // section 10.3.1.1
 	Items       *schema   `json:"items,omitempty"`       // section 10.3.1.2  (replaces additionalItems)
-	Contains    *schema   `json:"contains,omitempty"`    // section 10.3.1.3
+	// Contains is the contains of the schema as specified in section 10.3.1.3 of RFC
+	// draft-bhutton-json-schema-00.
+	//
+	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-00#section-10.3.1.3
+	//
+	//
+	// The value of this field MUST be a valid JSON Schema.
+	//
+	// An array instance is valid against "contains" if at least one of its
+	// elements is valid against the given schema.  The subschema MUST be
+	// applied to every array element even after the first match has been
+	// found, in order to collect annotations for use by other fields.
+	// This is to ensure that all possible annotations are collected.
+	Contains *schema `json:"contains,omitempty"` // section 10.3.1.3
 	// RFC draft-bhutton-json-schema-00 section 10.3.2 (sub-schemas)
 	// Properties are the properties of the schema as specified in section 10.3.2.1 of RFC
 	// draft-bhutton-json-schema-00.
@@ -1295,7 +1308,7 @@ type schema struct {
 	// corresponding schema.
 	//
 	// The annotation result of this field is the set of instance property
-	// names matched by this keyword.
+	// names matched by this field.
 	//
 	// Omitting this field has the same assertion behavior as an empty
 	// object.
@@ -1317,7 +1330,7 @@ type schema struct {
 	// expression.
 	//
 	// The annotation result of this field is the set of instance property
-	// names matched by this keyword.
+	// names matched by this field.
 	//
 	// Omitting this field has the same assertion behavior as an empty
 	// object.
@@ -1331,7 +1344,7 @@ type schema struct {
 	//
 	// The value of "additionalProperties" MUST be a valid JSON Schema.
 	//
-	// The behavior of this keyword depends on the presence and annotation
+	// The behavior of this field depends on the presence and annotation
 	// results of "properties" and "patternProperties" within the same
 	// schema object.  Validation with "additionalProperties" applies only
 	// to the child values of instance names that do not appear in the
@@ -1340,13 +1353,13 @@ type schema struct {
 	// For all such properties, validation succeeds if the child instance
 	// validates against the "additionalProperties" schema.
 	//
-	// The annotation result of this keyword is the set of instance property
-	// names validated by this keyword's subschema.
+	// The annotation result of this field is the set of instance property
+	// names validated by this field's subschema.
 	//
-	// Omitting this keyword has the same assertion behavior as an empty
+	// Omitting this field has the same assertion behavior as an empty
 	// schema.
 	//
-	// Implementations MAY choose to implement or optimize this keyword in
+	// Implementations MAY choose to implement or optimize this field in
 	// another way that produces the same effect, such as by directly
 	// checking the names in "properties" and the patterns in
 	// "patternProperties" against the instance property set.
@@ -1401,10 +1414,10 @@ type schema struct {
 	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-validation-00#section-6.1.3
 	//
 	// The value of this field MUST be an instance of the data type
-	// defined by the "type" keyword.
+	// defined by the "type" field.
 	//
 	// A numeric instance is valid against "const" if its value is equal
-	// to the value of this keyword.
+	// to the value of this field.
 	//
 	// Omitting this field has the same behavior as an empty value.
 	Const any `json:"const,omitempty"`
@@ -1414,10 +1427,10 @@ type schema struct {
 	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-validation-00#section-6.2.1
 	//
 	// The value of this field MUST be a JSON number, representing an
-	// instance of the data type defined by the "type" keyword.
+	// instance of the data type defined by the "type" field.
 	//
 	// A numeric instance is valid against "multipleOf" if the result of
-	// the division of the instance by this keyword's value leaves no
+	// the division of the instance by this field's value leaves no
 	// remainder.
 	//
 	// Omitting this field has the same behavior as an empty value.
@@ -1428,7 +1441,7 @@ type schema struct {
 	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-validation-00#section-6.2.2
 	//
 	// The value of this field MUST be a JSON number, representing an
-	// instance of the data type defined by the "type" keyword.
+	// instance of the data type defined by the "type" field.
 	//
 	// A numeric instance is valid against "maximum" if it has a value
 	// less than the value of "exclusiveMaximum" and it has a value
@@ -1443,7 +1456,7 @@ type schema struct {
 	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-validation-00#section-6.2.3
 	//
 	// The value of this field MUST be a JSON number, representing an
-	// instance of the data type defined by the "type" keyword.
+	// instance of the data type defined by the "type" field.
 	//
 	// A numeric instance is valid against "exclusiveMaximum" if it has a
 	// value less than the value of "minimum" and it has a value greater
@@ -1457,7 +1470,7 @@ type schema struct {
 	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-validation-00#section-6.2.4
 	//
 	// The value of this field MUST be a JSON number, representing an
-	// instance of the data type defined by the "type" keyword.
+	// instance of the data type defined by the "type" field.
 	//
 	// A numeric instance is valid against "minimum" if it has a value
 	// greater than the value of "exclusiveMinimum" and it has a value
@@ -1472,7 +1485,7 @@ type schema struct {
 	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-validation-00#section-6.2.5
 	//
 	// The value of this field MUST be a JSON number, representing an
-	// instance of the data type defined by the "type" keyword.
+	// instance of the data type defined by the "type" field.
 	//
 	// A numeric instance is valid against "exclusiveMinimum" if it has a
 	// value less than the value of "minimum" and it has a value greater
@@ -1766,7 +1779,7 @@ type schema struct {
 	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-validation-00#section-9.2
 	//
 	// The value of this field MUST be an instance of the data type defined
-	// by the "type" keyword.  This instance SHOULD be used as the default
+	// by the "type" field.  This instance SHOULD be used as the default
 	// value of the instance if the instance is undefined or its value is
 	// equal to null.
 	//
