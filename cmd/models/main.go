@@ -25,7 +25,7 @@ const (
 	outputFile = "models.go"
 )
 
-//go:embed models.go.txt
+//go:embed models.go.tmpl
 var outputFileTemplate string
 
 type templateParams struct {
@@ -150,7 +150,7 @@ func fillTemplate(w io.Writer, models []ResponseModel) error {
 			return time.Now().Format("2006-01-02 15:04:05")
 		},
 	}
-	tmpla, err := template.New("output").
+	tmpla, err := template.New("models").
 		Funcs(funcMap).
 		Parse(outputFileTemplate)
 	if err != nil {

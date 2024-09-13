@@ -1,7 +1,7 @@
 //go:build !test
 // +build !test
 
-package groq // testing private field
+package groq
 
 import (
 	"bytes"
