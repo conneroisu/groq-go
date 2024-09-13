@@ -1,0 +1,35 @@
+{{ define "code" }}
+Write a decription of the first file inside a json response.
+
+Your response should be a just the json object with the following fields:
+In your description, do not jump to conclusions, but instead provide a thoughtful description of the file's content.
+If you refer to a file, use the entire path, including the file name.
+
+<example-response>
+{
+	"thoughts": "Your thoughts on the task",
+	"description": "A description of the file in relation to the other files",
+}
+</example-response>
+
+Your file is:
+<code name="{{ .Name }}">
+{{.Source}}
+</code>
+
+Related files:
+{{- range $file := .Files }}
+<code name="{{ $file.Name }}">
+{{ $file.Content }}
+</code>
+{{- end }}
+{{  end  }}
+
+{{ define "header" }}--------------------------------------------------------------------------------
+-- author: [ Conner Ohnesorge ](https://github.com/conneroisu)
+-- file_name: {{ .FileName }}
+-- desc: {{ .Description }}
+--------------------------------------------------------------------------------
+
+{{ .Code }}
+{{  end  }}
