@@ -148,8 +148,9 @@ var (
 
 // ModerationRequest represents a request structure for moderation API.
 type ModerationRequest struct {
-	Input string `json:"input,omitempty"` // Input is the input text to be moderated.
-	Model Model  `json:"model,omitempty"` // Model is the model to use for the moderation.
+	// Input string `json:"input,omitempty"` // Input is the input text to be moderated.
+	Messages []ChatCompletionMessage `json:"messages"`        // Messages is the messages of the chat completion request. These act as the prompt for the model.
+	Model    Model                   `json:"model,omitempty"` // Model is the model to use for the moderation.
 }
 
 // Moderation represents one of possible moderation results.
@@ -182,11 +183,9 @@ func (c *Client) Moderate(
 	if err != nil {
 		return
 	}
-	content := resp.Choices[0].Message.Content
-	println(content)
-	if strings.Contains(content, "unsafe") {
+	if strings.Contains(resp.Choices[0].Message.Content, "unsafe") {
 		response.Flagged = true
-		split := strings.Split(strings.Split(content, "\n")[1], ",")
+		split := strings.Split(strings.Split(resp.Choices[0].Message.Content, "\n")[1], ",")
 		for _, s := range split {
 			response.Categories = append(
 				response.Categories,
