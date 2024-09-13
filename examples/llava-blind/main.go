@@ -28,27 +28,30 @@ func run(
 		return err
 	}
 
-	response, err := client.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
-		Model: groq.LlavaV157B4096Preview,
-		Messages: []groq.ChatCompletionMessage{
-			{
-				Role: groq.ChatMessageRoleUser,
-				MultiContent: []groq.ChatMessagePart{
-					{
-						Type: groq.ChatMessagePartTypeText,
-						Text: "What is the contents of the image?",
-					},
-					{
-						Type: groq.ChatMessagePartTypeImageURL,
-						ImageURL: &groq.ChatMessageImageURL{
-							URL:    "https://cdnimg.webstaurantstore.com/images/products/large/87539/251494.jpg",
-							Detail: "auto",
+	response, err := client.CreateChatCompletion(
+		ctx,
+		groq.ChatCompletionRequest{
+			Model: groq.LlavaV157B4096Preview,
+			Messages: []groq.ChatCompletionMessage{
+				{
+					Role: groq.ChatMessageRoleUser,
+					MultiContent: []groq.ChatMessagePart{
+						{
+							Type: groq.ChatMessagePartTypeText,
+							Text: "What is the contents of the image?",
 						},
-					}},
+						{
+							Type: groq.ChatMessagePartTypeImageURL,
+							ImageURL: &groq.ChatMessageImageURL{
+								URL:    "https://cdnimg.webstaurantstore.com/images/products/large/87539/251494.jpg",
+								Detail: "auto",
+							},
+						}},
+				},
 			},
+			MaxTokens: 2000,
 		},
-		MaxTokens: 2000,
-	})
+	)
 	if err != nil {
 		return err
 	}

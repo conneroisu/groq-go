@@ -27,7 +27,9 @@ func init() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	headerTemplate, err = template.New("header").Funcs(template.FuncMap{}).Parse(emTempl)
+	headerTemplate, err = template.New("header").
+		Funcs(template.FuncMap{}).
+		Parse(emTempl)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -81,7 +83,11 @@ func run(
 		if err != nil {
 			goto retry
 		}
-		log.Debugf("thoughts for %s:  %s", val.Destination, thoughtThroughCode.Thoughts)
+		log.Debugf(
+			"thoughts for %s:  %s",
+			val.Destination,
+			thoughtThroughCode.Thoughts,
+		)
 		content, err := executeHeaderTemplate(HeaderTemplateData{
 			FileName:    filename,
 			Description: wrapText(thoughtThroughCode.Description),
@@ -140,34 +146,61 @@ var (
 		{Source: tbNBitAdder, Destination: fullAdderDest + "tb_NBitAdder.vhd"},
 		{Source: nBitAdder, Destination: fullAdderDest + "nBitAdder.vhd"},
 
-		{Source: adderSubtractor, Destination: adderSubtractorDest + "AdderSubtractor.vhd"},
-		{Source: tbAdderSubtractor, Destination: adderSubtractorDest + "tb_AdderSubtractor.vhd"},
-		{Source: nBitInverter, Destination: adderSubtractorDest + "nBitInverter.vhd"},
-		{Source: tbNBitInverter, Destination: adderSubtractorDest + "tb_nBitInverter.vhd"},
+		{
+			Source:      adderSubtractor,
+			Destination: adderSubtractorDest + "AdderSubtractor.vhd",
+		},
+		{
+			Source:      tbAdderSubtractor,
+			Destination: adderSubtractorDest + "tb_AdderSubtractor.vhd",
+		},
+		{
+			Source:      nBitInverter,
+			Destination: adderSubtractorDest + "nBitInverter.vhd",
+		},
+		{
+			Source:      tbNBitInverter,
+			Destination: adderSubtractorDest + "tb_nBitInverter.vhd",
+		},
 		{Source: mux2t1N, Destination: adderSubtractorDest + "mux2t1_N.vhd"},
-		{Source: nBitAdder, Destination: adderSubtractorDest + "nBitAdder.vhd"},
+		{
+			Source:      nBitAdder,
+			Destination: adderSubtractorDest + "nBitAdder.vhd",
+		},
 
 		{Source: xorg2, Destination: onesCompDest + "xorg2.vhd"},
 		{Source: org2, Destination: onesCompDest + "org2.vhd"},
 		{Source: onesComp, Destination: onesCompDest + "OnesComp.vhd"},
 		{Source: tbOnesComp, Destination: onesCompDest + "tb_OnesComp.vhd"},
 
-		{Source: tpuMvElement, Destination: tpuElementDest + "tpuMvElement.vhd"},
+		{
+			Source:      tpuMvElement,
+			Destination: tpuElementDest + "tpuMvElement.vhd",
+		},
 		{Source: xorg2, Destination: tpuElementDest + "xorg2.vhd"},
 		{Source: org2, Destination: tpuElementDest + "org2.vhd"},
-		{Source: nBitInverter, Destination: tpuElementDest + "nBitInverter.vhd"},
+		{
+			Source:      nBitInverter,
+			Destination: tpuElementDest + "nBitInverter.vhd",
+		},
 		{Source: nBitAdder, Destination: tpuElementDest + "nBitAdder.vhd"},
 		{Source: mux2t1, Destination: tpuElementDest + "mux2t1.vhd"},
 		{Source: andg2, Destination: tpuElementDest + "andg2.vhd"},
 		{Source: regLd, Destination: tpuElementDest + "regLd.vhd"},
 		{Source: invg, Destination: tpuElementDest + "invg.vhd"},
 		{Source: adder, Destination: tpuElementDest + "adder.vhd"},
-		{Source: adderSubtractor, Destination: tpuElementDest + "adderSubtractor.vhd"},
+		{
+			Source:      adderSubtractor,
+			Destination: tpuElementDest + "adderSubtractor.vhd",
+		},
 		{Source: fullAdder, Destination: tpuElementDest + "fullAdder.vhd"},
 		{Source: multiplier, Destination: tpuElementDest + "multiplier.vhd"},
 		{Source: regLd, Destination: tpuElementDest + "regLd.vhd"},
 		{Source: reg, Destination: tpuElementDest + "reg.vhd"},
-		{Source: tbTPUElement, Destination: tpuElementDest + "tb_TPUElement.vhd"},
+		{
+			Source:      tbTPUElement,
+			Destination: tpuElementDest + "tb_TPUElement.vhd",
+		},
 	}
 )
 
@@ -291,7 +324,7 @@ type HeaderTemplateData struct {
 }
 
 type thoughtThroughCode struct {
-	Thoughts    string `json:"thoughts" jsonschema:"title=Thoughts,description=Thoughts on the code and thinking through exactly how it interacts with other given code in the project."`
+	Thoughts    string `json:"thoughts"    jsonschema:"title=Thoughts,description=Thoughts on the code and thinking through exactly how it interacts with other given code in the project."`
 	Description string `json:"description" jsonschema:"title=Description,description=A description of the code's function, form, etc."`
 }
 
