@@ -31,7 +31,7 @@ jobs:
         id: install-lint-requirements
         run: |
           go mod download
-          go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.58.1
+          go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
       - name: Lint
         id: lint
         run: |
