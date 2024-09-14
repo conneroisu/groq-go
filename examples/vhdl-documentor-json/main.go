@@ -34,7 +34,6 @@ func init() {
 		log.Fatal(err)
 	}
 }
-
 func main() {
 	log.SetLevel(log.DebugLevel)
 	log.SetReportCaller(true)
@@ -44,7 +43,6 @@ func main() {
 		fmt.Println(fmt.Errorf("failed to run: %w", err))
 	}
 }
-
 func run(
 	ctx context.Context,
 	getenv func(string) string,
@@ -67,7 +65,6 @@ func run(
 		if err != nil {
 			return err
 		}
-		// log.Debugf("prompting for %s: %s", val.Destination, prompt)
 		var thoughtThroughCode thoughtThroughCode
 		err = client.CreateChatCompletionJSON(
 			ctx,
@@ -108,7 +105,6 @@ func run(
 			return err
 		}
 	}
-
 	return nil
 }
 
@@ -130,22 +126,18 @@ const (
 
 var (
 	fileMap = FileMapper{
-
 		{Source: tbMux2t1, Destination: muxDest + "tb_Mux2t1.vhd"},
 		{Source: mux2t1, Destination: muxDest + "mux2t1.vhd"},
 		{Source: mux2t1s, Destination: muxDest + "mux2t1s.vhd"},
 		{Source: tbMux2t1s, Destination: muxDest + "tb_Mux2t1s.vhd"},
-
 		{Source: mux2t1N, Destination: nMuxDest + "mux2t1_N.vhd"},
 		{Source: tbMux2t1, Destination: nMuxDest + "tb_Mux2t1.vhd"},
 		{Source: mux2t1, Destination: nMuxDest + "mux2t1.vhd"},
 		{Source: tbNMux2t1, Destination: nMuxDest + "tb_NMux2t1.vhd"},
-
 		{Source: fullAdder, Destination: fullAdderDest + "FullAdder.vhd"},
 		{Source: tbFullAdder, Destination: fullAdderDest + "tb_FullAdder.vhd"},
 		{Source: tbNBitAdder, Destination: fullAdderDest + "tb_NBitAdder.vhd"},
 		{Source: nBitAdder, Destination: fullAdderDest + "nBitAdder.vhd"},
-
 		{
 			Source:      adderSubtractor,
 			Destination: adderSubtractorDest + "AdderSubtractor.vhd",
@@ -167,12 +159,10 @@ var (
 			Source:      nBitAdder,
 			Destination: adderSubtractorDest + "nBitAdder.vhd",
 		},
-
 		{Source: xorg2, Destination: onesCompDest + "xorg2.vhd"},
 		{Source: org2, Destination: onesCompDest + "org2.vhd"},
 		{Source: onesComp, Destination: onesCompDest + "OnesComp.vhd"},
 		{Source: tbOnesComp, Destination: onesCompDest + "tb_OnesComp.vhd"},
-
 		{
 			Source:      tpuMvElement,
 			Destination: tpuElementDest + "tpuMvElement.vhd",
@@ -264,9 +254,6 @@ var tbMux2t1 string
 //go:embed test/tb_nBitAdder.vhd
 var tbNBitAdder string
 
-//go:embed test/tb_Adder.vhd
-var tbAdder string
-
 //go:embed test/tb_mux2t1s.vhd
 var tbMux2t1s string
 
@@ -322,7 +309,6 @@ type HeaderTemplateData struct {
 	Description string
 	Code        string
 }
-
 type thoughtThroughCode struct {
 	Thoughts    string `json:"thoughts"    jsonschema:"title=Thoughts,description=Thoughts on the code and thinking through exactly how it interacts with other given code in the project."`
 	Description string `json:"description" jsonschema:"title=Description,description=A description of the code's function, form, etc."`
@@ -336,7 +322,6 @@ func executeCodeTemplate(data CodeTemplateData) (string, error) {
 	}
 	return buf.String(), nil
 }
-
 func executeHeaderTemplate(data HeaderTemplateData) (string, error) {
 	var result strings.Builder
 	err := headerTemplate.Execute(&result, data)
@@ -353,11 +338,9 @@ func wrapText(s string) string {
 	maxLineLength := 80
 	words := strings.Fields(s)
 	lineLength := 0
-
 	for i, word := range words {
 		wordLength := len(word)
 		if lineLength+wordLength > maxLineLength {
-			// If the word itself is longer than maxLineLength, split it with hyphens
 			if wordLength > maxLineLength {
 				remaining := word
 				for len(remaining) > 0 {

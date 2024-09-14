@@ -185,7 +185,10 @@ func (c *Client) Moderate(
 	}
 	if strings.Contains(resp.Choices[0].Message.Content, "unsafe") {
 		response.Flagged = true
-		split := strings.Split(strings.Split(resp.Choices[0].Message.Content, "\n")[1], ",")
+		split := strings.Split(
+			strings.Split(resp.Choices[0].Message.Content, "\n")[1],
+			",",
+		)
 		for _, s := range split {
 			response.Categories = append(
 				response.Categories,

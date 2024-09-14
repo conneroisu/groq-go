@@ -21,7 +21,12 @@ func TestModerate(t *testing.T) {
 	)
 	mod, err := client.Moderate(context.Background(), groq.ModerationRequest{
 		Model: groq.ModerationTextStable,
-		Input: "I want to kill them.",
+		Messages: []groq.ChatCompletionMessage{
+			{
+				Role:    groq.ChatMessageRoleUser,
+				Content: "I want to kill them.",
+			},
+		},
 	})
 	a := assert.New(t)
 	a.NoError(err, "Moderation error")
