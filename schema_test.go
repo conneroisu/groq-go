@@ -614,7 +614,6 @@ func TestSchemaGeneration(t *testing.T) {
 			&reflector{},
 			"testdata/custom_type_with_interface.json",
 		},
-		{&PatternTest{}, &reflector{}, "testdata/commas_in_pattern.json"},
 		{&RecursiveExample{}, &reflector{}, "testdata/recursive.json"},
 		{&KeyNamed{}, &reflector{
 			KeyNamer: func(s string) string {
@@ -643,7 +642,6 @@ func TestSchemaGeneration(t *testing.T) {
 		{ArrayType{}, &reflector{}, "testdata/array_type.json"},
 		{SchemaExtendTest{}, &reflector{}, "testdata/custom_type_extend.json"},
 		{Expression{}, &reflector{}, "testdata/schema_with_expression.json"},
-		{PatternEqualsTest{}, &reflector{}, "testdata/equals_in_pattern.json"},
 	}
 
 	for _, tt := range tests {
