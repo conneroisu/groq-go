@@ -1,4 +1,4 @@
-package test
+package groq_test
 
 import (
 	"bytes"
