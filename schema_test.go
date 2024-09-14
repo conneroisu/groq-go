@@ -390,7 +390,7 @@ type CustomMapOuter struct {
 }
 
 type PatternTest struct {
-	WithPattern string `json:"with_pattern" jsonschema:"minLength=1,pattern=[0-9]{1\,4},maxLength=50"`
+	WithPattern string `json:"with_pattern" jsonschema:"minLength=1,pattern=[0-9]{1\\,4},maxLength=50"`
 }
 
 type RecursiveExample struct {
@@ -436,7 +436,7 @@ type Expression struct {
 
 type PatternEqualsTest struct {
 	WithEquals          string `jsonschema:"pattern=foo=bar"`
-	WithEqualsAndCommas string `jsonschema:"pattern=foo\,=bar"`
+	WithEqualsAndCommas string `jsonschema:"pattern=foo,=bar"`
 }
 
 func TestReflector(t *testing.T) {
@@ -642,6 +642,7 @@ func TestSchemaGeneration(t *testing.T) {
 		{ArrayType{}, &reflector{}, "testdata/array_type.json"},
 		{SchemaExtendTest{}, &reflector{}, "testdata/custom_type_extend.json"},
 		{Expression{}, &reflector{}, "testdata/schema_with_expression.json"},
+		{&PatternTest{}, &reflector{}, "testdata/commas_in_pattern.json"},
 	}
 
 	for _, tt := range tests {
