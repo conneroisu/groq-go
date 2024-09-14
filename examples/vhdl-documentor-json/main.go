@@ -1,3 +1,5 @@
+// Package main is an example of using groq-go to create a chat completion
+// using the llama-70B-tools-preview model to create headers for vhdl projects.
 package main
 
 import (

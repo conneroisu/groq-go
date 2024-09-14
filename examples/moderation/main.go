@@ -1,3 +1,5 @@
+// Package main is an example of using groq-go to create a chat moderation
+// using the llama-3BGuard model.
 package main
 
 import (
