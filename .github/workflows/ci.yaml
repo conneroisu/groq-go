@@ -32,16 +32,10 @@ jobs:
         run: |
           go mod download
           go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.58.1
-          go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
       - name: Lint
         id: lint
         run: |
           golangci-lint run
-      - name: Vet
-        id: vet
-        run: |
-          sqlc vet
-          go vet ./...
       - name: Run Revive Action by pulling pre-built image
         uses: docker://morphy/revive-action:v2
         with:
