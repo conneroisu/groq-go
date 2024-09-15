@@ -36,7 +36,3 @@ jobs:
         id: lint
         run: |
           golangci-lint run
-      - name: Run Revive Action by pulling pre-built image
-        uses: docker://morphy/revive-action:v2
-        with:
-            config: .revive.toml
