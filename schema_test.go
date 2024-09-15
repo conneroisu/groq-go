@@ -1,3 +1,6 @@
+//go:build !test
+// +build !test
+
 package groq
 
 import (
@@ -42,7 +45,11 @@ func TestIDValidation(t *testing.T) {
 
 	id = "https://encoding/json"
 	if assert.Error(t, id.Validate()) {
-		assert.Contains(t, id.Validate().Error(), "hostname does not look valid")
+		assert.Contains(
+			t,
+			id.Validate().Error(),
+			"hostname does not look valid",
+		)
 	}
 
 	id = "time"
@@ -82,7 +89,7 @@ type (
 	// Plant represents the plants the user might have and serves as a test
 	// of structs inside a `type` set.
 	Plant struct {
-		Variant string `json:"variant" jsonschema:"title=Variant"` // This comment will be used
+		Variant string `json:"variant"                 jsonschema:"title=Variant"` // This comment will be used
 		// Multicellular is true if the plant is multicellular
 		Multicellular bool `json:"multicellular,omitempty" jsonschema:"title=Multicellular"` // This comment will be ignored
 	}
@@ -92,10 +99,9 @@ type (
 // Don't forget to checkout the nested path.
 type User struct {
 	// Unique sequential identifier.
-	ID int `json:"id" jsonschema:"required"`
-	// This comment will be ignored
-	Name    string         `json:"name" jsonschema:"required,minLength=1,maxLength=20,pattern=.*,description=this is a property,title=the name,example=joe,example=lucy,default=alex"`
-	Friends []int          `json:"friends,omitempty" jsonschema_description:"list of IDs, omitted when empty"`
+	ID      int            `json:"id"                jsonschema:"required"`
+	Name    string         `json:"name"              jsonschema:"required,minLength=1,maxLength=20,pattern=.*,description=this is a property,title=the name,example=joe,example=lucy,default=alex"`
+	Friends []int          `json:"friends,omitempty"                                                                                                                                               jsonschema_description:"list of IDs, omitted when empty"`
 	Tags    map[string]any `json:"tags,omitempty"`
 
 	// An array of pets the user cares for.
@@ -109,7 +115,12 @@ type User struct {
 }
 
 var updateFixtures = flag.Bool("update", false, "set to update fixtures")
-var compareFixtures = flag.Bool("compare", false, "output failed fixtures with .out.json")
+
+var compareFixtures = flag.Bool(
+	"compare",
+	false,
+	"output failed fixtures with .out.json",
+)
 
 type GrandfatherType struct {
 	FamilyName string `json:"family_name" jsonschema:"required"`
@@ -121,8 +132,8 @@ type SomeBaseType struct {
 	// The jsonschema required tag is nonsensical for private and ignored properties.
 	// Their presence here tests that the fields *will not* be required in the output
 	// schema, even if they are tagged required.
-	SomeIgnoredBaseProperty   string          `json:"-" jsonschema:"required"`
-	SomeSchemaIgnoredProperty string          `jsonschema:"-,required"`
+	SomeIgnoredBaseProperty   string          `json:"-"                  jsonschema:"required"`
+	SomeSchemaIgnoredProperty string          `                          jsonschema:"-,required"`
 	Grandfather               GrandfatherType `json:"grand"`
 
 	SomeUntaggedBaseProperty bool `jsonschema:"required"`
@@ -150,10 +161,10 @@ type TestUser struct {
 	nonExported
 	MapType
 
-	ID       int               `json:"id" jsonschema:"required,minimum=bad,maximum=bad,exclusiveMinimum=bad,exclusiveMaximum=bad,default=bad"`
-	Name     string            `json:"name" jsonschema:"required,minLength=1,maxLength=20,pattern=.*,description=this is a property,title=the name,example=joe,example=lucy,default=alex,readOnly=true"`
-	Password string            `json:"password" jsonschema:"writeOnly=true"`
-	Friends  []int             `json:"friends,omitempty" jsonschema_description:"list of IDs, omitted when empty"`
+	ID       int               `json:"id"                jsonschema:"required,minimum=bad,maximum=bad,exclusiveMinimum=bad,exclusiveMaximum=bad,default=bad"`
+	Name     string            `json:"name"              jsonschema:"required,minLength=1,maxLength=20,pattern=.*,description=this is a property,title=the name,example=joe,example=lucy,default=alex,readOnly=true"`
+	Password string            `json:"password"          jsonschema:"writeOnly=true"`
+	Friends  []int             `json:"friends,omitempty"                                                                                                                                                             jsonschema_description:"list of IDs, omitted when empty"`
 	Tags     map[string]string `json:"tags,omitempty"`
 	Options  map[string]any    `json:"options,omitempty"`
 
@@ -168,29 +179,29 @@ type TestUser struct {
 	IPAddress net.IP    `json:"network_address,omitempty"`
 
 	// Tests for RFC draft-wright-json-schema-hyperschema-00, section 4
-	Photo  []byte `json:"photo,omitempty" jsonschema:"required"`
+	Photo  []byte `json:"photo,omitempty"  jsonschema:"required"`
 	Photo2 Bytes  `json:"photo2,omitempty" jsonschema:"required"`
 
 	// Tests for jsonpb enum support
 	Feeling ProtoEnum `json:"feeling,omitempty"`
 
-	Age   int    `json:"age" jsonschema:"minimum=18,maximum=120,exclusiveMaximum=121,exclusiveMinimum=17"`
+	Age   int    `json:"age"   jsonschema:"minimum=18,maximum=120,exclusiveMaximum=121,exclusiveMinimum=17"`
 	Email string `json:"email" jsonschema:"format=email"`
-	UUID  string `json:"uuid" jsonschema:"format=uuid"`
+	UUID  string `json:"uuid"  jsonschema:"format=uuid"`
 
 	// Test for "extras" support
 	Baz       string `jsonschema_extras:"foo=bar,hello=world,foo=bar1"`
-	BoolExtra string `json:"bool_extra,omitempty" jsonschema_extras:"isTrue=true,isFalse=false"`
+	BoolExtra string `jsonschema_extras:"isTrue=true,isFalse=false"    json:"bool_extra,omitempty"`
 
 	// Tests for simple enum tags
-	Color      string  `json:"color" jsonschema:"enum=red,enum=green,enum=blue"`
+	Color      string  `json:"color"          jsonschema:"enum=red,enum=green,enum=blue"`
 	Rank       int     `json:"rank,omitempty" jsonschema:"enum=1,enum=2,enum=3"`
 	Multiplier float64 `json:"mult,omitempty" jsonschema:"enum=1.0,enum=1.5,enum=2.0"`
 
 	// Tests for enum tags on slices
-	Roles      []string  `json:"roles" jsonschema:"enum=admin,enum=moderator,enum=user"`
+	Roles      []string  `json:"roles"                jsonschema:"enum=admin,enum=moderator,enum=user"`
 	Priorities []int     `json:"priorities,omitempty" jsonschema:"enum=-1,enum=0,enum=1,enun=2"`
-	Offsets    []float64 `json:"offsets,omitempty" jsonschema:"enum=1.570796,enum=3.141592,enum=6.283185"`
+	Offsets    []float64 `json:"offsets,omitempty"    jsonschema:"enum=1.570796,enum=3.141592,enum=6.283185"`
 
 	// Test for raw JSON
 	Anything any             `json:"anything,omitempty"`
@@ -397,7 +408,7 @@ type KeyNamed struct {
 	NotComingFromJSON    bool           `json:"coming_from_json_tag_not_renamed"`
 	NestedNotRenamed     KeyNamedNested `json:"nested_not_renamed"`
 	UnicodeShenanigans   string
-	RenamedByComputation int `jsonschema_description:"Description was preserved"`
+	RenamedByComputation int `                                        jsonschema_description:"Description was preserved"`
 }
 
 type SchemaExtendTestBase struct {
@@ -425,7 +436,7 @@ type Expression struct {
 
 type PatternEqualsTest struct {
 	WithEquals          string `jsonschema:"pattern=foo=bar"`
-	WithEqualsAndCommas string `jsonschema:"pattern=foo\\,=bar"`
+	WithEqualsAndCommas string `jsonschema:"pattern=foo,=bar"`
 }
 
 func TestReflector(t *testing.T) {
@@ -441,7 +452,11 @@ func TestReflectFromType(t *testing.T) {
 	typ := reflect.TypeOf(tu)
 
 	s := r.ReflectFromType(typ)
-	assert.EqualValues(t, "https://github.com/conneroisu/groq-go/test-user", s.ID)
+	assert.EqualValues(
+		t,
+		"https://github.com/conneroisu/groq-go/test-user",
+		s.ID,
+	)
 
 	x := struct {
 		Test string
@@ -461,15 +476,51 @@ func TestSchemaGeneration(t *testing.T) {
 	}{
 		{&TestUser{}, &reflector{}, "testdata/test_user.json"},
 		{&UserWithAnchor{}, &reflector{}, "testdata/user_with_anchor.json"},
-		{&TestUser{}, &reflector{AssignAnchor: true}, "testdata/test_user_assign_anchor.json"},
-		{&TestUser{}, &reflector{AllowAdditionalProperties: true}, "testdata/allow_additional_props.json"},
-		{&TestUser{}, &reflector{RequiredFromJSONSchemaTags: true}, "testdata/required_from_jsontags.json"},
-		{&TestUser{}, &reflector{ExpandedStruct: true}, "testdata/defaults_expanded_toplevel.json"},
-		{&TestUser{}, &reflector{IgnoredTypes: []any{GrandfatherType{}}}, "testdata/ignore_type.json"},
-		{&TestUser{}, &reflector{DoNotReference: true}, "testdata/no_reference.json"},
-		{&TestUser{}, &reflector{DoNotReference: true, AssignAnchor: true}, "testdata/no_reference_anchor.json"},
-		{&RootOneOf{}, &reflector{RequiredFromJSONSchemaTags: true}, "testdata/oneof.json"},
-		{&RootAnyOf{}, &reflector{RequiredFromJSONSchemaTags: true}, "testdata/anyof.json"},
+		{
+			&TestUser{},
+			&reflector{AssignAnchor: true},
+			"testdata/test_user_assign_anchor.json",
+		},
+		{
+			&TestUser{},
+			&reflector{AllowAdditionalProperties: true},
+			"testdata/allow_additional_props.json",
+		},
+		{
+			&TestUser{},
+			&reflector{RequiredFromJSONSchemaTags: true},
+			"testdata/required_from_jsontags.json",
+		},
+		{
+			&TestUser{},
+			&reflector{ExpandedStruct: true},
+			"testdata/defaults_expanded_toplevel.json",
+		},
+		{
+			&TestUser{},
+			&reflector{IgnoredTypes: []any{GrandfatherType{}}},
+			"testdata/ignore_type.json",
+		},
+		{
+			&TestUser{},
+			&reflector{DoNotReference: true},
+			"testdata/no_reference.json",
+		},
+		{
+			&TestUser{},
+			&reflector{DoNotReference: true, AssignAnchor: true},
+			"testdata/no_reference_anchor.json",
+		},
+		{
+			&RootOneOf{},
+			&reflector{RequiredFromJSONSchemaTags: true},
+			"testdata/oneof.json",
+		},
+		{
+			&RootAnyOf{},
+			&reflector{RequiredFromJSONSchemaTags: true},
+			"testdata/anyof.json",
+		},
 		{&CustomTypeField{}, &reflector{
 			Mapper: func(i reflect.Type) *schema {
 				if i == reflect.TypeOf(CustomTime{}) {
@@ -481,7 +532,11 @@ func TestSchemaGeneration(t *testing.T) {
 				return nil
 			},
 		}, "testdata/custom_type.json"},
-		{LookupUser{}, &reflector{BaseSchemaID: "https://example.com/schemas"}, "testdata/base_schema_id.json"},
+		{
+			LookupUser{},
+			&reflector{BaseSchemaID: "https://example.com/schemas"},
+			"testdata/base_schema_id.json",
+		},
 		{LookupUser{}, &reflector{
 			Lookup: func(i reflect.Type) schemaID {
 				switch i {
@@ -507,11 +562,31 @@ func TestSchemaGeneration(t *testing.T) {
 				return EmptyID
 			},
 		}, "testdata/lookup_expanded.json"},
-		{&Outer{}, &reflector{ExpandedStruct: true}, "testdata/inlining_inheritance.json"},
-		{&OuterNamed{}, &reflector{ExpandedStruct: true}, "testdata/inlining_embedded.json"},
-		{&OuterNamed{}, &reflector{ExpandedStruct: true, AssignAnchor: true}, "testdata/inlining_embedded_anchored.json"},
-		{&OuterInlined{}, &reflector{ExpandedStruct: true}, "testdata/inlining_tag.json"},
-		{&OuterPtr{}, &reflector{ExpandedStruct: true}, "testdata/inlining_ptr.json"},
+		{
+			&Outer{},
+			&reflector{ExpandedStruct: true},
+			"testdata/inlining_inheritance.json",
+		},
+		{
+			&OuterNamed{},
+			&reflector{ExpandedStruct: true},
+			"testdata/inlining_embedded.json",
+		},
+		{
+			&OuterNamed{},
+			&reflector{ExpandedStruct: true, AssignAnchor: true},
+			"testdata/inlining_embedded_anchored.json",
+		},
+		{
+			&OuterInlined{},
+			&reflector{ExpandedStruct: true},
+			"testdata/inlining_tag.json",
+		},
+		{
+			&OuterPtr{},
+			&reflector{ExpandedStruct: true},
+			"testdata/inlining_ptr.json",
+		},
 		{&MinValue{}, &reflector{}, "testdata/schema_with_minimum.json"},
 		{&TestNullable{}, &reflector{}, "testdata/nullable.json"},
 		{&GrandfatherType{}, &reflector{
@@ -526,12 +601,19 @@ func TestSchemaGeneration(t *testing.T) {
 				}
 			},
 		}, "testdata/custom_additional.json"},
-		{&TestDescriptionOverride{}, &reflector{}, "testdata/test_description_override.json"},
+		{
+			&TestDescriptionOverride{},
+			&reflector{},
+			"testdata/test_description_override.json",
+		},
 		{&CompactDate{}, &reflector{}, "testdata/compact_date.json"},
 		{&CustomSliceOuter{}, &reflector{}, "testdata/custom_slice_type.json"},
 		{&CustomMapOuter{}, &reflector{}, "testdata/custom_map_type.json"},
-		{&CustomTypeFieldWithInterface{}, &reflector{}, "testdata/custom_type_with_interface.json"},
-		{&PatternTest{}, &reflector{}, "testdata/commas_in_pattern.json"},
+		{
+			&CustomTypeFieldWithInterface{},
+			&reflector{},
+			"testdata/custom_type_with_interface.json",
+		},
 		{&RecursiveExample{}, &reflector{}, "testdata/recursive.json"},
 		{&KeyNamed{}, &reflector{
 			KeyNamer: func(s string) string {
@@ -560,7 +642,7 @@ func TestSchemaGeneration(t *testing.T) {
 		{ArrayType{}, &reflector{}, "testdata/array_type.json"},
 		{SchemaExtendTest{}, &reflector{}, "testdata/custom_type_extend.json"},
 		{Expression{}, &reflector{}, "testdata/schema_with_expression.json"},
-		{PatternEqualsTest{}, &reflector{}, "testdata/equals_in_pattern.json"},
+		{&PatternTest{}, &reflector{}, "testdata/commas_in_pattern.json"},
 	}
 
 	for _, tt := range tests {
@@ -584,7 +666,11 @@ func compareSchemaOutput(t *testing.T, f string, r *reflector, obj any) {
 	require.NoError(t, err)
 
 	actualSchema := r.Reflect(obj)
-	actualJSON, _ := json.MarshalIndent(actualSchema, "", "  ") //nolint:errchkjson
+	actualJSON, _ := json.MarshalIndent(
+		actualSchema,
+		"",
+		"  ",
+	) //nolint:errchkjson
 
 	if *updateFixtures {
 		_ = os.WriteFile(f, actualJSON, 0600)
@@ -592,7 +678,11 @@ func compareSchemaOutput(t *testing.T, f string, r *reflector, obj any) {
 
 	if !assert.JSONEq(t, string(expectedJSON), string(actualJSON)) {
 		if *compareFixtures {
-			_ = os.WriteFile(strings.TrimSuffix(f, ".json")+".out.json", actualJSON, 0600)
+			_ = os.WriteFile(
+				strings.TrimSuffix(f, ".json")+".out.json",
+				actualJSON,
+				0600,
+			)
 		}
 	}
 }
@@ -609,7 +699,10 @@ func TestSplitOnUnescapedCommas(t *testing.T) {
 		strToSplit string
 		expected   []string
 	}{
-		{`Hello,this,is\,a\,string,haha`, []string{`Hello`, `this`, `is,a,string`, `haha`}},
+		{
+			`Hello,this,is\,a\,string,haha`,
+			[]string{`Hello`, `this`, `is,a,string`, `haha`},
+		},
 		{`hello,no\\,split`, []string{`hello`, `no\,split`}},
 		{`string without commas`, []string{`string without commas`}},
 		{`ünicode,𐂄,Ж\,П,ᠳ`, []string{`ünicode`, `𐂄`, `Ж,П`, `ᠳ`}},
@@ -656,9 +749,9 @@ func TestFieldNameTag(t *testing.T) {
 
 func TestFieldOneOfRef(t *testing.T) {
 	type Server struct {
-		IPAddress      any   `json:"ip_address,omitempty" jsonschema:"oneof_ref=#/$defs/ipv4;#/$defs/ipv6"`
-		IPAddresses    []any `json:"ip_addresses,omitempty" jsonschema:"oneof_ref=#/$defs/ipv4;#/$defs/ipv6"`
-		IPAddressAny   any   `json:"ip_address_any,omitempty" jsonschema:"anyof_ref=#/$defs/ipv4;#/$defs/ipv6"`
+		IPAddress      any   `json:"ip_address,omitempty"       jsonschema:"oneof_ref=#/$defs/ipv4;#/$defs/ipv6"`
+		IPAddresses    []any `json:"ip_addresses,omitempty"     jsonschema:"oneof_ref=#/$defs/ipv4;#/$defs/ipv6"`
+		IPAddressAny   any   `json:"ip_address_any,omitempty"   jsonschema:"anyof_ref=#/$defs/ipv4;#/$defs/ipv6"`
 		IPAddressesAny []any `json:"ip_addresses_any,omitempty" jsonschema:"anyof_ref=#/$defs/ipv4;#/$defs/ipv6"`
 	}
 
@@ -668,12 +761,17 @@ func TestFieldOneOfRef(t *testing.T) {
 
 func TestNumberHandling(t *testing.T) {
 	type NumberHandler struct {
-		Int64   int64   `json:"int64" jsonschema:"default=12"`
+		Int64   int64   `json:"int64"   jsonschema:"default=12"`
 		Float32 float32 `json:"float32" jsonschema:"default=12.5"`
 	}
 
 	r := &reflector{}
-	compareSchemaOutput(t, "testdata/number_handling.json", r, &NumberHandler{})
+	compareSchemaOutput(
+		t,
+		"testdata/number_handling.json",
+		r,
+		&NumberHandler{},
+	)
 	fixtureContains(t, "testdata/number_handling.json", `"default": 12`)
 	fixtureContains(t, "testdata/number_handling.json", `"default": 12.5`)
 }
@@ -692,14 +790,19 @@ func TestArrayHandling(t *testing.T) {
 
 func TestUnsignedIntHandling(t *testing.T) {
 	type UnsignedIntHandler struct {
-		MinLen   []string `json:"min_len" jsonschema:"minLength=0"`
-		MaxLen   []string `json:"max_len" jsonschema:"maxLength=0"`
+		MinLen   []string `json:"min_len"   jsonschema:"minLength=0"`
+		MaxLen   []string `json:"max_len"   jsonschema:"maxLength=0"`
 		MinItems []string `json:"min_items" jsonschema:"minItems=0"`
 		MaxItems []string `json:"max_items" jsonschema:"maxItems=0"`
 	}
 
 	r := &reflector{}
-	compareSchemaOutput(t, "testdata/unsigned_int_handling.json", r, &UnsignedIntHandler{})
+	compareSchemaOutput(
+		t,
+		"testdata/unsigned_int_handling.json",
+		r,
+		&UnsignedIntHandler{},
+	)
 	fixtureContains(t, "testdata/unsigned_int_handling.json", `"minLength": 0`)
 	fixtureContains(t, "testdata/unsigned_int_handling.json", `"maxLength": 0`)
 	fixtureContains(t, "testdata/unsigned_int_handling.json", `"minItems": 0`)
@@ -709,11 +812,16 @@ func TestUnsignedIntHandling(t *testing.T) {
 func TestJSONSchemaFormat(t *testing.T) {
 	type WithCustomFormat struct {
 		Dates []string `json:"dates" jsonschema:"format=date"`
-		Odds  []string `json:"odds" jsonschema:"format=odd"`
+		Odds  []string `json:"odds"  jsonschema:"format=odd"`
 	}
 
 	r := &reflector{}
-	compareSchemaOutput(t, "testdata/with_custom_format.json", r, &WithCustomFormat{})
+	compareSchemaOutput(
+		t,
+		"testdata/with_custom_format.json",
+		r,
+		&WithCustomFormat{},
+	)
 	fixtureContains(t, "testdata/with_custom_format.json", `"format": "date"`)
 	fixtureContains(t, "testdata/with_custom_format.json", `"format": "odd"`)
 }
@@ -744,7 +852,12 @@ func (AliasObjectB) JSONSchemaAlias() any {
 
 func TestJSONSchemaProperty(t *testing.T) {
 	r := &reflector{}
-	compareSchemaOutput(t, "testdata/schema_property_alias.json", r, &AliasPropertyObjectBase{})
+	compareSchemaOutput(
+		t,
+		"testdata/schema_property_alias.json",
+		r,
+		&AliasPropertyObjectBase{},
+	)
 }
 
 func TestJSONSchemaAlias(t *testing.T) {

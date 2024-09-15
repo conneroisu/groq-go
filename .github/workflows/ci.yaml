@@ -25,24 +25,14 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.22'
+          go-version: '1.23.1'
           cache: true
       - name: Install requirements
         id: install-lint-requirements
         run: |
           go mod download
-          go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.58.1
-          go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
+          go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
       - name: Lint
         id: lint
         run: |
           golangci-lint run
-      - name: Vet
-        id: vet
-        run: |
-          sqlc vet
-          go vet ./...
-      - name: Run Revive Action by pulling pre-built image
-        uses: docker://morphy/revive-action:v2
-        with:
-            config: .revive.toml

@@ -14,6 +14,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"sort"
 	"text/template"
 	"time"
 
@@ -24,7 +25,7 @@ const (
 	outputFile = "models.go"
 )
 
-//go:embed models.go.txt
+//go:embed models.go.tmpl
 var outputFileTemplate string
 
 type templateParams struct {
@@ -135,13 +136,13 @@ func fillTemplate(w io.Writer, models []ResponseModel) error {
 			}
 			return false
 		},
-		// isModerationModel returns true if the model is
+		// notModerationModel returns false if the model is
 		// a model that can be used for moderation.
 		//
 		// llama-guard-3-8b is a moderation model.
-		"isModerationModel": func(model ResponseModel) bool {
+		"notModerationModel": func(model ResponseModel) bool {
 			// if the id of the model is llama-guard-3-8b
-			return model.ID == "llama-guard-3-8b"
+			return model.ID != "llama-guard-3-8b"
 		},
 		// getCurrentDate returns the current date in the format
 		// "2006-01-02 15:04:05".
@@ -149,7 +150,7 @@ func fillTemplate(w io.Writer, models []ResponseModel) error {
 			return time.Now().Format("2006-01-02 15:04:05")
 		},
 	}
-	tmpla, err := template.New("output").
+	tmpla, err := template.New("models").
 		Funcs(funcMap).
 		Parse(outputFileTemplate)
 	if err != nil {
@@ -168,4 +169,8 @@ func nameModels(models []ResponseModel) {
 			models[i].Name = lo.PascalCase(models[i].ID)
 		}
 	}
+	// sort models by name alphabetically
+	sort.Slice(models, func(i, j int) bool {
+		return models[i].Name < models[j].Name
+	})
 }

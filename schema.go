@@ -30,21 +30,27 @@ var (
 	falseSchema = &schema{boolean: &[]bool{false}[0]}
 
 	timeType = reflect.TypeOf(time.Time{}) // date-time RFC section 7.3.1
-	ipType   = reflect.TypeOf(net.IP{})    // ipv4 and ipv6 RFC section 7.3.4, 7.3.5
-	uriType  = reflect.TypeOf(url.URL{})   // uri RFC section 7.3.6
+	ipType   = reflect.TypeOf(
+		net.IP{},
+	) // ipv4 and ipv6 RFC section 7.3.4, 7.3.5
+	uriType = reflect.TypeOf(url.URL{}) // uri RFC section 7.3.6
 
 	byteSliceType  = reflect.TypeOf([]byte(nil))
 	rawMessageType = reflect.TypeOf(json.RawMessage{})
 
-	customType                    = reflect.TypeOf((*customSchemaImpl)(nil)).Elem()
-	extendType                    = reflect.TypeOf((*extendSchemaImpl)(nil)).Elem()
-	customStructGetFieldDocString = reflect.TypeOf((*customSchemaGetFieldDocString)(nil)).Elem()
-	protoEnumType                 = reflect.TypeOf((*protoEnum)(nil)).Elem()
-	matchFirstCap                 = regexp.MustCompile("(.)([A-Z][a-z]+)")
-	matchAllCap                   = regexp.MustCompile("([a-z0-9])([A-Z])")
+	customType = reflect.TypeOf((*customSchemaImpl)(nil)).
+			Elem()
+	extendType = reflect.TypeOf((*extendSchemaImpl)(nil)).
+			Elem()
+	customStructGetFieldDocString = reflect.TypeOf((*customSchemaGetFieldDocString)(nil)).
+					Elem()
+	protoEnumType = reflect.TypeOf((*protoEnum)(nil)).Elem()
+	matchFirstCap = regexp.MustCompile("(.)([A-Z][a-z]+)")
+	matchAllCap   = regexp.MustCompile("([a-z0-9])([A-Z])")
 
 	customAliasSchema         = reflect.TypeOf((*aliasSchemaImpl)(nil)).Elem()
-	customPropertyAliasSchema = reflect.TypeOf((*propertyAliasSchemaImpl)(nil)).Elem()
+	customPropertyAliasSchema = reflect.TypeOf((*propertyAliasSchemaImpl)(nil)).
+					Elem()
 )
 
 // customSchemaImpl is used to detect if the type provides it's own
@@ -328,8 +334,16 @@ func (r *reflector) reflectTypeToSchema(
 	case reflect.Interface:
 		// empty
 
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
-		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+	case reflect.Int,
+		reflect.Int8,
+		reflect.Int16,
+		reflect.Int32,
+		reflect.Int64,
+		reflect.Uint,
+		reflect.Uint8,
+		reflect.Uint16,
+		reflect.Uint32,
+		reflect.Uint64:
 		st.Type = "integer"
 
 	case reflect.Float32, reflect.Float64:
@@ -437,7 +451,11 @@ func (r *reflector) reflectMap(
 	}
 
 	switch t.Key().Kind() {
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+	case reflect.Int,
+		reflect.Int8,
+		reflect.Int16,
+		reflect.Int32,
+		reflect.Int64:
 		st.PatternProperties = map[string]*schema{
 			"^[0-9]+$": r.refOrReflectTypeToSchema(definitions, t.Elem()),
 		}
@@ -445,7 +463,10 @@ func (r *reflector) reflectMap(
 		return
 	}
 	if t.Elem().Kind() != reflect.Interface {
-		st.AdditionalProperties = r.refOrReflectTypeToSchema(definitions, t.Elem())
+		st.AdditionalProperties = r.refOrReflectTypeToSchema(
+			definitions,
+			t.Elem(),
+		)
 	}
 }
 
@@ -533,7 +554,10 @@ func (r *reflector) reflectStructFields(
 		// the provided object's type instead of the field's type.
 		var property *schema
 		if alias := customPropertyMethod(name); alias != nil {
-			property = r.refOrReflectTypeToSchema(definitions, reflect.TypeOf(alias))
+			property = r.refOrReflectTypeToSchema(
+				definitions,
+				reflect.TypeOf(alias),
+			)
 		} else {
 			property = r.refOrReflectTypeToSchema(definitions, f.Type)
 		}
@@ -599,7 +623,11 @@ func (r *reflector) lookupComment(t reflect.Type, name string) string {
 }
 
 // addDefinition will append the provided schema. If needed, an ID and anchor will also be added.
-func (r *reflector) addDefinition(definitions schemaDefinitions, t reflect.Type, s *schema) {
+func (r *reflector) addDefinition(
+	definitions schemaDefinitions,
+	t reflect.Type,
+	s *schema,
+) {
 	name := r.typeName(t)
 	if name == "" {
 		return
@@ -608,7 +636,10 @@ func (r *reflector) addDefinition(definitions schemaDefinitions, t reflect.Type,
 }
 
 // refDefinition will provide a schema with a reference to an existing definition.
-func (r *reflector) refDefinition(definitions schemaDefinitions, t reflect.Type) *schema {
+func (r *reflector) refDefinition(
+	definitions schemaDefinitions,
+	t reflect.Type,
+) *schema {
 	if r.DoNotReference {
 		return nil
 	}
@@ -635,7 +666,11 @@ func (r *reflector) lookupID(t reflect.Type) schemaID {
 	return EmptyID
 }
 
-func (t *schema) fieldsFromTags(f reflect.StructField, parent *schema, propertyName string) {
+func (t *schema) fieldsFromTags(
+	f reflect.StructField,
+	parent *schema,
+	propertyName string,
+) {
 	t.Description = f.Tag.Get("jsonschema_description")
 
 	tags := splitOnUnescapedCommas(f.Tag.Get("jsonschema"))
@@ -874,7 +909,10 @@ func (t *schema) arrayfields(tags []string) {
 			case "pattern":
 				t.Items.Pattern = val
 			default:
-				unprocessed = append(unprocessed, tag) // left for further processing by underlying type
+				unprocessed = append(
+					unprocessed,
+					tag,
+				) // left for further processing by underlying type
 			}
 		}
 	}
@@ -1024,7 +1062,9 @@ func (r *reflector) fieldNameTag() string {
 	return "json"
 }
 
-func (r *reflector) reflectFieldName(f reflect.StructField) (string, bool, bool, bool) {
+func (r *reflector) reflectFieldName(
+	f reflect.StructField,
+) (string, bool, bool, bool) {
 	jsonTagString := f.Tag.Get(r.fieldNameTag())
 	jsonTags := strings.Split(jsonTagString, ",")
 	if ignoredByJSONTags(jsonTags) {
@@ -1049,7 +1089,8 @@ func (r *reflector) reflectFieldName(f reflect.StructField) (string, bool, bool,
 		}
 
 		// As per JSON Marshal rules, anonymous pointer to structs are inherited
-		if f.Type.Kind() == reflect.Ptr && f.Type.Elem().Kind() == reflect.Struct {
+		if f.Type.Kind() == reflect.Ptr &&
+			f.Type.Elem().Kind() == reflect.Struct {
 			return "", true, false, false
 		}
 	}

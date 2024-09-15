@@ -1,4 +1,7 @@
-package groq //nolint:testpackage // testing private field
+//go:build !test
+// +build !test
+
+package groq
 
 import (
 	"bytes"

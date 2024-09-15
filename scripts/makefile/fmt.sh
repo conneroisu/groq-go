@@ -7,4 +7,4 @@
 
 gofmt -w .
 
-golines -w --max-len=79 .
+# golines -w --max-len=79 .

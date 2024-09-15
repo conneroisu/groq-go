@@ -22,7 +22,8 @@ type APIError struct {
 	HTTPStatusCode int     `json:"-"`               // HTTPStatusCode is the status code of the error.
 }
 
-// ErrChatCompletionInvalidModel is an error that occurs when the model is not supported with the CreateChatCompletion method.
+// ErrChatCompletionInvalidModel is an error that occurs when the model is not
+// supported with a specific endpoint.
 type ErrChatCompletionInvalidModel struct {
 	Model    Model
 	Endpoint Endpoint
@@ -38,7 +39,8 @@ func (e ErrChatCompletionInvalidModel) Error() string {
 		Error()
 }
 
-// ErrChatCompletionStreamNotSupported is an error that occurs when streaming is not supported with the CreateChatCompletionStream method.
+// ErrChatCompletionStreamNotSupported is an error that occurs when streaming
+// is not supported with the CreateChatCompletionStream method.
 type ErrChatCompletionStreamNotSupported struct {
 	model Model
 }
@@ -49,7 +51,8 @@ func (e ErrChatCompletionStreamNotSupported) Error() string {
 		Error()
 }
 
-// ErrContentFieldsMisused is an error that occurs when both Content and MultiContent properties are set.
+// ErrContentFieldsMisused is an error that occurs when both Content and
+// MultiContent properties are set.
 type ErrContentFieldsMisused struct {
 	field string
 }
@@ -70,7 +73,8 @@ func (e ErrCompletionUnsupportedModel) Error() string {
 		Error()
 }
 
-// ErrCompletionStreamNotSupported is an error that occurs when streaming is not supported with the CreateCompletionStream method.
+// ErrCompletionStreamNotSupported is an error that occurs when streaming is
+// not supported with the CreateCompletionStream method.
 type ErrCompletionStreamNotSupported struct{}
 
 // Error implements the error interface.
@@ -79,7 +83,8 @@ func (e ErrCompletionStreamNotSupported) Error() string {
 		Error()
 }
 
-// ErrCompletionRequestPromptTypeNotSupported is an error that occurs when the type of CompletionRequest.Prompt only supports string and []string.
+// ErrCompletionRequestPromptTypeNotSupported is an error that occurs when the
+// type of CompletionRequest.Prompt only supports string and []string.
 type ErrCompletionRequestPromptTypeNotSupported struct{}
 
 // Error implements the error interface.
@@ -88,7 +93,8 @@ func (e ErrCompletionRequestPromptTypeNotSupported) Error() string {
 		Error()
 }
 
-// ErrTooManyEmptyStreamMessages is returned when the stream has sent too many empty messages.
+// ErrTooManyEmptyStreamMessages is returned when the stream has sent too many
+// empty messages.
 type ErrTooManyEmptyStreamMessages struct{}
 
 // Error returns the error message.
@@ -98,11 +104,11 @@ func (e ErrTooManyEmptyStreamMessages) Error() string {
 
 // errorAccumulator is an interface for accumulating errors
 type errorAccumulator interface {
-	// Write writes bytes to the error accumulator
+	// Write method writes bytes to the error accumulator
 	//
 	// It implements the io.Writer interface.
 	Write(p []byte) error
-	// Bytes returns the bytes of the error accumulator.
+	// Bytes method returns the bytes of the error accumulator.
 	Bytes() []byte
 }
 
@@ -131,7 +137,7 @@ func newErrorAccumulator() errorAccumulator {
 	}
 }
 
-// Write writes bytes to the error accumulator.
+// Write method writes bytes to the error accumulator.
 func (e *DefaultErrorAccumulator) Write(p []byte) error {
 	_, err := e.Buffer.Write(p)
 	if err != nil {
@@ -140,7 +146,7 @@ func (e *DefaultErrorAccumulator) Write(p []byte) error {
 	return nil
 }
 
-// Bytes returns the bytes of the error accumulator.
+// Bytes method returns the bytes of the error accumulator.
 func (e *DefaultErrorAccumulator) Bytes() (errBytes []byte) {
 	if e.Buffer.Len() == 0 {
 		return
@@ -149,7 +155,7 @@ func (e *DefaultErrorAccumulator) Bytes() (errBytes []byte) {
 	return
 }
 
-// Error implements the error interface.
+// Error method implements the error interface on APIError.
 func (e *APIError) Error() string {
 	if e.HTTPStatusCode > 0 {
 		return fmt.Sprintf(
