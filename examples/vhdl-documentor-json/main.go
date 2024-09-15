@@ -53,7 +53,6 @@ func run(
 	if err != nil {
 		return err
 	}
-	log.Debugf("running with %s", getenv("GROQ_KEY"))
 	for _, val := range fileMap {
 	retry:
 		time.Sleep(6 * time.Second)
