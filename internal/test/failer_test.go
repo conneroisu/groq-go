@@ -102,10 +102,7 @@ func TestFailingErrorBuffer_MultipleWrites(t *testing.T) {
 	}
 }
 
-// TestFailingErrorBuffer_InterfaceCompliance checks if FailingErrorBuffer implements necessary interfaces.
-func TestFailingErrorBuffer_InterfaceCompliance(t *testing.T) {
-	var _ error = ErrTestErrorAccumulatorWriteFailed{}
-	var _ interface{ Write([]byte) (int, error) } = &FailingErrorBuffer{}
-	var _ interface{ Len() int } = &FailingErrorBuffer{}
-	var _ interface{ Bytes() []byte } = &FailingErrorBuffer{}
-}
+var _ error = ErrTestErrorAccumulatorWriteFailed{}
+var _ interface{ Write([]byte) (int, error) } = &FailingErrorBuffer{}
+var _ interface{ Len() int } = &FailingErrorBuffer{}
+var _ interface{ Bytes() []byte } = &FailingErrorBuffer{}
