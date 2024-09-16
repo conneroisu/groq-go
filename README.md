@@ -3,6 +3,7 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/conneroisu/groq-go.svg)](https://pkg.go.dev/github.com/conneroisu/groq-go)
 [![Go Report Card](https://goreportcard.com/badge/github.com/conneroisu/groq-go)](https://goreportcard.com/report/github.com/conneroisu/groq-go)
 [![Coverage Status](https://coveralls.io/repos/github/conneroisu/groq-go/badge.svg?branch=main)](https://coveralls.io/github/conneroisu/groq-go?branch=main)
+[![PhormAI](https://img.shields.io/badge/Phorm-Ask_AI-%23F2777A.svg?&logo=data:image/svg+xml)](https://www.phorm.ai/query?projectId=0634251d-5a98-4c37-ac2f-385b588ce3d3)
 
 ## Features
 
