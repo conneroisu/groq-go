@@ -107,10 +107,6 @@ func TestAudioWithOptionalArgs(t *testing.T) {
 				Temperature: 0.5,
 				Language:    "zh",
 				Format:      groq.AudioResponseFormatSRT,
-				TimestampGranularities: []groq.TranscriptionTimestampGranularity{
-					groq.TranscriptionTimestampGranularitySegment,
-					groq.TranscriptionTimestampGranularityWord,
-				},
 			}
 			_, err := tc.createFn(ctx, req)
 			a.NoError(err, "audio API error")
