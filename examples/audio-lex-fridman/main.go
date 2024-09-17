@@ -11,18 +11,26 @@ import (
 )
 
 func main() {
-	client, err := groq.NewClient(os.Getenv("GROQ_KEY"))
-	if err != nil {
+	if err := run(context.Background()); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	response, err := client.CreateTranscription(context.Background(), groq.AudioRequest{
+}
+
+func run(
+	ctx context.Context,
+) error {
+	client, err := groq.NewClient(os.Getenv("GROQ_KEY"))
+	if err != nil {
+		return err
+	}
+	response, err := client.CreateTranscription(ctx, groq.AudioRequest{
 		Model:    groq.WhisperLargeV3,
 		FilePath: "./The Roman Emperors who went insane Gregory Aldrete and Lex Fridman.mp3",
 	})
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		return err
 	}
 	fmt.Println(response.Text)
+	return nil
 }

@@ -31,14 +31,13 @@ func (c *Client) CreateTranslation(
 
 // AudioRequest represents a request structure for audio API.
 type AudioRequest struct {
-	Model                  Model                               // Model is the model to use for the transcription.
-	FilePath               string                              // FilePath is either an existing file in your filesystem or a filename representing the contents of Reader.
-	Reader                 io.Reader                           // Reader is an optional io.Reader when you do not want to use an existing file.
-	Prompt                 string                              // Prompt is the prompt for the transcription.
-	Temperature            float32                             // Temperature is the temperature for the transcription.
-	Language               string                              // Language is the language for the transcription. Only for transcription.
-	Format                 AudioResponseFormat                 // Format is the format for the response.
-	TimestampGranularities []TranscriptionTimestampGranularity // Only for transcription. TimestampGranularities is the timestamp granularities for the transcription.
+	Model       Model               // Model is the model to use for the transcription.
+	FilePath    string              // FilePath is either an existing file in your filesystem or a filename representing the contents of Reader.
+	Reader      io.Reader           // Reader is an optional io.Reader when you do not want to use an existing file.
+	Prompt      string              // Prompt is the prompt for the transcription.
+	Temperature float32             // Temperature is the temperature for the transcription.
+	Language    string              // Language is the language for the transcription. Only for transcription.
+	Format      AudioResponseFormat // Format is the format for the response.
 }
 
 // AudioResponse represents a response structure for audio API.
