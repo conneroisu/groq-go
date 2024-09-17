@@ -207,24 +207,24 @@ const (
 
     TranscriptionTimestampGranularityWord    TranscriptionTimestampGranularity = "word"                                  // TranscriptionTimestampGranularityWord is the word timestamp granularity.
     TranscriptionTimestampGranularitySegment TranscriptionTimestampGranularity = "segment"                               // TranscriptionTimestampGranularitySegment is the segment timestamp granularity.
-    Llama370B8192                            Model                             = "llama3-70b-8192"                       // Llama370B8192 is an AI text model provided by Meta. It has 8192 context window.
     DistilWhisperLargeV3En                   Model                             = "distil-whisper-large-v3-en"            // DistilWhisperLargeV3En is an AI audio model provided by Hugging Face. It has 448 context window.
-    Gemma7BIt                                Model                             = "gemma-7b-it"                           // Gemma7BIt is an AI text model provided by Google. It has 8192 context window.
-    LlavaV157B4096Preview                    Model                             = "llava-v1.5-7b-4096-preview"            // LlavaV157B4096Preview is an AI text model provided by Other. It has 4096 context window.
-    Llama3170BVersatile                      Model                             = "llama-3.1-70b-versatile"               // Llama3170BVersatile is an AI text model provided by Meta. It has 131072 context window.
-    Llama38B8192                             Model                             = "llama3-8b-8192"                        // Llama38B8192 is an AI text model provided by Meta. It has 8192 context window.
-    Llama318BInstant                         Model                             = "llama-3.1-8b-instant"                  // Llama318BInstant is an AI text model provided by Meta. It has 131072 context window.
-    WhisperLargeV3                           Model                             = "whisper-large-v3"                      // WhisperLargeV3 is an AI audio model provided by OpenAI. It has 448 context window.
-    Llama3Groq8B8192ToolUsePreview           Model                             = "llama3-groq-8b-8192-tool-use-preview"  // Llama3Groq8B8192ToolUsePreview is an AI text model provided by Groq. It has 8192 context window.
     Gemma29BIt                               Model                             = "gemma2-9b-it"                          // Gemma29BIt is an AI text model provided by Google. It has 8192 context window.
-    Mixtral8X7B32768                         Model                             = "mixtral-8x7b-32768"                    // Mixtral8X7B32768 is an AI text model provided by Mistral AI. It has 32768 context window.
+    Gemma7BIt                                Model                             = "gemma-7b-it"                           // Gemma7BIt is an AI text model provided by Google. It has 8192 context window.
+    Llama3170BVersatile                      Model                             = "llama-3.1-70b-versatile"               // Llama3170BVersatile is an AI text model provided by Meta. It has 131072 context window.
+    Llama318BInstant                         Model                             = "llama-3.1-8b-instant"                  // Llama318BInstant is an AI text model provided by Meta. It has 131072 context window.
+    Llama370B8192                            Model                             = "llama3-70b-8192"                       // Llama370B8192 is an AI text model provided by Meta. It has 8192 context window.
+    Llama38B8192                             Model                             = "llama3-8b-8192"                        // Llama38B8192 is an AI text model provided by Meta. It has 8192 context window.
     Llama3Groq70B8192ToolUsePreview          Model                             = "llama3-groq-70b-8192-tool-use-preview" // Llama3Groq70B8192ToolUsePreview is an AI text model provided by Groq. It has 8192 context window.
-    LlamaGuard38B                            Model                             = "llama-guard-3-8b"                      // LlamaGuard38B is an AI moderation model provided by Meta. It has 8192 context window.
+    Llama3Groq8B8192ToolUsePreview           Model                             = "llama3-groq-8b-8192-tool-use-preview"  // Llama3Groq8B8192ToolUsePreview is an AI text model provided by Groq. It has 8192 context window.
+    LlamaGuard38B                            Model                             = "llama-guard-3-8b"                      // LlamaGuard38B is an AI  model provided by Meta. It has 8192 context window.
+    LlavaV157B4096Preview                    Model                             = "llava-v1.5-7b-4096-preview"            // LlavaV157B4096Preview is an AI text model provided by Other. It has 4096 context window.
+    Mixtral8X7B32768                         Model                             = "mixtral-8x7b-32768"                    // Mixtral8X7B32768 is an AI text model provided by Mistral AI. It has 32768 context window.
+    WhisperLargeV3                           Model                             = "whisper-large-v3"                      // WhisperLargeV3 is an AI audio model provided by OpenAI. It has 448 context window.
 )
 ```
 
 <a name="ToSnakeCase"></a>
-## func [ToSnakeCase](<https://github.com/conneroisu/groq-go/blob/main/schema.go#L1165>)
+## func [ToSnakeCase](<https://github.com/conneroisu/groq-go/blob/main/schema.go#L1206>)
 
 ```go
 func ToSnakeCase(str string) string
@@ -248,16 +248,16 @@ type APIError struct {
 ```
 
 <a name="APIError.Error"></a>
-### func \(\*APIError\) [Error](<https://github.com/conneroisu/groq-go/blob/main/errors.go#L153>)
+### func \(\*APIError\) [Error](<https://github.com/conneroisu/groq-go/blob/main/errors.go#L159>)
 
 ```go
 func (e *APIError) Error() string
 ```
 
-Error implements the error interface.
+Error method implements the error interface on APIError.
 
 <a name="APIError.UnmarshalJSON"></a>
-### func \(\*APIError\) [UnmarshalJSON](<https://github.com/conneroisu/groq-go/blob/main/errors.go#L165>)
+### func \(\*APIError\) [UnmarshalJSON](<https://github.com/conneroisu/groq-go/blob/main/errors.go#L171>)
 
 ```go
 func (e *APIError) UnmarshalJSON(data []byte) (err error)
@@ -266,25 +266,24 @@ func (e *APIError) UnmarshalJSON(data []byte) (err error)
 UnmarshalJSON implements the json.Unmarshaler interface.
 
 <a name="AudioRequest"></a>
-## type [AudioRequest](<https://github.com/conneroisu/groq-go/blob/main/audio.go#L33-L42>)
+## type [AudioRequest](<https://github.com/conneroisu/groq-go/blob/main/audio.go#L33-L41>)
 
 AudioRequest represents a request structure for audio API.
 
 ```go
 type AudioRequest struct {
-    Model                  Model                               // Model is the model to use for the transcription.
-    FilePath               string                              // FilePath is either an existing file in your filesystem or a filename representing the contents of Reader.
-    Reader                 io.Reader                           // Reader is an optional io.Reader when you do not want to use an existing file.
-    Prompt                 string                              // Prompt is the prompt for the transcription.
-    Temperature            float32                             // Temperature is the temperature for the transcription.
-    Language               string                              // Language is the language for the transcription. Only for transcription.
-    Format                 AudioResponseFormat                 // Format is the format for the response.
-    TimestampGranularities []TranscriptionTimestampGranularity // Only for transcription. TimestampGranularities is the timestamp granularities for the transcription.
+    Model       Model               // Model is the model to use for the transcription.
+    FilePath    string              // FilePath is either an existing file in your filesystem or a filename representing the contents of Reader.
+    Reader      io.Reader           // Reader is an optional io.Reader when you do not want to use an existing file.
+    Prompt      string              // Prompt is the prompt for the transcription.
+    Temperature float32             // Temperature is the temperature for the transcription.
+    Language    string              // Language is the language for the transcription. Only for transcription.
+    Format      AudioResponseFormat // Format is the format for the response.
 }
 ```
 
 <a name="AudioResponse"></a>
-## type [AudioResponse](<https://github.com/conneroisu/groq-go/blob/main/audio.go#L45-L54>)
+## type [AudioResponse](<https://github.com/conneroisu/groq-go/blob/main/audio.go#L44-L53>)
 
 AudioResponse represents a response structure for audio API.
 
@@ -302,7 +301,7 @@ type AudioResponse struct {
 ```
 
 <a name="AudioResponse.SetHeader"></a>
-### func \(\*AudioResponse\) [SetHeader](<https://github.com/conneroisu/groq-go/blob/main/audio.go#L79>)
+### func \(\*AudioResponse\) [SetHeader](<https://github.com/conneroisu/groq-go/blob/main/audio.go#L78>)
 
 ```go
 func (r *AudioResponse) SetHeader(header http.Header)
@@ -698,7 +697,7 @@ CreateTranslation calls the translations endpoint with the given request.
 Returns the translated text in the response\_format specified in the request.
 
 <a name="Client.Moderate"></a>
-### func \(\*Client\) [Moderate](<https://github.com/conneroisu/groq-go/blob/main/moderation.go#L163-L166>)
+### func \(\*Client\) [Moderate](<https://github.com/conneroisu/groq-go/blob/main/moderation.go#L164-L167>)
 
 ```go
 func (c *Client) Moderate(ctx context.Context, request ModerationRequest) (response Moderation, err error)
@@ -797,22 +796,22 @@ type DefaultErrorAccumulator struct {
 ```
 
 <a name="DefaultErrorAccumulator.Bytes"></a>
-### func \(\*DefaultErrorAccumulator\) [Bytes](<https://github.com/conneroisu/groq-go/blob/main/errors.go#L144>)
+### func \(\*DefaultErrorAccumulator\) [Bytes](<https://github.com/conneroisu/groq-go/blob/main/errors.go#L150>)
 
 ```go
 func (e *DefaultErrorAccumulator) Bytes() (errBytes []byte)
 ```
 
-Bytes returns the bytes of the error accumulator.
+Bytes method returns the bytes of the error accumulator.
 
 <a name="DefaultErrorAccumulator.Write"></a>
-### func \(\*DefaultErrorAccumulator\) [Write](<https://github.com/conneroisu/groq-go/blob/main/errors.go#L135>)
+### func \(\*DefaultErrorAccumulator\) [Write](<https://github.com/conneroisu/groq-go/blob/main/errors.go#L141>)
 
 ```go
 func (e *DefaultErrorAccumulator) Write(p []byte) error
 ```
 
-Write writes bytes to the error accumulator.
+Write method writes bytes to the error accumulator.
 
 <a name="Endpoint"></a>
 ## type [Endpoint](<https://github.com/conneroisu/groq-go/blob/main/models.go#L11>)
@@ -824,9 +823,9 @@ type Endpoint string
 ```
 
 <a name="ErrChatCompletionInvalidModel"></a>
-## type [ErrChatCompletionInvalidModel](<https://github.com/conneroisu/groq-go/blob/main/errors.go#L26-L29>)
+## type [ErrChatCompletionInvalidModel](<https://github.com/conneroisu/groq-go/blob/main/errors.go#L27-L30>)
 
-ErrChatCompletionInvalidModel is an error that occurs when the model is not supported with the CreateChatCompletion method.
+ErrChatCompletionInvalidModel is an error that occurs when the model is not supported with a specific endpoint.
 
 ```go
 type ErrChatCompletionInvalidModel struct {
@@ -836,7 +835,7 @@ type ErrChatCompletionInvalidModel struct {
 ```
 
 <a name="ErrChatCompletionInvalidModel.Error"></a>
-### func \(ErrChatCompletionInvalidModel\) [Error](<https://github.com/conneroisu/groq-go/blob/main/errors.go#L32>)
+### func \(ErrChatCompletionInvalidModel\) [Error](<https://github.com/conneroisu/groq-go/blob/main/errors.go#L33>)
 
 ```go
 func (e ErrChatCompletionInvalidModel) Error() string
@@ -845,7 +844,7 @@ func (e ErrChatCompletionInvalidModel) Error() string
 Error implements the error interface.
 
 <a name="ErrChatCompletionStreamNotSupported"></a>
-## type [ErrChatCompletionStreamNotSupported](<https://github.com/conneroisu/groq-go/blob/main/errors.go#L42-L44>)
+## type [ErrChatCompletionStreamNotSupported](<https://github.com/conneroisu/groq-go/blob/main/errors.go#L44-L46>)
 
 ErrChatCompletionStreamNotSupported is an error that occurs when streaming is not supported with the CreateChatCompletionStream method.
 
@@ -856,7 +855,7 @@ type ErrChatCompletionStreamNotSupported struct {
 ```
 
 <a name="ErrChatCompletionStreamNotSupported.Error"></a>
-### func \(ErrChatCompletionStreamNotSupported\) [Error](<https://github.com/conneroisu/groq-go/blob/main/errors.go#L47>)
+### func \(ErrChatCompletionStreamNotSupported\) [Error](<https://github.com/conneroisu/groq-go/blob/main/errors.go#L49>)
 
 ```go
 func (e ErrChatCompletionStreamNotSupported) Error() string
@@ -865,7 +864,7 @@ func (e ErrChatCompletionStreamNotSupported) Error() string
 Error implements the error interface.
 
 <a name="ErrCompletionRequestPromptTypeNotSupported"></a>
-## type [ErrCompletionRequestPromptTypeNotSupported](<https://github.com/conneroisu/groq-go/blob/main/errors.go#L83>)
+## type [ErrCompletionRequestPromptTypeNotSupported](<https://github.com/conneroisu/groq-go/blob/main/errors.go#L88>)
 
 ErrCompletionRequestPromptTypeNotSupported is an error that occurs when the type of CompletionRequest.Prompt only supports string and \[\]string.
 
@@ -874,7 +873,7 @@ type ErrCompletionRequestPromptTypeNotSupported struct{}
 ```
 
 <a name="ErrCompletionRequestPromptTypeNotSupported.Error"></a>
-### func \(ErrCompletionRequestPromptTypeNotSupported\) [Error](<https://github.com/conneroisu/groq-go/blob/main/errors.go#L86>)
+### func \(ErrCompletionRequestPromptTypeNotSupported\) [Error](<https://github.com/conneroisu/groq-go/blob/main/errors.go#L91>)
 
 ```go
 func (e ErrCompletionRequestPromptTypeNotSupported) Error() string
@@ -883,7 +882,7 @@ func (e ErrCompletionRequestPromptTypeNotSupported) Error() string
 Error implements the error interface.
 
 <a name="ErrCompletionStreamNotSupported"></a>
-## type [ErrCompletionStreamNotSupported](<https://github.com/conneroisu/groq-go/blob/main/errors.go#L74>)
+## type [ErrCompletionStreamNotSupported](<https://github.com/conneroisu/groq-go/blob/main/errors.go#L78>)
 
 ErrCompletionStreamNotSupported is an error that occurs when streaming is not supported with the CreateCompletionStream method.
 
@@ -892,7 +891,7 @@ type ErrCompletionStreamNotSupported struct{}
 ```
 
 <a name="ErrCompletionStreamNotSupported.Error"></a>
-### func \(ErrCompletionStreamNotSupported\) [Error](<https://github.com/conneroisu/groq-go/blob/main/errors.go#L77>)
+### func \(ErrCompletionStreamNotSupported\) [Error](<https://github.com/conneroisu/groq-go/blob/main/errors.go#L81>)
 
 ```go
 func (e ErrCompletionStreamNotSupported) Error() string
@@ -901,7 +900,7 @@ func (e ErrCompletionStreamNotSupported) Error() string
 Error implements the error interface.
 
 <a name="ErrCompletionUnsupportedModel"></a>
-## type [ErrCompletionUnsupportedModel](<https://github.com/conneroisu/groq-go/blob/main/errors.go#L65>)
+## type [ErrCompletionUnsupportedModel](<https://github.com/conneroisu/groq-go/blob/main/errors.go#L68>)
 
 ErrCompletionUnsupportedModel is an error that occurs when the model is not supported with the CreateCompletion method.
 
@@ -910,7 +909,7 @@ type ErrCompletionUnsupportedModel struct{ Model Model }
 ```
 
 <a name="ErrCompletionUnsupportedModel.Error"></a>
-### func \(ErrCompletionUnsupportedModel\) [Error](<https://github.com/conneroisu/groq-go/blob/main/errors.go#L68>)
+### func \(ErrCompletionUnsupportedModel\) [Error](<https://github.com/conneroisu/groq-go/blob/main/errors.go#L71>)
 
 ```go
 func (e ErrCompletionUnsupportedModel) Error() string
@@ -919,7 +918,7 @@ func (e ErrCompletionUnsupportedModel) Error() string
 Error implements the error interface.
 
 <a name="ErrContentFieldsMisused"></a>
-## type [ErrContentFieldsMisused](<https://github.com/conneroisu/groq-go/blob/main/errors.go#L53-L55>)
+## type [ErrContentFieldsMisused](<https://github.com/conneroisu/groq-go/blob/main/errors.go#L56-L58>)
 
 ErrContentFieldsMisused is an error that occurs when both Content and MultiContent properties are set.
 
@@ -930,7 +929,7 @@ type ErrContentFieldsMisused struct {
 ```
 
 <a name="ErrContentFieldsMisused.Error"></a>
-### func \(ErrContentFieldsMisused\) [Error](<https://github.com/conneroisu/groq-go/blob/main/errors.go#L58>)
+### func \(ErrContentFieldsMisused\) [Error](<https://github.com/conneroisu/groq-go/blob/main/errors.go#L61>)
 
 ```go
 func (e ErrContentFieldsMisused) Error() string
@@ -939,7 +938,7 @@ func (e ErrContentFieldsMisused) Error() string
 Error implements the error interface.
 
 <a name="ErrTooManyEmptyStreamMessages"></a>
-## type [ErrTooManyEmptyStreamMessages](<https://github.com/conneroisu/groq-go/blob/main/errors.go#L92>)
+## type [ErrTooManyEmptyStreamMessages](<https://github.com/conneroisu/groq-go/blob/main/errors.go#L98>)
 
 ErrTooManyEmptyStreamMessages is returned when the stream has sent too many empty messages.
 
@@ -948,7 +947,7 @@ type ErrTooManyEmptyStreamMessages struct{}
 ```
 
 <a name="ErrTooManyEmptyStreamMessages.Error"></a>
-### func \(ErrTooManyEmptyStreamMessages\) [Error](<https://github.com/conneroisu/groq-go/blob/main/errors.go#L95>)
+### func \(ErrTooManyEmptyStreamMessages\) [Error](<https://github.com/conneroisu/groq-go/blob/main/errors.go#L101>)
 
 ```go
 func (e ErrTooManyEmptyStreamMessages) Error() string
@@ -1142,7 +1141,7 @@ type Model string
 ```
 
 <a name="Moderation"></a>
-## type [Moderation](<https://github.com/conneroisu/groq-go/blob/main/moderation.go#L156-L159>)
+## type [Moderation](<https://github.com/conneroisu/groq-go/blob/main/moderation.go#L157-L160>)
 
 Moderation represents one of possible moderation results.
 
@@ -1154,14 +1153,15 @@ type Moderation struct {
 ```
 
 <a name="ModerationRequest"></a>
-## type [ModerationRequest](<https://github.com/conneroisu/groq-go/blob/main/moderation.go#L150-L153>)
+## type [ModerationRequest](<https://github.com/conneroisu/groq-go/blob/main/moderation.go#L150-L154>)
 
 ModerationRequest represents a request structure for moderation API.
 
 ```go
 type ModerationRequest struct {
-    Input string `json:"input,omitempty"` // Input is the input text to be moderated.
-    Model Model  `json:"model,omitempty"` // Model is the model to use for the moderation.
+    // Input string `json:"input,omitempty"` // Input is the input text to be moderated.
+    Messages []ChatCompletionMessage `json:"messages"`        // Messages is the messages of the chat completion request. These act as the prompt for the model.
+    Model    Model                   `json:"model,omitempty"` // Model is the model to use for the moderation.
 }
 ```
 
@@ -1291,7 +1291,7 @@ type Role string
 ```
 
 <a name="Segments"></a>
-## type [Segments](<https://github.com/conneroisu/groq-go/blob/main/audio.go#L64-L76>)
+## type [Segments](<https://github.com/conneroisu/groq-go/blob/main/audio.go#L63-L75>)
 
 Segments is the segments of the response.
 
@@ -1425,7 +1425,7 @@ type Usage struct {
 ```
 
 <a name="Words"></a>
-## type [Words](<https://github.com/conneroisu/groq-go/blob/main/audio.go#L57-L61>)
+## type [Words](<https://github.com/conneroisu/groq-go/blob/main/audio.go#L56-L60>)
 
 Words is the words of the response.
 
