@@ -7,12 +7,12 @@ import (
 	"context"
 	_ "embed"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 	"text/template"
 	"time"
 
-	"github.com/charmbracelet/log"
 	"github.com/conneroisu/groq-go"
 )
 
@@ -37,8 +37,6 @@ func init() {
 	}
 }
 func main() {
-	log.SetLevel(log.DebugLevel)
-	log.SetReportCaller(true)
 	ctx := context.Background()
 	err := run(ctx, os.Getenv)
 	if err != nil {
@@ -56,7 +54,7 @@ func run(
 	for _, val := range fileMap {
 	retry:
 		time.Sleep(6 * time.Second)
-		log.Debugf("processing %s", val.Destination)
+		log.Printf("processing %s", val.Destination)
 		filename := strings.Split(val.Destination, "/")[len(strings.Split(val.Destination, "/"))-1]
 		prompt, err := executeCodeTemplate(CodeTemplateData{
 			Source: val.Source,
@@ -81,7 +79,7 @@ func run(
 		if err != nil {
 			goto retry
 		}
-		log.Debugf(
+		log.Printf(
 			"thoughts for %s:  %s",
 			val.Destination,
 			thoughtThroughCode.Thoughts,
@@ -94,13 +92,13 @@ func run(
 		if err != nil {
 			return err
 		}
-		log.Debugf("Creating file %s", val.Destination)
+		log.Printf("Creating file %s", val.Destination)
 		oF, err := os.Create(val.Destination)
 		if err != nil {
 			return err
 		}
 		defer oF.Close()
-		log.Debugf("Writing file %s", val.Destination)
+		log.Printf("Writing file %s", val.Destination)
 		_, err = oF.WriteString(content)
 		if err != nil {
 			return err
@@ -285,7 +283,7 @@ func (fM *FileMapper) ToFileArray(dest string) []File {
 	for _, file := range *fM {
 		split := strings.Split(file.Destination, "/")
 		if strings.Contains(dest, "/"+split[2]+"/") {
-			log.Debugf("adding %s to files", file.Destination)
+			log.Printf("adding %s to files", file.Destination)
 			files = append(files, File{
 				Name:    file.Destination,
 				Content: file.Source,
@@ -293,7 +291,7 @@ func (fM *FileMapper) ToFileArray(dest string) []File {
 			continue
 		}
 	}
-	log.Debugf("n-files: %v", len(files))
+	log.Printf("n-files: %v", len(files))
 	return files
 }
 
