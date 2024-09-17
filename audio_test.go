@@ -28,10 +28,6 @@ func TestAudioWithFailingFormBuilder(t *testing.T) {
 		Temperature: 0.5,
 		Language:    "en",
 		Format:      AudioResponseFormatSRT,
-		TimestampGranularities: []TranscriptionTimestampGranularity{
-			TranscriptionTimestampGranularitySegment,
-			TranscriptionTimestampGranularityWord,
-		},
 	}
 
 	mockFailedErr := fmt.Errorf("mock form builder fail")
@@ -65,7 +61,6 @@ func TestAudioWithFailingFormBuilder(t *testing.T) {
 		"temperature",
 		"language",
 		"response_format",
-		"timestamp_granularities[]",
 	}
 	for _, failingField := range failOn {
 		failForField = failingField

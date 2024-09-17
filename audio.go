@@ -184,14 +184,6 @@ func audioMultipartForm(request AudioRequest, b formBuilder) error {
 			return fmt.Errorf("writing language: %w", err)
 		}
 	}
-	if len(request.TimestampGranularities) > 0 {
-		for _, tg := range request.TimestampGranularities {
-			err = b.WriteField("timestamp_granularities[]", string(tg))
-			if err != nil {
-				return fmt.Errorf("writing timestamp_granularities[]: %w", err)
-			}
-		}
-	}
 	return b.Close()
 }
 
