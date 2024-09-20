@@ -129,7 +129,6 @@ type errorResponse struct {
 	Error *APIError `json:"error,omitempty"`
 }
 
-// Error implements the error interface.
 // newErrorAccumulator creates a new error accumulator
 func newErrorAccumulator() errorAccumulator {
 	return &DefaultErrorAccumulator{
@@ -204,6 +203,7 @@ func (e *APIError) UnmarshalJSON(data []byte) (err error) {
 	return json.Unmarshal(rawMap["code"], &e.Code)
 }
 
+// Error implements the error interface.
 func (e *requestError) Error() string {
 	return fmt.Sprintf(
 		"error, status code: %d, message: %s",
@@ -212,6 +212,7 @@ func (e *requestError) Error() string {
 	)
 }
 
+// Unwrap unwraps the error.
 func (e *requestError) Unwrap() error {
 	return e.Err
 }

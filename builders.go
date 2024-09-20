@@ -14,10 +14,10 @@ import (
 
 // formBuilder is an interface for building a form.
 type formBuilder interface {
+	io.Closer
 	CreateFormFile(fieldname string, file *os.File) error
 	CreateFormFileReader(fieldname string, r io.Reader, filename string) error
 	WriteField(fieldname, value string) error
-	Close() error
 	FormDataContentType() string
 }
 

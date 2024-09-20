@@ -70,7 +70,9 @@ type MockRoundTripper struct {
 }
 
 // RoundTrip captures the request and returns a dummy response.
-func (m *MockRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+func (m *MockRoundTripper) RoundTrip(
+	req *http.Request,
+) (*http.Response, error) {
 	m.LastRequest = req
 	return &http.Response{
 		StatusCode: http.StatusOK,
@@ -104,10 +106,18 @@ func TestTokenRoundTripper(t *testing.T) {
 	// Perform the HTTP request.
 	resp, err := client.Do(req)
 	a.NoError(err, "HTTP request should succeed")
-	a.Equal(http.StatusOK, resp.StatusCode, "Response status code should be 200")
+	a.Equal(
+		http.StatusOK,
+		resp.StatusCode,
+		"Response status code should be 200",
+	)
 
 	// Verify that the Authorization header was added.
 	a.NotNil(mockRT.LastRequest, "LastRequest should be captured")
 	authHeader := mockRT.LastRequest.Header.Get("Authorization")
-	a.Equal("Bearer test-token", authHeader, "Authorization header should contain the correct token")
+	a.Equal(
+		"Bearer test-token",
+		authHeader,
+		"Authorization header should contain the correct token",
+	)
 }
