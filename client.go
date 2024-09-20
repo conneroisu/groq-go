@@ -38,7 +38,7 @@ type Client struct {
 	orgID              string       // OrgID is the organization ID for the client.
 	baseURL            string       // Base URL for the client.
 	client             *http.Client // Client is the HTTP client to use
-	EmptyMessagesLimit uint         // EmptyMessagesLimit is the limit for the empty messages.
+	emptyMessagesLimit uint         // EmptyMessagesLimit is the limit for the empty messages.
 	requestBuilder     requestBuilder
 	requestFormBuilder formBuilder
 	createFormBuilder  func(body io.Writer) formBuilder
@@ -59,7 +59,7 @@ func NewClient(groqAPIKey string, opts ...Opts) (*Client, error) {
 			Timestamp().
 			Logger(),
 		baseURL:            groqAPIURLv1,
-		EmptyMessagesLimit: 10,
+		emptyMessagesLimit: 10,
 		createFormBuilder: func(body io.Writer) formBuilder {
 			return newFormBuilder(body)
 		},
@@ -217,7 +217,7 @@ func sendRequestStream[T streamer](
 		return new(streamReader[T]), client.handleErrorResp(resp)
 	}
 	return &streamReader[T]{
-		emptyMessagesLimit: client.EmptyMessagesLimit,
+		emptyMessagesLimit: client.emptyMessagesLimit,
 		reader:             bufio.NewReader(resp.Body),
 		response:           resp,
 		errAccumulator:     newErrorAccumulator(),

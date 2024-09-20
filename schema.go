@@ -25,9 +25,9 @@ const version = "https://json-schema.org/draft/2020-12/schema"
 // RFC draft-wright-json-schema-validation-00, section 7.3
 var (
 	// trueSchema defines a schema with a true value
-	trueSchema = &schema{boolean: &[]bool{true}[0]}
+	trueSchema = &Schema{boolean: &[]bool{true}[0]}
 	// falseSchema defines a schema with a false value
-	falseSchema = &schema{boolean: &[]bool{false}[0]}
+	falseSchema = &Schema{boolean: &[]bool{false}[0]}
 
 	timeType = reflect.TypeOf(time.Time{}) // date-time RFC section 7.3.1
 	ipType   = reflect.TypeOf(
@@ -57,13 +57,13 @@ var (
 // custom Schema Type definition to use instead. Very useful for situations
 // where there are custom JSON Marshal and Unmarshal methods.
 type customSchemaImpl interface {
-	JSONSchema() *schema
+	JSONSchema() *Schema
 }
 
 // Function to be run after the schema has been generated.
 // this will let you modify a schema afterwards
 type extendSchemaImpl interface {
-	JSONSchemaExtend(*schema)
+	JSONSchemaExtend(*Schema)
 }
 
 // If the object to be reflected defines a `JSONSchemaAlias` method, its type will
@@ -146,24 +146,26 @@ type reflector struct {
 	Lookup func(reflect.Type) schemaID
 
 	// Mapper is a function that can be used to map custom Go types to jsonschema schemas.
-	Mapper func(reflect.Type) *schema
+	Mapper func(reflect.Type) *Schema
 
 	// Namer allows customizing of type names. The default is to use the type's name
 	// provided by the reflect package.
 	Namer func(reflect.Type) string
 
 	// KeyNamer allows customizing of key names.
-	// The default is to use the key's name as is, or the json tag if present.
-	// If a json tag is present, KeyNamer will receive the tag's name as an argument, not the original key name.
+	// The default is to use the key's name as is, or the json tag if
+	// present.
+	// If a json tag is present, KeyNamer will receive the tag's name as an
+	// argument, not the original key name.
 	KeyNamer func(string) string
 
 	// AdditionalFields allows adding structfields for a given type
 	AdditionalFields func(reflect.Type) []reflect.StructField
 
-	// CommentMap is a dictionary of fully qualified go types and fields to comment
-	// strings that will be used if a description has not already been provided in
-	// the tags. Types and fields are added to the package path using "." as a
-	// separator.
+	// CommentMap is a dictionary of fully qualified go types and fields to
+	// comment strings that will be used if a description has not already
+	// been provided in the tags. Types and fields are added to the package
+	// path using "." as a separator.
 	//
 	// Type descriptions should be defined like:
 	//
@@ -178,19 +180,19 @@ type reflector struct {
 }
 
 // Reflect reflects to Schema from a value.
-func (r *reflector) Reflect(v any) *schema {
+func (r *reflector) Reflect(v any) *Schema {
 	return r.ReflectFromType(reflect.TypeOf(v))
 }
 
 // ReflectFromType generates root schema
-func (r *reflector) ReflectFromType(t reflect.Type) *schema {
+func (r *reflector) ReflectFromType(t reflect.Type) *Schema {
 	if t.Kind() == reflect.Ptr {
 		t = t.Elem() // re-assign from pointer
 	}
 
 	name := r.typeName(t)
 
-	s := new(schema)
+	s := new(Schema)
 	definitions := schemaDefinitions{}
 	s.Definitions = definitions
 	bs := r.reflectTypeToSchemaWithID(definitions, t)
@@ -238,10 +240,10 @@ func (r *reflector) SetBaseSchemaID(identifier string) {
 func (r *reflector) refOrReflectTypeToSchema(
 	definitions schemaDefinitions,
 	t reflect.Type,
-) *schema {
+) *Schema {
 	id := r.lookupID(t)
 	if id != EmptyID {
-		return &schema{
+		return &Schema{
 			Ref: id.String(),
 		}
 	}
@@ -257,7 +259,7 @@ func (r *reflector) refOrReflectTypeToSchema(
 func (r *reflector) reflectTypeToSchemaWithID(
 	defs schemaDefinitions,
 	t reflect.Type,
-) *schema {
+) *Schema {
 	s := r.reflectTypeToSchema(defs, t)
 	if s != nil {
 		if r.Lookup != nil {
@@ -273,7 +275,7 @@ func (r *reflector) reflectTypeToSchemaWithID(
 func (r *reflector) reflectTypeToSchema(
 	definitions schemaDefinitions,
 	t reflect.Type,
-) *schema {
+) *Schema {
 	// only try to reflect non-pointers
 	if t.Kind() == reflect.Ptr {
 		return r.refOrReflectTypeToSchema(definitions, t.Elem())
@@ -299,12 +301,12 @@ func (r *reflector) reflectTypeToSchema(
 	}
 
 	// Prepare a base to which details can be added
-	st := new(schema)
+	st := new(Schema)
 
 	// jsonpb will marshal protobuf enum options as either strings or integers.
 	// It will unmarshal either.
 	if t.Implements(protoEnumType) {
-		st.OneOf = []*schema{
+		st.OneOf = []*Schema{
 			{Type: "string"},
 			{Type: "integer"},
 		}
@@ -372,7 +374,7 @@ func (r *reflector) reflectTypeToSchema(
 func (r *reflector) reflectCustomSchema(
 	definitions schemaDefinitions,
 	t reflect.Type,
-) *schema {
+) *Schema {
 	if t.Kind() == reflect.Ptr {
 		return r.reflectCustomSchema(definitions, t.Elem())
 	}
@@ -394,8 +396,8 @@ func (r *reflector) reflectCustomSchema(
 func (r *reflector) reflectSchemaExtend(
 	definitions schemaDefinitions,
 	t reflect.Type,
-	s *schema,
-) *schema {
+	s *Schema,
+) *Schema {
 	if t.Implements(extendType) {
 		v := reflect.New(t)
 		o := v.Interface().(extendSchemaImpl)
@@ -411,7 +413,7 @@ func (r *reflector) reflectSchemaExtend(
 func (r *reflector) reflectSliceOrArray(
 	definitions schemaDefinitions,
 	t reflect.Type,
-	st *schema,
+	st *Schema,
 ) {
 	if t == rawMessageType {
 		return
@@ -441,7 +443,7 @@ func (r *reflector) reflectSliceOrArray(
 func (r *reflector) reflectMap(
 	definitions schemaDefinitions,
 	t reflect.Type,
-	st *schema,
+	st *Schema,
 ) {
 	r.addDefinition(definitions, t, st)
 
@@ -456,7 +458,7 @@ func (r *reflector) reflectMap(
 		reflect.Int16,
 		reflect.Int32,
 		reflect.Int64:
-		st.PatternProperties = map[string]*schema{
+		st.PatternProperties = map[string]*Schema{
 			"^[0-9]+$": r.refOrReflectTypeToSchema(definitions, t.Elem()),
 		}
 		st.AdditionalProperties = falseSchema
@@ -474,7 +476,7 @@ func (r *reflector) reflectMap(
 func (r *reflector) reflectStruct(
 	definitions schemaDefinitions,
 	t reflect.Type,
-	s *schema,
+	s *Schema,
 ) {
 	// Handle special types
 	switch t {
@@ -512,7 +514,7 @@ func (r *reflector) reflectStruct(
 }
 
 func (r *reflector) reflectStructFields(
-	st *schema,
+	st *Schema,
 	definitions schemaDefinitions,
 	t reflect.Type,
 ) {
@@ -541,8 +543,9 @@ func (r *reflector) reflectStructFields(
 
 	handleField := func(f reflect.StructField) {
 		name, shouldEmbed, required, nullable := r.reflectFieldName(f)
-		// if anonymous and exported type should be processed recursively
-		// current type should inherit properties of anonymous one
+		// if anonymous and exported type should be processed
+		// recursively current type should inherit properties of
+		// anonymous one
 		if name == "" {
 			if shouldEmbed {
 				r.reflectStructFields(st, definitions, f.Type)
@@ -550,9 +553,10 @@ func (r *reflector) reflectStructFields(
 			return
 		}
 
-		// If a JSONSchemaAlias(prop string) method is defined, attempt to use
-		// the provided object's type instead of the field's type.
-		var property *schema
+		// If a JSONSchemaAlias(prop string) method is defined, attempt
+		// to use the provided object's type instead of the field's
+		// type.
+		var property *Schema
 		if alias := customPropertyMethod(name); alias != nil {
 			property = r.refOrReflectTypeToSchema(
 				definitions,
@@ -571,8 +575,8 @@ func (r *reflector) reflectStructFields(
 		}
 
 		if nullable {
-			property = &schema{
-				OneOf: []*schema{
+			property = &Schema{
+				OneOf: []*Schema{
 					property,
 					{
 						Type: "null",
@@ -622,11 +626,12 @@ func (r *reflector) lookupComment(t reflect.Type, name string) string {
 	return r.CommentMap[n]
 }
 
-// addDefinition will append the provided schema. If needed, an ID and anchor will also be added.
+// addDefinition will append the provided schema. If needed, an ID and anchor
+// will also be added.
 func (r *reflector) addDefinition(
 	definitions schemaDefinitions,
 	t reflect.Type,
-	s *schema,
+	s *Schema,
 ) {
 	name := r.typeName(t)
 	if name == "" {
@@ -635,11 +640,12 @@ func (r *reflector) addDefinition(
 	definitions[name] = s
 }
 
-// refDefinition will provide a schema with a reference to an existing definition.
+// refDefinition will provide a schema with a reference to an existing
+// definition.
 func (r *reflector) refDefinition(
 	definitions schemaDefinitions,
 	t reflect.Type,
-) *schema {
+) *Schema {
 	if r.DoNotReference {
 		return nil
 	}
@@ -650,7 +656,7 @@ func (r *reflector) refDefinition(
 	if _, ok := definitions[name]; !ok {
 		return nil
 	}
-	return &schema{
+	return &Schema{
 		Ref: "#/$defs/" + name,
 	}
 }
@@ -666,9 +672,9 @@ func (r *reflector) lookupID(t reflect.Type) schemaID {
 	return EmptyID
 }
 
-func (t *schema) fieldsFromTags(
+func (t *Schema) fieldsFromTags(
 	f reflect.StructField,
-	parent *schema,
+	parent *Schema,
 	propertyName string,
 ) {
 	t.Description = f.Tag.Get("jsonschema_description")
@@ -693,9 +699,9 @@ func (t *schema) fieldsFromTags(
 }
 
 // genericfields reads struct tags for generic keywords
-func (t *schema) genericfields(
+func (t *Schema) genericfields(
 	tags []string,
-	parent *schema,
+	parent *Schema,
 	propertyName string,
 ) []string {
 	unprocessed := make([]string, 0, len(tags))
@@ -713,14 +719,14 @@ func (t *schema) genericfields(
 			case "anchor":
 				t.Anchor = val
 			case "oneof_required":
-				var typeFound *schema
+				var typeFound *Schema
 				for i := range parent.OneOf {
 					if parent.OneOf[i].Title == nameValue[1] {
 						typeFound = parent.OneOf[i]
 					}
 				}
 				if typeFound == nil {
-					typeFound = &schema{
+					typeFound = &Schema{
 						Title:    nameValue[1],
 						Required: []string{},
 					}
@@ -728,14 +734,14 @@ func (t *schema) genericfields(
 				}
 				typeFound.Required = append(typeFound.Required, propertyName)
 			case "anyof_required":
-				var typeFound *schema
+				var typeFound *Schema
 				for i := range parent.AnyOf {
 					if parent.AnyOf[i].Title == nameValue[1] {
 						typeFound = parent.AnyOf[i]
 					}
 				}
 				if typeFound == nil {
-					typeFound = &schema{
+					typeFound = &Schema{
 						Title:    nameValue[1],
 						Required: []string{},
 					}
@@ -748,23 +754,23 @@ func (t *schema) genericfields(
 					subSchema = t.Items
 				}
 				if subSchema.OneOf == nil {
-					subSchema.OneOf = make([]*schema, 0, 1)
+					subSchema.OneOf = make([]*Schema, 0, 1)
 				}
 				subSchema.Ref = ""
 				refs := strings.Split(nameValue[1], ";")
 				for _, r := range refs {
-					subSchema.OneOf = append(subSchema.OneOf, &schema{
+					subSchema.OneOf = append(subSchema.OneOf, &Schema{
 						Ref: r,
 					})
 				}
 			case "oneof_type":
 				if t.OneOf == nil {
-					t.OneOf = make([]*schema, 0, 1)
+					t.OneOf = make([]*Schema, 0, 1)
 				}
 				t.Type = ""
 				types := strings.Split(nameValue[1], ";")
 				for _, ty := range types {
-					t.OneOf = append(t.OneOf, &schema{
+					t.OneOf = append(t.OneOf, &Schema{
 						Type: ty,
 					})
 				}
@@ -774,23 +780,23 @@ func (t *schema) genericfields(
 					subSchema = t.Items
 				}
 				if subSchema.AnyOf == nil {
-					subSchema.AnyOf = make([]*schema, 0, 1)
+					subSchema.AnyOf = make([]*Schema, 0, 1)
 				}
 				subSchema.Ref = ""
 				refs := strings.Split(nameValue[1], ";")
 				for _, r := range refs {
-					subSchema.AnyOf = append(subSchema.AnyOf, &schema{
+					subSchema.AnyOf = append(subSchema.AnyOf, &Schema{
 						Ref: r,
 					})
 				}
 			case "anyof_type":
 				if t.AnyOf == nil {
-					t.AnyOf = make([]*schema, 0, 1)
+					t.AnyOf = make([]*Schema, 0, 1)
 				}
 				t.Type = ""
 				types := strings.Split(nameValue[1], ";")
 				for _, ty := range types {
-					t.AnyOf = append(t.AnyOf, &schema{
+					t.AnyOf = append(t.AnyOf, &Schema{
 						Type: ty,
 					})
 				}
@@ -803,7 +809,7 @@ func (t *schema) genericfields(
 }
 
 // read struct tags for boolean type fields
-func (t *schema) booleanfields(tags []string) {
+func (t *Schema) booleanfields(tags []string) {
 	for _, tag := range tags {
 		nameValue := strings.Split(tag, "=")
 		if len(nameValue) != 2 {
@@ -821,7 +827,7 @@ func (t *schema) booleanfields(tags []string) {
 }
 
 // read struct tags for string type fields
-func (t *schema) stringfields(tags []string) {
+func (t *Schema) stringfields(tags []string) {
 	for _, tag := range tags {
 		nameValue := strings.SplitN(tag, "=", 2)
 		if len(nameValue) == 2 {
@@ -853,7 +859,7 @@ func (t *schema) stringfields(tags []string) {
 }
 
 // read struct tags for numerical type fields
-func (t *schema) numericalfields(tags []string) {
+func (t *Schema) numericalfields(tags []string) {
 	for _, tag := range tags {
 		nameValue := strings.Split(tag, "=")
 		if len(nameValue) == 2 {
@@ -887,7 +893,7 @@ func (t *schema) numericalfields(tags []string) {
 }
 
 // read struct tags for array type fields
-func (t *schema) arrayfields(tags []string) {
+func (t *Schema) arrayfields(tags []string) {
 	var defaultValues []any
 
 	unprocessed := make([]string, 0, len(tags))
@@ -938,7 +944,7 @@ func (t *schema) arrayfields(tags []string) {
 	}
 }
 
-func (t *schema) extrafields(tags []string) {
+func (t *Schema) extrafields(tags []string) {
 	for _, tag := range tags {
 		nameValue := strings.SplitN(tag, "=", 2)
 		if len(nameValue) == 2 {
@@ -947,7 +953,7 @@ func (t *schema) extrafields(tags []string) {
 	}
 }
 
-func (t *schema) setExtra(key, val string) {
+func (t *Schema) setExtra(key, val string) {
 	if t.Extras == nil {
 		t.Extras = map[string]any{}
 	}
@@ -1116,7 +1122,7 @@ func (r *reflector) reflectFieldName(
 }
 
 // UnmarshalJSON is used to parse a schema object or boolean.
-func (t *schema) UnmarshalJSON(data []byte) error {
+func (t *Schema) UnmarshalJSON(data []byte) error {
 	if bytes.Equal(data, []byte("true")) {
 		*t = *trueSchema
 		return nil
@@ -1124,7 +1130,7 @@ func (t *schema) UnmarshalJSON(data []byte) error {
 		*t = *falseSchema
 		return nil
 	}
-	type SchemaAlt schema
+	type SchemaAlt Schema
 	aux := &struct {
 		*SchemaAlt
 	}{
@@ -1134,18 +1140,18 @@ func (t *schema) UnmarshalJSON(data []byte) error {
 }
 
 // MarshalJSON is used to serialize a schema object or boolean.
-func (t *schema) MarshalJSON() ([]byte, error) {
+func (t *Schema) MarshalJSON() ([]byte, error) {
 	if t.boolean != nil {
 		if *t.boolean {
 			return []byte("true"), nil
 		}
 		return []byte("false"), nil
 	}
-	if reflect.DeepEqual(&schema{}, t) {
+	if reflect.DeepEqual(&Schema{}, t) {
 		// Don't bother returning empty schemas
 		return []byte("true"), nil
 	}
-	type SchemaAlt schema
+	type SchemaAlt Schema
 	b, err := json.Marshal((*SchemaAlt)(t))
 	if err != nil {
 		return nil, err
@@ -1211,20 +1217,77 @@ func ToSnakeCase(str string) string {
 
 // newProperties is a helper method to instantiate a new properties ordered
 // map.
-func newProperties() *orderedmap.OrderedMap[string, *schema] {
-	return orderedmap.New[string, *schema]()
+func newProperties() *orderedmap.OrderedMap[string, *Schema] {
+	return orderedmap.New[string, *Schema]()
 }
 
-// schema represents a JSON schema object type.
-// RFC draft-bhutton-json-schema-00 section 4.3
-type schema struct {
+// Schema represents a JSON Schema object type.
+// RFC draft-bhutton-json-Schema-00 section 4.3
+type Schema struct {
 	// RFC draft-bhutton-json-schema-00
-	Version     string            `json:"$schema,omitempty"`     // section 8.1.1
-	ID          schemaID          `json:"$id,omitempty"`         // section 8.2.1
-	Anchor      string            `json:"$anchor,omitempty"`     // section 8.2.2
-	Ref         string            `json:"$ref,omitempty"`        // section 8.2.3.1
-	DynamicRef  string            `json:"$dynamicRef,omitempty"` // section 8.2.3.2
-	Definitions schemaDefinitions `json:"$defs,omitempty"`       // section 8.2.4
+	// Version is the version of the schema as specified in section 8.1.1 of RFC
+	// draft-bhutton-json-schema-00.
+	//
+	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-00#section-8.1.1
+	//
+	// The value of this field MUST be a string.  This string SHOULD be a
+	// version number of the schema.
+	Version string `json:"$schema,omitempty"`
+	// ID is the ID of the schema as specified in section 8.2.1 of RFC
+	// draft-bhutton-json-schema-00.
+	//
+	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-00#section-8.2.1
+	//
+	// The value of this field MUST be a string.  This string SHOULD be a
+	// URI.
+	ID schemaID `json:"$id,omitempty"`
+	// Anchor is the anchor of the schema as specified in section 8.2.2 of RFC
+	// draft-bhutton-json-schema-00.
+	//
+	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-00#section-8.2.2
+	//
+	// The value of this field MUST be a string.  This string SHOULD be a
+	// valid URI fragment.
+	Anchor string `json:"$anchor,omitempty"`
+	// Ref is the ref of the schema as specified in section 8.2.3.1 of RFC
+	// draft-bhutton-json-schema-00.
+	//
+	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-00#section-8.2.3.1
+	//
+	// The value of this field MUST be a string.  This string SHOULD be a
+	// valid URI.
+	Ref string `json:"$ref,omitempty"`
+	// DynamicRef is the dynamic ref of the schema as specified in section 8.2.3.2 of RFC
+	// draft-bhutton-json-schema-00.
+	//
+	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-00#section-8.2.3.2
+	//
+	// The value of this field MUST be a string.  This string SHOULD be a
+	// valid URI.
+	DynamicRef string `json:"$dynamicRef,omitempty"`
+	// Definitions is the definitions of the schema as specified in section 8.2.4 of RFC
+	// draft-bhutton-json-schema-00.
+	//
+	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-00#section-8.2.4
+	//
+	// The value of this field MUST be an object.  Properties in this
+	// object, if any, MUST be arrays.  Elements in each array, if any, MUST
+	// be strings, and MUST be unique.
+	//
+	// This field specifies properties that are required if a specific
+	// other property is present.  Their requirement is dependent on the
+	// presence of the other property.
+	//
+	// Validation succeeds if, for each name that appears in both the
+	// instance and as a name within this field's value, the child instance
+	// for that name successfully validates against the corresponding schema.
+	//
+	// The annotation result of this field is the set of instance property
+	// names matched by this field.
+	//
+	// Omitting this field has the same assertion behavior as an empty
+	// object.
+	Definitions schemaDefinitions `json:"$defs,omitempty"`
 	// Comments specifies a comment for the schema as
 	// specified RFC draft-bhutton-json-schema-00 section 8.3
 	//
@@ -1270,7 +1333,7 @@ type schema struct {
 	// validates successfully against all schemas defined by "allOf".
 	//
 	// Omitting this field has the same behavior as an empty array.
-	AllOf []*schema `json:"allOf,omitempty"`
+	AllOf []*Schema `json:"allOf,omitempty"`
 	// AnyOf is the any of of the schema as specified in section 10.2.1.2
 	// of RFC draft-bhutton-json-schema-00.
 	//
@@ -1284,7 +1347,7 @@ type schema struct {
 	// "anyOf".
 	//
 	// Omitting this field has the same behavior as an empty array.
-	AnyOf []*schema `json:"anyOf,omitempty"`
+	AnyOf []*Schema `json:"anyOf,omitempty"`
 	// OneOf is the one of of the schema as specified in section 10.2.1.3
 	// of RFC draft-bhutton-json-schema-00.
 	//
@@ -1298,7 +1361,7 @@ type schema struct {
 	// "oneOf".
 	//
 	// Omitting this field has the same behavior as an empty array.
-	OneOf []*schema `json:"oneOf,omitempty"`
+	OneOf []*Schema `json:"oneOf,omitempty"`
 	// Not is the not of the schema as specified in section 10.2.1.4 of
 	// RFC draft-bhutton-json-schema-00.
 	//
@@ -1311,15 +1374,15 @@ type schema struct {
 	// validates successfully against the schema defined by "not".
 	//
 	// Omitting this field has the same behavior as an empty object.
-	Not *schema `json:"not,omitempty"`
+	Not *Schema `json:"not,omitempty"`
 	// RFC draft-bhutton-json-schema-00 section 10.2.2 (Apply sub-schemas conditionally)
-	If               *schema            `json:"if,omitempty"`               // section 10.2.2.1
-	Then             *schema            `json:"then,omitempty"`             // section 10.2.2.2
-	Else             *schema            `json:"else,omitempty"`             // section 10.2.2.3
-	DependentSchemas map[string]*schema `json:"dependentSchemas,omitempty"` // section 10.2.2.4
+	If               *Schema            `json:"if,omitempty"`               // section 10.2.2.1
+	Then             *Schema            `json:"then,omitempty"`             // section 10.2.2.2
+	Else             *Schema            `json:"else,omitempty"`             // section 10.2.2.3
+	DependentSchemas map[string]*Schema `json:"dependentSchemas,omitempty"` // section 10.2.2.4
 	// RFC draft-bhutton-json-schema-00 section 10.3.1 (arrays)
-	PrefixItems []*schema `json:"prefixItems,omitempty"` // section 10.3.1.1
-	Items       *schema   `json:"items,omitempty"`       // section 10.3.1.2  (replaces additionalItems)
+	PrefixItems []*Schema `json:"prefixItems,omitempty"` // section 10.3.1.1
+	Items       *Schema   `json:"items,omitempty"`       // section 10.3.1.2  (replaces additionalItems)
 	// Contains is the contains of the schema as specified in section 10.3.1.3 of RFC
 	// draft-bhutton-json-schema-00.
 	//
@@ -1333,7 +1396,7 @@ type schema struct {
 	// applied to every array element even after the first match has been
 	// found, in order to collect annotations for use by other fields.
 	// This is to ensure that all possible annotations are collected.
-	Contains *schema `json:"contains,omitempty"` // section 10.3.1.3
+	Contains *Schema `json:"contains,omitempty"` // section 10.3.1.3
 	// RFC draft-bhutton-json-schema-00 section 10.3.2 (sub-schemas)
 	// Properties are the properties of the schema as specified in section 10.3.2.1 of RFC
 	// draft-bhutton-json-schema-00.
@@ -1353,7 +1416,7 @@ type schema struct {
 	//
 	// Omitting this field has the same assertion behavior as an empty
 	// object.
-	Properties *orderedmap.OrderedMap[string, *schema] `json:"properties,omitempty"`
+	Properties *orderedmap.OrderedMap[string, *Schema] `json:"properties,omitempty"`
 	// PatternProperties are the pattern properties of the schema as specified in section 10.3.2.2 of RFC
 	// draft-bhutton-json-schema-00.
 	//
@@ -1375,7 +1438,7 @@ type schema struct {
 	//
 	// Omitting this field has the same assertion behavior as an empty
 	// object.
-	PatternProperties map[string]*schema `json:"patternProperties,omitempty"` // section 10.3.2.2
+	PatternProperties map[string]*Schema `json:"patternProperties,omitempty"` // section 10.3.2.2
 	// AdditionalProperties is the additional properties of the schema as
 	// specified in section 10.3.2.3 of RFC
 	// draft-bhutton-json-schema-00.
@@ -1405,7 +1468,7 @@ type schema struct {
 	// checking the names in "properties" and the patterns in
 	// "patternProperties" against the instance property set.
 	// Implementations that do not support annotation collection MUST do so.
-	AdditionalProperties *schema `json:"additionalProperties,omitempty"` // section 10.3.2.3
+	AdditionalProperties *Schema `json:"additionalProperties,omitempty"` // section 10.3.2.3
 	// PropertyNames is the property names of the schema as specified in
 	// section 10.3.2.4 of RFC
 	// draft-bhutton-json-schema-00.
@@ -1425,7 +1488,7 @@ type schema struct {
 	// corresponding array is also the name of a property in the instance.
 	//
 	// Omitting this field has the same behavior as an empty object.
-	PropertyNames *schema `json:"propertyNames,omitempty"` // section 10.3.2.4
+	PropertyNames *Schema `json:"propertyNames,omitempty"` // section 10.3.2.4
 	// Type is the type of the schema as specified in section 6.1.1 of
 	// RFC draft-bhutton-json-schema-validation-00.
 	//
@@ -1791,7 +1854,7 @@ type schema struct {
 	//
 	// The value of this property MUST be a valid JSON schema.  It SHOULD be
 	// ignored if "contentMediaType" is not present.
-	ContentSchema *schema `json:"contentSchema,omitempty"`
+	ContentSchema *Schema `json:"contentSchema,omitempty"`
 	// Title is the title of the schema as specified in section 9.1 of
 	// RFC draft-bhutton-json-schema-validation-00.
 	//
@@ -1879,7 +1942,7 @@ type schema struct {
 // http://json-schema.org/latest/json-schema-validation.html#rfc.section.5.26
 //
 // RFC draft-wright-json-schema-validation-00, section 5.26
-type schemaDefinitions map[string]*schema
+type schemaDefinitions map[string]*Schema
 
 // schemaID represents a Schema schemaID type which should always be a URI.
 // See draft-bhutton-json-schema-00 section 8.2.1

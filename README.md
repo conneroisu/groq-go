@@ -26,6 +26,13 @@ go get github.com/conneroisu/groq-go
 
 For introductory examples, see the [examples](https://github.com/conneroisu/groq-go/tree/main/examples) directory.
 
+[audio](/examples/audio-lex-fridman)
+[json](/examples/json-chat)
+[moderation](/examples/moderation)
+[vision](/examples/llava-blind)
+[terminal-chat](/examples/terminal-chat)
+[documentor-float](/examples/vhdl-documentor-json)
+
 External Repositories using groq-go:
 - [Automatic Git Commit Message Generator](https://github.com/conneroisu/gita)
 

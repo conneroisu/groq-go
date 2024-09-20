@@ -217,8 +217,8 @@ type CustomTypeFieldWithInterface struct {
 	CreatedAt CustomTimeWithInterface
 }
 
-func (CustomTimeWithInterface) JSONSchema() *schema {
-	return &schema{
+func (CustomTimeWithInterface) JSONSchema() *Schema {
+	return &Schema{
 		Type:   "string",
 		Format: "date-time",
 	}
@@ -302,8 +302,8 @@ type UserWithAnchor struct {
 	Name string `json:"name" jsonschema:"anchor=Name"`
 }
 
-func (CompactDate) JSONSchema() *schema {
-	return &schema{
+func (CompactDate) JSONSchema() *Schema {
+	return &Schema{
 		Type:        "string",
 		Title:       "Compact Date",
 		Description: "Short date that only includes year and month",
@@ -349,13 +349,13 @@ type CustomSliceOuter struct {
 
 type CustomSliceType []string
 
-func (CustomSliceType) JSONSchema() *schema {
-	return &schema{
-		OneOf: []*schema{{
+func (CustomSliceType) JSONSchema() *Schema {
+	return &Schema{
+		OneOf: []*Schema{{
 			Type: "string",
 		}, {
 			Type: "array",
-			Items: &schema{
+			Items: &Schema{
 				Type: "string",
 			},
 		}},
@@ -364,17 +364,17 @@ func (CustomSliceType) JSONSchema() *schema {
 
 type CustomMapType map[string]string
 
-func (CustomMapType) JSONSchema() *schema {
+func (CustomMapType) JSONSchema() *Schema {
 	properties := newProperties()
-	properties.Set("key", &schema{
+	properties.Set("key", &Schema{
 		Type: "string",
 	})
-	properties.Set("value", &schema{
+	properties.Set("value", &Schema{
 		Type: "string",
 	})
-	return &schema{
+	return &Schema{
 		Type: "array",
-		Items: &schema{
+		Items: &Schema{
 			Type:       "object",
 			Properties: properties,
 			Required:   []string{"key", "value"},
@@ -419,7 +419,7 @@ type SchemaExtendTest struct {
 	SchemaExtendTestBase `json:",inline"`
 }
 
-func (SchemaExtendTest) JSONSchemaExtend(base *schema) {
+func (SchemaExtendTest) JSONSchemaExtend(base *Schema) {
 	base.Properties.Delete("FirstName")
 	base.Properties.Delete("age")
 	val, _ := base.Properties.Get("LastName")
@@ -519,9 +519,9 @@ func TestSchemaGeneration(t *testing.T) {
 			"testdata/anyof.json",
 		},
 		{&CustomTypeField{}, &reflector{
-			Mapper: func(i reflect.Type) *schema {
+			Mapper: func(i reflect.Type) *Schema {
 				if i == reflect.TypeOf(CustomTime{}) {
-					return &schema{
+					return &Schema{
 						Type:   "string",
 						Format: "date-time",
 					}

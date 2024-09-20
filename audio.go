@@ -83,7 +83,7 @@ func (r *AudioResponse) SetHeader(header http.Header) {
 // response format is text.
 type audioTextResponse struct {
 	Text   string      `json:"text"` // Text is the text of the response.
-	header http.Header // Header is the header of the response.
+	header http.Header `json:"-"`    // Header is the response header.
 }
 
 // SetHeader sets the header of the audio text response.

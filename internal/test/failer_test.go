@@ -39,7 +39,11 @@ func TestFailingErrorBuffer_Write(t *testing.T) {
 				t.Errorf("Write(%q) returned n=%d, expected n=0", tc.input, n)
 			}
 			if !errors.Is(err, ErrTestErrorAccumulatorWriteFailed{}) {
-				t.Errorf("Write(%q) returned err=%v, expected ErrTestErrorAccumulatorWriteFailed{}", tc.input, err)
+				t.Errorf(
+					"Write(%q) returned err=%v, expected ErrTestErrorAccumulatorWriteFailed{}",
+					tc.input,
+					err,
+				)
 			}
 		})
 	}
@@ -68,14 +72,22 @@ func TestFailingErrorBuffer_Bytes(t *testing.T) {
 
 	bytes := buf.Bytes()
 	if len(bytes) != 0 {
-		t.Errorf("Bytes() returned %v (len=%d), expected empty byte slice", bytes, len(bytes))
+		t.Errorf(
+			"Bytes() returned %v (len=%d), expected empty byte slice",
+			bytes,
+			len(bytes),
+		)
 	}
 
 	// After Write calls
 	_, _ = buf.Write([]byte("test"))
 	bytes = buf.Bytes()
 	if len(bytes) != 0 {
-		t.Errorf("Bytes() after Write returned %v (len=%d), expected empty byte slice", bytes, len(bytes))
+		t.Errorf(
+			"Bytes() after Write returned %v (len=%d), expected empty byte slice",
+			bytes,
+			len(bytes),
+		)
 	}
 }
 
@@ -89,16 +101,26 @@ func TestFailingErrorBuffer_MultipleWrites(t *testing.T) {
 			t.Errorf("Write call %d returned n=%d, expected n=0", i+1, n)
 		}
 		if !errors.Is(err, ErrTestErrorAccumulatorWriteFailed{}) {
-			t.Errorf("Write call %d returned err=%v, expected ErrTestErrorAccumulatorWriteFailed{}", i+1, err)
+			t.Errorf(
+				"Write call %d returned err=%v, expected ErrTestErrorAccumulatorWriteFailed{}",
+				i+1,
+				err,
+			)
 		}
 	}
 
 	if buf.Len() != 0 {
-		t.Errorf("Len() after multiple Writes returned %d, expected 0", buf.Len())
+		t.Errorf(
+			"Len() after multiple Writes returned %d, expected 0",
+			buf.Len(),
+		)
 	}
 
 	if len(buf.Bytes()) != 0 {
-		t.Errorf("Bytes() after multiple Writes returned len=%d, expected 0", len(buf.Bytes()))
+		t.Errorf(
+			"Bytes() after multiple Writes returned len=%d, expected 0",
+			len(buf.Bytes()),
+		)
 	}
 }
 
