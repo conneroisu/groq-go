@@ -150,7 +150,7 @@ Features:
 - [type Opts](<#Opts>)
   - [func WithBaseURL\(baseURL string\) Opts](<#WithBaseURL>)
   - [func WithClient\(client \*http.Client\) Opts](<#WithClient>)
-  - [func WithLogger\(logger zerolog.Logger\) Opts](<#WithLogger>)
+  - [func WithLogger\(logger \*slog.Logger\) Opts](<#WithLogger>)
 - [type PromptAnnotation](<#PromptAnnotation>)
 - [type PromptFilterResult](<#PromptFilterResult>)
 - [type RateLimitHeaders](<#RateLimitHeaders>)
@@ -217,19 +217,24 @@ const (
 
     TranscriptionTimestampGranularityWord    TranscriptionTimestampGranularity = "word"                                  // TranscriptionTimestampGranularityWord is the word timestamp granularity.
     TranscriptionTimestampGranularitySegment TranscriptionTimestampGranularity = "segment"                               // TranscriptionTimestampGranularitySegment is the segment timestamp granularity.
-    DistilWhisperLargeV3En                   Model                             = "distil-whisper-large-v3-en"            // DistilWhisperLargeV3En is an AI audio model provided by Hugging Face. It has 448 context window.
-    Gemma29BIt                               Model                             = "gemma2-9b-it"                          // Gemma29BIt is an AI text model provided by Google. It has 8192 context window.
-    Gemma7BIt                                Model                             = "gemma-7b-it"                           // Gemma7BIt is an AI text model provided by Google. It has 8192 context window.
-    Llama3170BVersatile                      Model                             = "llama-3.1-70b-versatile"               // Llama3170BVersatile is an AI text model provided by Meta. It has 131072 context window.
-    Llama318BInstant                         Model                             = "llama-3.1-8b-instant"                  // Llama318BInstant is an AI text model provided by Meta. It has 131072 context window.
-    Llama370B8192                            Model                             = "llama3-70b-8192"                       // Llama370B8192 is an AI text model provided by Meta. It has 8192 context window.
-    Llama38B8192                             Model                             = "llama3-8b-8192"                        // Llama38B8192 is an AI text model provided by Meta. It has 8192 context window.
-    Llama3Groq70B8192ToolUsePreview          Model                             = "llama3-groq-70b-8192-tool-use-preview" // Llama3Groq70B8192ToolUsePreview is an AI text model provided by Groq. It has 8192 context window.
-    Llama3Groq8B8192ToolUsePreview           Model                             = "llama3-groq-8b-8192-tool-use-preview"  // Llama3Groq8B8192ToolUsePreview is an AI text model provided by Groq. It has 8192 context window.
-    LlamaGuard38B                            Model                             = "llama-guard-3-8b"                      // LlamaGuard38B is an AI  model provided by Meta. It has 8192 context window.
-    LlavaV157B4096Preview                    Model                             = "llava-v1.5-7b-4096-preview"            // LlavaV157B4096Preview is an AI text model provided by Other. It has 4096 context window.
-    Mixtral8X7B32768                         Model                             = "mixtral-8x7b-32768"                    // Mixtral8X7B32768 is an AI text model provided by Mistral AI. It has 32768 context window.
-    WhisperLargeV3                           Model                             = "whisper-large-v3"                      // WhisperLargeV3 is an AI audio model provided by OpenAI. It has 448 context window.
+    ModelDistilWhisperLargeV3En              Model                             = "distil-whisper-large-v3-en"            // ModelDistilWhisperLargeV3En is an AI audio model provided by Hugging Face. It has 448 context window.
+    ModelGemma29BIt                          Model                             = "gemma2-9b-it"                          // ModelGemma29BIt is an AI text model provided by Google. It has 8192 context window.
+    ModelGemma7BIt                           Model                             = "gemma-7b-it"                           // ModelGemma7BIt is an AI text model provided by Google. It has 8192 context window.
+    ModelLlama3170BVersatile                 Model                             = "llama-3.1-70b-versatile"               // ModelLlama3170BVersatile is an AI text model provided by Meta. It has 131072 context window.
+    ModelLlama318BInstant                    Model                             = "llama-3.1-8b-instant"                  // ModelLlama318BInstant is an AI text model provided by Meta. It has 131072 context window.
+    ModelLlama3211BTextPreview               Model                             = "llama-3.2-11b-text-preview"            // ModelLlama3211BTextPreview is an AI text model provided by Meta. It has 8192 context window.
+    ModelLlama3211BVisionPreview             Model                             = "llama-3.2-11b-vision-preview"          // ModelLlama3211BVisionPreview is an AI text model provided by Meta. It has 8192 context window.
+    ModelLlama321BPreview                    Model                             = "llama-3.2-1b-preview"                  // ModelLlama321BPreview is an AI text model provided by Meta. It has 8192 context window.
+    ModelLlama323BPreview                    Model                             = "llama-3.2-3b-preview"                  // ModelLlama323BPreview is an AI text model provided by Meta. It has 8192 context window.
+    ModelLlama3290BTextPreview               Model                             = "llama-3.2-90b-text-preview"            // ModelLlama3290BTextPreview is an AI text model provided by Meta. It has 8192 context window.
+    ModelLlama370B8192                       Model                             = "llama3-70b-8192"                       // ModelLlama370B8192 is an AI text model provided by Meta. It has 8192 context window.
+    ModelLlama38B8192                        Model                             = "llama3-8b-8192"                        // ModelLlama38B8192 is an AI text model provided by Meta. It has 8192 context window.
+    ModelLlama3Groq70B8192ToolUsePreview     Model                             = "llama3-groq-70b-8192-tool-use-preview" // ModelLlama3Groq70B8192ToolUsePreview is an AI text model provided by Groq. It has 8192 context window.
+    ModelLlama3Groq8B8192ToolUsePreview      Model                             = "llama3-groq-8b-8192-tool-use-preview"  // ModelLlama3Groq8B8192ToolUsePreview is an AI text model provided by Groq. It has 8192 context window.
+    ModelLlamaGuard38B                       Model                             = "llama-guard-3-8b"                      // ModelLlamaGuard38B is an AI  model provided by Meta. It has 8192 context window.
+    ModelLlavaV157B4096Preview               Model                             = "llava-v1.5-7b-4096-preview"            // ModelLlavaV157B4096Preview is an AI text model provided by Other. It has 4096 context window.
+    ModelMixtral8X7B32768                    Model                             = "mixtral-8x7b-32768"                    // ModelMixtral8X7B32768 is an AI text model provided by Mistral AI. It has 32768 context window.
+    ModelWhisperLargeV3                      Model                             = "whisper-large-v3"                      // ModelWhisperLargeV3 is an AI audio model provided by OpenAI. It has 448 context window.
 )
 ```
 
@@ -599,7 +604,7 @@ type ChatMessagePartType string
 ```
 
 <a name="Client"></a>
-## type [Client](<https://github.com/conneroisu/groq-go/blob/main/client.go#L36-L46>)
+## type [Client](<https://github.com/conneroisu/groq-go/blob/main/client.go#L34-L45>)
 
 Client is a Groq api client.
 
@@ -610,7 +615,7 @@ type Client struct {
 ```
 
 <a name="NewClient"></a>
-### func [NewClient](<https://github.com/conneroisu/groq-go/blob/main/client.go#L49>)
+### func [NewClient](<https://github.com/conneroisu/groq-go/blob/main/client.go#L48>)
 
 ```go
 func NewClient(groqAPIKey string, opts ...Opts) (*Client, error)
@@ -971,7 +976,7 @@ func (r FinishReason) MarshalJSON() ([]byte, error)
 MarshalJSON implements the json.Marshaler interface.
 
 <a name="Format"></a>
-## type [Format](<https://github.com/conneroisu/groq-go/blob/main/client.go#L21>)
+## type [Format](<https://github.com/conneroisu/groq-go/blob/main/client.go#L19>)
 
 Format is the format of a response. string
 
@@ -1013,13 +1018,13 @@ FunctionDefinition represents the function definition.
 type FunctionDefinition struct {
     Name        string `json:"name"`                  // Name is the name of the function.
     Description string `json:"description,omitempty"` // Description is the description of the function.
-    Strict      bool   `json:"strict,omitempty"`      // Strict is the strict of the function.
+    Strict      bool   `json:"strict,omitempty"`      // Strict is the strictness of the function.
     // Parameters is an object describing the function.
     // You can pass json.RawMessage to describe the schema,
     // or you can pass in a struct which serializes to the proper JSON schema.
     // The jsonschema package is provided for convenience, but you should
     // consider another specialized library if you require more complex schemas.
-    Parameters any `json:"parameters"`
+    Parameters Schema `json:"parameters"`
 }
 ```
 
@@ -1163,7 +1168,7 @@ type ModerationRequest struct {
 ```
 
 <a name="Opts"></a>
-## type [Opts](<https://github.com/conneroisu/groq-go/blob/main/client.go#L85>)
+## type [Opts](<https://github.com/conneroisu/groq-go/blob/main/client.go#L80>)
 
 Opts is a function that sets options for a Groq client.
 
@@ -1172,7 +1177,7 @@ type Opts func(*Client)
 ```
 
 <a name="WithBaseURL"></a>
-### func [WithBaseURL](<https://github.com/conneroisu/groq-go/blob/main/client.go#L95>)
+### func [WithBaseURL](<https://github.com/conneroisu/groq-go/blob/main/client.go#L90>)
 
 ```go
 func WithBaseURL(baseURL string) Opts
@@ -1181,7 +1186,7 @@ func WithBaseURL(baseURL string) Opts
 WithBaseURL sets the base URL for the Groq client.
 
 <a name="WithClient"></a>
-### func [WithClient](<https://github.com/conneroisu/groq-go/blob/main/client.go#L88>)
+### func [WithClient](<https://github.com/conneroisu/groq-go/blob/main/client.go#L83>)
 
 ```go
 func WithClient(client *http.Client) Opts
@@ -1190,10 +1195,10 @@ func WithClient(client *http.Client) Opts
 WithClient sets the client for the Groq client.
 
 <a name="WithLogger"></a>
-### func [WithLogger](<https://github.com/conneroisu/groq-go/blob/main/client.go#L102>)
+### func [WithLogger](<https://github.com/conneroisu/groq-go/blob/main/client.go#L97>)
 
 ```go
-func WithLogger(logger zerolog.Logger) Opts
+func WithLogger(logger *slog.Logger) Opts
 ```
 
 WithLogger sets the logger for the Groq client.
@@ -1221,7 +1226,7 @@ type PromptFilterResult struct {
 ```
 
 <a name="RateLimitHeaders"></a>
-## type [RateLimitHeaders](<https://github.com/conneroisu/groq-go/blob/main/client.go#L295-L302>)
+## type [RateLimitHeaders](<https://github.com/conneroisu/groq-go/blob/main/client.go#L290-L297>)
 
 RateLimitHeaders struct represents Groq rate limits headers.
 
@@ -1237,7 +1242,7 @@ type RateLimitHeaders struct {
 ```
 
 <a name="RawResponse"></a>
-## type [RawResponse](<https://github.com/conneroisu/groq-go/blob/main/client.go#L195-L199>)
+## type [RawResponse](<https://github.com/conneroisu/groq-go/blob/main/client.go#L190-L194>)
 
 RawResponse is a response from the raw endpoint.
 
@@ -1250,7 +1255,7 @@ type RawResponse struct {
 ```
 
 <a name="ResetTime"></a>
-## type [ResetTime](<https://github.com/conneroisu/groq-go/blob/main/client.go#L306>)
+## type [ResetTime](<https://github.com/conneroisu/groq-go/blob/main/client.go#L301>)
 
 ResetTime is a time.Time wrapper for the rate limit reset time. string
 
@@ -1259,7 +1264,7 @@ type ResetTime string
 ```
 
 <a name="ResetTime.String"></a>
-### func \(ResetTime\) [String](<https://github.com/conneroisu/groq-go/blob/main/client.go#L309>)
+### func \(ResetTime\) [String](<https://github.com/conneroisu/groq-go/blob/main/client.go#L304>)
 
 ```go
 func (r ResetTime) String() string
@@ -1268,7 +1273,7 @@ func (r ResetTime) String() string
 String returns the string representation of the ResetTime.
 
 <a name="ResetTime.Time"></a>
-### func \(ResetTime\) [Time](<https://github.com/conneroisu/groq-go/blob/main/client.go#L314>)
+### func \(ResetTime\) [Time](<https://github.com/conneroisu/groq-go/blob/main/client.go#L309>)
 
 ```go
 func (r ResetTime) Time() time.Time
@@ -1288,7 +1293,7 @@ type Role string
 ```
 
 <a name="Schema"></a>
-## type [Schema](<https://github.com/conneroisu/groq-go/blob/main/schema.go#L1226-L1938>)
+## type [Schema](<https://github.com/conneroisu/groq-go/blob/main/schema.go#L1226-L2017>)
 
 Schema represents a JSON Schema object type. RFC draft\-bhutton\-json\-Schema\-00 section 4.3
 
@@ -1446,13 +1451,92 @@ type Schema struct {
     // Omitting this field has the same behavior as an empty object.
     Not *Schema `json:"not,omitempty"`
     // RFC draft-bhutton-json-schema-00 section 10.2.2 (Apply sub-schemas conditionally)
-    If               *Schema            `json:"if,omitempty"`               // section 10.2.2.1
-    Then             *Schema            `json:"then,omitempty"`             // section 10.2.2.2
-    Else             *Schema            `json:"else,omitempty"`             // section 10.2.2.3
+    If  *Schema `json:"if,omitempty"` // section 10.2.2.1
+    // Then is the then of the schema as specified in section 10.2.2.2 of RFC
+    // draft-bhutton-json-schema-00.
+    //
+    // https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-00#section-10.2.2.2
+    //
+    // The value of this field MUST be an object.  This object MUST be a
+    // valid JSON Schema.
+    //
+    // An instance validates successfully against this field if it
+    // validates successfully against the schema defined by "then".
+    //
+    // Omitting this field has the same behavior as an empty object.
+    Then *Schema `json:"then,omitempty"` // section 10.2.2.2
+    // Else is the else of the schema as specified in section 10.2.2.3 of RFC
+    // draft-bhutton-json-schema-00.
+    //
+    // https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-00#section-10.2.2.3
+    //
+    // The value of this field MUST be an object.  This object MUST be a
+    // valid JSON Schema.
+    //
+    // An instance validates successfully against this field if it
+    // validates successfully against the schema defined by "else".
+    //
+    // Omitting this field has the same behavior as an empty object.
+    Else *Schema `json:"else,omitempty"` // section 10.2.2.3
+    // DependentSchemas is the dependent schemas of the schema as specified in section 10.2.2.4 of RFC
+    // draft-bhutton-json-schema-00.
+    //
+    // https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-00#section-10.2.2.4
+    //
+    // The value of this field MUST be an object.  Properties in this
+    // object, if any, MUST be arrays.  Elements in each array, if any, MUST
+    // be strings, and MUST be unique.
+    //
+    // This field specifies properties that are required if a specific
+    // other property is present.  Their requirement is dependent on the
+    // presence of the other property.
+    //
+    // Validation succeeds if, for each name that appears in both the
+    // instance and as a name within this field's value, every item in the
+    // corresponding array is also the name of a property in the instance.
+    //
+    // Omitting this field has the same behavior as an empty object.
     DependentSchemas map[string]*Schema `json:"dependentSchemas,omitempty"` // section 10.2.2.4
-    // RFC draft-bhutton-json-schema-00 section 10.3.1 (arrays)
+    // PrefixItems is the prefix items of the schema as specified in section 10.3.1.1 of RFC
+    // draft-bhutton-json-schema-00.
+    //
+    // https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-00#section-10.3.1.1
+    //
+    // The value of this field MUST be an array.  Elements in the array,
+    // if any, MUST be valid JSON Schemas.
+    //
+    // An array instance is valid against "prefixItems" if its length is
+    // greater than or equal to the value of "minItems" and if each item
+    // in the instance array is valid against the schema defined by the
+    // corresponding item in "prefixItems".
+    //
+    // Omitting this field has the same behavior as an empty array.
     PrefixItems []*Schema `json:"prefixItems,omitempty"` // section 10.3.1.1
-    Items       *Schema   `json:"items,omitempty"`       // section 10.3.1.2  (replaces additionalItems)
+    // Items is the items of the schema as specified in section 10.3.1.2 of RFC
+    // draft-bhutton-json-schema-00.
+    //
+    // https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-00#section-10.3.1.2
+    //
+    // The value of "items" MUST be a valid JSON Schema.
+    //
+    // This keyword applies its subschema to all instance elements at
+    // indexes greater than the length of the "prefixItems" array in the
+    // same schema object, as reported by the annotation result of that
+    // "prefixItems" keyword.  If no such annotation result exists, "items"
+    // applies its subschema to all instance array elements.  [[CREF11: Note
+    // that the behavior of "items" without "prefixItems" is identical to
+    // that of the schema form of "items" in prior drafts.  When
+    // "prefixItems" is present, the behavior of "items" is identical to the
+    // former "additionalItems" keyword.  ]]
+    //
+    // If the "items" subschema is applied to any positions within the
+    // instance array, it produces an annotation result of boolean true,
+    // indicating that all remaining array elements have been evaluated
+    // against this keyword's subschema.
+    //
+    // Omitting this keyword has the same assertion behavior as an empty
+    // schema.
+    Items *Schema `json:"items,omitempty"` // section 10.3.1.2  (replaces additionalItems)
     // Contains is the contains of the schema as specified in section 10.3.1.3 of RFC
     // draft-bhutton-json-schema-00.
     //
@@ -2146,7 +2230,7 @@ type TranscriptionTimestampGranularity string
 ```
 
 <a name="Usage"></a>
-## type [Usage](<https://github.com/conneroisu/groq-go/blob/main/client.go#L109-L113>)
+## type [Usage](<https://github.com/conneroisu/groq-go/blob/main/client.go#L104-L108>)
 
 Usage Represents the total token usage per request to Groq.
 
