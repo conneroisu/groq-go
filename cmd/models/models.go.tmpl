@@ -44,31 +44,32 @@ const (
 	TranscriptionTimestampGranularityWord    TranscriptionTimestampGranularity = "word"    // TranscriptionTimestampGranularityWord is the word timestamp granularity.
 	TranscriptionTimestampGranularitySegment TranscriptionTimestampGranularity = "segment" // TranscriptionTimestampGranularitySegment is the segment timestamp granularity.
 	
+	
 	{{- range $model := .Models }}
-		{{ $model.Name }} Model = "{{ $model.ID }}" // {{ $model.Name }} is an AI {{if isTextModel $model}}text{{else if isAudioModel $model}}audio{{else if notModerationModel $model}}moderation{{end}} model provided by {{$model.OwnedBy}}. It has {{$model.ContextWindow}} context window.
+		Model{{ $model.Name }} Model = "{{ $model.ID }}" // Model{{ $model.Name }} is an AI {{if isTextModel $model}}text{{else if isAudioModel $model}}audio{{else if notModerationModel $model}}moderation{{end}} model provided by {{$model.OwnedBy}}. It has {{$model.ContextWindow}} context window.
 		{{- end }}
 )
 
 var disabledModelsForEndpoints = map[Endpoint]map[Model]bool{
 	completionsSuffix: {
 	{{- range $model := .Models }} {{ if isAudioModel $model }}
-			{{ $model.Name }}: true, {{- end }} {{- end }} 
+			Model{{ $model.Name }}: true, {{- end }} {{- end }} 
 	},
 	chatCompletionsSuffix: {
 	{{- range $model := .Models }} {{ if isAudioModel $model }}
-			{{ $model.Name }}: true, {{- end }} {{- end }}
+			Model{{ $model.Name }}: true, {{- end }} {{- end }}
 	},
 	transcriptionsSuffix: {
 	{{- range $model := .Models }} {{ if isTextModel $model }}
-			{{ $model.Name }}: true, {{- end }} {{- end }}
+			Model{{ $model.Name }}: true, {{- end }} {{- end }}
 	},
 	translationsSuffix: {
 	{{- range $model := .Models }} {{ if isTextModel $model }}
-			{{ $model.Name }}: true, {{- end }} {{- end }}
+			Model{{ $model.Name }}: true, {{- end }} {{- end }}
 	},
 	moderationsSuffix: {
 	{{- range $model := .Models }} {{ if notModerationModel $model }}
-			{{ $model.Name }}: true, {{- end }} {{- end }}
+			Model{{ $model.Name }}: true, {{- end }} {{- end }}
 	},
 }
 

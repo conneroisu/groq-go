@@ -31,7 +31,7 @@ func run(
 	response, err := client.CreateChatCompletion(
 		ctx,
 		groq.ChatCompletionRequest{
-			Model: groq.LlavaV157B4096Preview,
+			Model: groq.ModelLlavaV157B4096Preview,
 			Messages: []groq.ChatCompletionMessage{
 				{
 					Role: groq.ChatMessageRoleUser,

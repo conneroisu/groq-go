@@ -1,5 +1,3 @@
-// Package main is an example of using groq-go to create a transcription
-// using the whisper model.
 package main
 
 import (
@@ -24,9 +22,10 @@ func run(
 	if err != nil {
 		return err
 	}
-	response, err := client.CreateTranscription(ctx, groq.AudioRequest{
+	response, err := client.CreateTranslation(ctx, groq.AudioRequest{
 		Model:    groq.ModelWhisperLargeV3,
-		FilePath: "./The Roman Emperors who went insane Gregory Aldrete and Lex Fridman.mp3",
+		FilePath: "./house-speaks-mandarin.mp3",
+		Prompt:   "english and mandarin",
 	})
 	if err != nil {
 		return err

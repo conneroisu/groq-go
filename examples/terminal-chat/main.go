@@ -116,7 +116,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.textarea.Reset()
 			m.viewport.GotoBottom()
 			re, err := m.groqClient.CreateChatCompletionStream(context.Background(), groq.ChatCompletionRequest{
-				Model: groq.Llama3170BVersatile,
+				Model: groq.ModelLlama3170BVersatile,
 				Messages: []groq.ChatCompletionMessage{
 					{
 						Role:    groq.ChatMessageRoleUser,
