@@ -7,14 +7,14 @@
 
 ## Features
 
-- [x] Supports all models from [Groq](https://wow.groq.com/) in a type-safe way.
-- [x] Supports streaming.
-- [x] Supports moderation.
-- [x] Supports audio transcription.
-- [x] Supports audio translation.
-- [x] Supports Tool Use.
-- [x] Supports Function Calling.
-- [x] JSON Schema Generation from structs.
+- Supports all models from [Groq](https://wow.groq.com/) in a type-safe way.
+- Supports streaming.
+- Supports moderation.
+- Supports audio transcription.
+- Supports audio translation.
+- Supports Tool Use.
+- Supports Function Calling.
+- JSON Schema Generation from structs.
 
 ## Installation
 
@@ -26,12 +26,12 @@ go get github.com/conneroisu/groq-go
 
 For introductory examples, see the [examples](https://github.com/conneroisu/groq-go/tree/main/examples) directory.
 
-[audio](/examples/audio-lex-fridman)
-[json](/examples/json-chat)
-[moderation](/examples/moderation)
-[vision](/examples/llava-blind)
-[terminal-chat](/examples/terminal-chat)
-[documentor-float](/examples/vhdl-documentor-json)
+- [audio](/examples/audio-lex-fridman)
+- [json](/examples/json-chat)
+- [moderation](/examples/moderation)
+- [vision](/examples/llava-blind)
+- [terminal-chat](/examples/terminal-chat)
+- [documentor-float](/examples/vhdl-documentor-json)
 
 External Repositories using groq-go:
 - [Automatic Git Commit Message Generator](https://github.com/conneroisu/gita)
