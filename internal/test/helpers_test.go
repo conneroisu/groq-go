@@ -1,7 +1,4 @@
-//go:build !test
-// +build !test
-
-package test
+package test_test
 
 import (
 	"io"
@@ -11,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/conneroisu/groq-go/internal/test"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -19,14 +17,14 @@ func TestCreateTestFile(t *testing.T) {
 	a := assert.New(t)
 
 	// Create a temporary directory and ensure cleanup.
-	dir, cleanup := CreateTestDirectory(t)
+	dir, cleanup := test.CreateTestDirectory(t)
 	defer cleanup()
 
 	// Define the path for the test file.
 	filePath := filepath.Join(dir, "testfile.txt")
 
 	// Call the function under test.
-	CreateTestFile(t, filePath)
+	test.CreateTestFile(t, filePath)
 
 	// Check that the file exists.
 	info, err := os.Stat(filePath)
@@ -44,7 +42,7 @@ func TestCreateTestDirectory(t *testing.T) {
 	a := assert.New(t)
 
 	// Create the test directory.
-	dir, cleanup := CreateTestDirectory(t)
+	dir, cleanup := test.CreateTestDirectory(t)
 
 	// Check that the directory exists.
 	info, err := os.Stat(dir)
@@ -89,7 +87,7 @@ func TestTokenRoundTripper(t *testing.T) {
 	mockRT := &MockRoundTripper{}
 
 	// Initialize the TokenRoundTripper with a test token.
-	tokenRT := &TokenRoundTripper{
+	tokenRT := &test.TokenRoundTripper{
 		Token:    "test-token",
 		Fallback: mockRT,
 	}

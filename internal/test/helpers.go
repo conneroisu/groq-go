@@ -4,15 +4,14 @@ import (
 	"net/http"
 	"os"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
 // CreateTestFile creates a fake file with "hello" as the content.
 func CreateTestFile(t *testing.T, path string) {
-	a := assert.New(t)
 	file, err := os.Create(path)
-	a.NoError(err, "failed to create file")
+	if err != nil {
+		t.Fatalf("failed to create file %v", err)
+	}
 
 	if _, err = file.WriteString("hello"); err != nil {
 		t.Fatalf("failed to write to file %v", err)
@@ -24,9 +23,10 @@ func CreateTestFile(t *testing.T, path string) {
 func CreateTestDirectory(t *testing.T) (path string, cleanup func()) {
 	t.Helper()
 
-	a := assert.New(t)
 	path, err := os.MkdirTemp(os.TempDir(), "")
-	a.NoError(err)
+	if err != nil {
+		t.Fatalf("failed to create directory %v", err)
+	}
 
 	return path, func() { os.RemoveAll(path) }
 }
