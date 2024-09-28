@@ -1,11 +1,9 @@
 package groq
 
 import (
+	"log/slog"
 	"net/http"
-	"os"
 	"testing"
-
-	"github.com/rs/zerolog"
 )
 
 func TestClient(t *testing.T) {
@@ -13,7 +11,7 @@ func TestClient(t *testing.T) {
 		"test",
 		WithBaseURL("http://localhost/v1"),
 		WithClient(http.DefaultClient),
-		WithLogger(zerolog.New(os.Stderr).Level(zerolog.DebugLevel).With().Timestamp().Logger()),
+		WithLogger(slog.Default()),
 	)
 	if err != nil {
 		t.Fatal(err)

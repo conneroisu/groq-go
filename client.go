@@ -6,15 +6,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
-	"os"
 	"strings"
 	"time"
-
-	"github.com/rs/zerolog"
 )
 
-//go:generate go run ./cmd/models/main.go
+//go:generate go run ./scripts/generate-models/
 
 // Format is the format of a response.
 // string
@@ -34,15 +32,16 @@ const (
 
 // Client is a Groq api client.
 type Client struct {
-	groqAPIKey         string       // Groq API key
-	orgID              string       // OrgID is the organization ID for the client.
-	baseURL            string       // Base URL for the client.
-	client             *http.Client // Client is the HTTP client to use
-	emptyMessagesLimit uint         // EmptyMessagesLimit is the limit for the empty messages.
+	groqAPIKey         string // Groq API key
+	orgID              string // OrgID is the organization ID for the client.
+	baseURL            string // Base URL for the client.
+	emptyMessagesLimit uint   // EmptyMessagesLimit is the limit for the empty messages.
 	requestBuilder     requestBuilder
 	requestFormBuilder formBuilder
 	createFormBuilder  func(body io.Writer) formBuilder
-	logger             zerolog.Logger // Logger is the logger for the client.
+
+	client *http.Client // Client is the HTTP client to use
+	logger *slog.Logger // Logger is the logger for the client.
 }
 
 // NewClient creates a new Groq client.
@@ -51,13 +50,9 @@ func NewClient(groqAPIKey string, opts ...Opts) (*Client, error) {
 		return nil, fmt.Errorf("groq api key is required")
 	}
 	c := &Client{
-		groqAPIKey: groqAPIKey,
-		client:     http.DefaultClient,
-		logger: zerolog.New(os.Stderr).
-			Level(zerolog.DebugLevel).
-			With().
-			Timestamp().
-			Logger(),
+		groqAPIKey:         groqAPIKey,
+		client:             http.DefaultClient,
+		logger:             slog.Default(),
 		baseURL:            groqAPIURLv1,
 		emptyMessagesLimit: 10,
 		createFormBuilder: func(body io.Writer) formBuilder {
@@ -99,7 +94,7 @@ func WithBaseURL(baseURL string) Opts {
 }
 
 // WithLogger sets the logger for the Groq client.
-func WithLogger(logger zerolog.Logger) Opts {
+func WithLogger(logger *slog.Logger) Opts {
 	return func(c *Client) {
 		c.logger = logger
 	}
