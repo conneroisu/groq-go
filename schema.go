@@ -1376,13 +1376,92 @@ type Schema struct {
 	// Omitting this field has the same behavior as an empty object.
 	Not *Schema `json:"not,omitempty"`
 	// RFC draft-bhutton-json-schema-00 section 10.2.2 (Apply sub-schemas conditionally)
-	If               *Schema            `json:"if,omitempty"`               // section 10.2.2.1
-	Then             *Schema            `json:"then,omitempty"`             // section 10.2.2.2
-	Else             *Schema            `json:"else,omitempty"`             // section 10.2.2.3
+	If *Schema `json:"if,omitempty"` // section 10.2.2.1
+	// Then is the then of the schema as specified in section 10.2.2.2 of RFC
+	// draft-bhutton-json-schema-00.
+	//
+	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-00#section-10.2.2.2
+	//
+	// The value of this field MUST be an object.  This object MUST be a
+	// valid JSON Schema.
+	//
+	// An instance validates successfully against this field if it
+	// validates successfully against the schema defined by "then".
+	//
+	// Omitting this field has the same behavior as an empty object.
+	Then *Schema `json:"then,omitempty"` // section 10.2.2.2
+	// Else is the else of the schema as specified in section 10.2.2.3 of RFC
+	// draft-bhutton-json-schema-00.
+	//
+	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-00#section-10.2.2.3
+	//
+	// The value of this field MUST be an object.  This object MUST be a
+	// valid JSON Schema.
+	//
+	// An instance validates successfully against this field if it
+	// validates successfully against the schema defined by "else".
+	//
+	// Omitting this field has the same behavior as an empty object.
+	Else *Schema `json:"else,omitempty"` // section 10.2.2.3
+	// DependentSchemas is the dependent schemas of the schema as specified in section 10.2.2.4 of RFC
+	// draft-bhutton-json-schema-00.
+	//
+	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-00#section-10.2.2.4
+	//
+	// The value of this field MUST be an object.  Properties in this
+	// object, if any, MUST be arrays.  Elements in each array, if any, MUST
+	// be strings, and MUST be unique.
+	//
+	// This field specifies properties that are required if a specific
+	// other property is present.  Their requirement is dependent on the
+	// presence of the other property.
+	//
+	// Validation succeeds if, for each name that appears in both the
+	// instance and as a name within this field's value, every item in the
+	// corresponding array is also the name of a property in the instance.
+	//
+	// Omitting this field has the same behavior as an empty object.
 	DependentSchemas map[string]*Schema `json:"dependentSchemas,omitempty"` // section 10.2.2.4
-	// RFC draft-bhutton-json-schema-00 section 10.3.1 (arrays)
+	// PrefixItems is the prefix items of the schema as specified in section 10.3.1.1 of RFC
+	// draft-bhutton-json-schema-00.
+	//
+	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-00#section-10.3.1.1
+	//
+	// The value of this field MUST be an array.  Elements in the array,
+	// if any, MUST be valid JSON Schemas.
+	//
+	// An array instance is valid against "prefixItems" if its length is
+	// greater than or equal to the value of "minItems" and if each item
+	// in the instance array is valid against the schema defined by the
+	// corresponding item in "prefixItems".
+	//
+	// Omitting this field has the same behavior as an empty array.
 	PrefixItems []*Schema `json:"prefixItems,omitempty"` // section 10.3.1.1
-	Items       *Schema   `json:"items,omitempty"`       // section 10.3.1.2  (replaces additionalItems)
+	// Items is the items of the schema as specified in section 10.3.1.2 of RFC
+	// draft-bhutton-json-schema-00.
+	//
+	// https://datatracker.ietf.org/doc/html/draft-bhutton-json-schema-00#section-10.3.1.2
+	//
+	// The value of "items" MUST be a valid JSON Schema.
+	//
+	// This keyword applies its subschema to all instance elements at
+	// indexes greater than the length of the "prefixItems" array in the
+	// same schema object, as reported by the annotation result of that
+	// "prefixItems" keyword.  If no such annotation result exists, "items"
+	// applies its subschema to all instance array elements.  [[CREF11: Note
+	// that the behavior of "items" without "prefixItems" is identical to
+	// that of the schema form of "items" in prior drafts.  When
+	// "prefixItems" is present, the behavior of "items" is identical to the
+	// former "additionalItems" keyword.  ]]
+	//
+	// If the "items" subschema is applied to any positions within the
+	// instance array, it produces an annotation result of boolean true,
+	// indicating that all remaining array elements have been evaluated
+	// against this keyword's subschema.
+	//
+	// Omitting this keyword has the same assertion behavior as an empty
+	// schema.
+	Items *Schema `json:"items,omitempty"` // section 10.3.1.2  (replaces additionalItems)
 	// Contains is the contains of the schema as specified in section 10.3.1.3 of RFC
 	// draft-bhutton-json-schema-00.
 	//

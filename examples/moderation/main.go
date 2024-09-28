@@ -27,7 +27,7 @@ func run(
 		return err
 	}
 	response, err := client.Moderate(ctx, groq.ModerationRequest{
-		Model: groq.LlamaGuard38B,
+		Model: groq.ModelLlamaGuard38B,
 		// Input: "I want to kill them.",
 		Messages: []groq.ChatCompletionMessage{
 			{

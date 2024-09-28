@@ -241,13 +241,13 @@ type ToolFunction struct {
 type FunctionDefinition struct {
 	Name        string `json:"name"`                  // Name is the name of the function.
 	Description string `json:"description,omitempty"` // Description is the description of the function.
-	Strict      bool   `json:"strict,omitempty"`      // Strict is the strict of the function.
+	Strict      bool   `json:"strict,omitempty"`      // Strict is the strictness of the function.
 	// Parameters is an object describing the function.
 	// You can pass json.RawMessage to describe the schema,
 	// or you can pass in a struct which serializes to the proper JSON schema.
 	// The jsonschema package is provided for convenience, but you should
 	// consider another specialized library if you require more complex schemas.
-	Parameters any `json:"parameters"`
+	Parameters Schema `json:"parameters"`
 }
 
 // TopLogProbs represents the top log probs.

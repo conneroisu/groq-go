@@ -1,16 +1,18 @@
 //go:build !test
 // +build !test
 
-package test
+package test_test
 
 import (
 	"errors"
 	"testing"
+
+	"github.com/conneroisu/groq-go/internal/test"
 )
 
 // TestErrTestErrorAccumulatorWriteFailed_Error tests the Error method of ErrTestErrorAccumulatorWriteFailed.
 func TestErrTestErrorAccumulatorWriteFailed_Error(t *testing.T) {
-	err := ErrTestErrorAccumulatorWriteFailed{}
+	err := test.ErrTestErrorAccumulatorWriteFailed{}
 	expected := "test error accumulator failed"
 
 	if err.Error() != expected {
@@ -20,7 +22,7 @@ func TestErrTestErrorAccumulatorWriteFailed_Error(t *testing.T) {
 
 // TestFailingErrorBuffer_Write tests the Write method of FailingErrorBuffer with various inputs.
 func TestFailingErrorBuffer_Write(t *testing.T) {
-	buf := &FailingErrorBuffer{}
+	buf := &test.FailingErrorBuffer{}
 
 	testCases := []struct {
 		name  string
@@ -38,7 +40,7 @@ func TestFailingErrorBuffer_Write(t *testing.T) {
 			if n != 0 {
 				t.Errorf("Write(%q) returned n=%d, expected n=0", tc.input, n)
 			}
-			if !errors.Is(err, ErrTestErrorAccumulatorWriteFailed{}) {
+			if !errors.Is(err, test.ErrTestErrorAccumulatorWriteFailed{}) {
 				t.Errorf(
 					"Write(%q) returned err=%v, expected ErrTestErrorAccumulatorWriteFailed{}",
 					tc.input,
@@ -51,7 +53,7 @@ func TestFailingErrorBuffer_Write(t *testing.T) {
 
 // TestFailingErrorBuffer_Len tests the Len method of FailingErrorBuffer.
 func TestFailingErrorBuffer_Len(t *testing.T) {
-	buf := &FailingErrorBuffer{}
+	buf := &test.FailingErrorBuffer{}
 
 	length := buf.Len()
 	if length != 0 {
@@ -68,7 +70,7 @@ func TestFailingErrorBuffer_Len(t *testing.T) {
 
 // TestFailingErrorBuffer_Bytes tests the Bytes method of FailingErrorBuffer.
 func TestFailingErrorBuffer_Bytes(t *testing.T) {
-	buf := &FailingErrorBuffer{}
+	buf := &test.FailingErrorBuffer{}
 
 	bytes := buf.Bytes()
 	if len(bytes) != 0 {
@@ -93,14 +95,14 @@ func TestFailingErrorBuffer_Bytes(t *testing.T) {
 
 // TestFailingErrorBuffer_MultipleWrites tests multiple Write calls to FailingErrorBuffer.
 func TestFailingErrorBuffer_MultipleWrites(t *testing.T) {
-	buf := &FailingErrorBuffer{}
+	buf := &test.FailingErrorBuffer{}
 
 	for i := 0; i < 5; i++ {
 		n, err := buf.Write([]byte("data"))
 		if n != 0 {
 			t.Errorf("Write call %d returned n=%d, expected n=0", i+1, n)
 		}
-		if !errors.Is(err, ErrTestErrorAccumulatorWriteFailed{}) {
+		if !errors.Is(err, test.ErrTestErrorAccumulatorWriteFailed{}) {
 			t.Errorf(
 				"Write call %d returned err=%v, expected ErrTestErrorAccumulatorWriteFailed{}",
 				i+1,
@@ -124,7 +126,7 @@ func TestFailingErrorBuffer_MultipleWrites(t *testing.T) {
 	}
 }
 
-var _ error = ErrTestErrorAccumulatorWriteFailed{}
-var _ interface{ Write([]byte) (int, error) } = &FailingErrorBuffer{}
-var _ interface{ Len() int } = &FailingErrorBuffer{}
-var _ interface{ Bytes() []byte } = &FailingErrorBuffer{}
+var _ error = test.ErrTestErrorAccumulatorWriteFailed{}
+var _ interface{ Write([]byte) (int, error) } = &test.FailingErrorBuffer{}
+var _ interface{ Len() int } = &test.FailingErrorBuffer{}
+var _ interface{ Bytes() []byte } = &test.FailingErrorBuffer{}
