@@ -1,9 +1,12 @@
 package groq
 
 import (
+	"bufio"
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"reflect"
 	"strings"
@@ -32,6 +35,10 @@ const (
 	FinishReasonContentFilter                  FinishReason                     = "content_filter" // FinishReasonContentFilter is the content filter finish reason.
 	FinishReasonNull                           FinishReason                     = "null"           // FinishReasonNull is the null finish reason.
 )
+
+type streamer interface {
+	ChatCompletionStreamResponse
+}
 
 // ImageURLDetail is the image url detail.
 //
@@ -309,12 +316,14 @@ type ChatCompletionResponse struct {
 	ID                string                 `json:"id"`                 // ID is the id of the response.
 	Object            string                 `json:"object"`             // Object is the object of the response.
 	Created           int64                  `json:"created"`            // Created is the created time of the response.
-	Model             string                 `json:"model"`              // Model is the model of the response.
+	Model             Model                  `json:"model"`              // Model is the model of the response.
 	Choices           []ChatCompletionChoice `json:"choices"`            // Choices is the choices of the response.
 	Usage             Usage                  `json:"usage"`              // Usage is the usage of the response.
 	SystemFingerprint string                 `json:"system_fingerprint"` // SystemFingerprint is the system fingerprint of the response.
 
 	http.Header // Header is the header of the response.
+
+	History []*ChatCompletionMessage `json:"-"`
 }
 
 // SetHeader sets the header of the response.
@@ -348,6 +357,14 @@ func (c *Client) CreateChatCompletion(
 	}
 
 	err = c.sendRequest(req, &response)
+
+	// *response.History = []ChatCompletionMessage{}
+	// *response.History = append(
+	//         *response.History,
+	//         request.Messages...)
+	// *response.History = append(
+	//         *response.History,
+	//         response.Choices[0].Message)
 	return
 }
 
@@ -483,4 +500,92 @@ func (c *Client) CreateChatCompletionJSON(
 		)
 	}
 	return
+}
+
+type streamReader[T streamer] struct {
+	emptyMessagesLimit uint
+	isFinished         bool
+
+	reader         *bufio.Reader
+	response       *http.Response
+	errAccumulator errorAccumulator
+
+	Header http.Header // Header is the header of the response.
+}
+
+// Recv receives a response from the stream.
+func (stream *streamReader[T]) Recv() (response T, err error) {
+	if stream.isFinished {
+		err = io.EOF
+		return response, err
+	}
+	return stream.processLines()
+}
+
+// processLines processes the lines of the current response in the stream.
+func (stream *streamReader[T]) processLines() (T, error) {
+	var (
+		headerData  = []byte("data: ")
+		errorPrefix = []byte(`data: {"error":`)
+
+		emptyMessagesCount uint
+		hasErrorPrefix     bool
+	)
+	for {
+		rawLine, err := stream.reader.ReadBytes('\n')
+		if err != nil || hasErrorPrefix {
+			respErr := stream.unmarshalError()
+			if respErr != nil {
+				return *new(T),
+					fmt.Errorf("error, %w", respErr.Error)
+			}
+			return *new(T), err
+		}
+		noSpaceLine := bytes.TrimSpace(rawLine)
+		if bytes.HasPrefix(noSpaceLine, errorPrefix) {
+			hasErrorPrefix = true
+		}
+		if !bytes.HasPrefix(noSpaceLine, headerData) || hasErrorPrefix {
+			if hasErrorPrefix {
+				noSpaceLine = bytes.TrimPrefix(noSpaceLine, headerData)
+			}
+			err := stream.errAccumulator.Write(noSpaceLine)
+			if err != nil {
+				return *new(T), err
+			}
+			emptyMessagesCount++
+			if emptyMessagesCount > stream.emptyMessagesLimit {
+				return *new(T), ErrTooManyEmptyStreamMessages{}
+			}
+
+			continue
+		}
+		noPrefixLine := bytes.TrimPrefix(noSpaceLine, headerData)
+		if string(noPrefixLine) == "[DONE]" {
+			stream.isFinished = true
+			return *new(T), io.EOF
+		}
+		var response T
+		unmarshalErr := json.Unmarshal(noPrefixLine, &response)
+		if unmarshalErr != nil {
+			return *new(T), unmarshalErr
+		}
+		return response, nil
+	}
+}
+
+func (stream *streamReader[T]) unmarshalError() (errResp *errorResponse) {
+	errBytes := stream.errAccumulator.Bytes()
+	if len(errBytes) == 0 {
+		return
+	}
+	err := json.Unmarshal(errBytes, &errResp)
+	if err != nil {
+		errResp = nil
+	}
+	return
+}
+
+func (stream *streamReader[T]) Close() error {
+	return stream.response.Body.Close()
 }

@@ -16,11 +16,6 @@ import (
 type HarmfulCategory string
 
 const (
-	// ModerationTextStable is the text-moderation-stable model.
-	ModerationTextStable = "text-moderation-stable"
-	// ModerationTextLatest is the text-moderation-latest model.
-	ModerationTextLatest = "text-moderation-latest"
-
 	// CategoryViolentCrimes (S1) is the violent crimes category. Responses that enable, encourage, or endorse the commission of violent crimes, including: (1) unlawful violence toward people (ex: terrorism, genocide, murder, hate-motivated violent crimes, child abuse, assault, battery, kidnapping) and (2) unlawful violence toward animals (ex: animal abuse)
 	CategoryViolentCrimes HarmfulCategory = "violent_crimes"
 	// CategoryNonviolentCrimes (S2) is the non-violent crimes category.
