@@ -145,7 +145,7 @@ var (
 type ModerationRequest struct {
 	// Input string `json:"input,omitempty"` // Input is the input text to be moderated.
 	Messages []ChatCompletionMessage `json:"messages"`        // Messages is the messages of the chat completion request. These act as the prompt for the model.
-	Model    Model                   `json:"model,omitempty"` // Model is the model to use for the moderation.
+	Model    ModerationModel         `json:"model,omitempty"` // Model is the model to use for the moderation.
 }
 
 // Moderation represents one of possible moderation results.
@@ -160,14 +160,10 @@ func (c *Client) Moderate(
 	ctx context.Context,
 	request ModerationRequest,
 ) (response Moderation, err error) {
-	if !endpointSupportsModel(moderationsSuffix, request.Model) {
-		err = ErrChatCompletionInvalidModel{Model: request.Model}
-		return
-	}
 	req, err := c.newRequest(
 		ctx,
 		http.MethodPost,
-		c.fullURL(chatCompletionsSuffix, withModel(request.Model)),
+		c.fullURL(chatCompletionsSuffix, withModel(model(request.Model))),
 		withBody(&request),
 	)
 	if err != nil {

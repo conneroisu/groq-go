@@ -257,14 +257,14 @@ func decodeString(body io.Reader, output *string) error {
 }
 
 type fullURLOptions struct {
-	model Model
+	model string
 }
 
 type fullURLOption func(*fullURLOptions)
 
-func withModel(model Model) fullURLOption {
+func withModel(model model) fullURLOption {
 	return func(args *fullURLOptions) {
-		args.model = model
+		args.model = string(model)
 	}
 }
 

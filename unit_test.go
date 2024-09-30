@@ -100,7 +100,7 @@ func handleModerationEndpoint(w http.ResponseWriter, r *http.Request) {
 		ID:      "chatcmpl-123",
 		Object:  "chat.completion",
 		Created: 1693721698,
-		Model:   groq.ModelLlamaGuard38B,
+		Model:   groq.ChatModel(groq.ModelLlamaGuard38B),
 		Choices: []groq.ChatCompletionChoice{
 			{
 				Message: groq.ChatCompletionMessage{
@@ -781,7 +781,7 @@ func TestAudio(t *testing.T) {
 
 			req := groq.AudioRequest{
 				FilePath: path,
-				Model:    "distil-whisper-large-v3-en",
+				Model:    groq.ModelWhisperLargeV3,
 			}
 			_, err := tc.createFn(ctx, req)
 			a.NoError(err, "audio API error")
@@ -791,7 +791,7 @@ func TestAudio(t *testing.T) {
 			req := groq.AudioRequest{
 				FilePath: "fake.webm",
 				Reader:   bytes.NewBuffer([]byte(`some webm binary data`)),
-				Model:    "whisper-3",
+				Model:    groq.ModelWhisperLargeV3,
 			}
 			_, err := tc.createFn(ctx, req)
 			a.NoError(err, "audio API error")
@@ -832,7 +832,7 @@ func TestAudioWithOptionalArgs(t *testing.T) {
 
 			req := groq.AudioRequest{
 				FilePath:    path,
-				Model:       "whisper-3",
+				Model:       groq.ModelWhisperLargeV3,
 				Prompt:      "用简体中文",
 				Temperature: 0.5,
 				Language:    "zh",

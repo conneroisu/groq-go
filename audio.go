@@ -9,6 +9,29 @@ import (
 	"os"
 )
 
+const (
+	AudioResponseFormatJSON        AudioResponseFormat = "json"         // AudioResponseFormatJSON is the JSON format of some audio.
+	AudioResponseFormatText        AudioResponseFormat = "text"         // AudioResponseFormatText is the text format of some audio.
+	AudioResponseFormatSRT         AudioResponseFormat = "srt"          // AudioResponseFormatSRT is the SRT format of some audio.
+	AudioResponseFormatVerboseJSON AudioResponseFormat = "verbose_json" // AudioResponseFormatVerboseJSON is the verbose JSON format of some audio.
+	AudioResponseFormatVTT         AudioResponseFormat = "vtt"          // AudioResponseFormatVTT is the VTT format of some audio.
+
+	TranscriptionTimestampGranularityWord    TranscriptionTimestampGranularity = "word"    // TranscriptionTimestampGranularityWord is the word timestamp granularity.
+	TranscriptionTimestampGranularitySegment TranscriptionTimestampGranularity = "segment" // TranscriptionTimestampGranularitySegment is the segment timestamp granularity.
+)
+
+// AudioResponseFormat is the response format for the audio API.
+//
+// Response formatted using AudioResponseFormatJSON by default.
+//
+// string
+type AudioResponseFormat string
+
+// TranscriptionTimestampGranularity is the timestamp granularity for the transcription.
+//
+// string
+type TranscriptionTimestampGranularity string
+
 // CreateTranscription calls the transcriptions endpoint with the given request.
 //
 // Returns transcribed text in the response_format specified in the request.
@@ -31,7 +54,7 @@ func (c *Client) CreateTranslation(
 
 // AudioRequest represents a request structure for audio API.
 type AudioRequest struct {
-	Model       Model               // Model is the model to use for the transcription.
+	Model       AudioModel          // Model is the model to use for the transcription.
 	FilePath    string              // FilePath is either an existing file in your filesystem or a filename representing the contents of Reader.
 	Reader      io.Reader           // Reader is an optional io.Reader when you do not want to use an existing file.
 	Prompt      string              // Prompt is the prompt for the transcription.
@@ -116,7 +139,7 @@ func (c *Client) callAudioAPI(
 	req, err := c.newRequest(
 		ctx,
 		http.MethodPost,
-		c.fullURL(endpointSuffix, withModel(request.Model)),
+		c.fullURL(endpointSuffix, withModel(model(request.Model))),
 		withBody(&formBody),
 		withContentType(c.requestFormBuilder.FormDataContentType()),
 	)
