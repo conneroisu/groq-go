@@ -93,73 +93,82 @@ type customGetFieldDocString func(fieldName string) string
 
 // A reflector reflects values into a Schema.
 type reflector struct {
-	// BaseSchemaID defines the URI that will be used as a base to determine Schema
-	// IDs for models. For example, a base Schema ID of `https://invopop.com/schemas`
-	// when defined with a struct called `User{}`, will result in a schema with an
-	// ID set to `https://invopop.com/schemas/user`.
+	// BaseSchemaID defines the URI that will be used as a base to determine
+	// Schema IDs for models. For example, a base Schema ID of `
+	// https://conneroh.com/schemas` when defined with a struct called
+	// `User{}`, will result in a schema with an ID set to
+	// `https://conneroh.com/schemas/user`.
 	//
-	// If no `BaseSchemaID` is provided, we'll take the type's complete package path
-	// and use that as a base instead. Set `Anonymous` to try if you do not want to
-	// include a schema ID.
+	// If no `BaseSchemaID` is provided, we'll take the type's complete
+	// package path and use that as a base instead. Set `Anonymous` to try
+	// if you do not want to include a schema ID.
 	BaseSchemaID schemaID
 
-	// Anonymous when true will hide the auto-generated Schema ID and provide what is
-	// known as an "anonymous schema". As a rule, this is not recommended.
+	// Anonymous when true will hide the auto-generated Schema ID and
+	// provide what is known as an "anonymous schema". As a rule, this is
+	// not recommended.
 	Anonymous bool
 
-	// AssignAnchor when true will use the original struct's name as an anchor inside
-	// every definition, including the root schema. These can be useful for having a
-	// reference to the original struct's name in CamelCase instead of the snake-case used
+	// AssignAnchor when true will use the original struct's name as an
+	// anchor inside every definition, including the root schema. These can
+	// be useful for having a reference to the original struct's name in
+	// CamelCase instead of the snake-case used
 	// by default for URI compatibility.
 	//
-	// Anchors do not appear to be widely used out in the wild, so at this time the
-	// anchors themselves will not be used inside generated schema.
+	// Anchors do not appear to be widely used out in the wild, so at this
+	// time the anchors themselves will not be used inside generated schema.
 	AssignAnchor bool
 
-	// AllowAdditionalProperties will cause the Reflector to generate a schema
-	// without additionalProperties set to 'false' for all struct types. This means
-	// the presence of additional keys in JSON objects will not cause validation
-	// to fail. Note said additional keys will simply be dropped when the
-	// validated JSON is unmarshaled.
+	// AllowAdditionalProperties will cause the Reflector to generate a
+	// schema without additionalProperties set to 'false' for all struct
+	// types. This means the presence of additional keys in JSON objects
+	// will not cause validation to fail. Note said additional keys will
+	// simply be dropped when the validated JSON is unmarshaled.
 	AllowAdditionalProperties bool
 
-	// RequiredFromJSONSchemaTags will cause the Reflector to generate a schema
-	// that requires any key tagged with `jsonschema:required`, overriding the
-	// default of requiring any key *not* tagged with `json:,omitempty`.
+	// RequiredFromJSONSchemaTags will cause the Reflector to generate a
+	// schema that requires any key tagged with `jsonschema:required`,
+	// overriding the default of requiring any key *not* tagged with
+	// `json:,omitempty`.
 	RequiredFromJSONSchemaTags bool
 
-	// Do not reference definitions. This will remove the top-level $defs map and
-	// instead cause the entire structure of types to be output in one tree. The
-	// list of type definitions (`$defs`) will not be included.
+	// Do not reference definitions. This will remove the top-level $defs
+	// map and instead cause the entire structure of types to be output in
+	// one tree. The list of type definitions (`$defs`) will not be
+	// included.
 	DoNotReference bool
 
-	// ExpandedStruct when true will include the reflected type's definition in the
-	// root as opposed to a definition with a reference.
+	// ExpandedStruct when true will include the reflected type's definition
+	// in the root as opposed to a definition with a reference.
 	ExpandedStruct bool
 
-	// FieldNameTag will change the tag used to get field names. json tags are used by default.
+	// FieldNameTag will change the tag used to get field names. json tags
+	// are used by default.
 	FieldNameTag string
 
-	// IgnoredTypes defines a slice of types that should be ignored in the schema,
-	// switching to just allowing additional properties instead.
+	// IgnoredTypes defines a slice of types that should be ignored in the
+	// schema, switching to just allowing additional properties instead.
 	IgnoredTypes []any
 
-	// Lookup allows a function to be defined that will provide a custom mapping of
-	// types to Schema IDs. This allows existing schema documents to be referenced
-	// by their ID instead of being embedded into the current schema definitions.
-	// Reflected types will never be pointers, only underlying elements.
+	// Lookup allows a function to be defined that will provide a custom
+	// mapping of types to Schema IDs. This allows existing schema documents
+	// to be referenced by their ID instead of being embedded into the
+	// current schema definitions. Reflected types will never be pointers,
+	// only underlying elements.
 	Lookup func(reflect.Type) schemaID
 
-	// Mapper is a function that can be used to map custom Go types to jsonschema schemas.
+	// Mapper is a function that can be used to map custom Go types to
+	// jsonschema schemas.
 	Mapper func(reflect.Type) *Schema
 
-	// Namer allows customizing of type names. The default is to use the type's name
-	// provided by the reflect package.
+	// Namer allows customizing of type names. The default is to use the
+	// type's name provided by the reflect package.
 	Namer func(reflect.Type) string
 
 	// KeyNamer allows customizing of key names.
 	// The default is to use the key's name as is, or the json tag if
 	// present.
+	//
 	// If a json tag is present, KeyNamer will receive the tag's name as an
 	// argument, not the original key name.
 	KeyNamer func(string) string
@@ -824,8 +833,11 @@ func (t *Schema) booleanfields(tags []string) {
 		if name == "default" {
 			if val == "true" {
 				t.Default = true
-			} else if val == "false" {
+				continue
+			}
+			if val == "false" {
 				t.Default = false
+				continue
 			}
 		}
 	}

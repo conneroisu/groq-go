@@ -104,7 +104,8 @@ func (b *httpRequestBuilder) Build(
 ) (req *http.Request, err error) {
 	var bodyReader io.Reader
 	if body != nil {
-		if v, ok := body.(io.Reader); ok {
+		v, ok := body.(io.Reader)
+		if ok {
 			bodyReader = v
 		} else {
 			var reqBytes []byte
