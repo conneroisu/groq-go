@@ -21,7 +21,7 @@ func TestID(t *testing.T) {
 	base := "https://github.com/conneroisu/groq-go/schema"
 	id := schemaID(base)
 
-	assert.Equal(t, base, id.String())
+	assert.Equal(t, base, string(id))
 
 	id = id.Add("user")
 	assert.EqualValues(t, base+"/user", id)

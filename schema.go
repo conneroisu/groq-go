@@ -244,7 +244,7 @@ func (r *reflector) refOrReflectTypeToSchema(
 	id := r.lookupID(t)
 	if id != EmptyID {
 		return &Schema{
-			Ref: id.String(),
+			Ref: string(id),
 		}
 	}
 
@@ -2034,7 +2034,7 @@ const EmptyID schemaID = ""
 // This is done by parsing the ID as a URL and checking it has all the
 // relevant parts.
 func (i schemaID) Validate() error {
-	u, err := url.Parse(i.String())
+	u, err := url.Parse(string(i))
 	if err != nil {
 		return fmt.Errorf("invalid URL: %w", err)
 	}
@@ -2056,13 +2056,13 @@ func (i schemaID) Validate() error {
 // Anchor sets the anchor part of the schema URI.
 func (i schemaID) Anchor(name string) schemaID {
 	b := i.Base()
-	return schemaID(b.String() + "#" + name)
+	return schemaID(string(b) + "#" + name)
 }
 
 // Def adds or replaces a definition identifier.
 func (i schemaID) Def(name string) schemaID {
 	b := i.Base()
-	return schemaID(b.String() + "#/$defs/" + name)
+	return schemaID(string(b) + "#/$defs/" + name)
 }
 
 // Add appends the provided path to the id, and removes any
@@ -2072,21 +2072,16 @@ func (i schemaID) Add(path string) schemaID {
 	if !strings.HasPrefix(path, "/") {
 		path = "/" + path
 	}
-	return schemaID(b.String() + path)
+	return schemaID(string(b) + path)
 }
 
 // Base removes any anchor information from the schema
 func (i schemaID) Base() schemaID {
-	s := i.String()
+	s := string(i)
 	li := strings.LastIndex(s, "#")
 	if li != -1 {
 		s = s[0:li]
 	}
 	s = strings.TrimRight(s, "/")
 	return schemaID(s)
-}
-
-// String provides string version of ID
-func (i schemaID) String() string {
-	return string(i)
 }
