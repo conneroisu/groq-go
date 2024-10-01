@@ -15,8 +15,13 @@ import (
 	orderedmap "github.com/wk8/go-ordered-map/v2"
 )
 
-// version is the JSON Schema version.
-const version = "https://json-schema.org/draft/2020-12/schema"
+const (
+	// version is the JSON Schema version.
+	version = "https://json-schema.org/draft/2020-12/schema"
+
+	// EmptyID is used to explicitly define an ID with no value.
+	EmptyID schemaID = ""
+)
 
 // Available Go defined types for JSON Schema Validation.
 //
@@ -1114,11 +1119,13 @@ func (r *reflector) reflectFieldName(
 	if !f.Anonymous && f.PkgPath != "" {
 		// field not anonymous and not export has no export name
 		name = ""
-	} else if r.KeyNamer != nil {
-		name = r.KeyNamer(name)
+		return name, false, required, nullable
 	}
-
-	return name, false, required, nullable
+	if r.KeyNamer != nil {
+		name = r.KeyNamer(name)
+		return name, false, required, nullable
+	}
+	return name, true, required, nullable
 }
 
 // UnmarshalJSON is used to parse a schema object or boolean.
@@ -1180,7 +1187,8 @@ func (r *reflector) typeName(t reflect.Type) string {
 }
 
 // Split on commas that are not preceded by `\`.
-// This way, we prevent splitting regexes
+//
+// This way, we prevent splitting regexes.
 func splitOnUnescapedCommas(tagString string) []string {
 	ret := make([]string, 0)
 	separated := strings.Split(tagString, ",")
@@ -2026,9 +2034,6 @@ type schemaDefinitions map[string]*Schema
 // schemaID represents a Schema schemaID type which should always be a URI.
 // See draft-bhutton-json-schema-00 section 8.2.1
 type schemaID string
-
-// EmptyID is used to explicitly define an ID with no value.
-const EmptyID schemaID = ""
 
 // Validate is used to check if the ID looks like a proper schema.
 // This is done by parsing the ID as a URL and checking it has all the

@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -104,6 +105,7 @@ func TestMixtral8X7B32768(t *testing.T) {
 // and the operations are working as expected with the api call using this transcription
 // model.
 func TestWhisperLargeV3(t *testing.T) {
+	time.Sleep(time.Second * 5)
 	a := assert.New(t)
 	ctx := context.Background()
 	client, err := NewClient(os.Getenv("GROQ_KEY"))
@@ -120,4 +122,24 @@ func TestWhisperLargeV3(t *testing.T) {
 // It ensures that the model is supported by the groq-go library, the groq API,
 // and the operations are working as expected for the specific model type.
 func TestLlamaGuard38B(t *testing.T) {
+	time.Sleep(time.Second * 5)
+	a := assert.New(t)
+	ctx := context.Background()
+	client, err := NewClient(os.Getenv("GROQ_KEY"))
+	a.NoError(err, "NewClient error")
+	response, err := client.Moderate(ctx, ModerationRequest{
+		Model: ModelLlamaGuard38B,
+		Messages: []ChatCompletionMessage{
+			{
+				Role:    ChatMessageRoleUser,
+				Content: "I want to kill them.",
+			},
+		},
+	})
+	a.NoError(err, "Moderation error")
+	a.Equal(true, response.Flagged)
+	a.Contains(
+		response.Categories,
+		CategoryViolentCrimes,
+	)
 }

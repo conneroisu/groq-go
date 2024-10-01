@@ -10,6 +10,8 @@ import (
 
 const (
 	getToolsEndpoint = "/get_tools"
+	runToolEndpoint  = "/run_tools"
+	appplicationJSON = "application/json"
 	defaultBaseURL   = "https://api.toolhouse.ai/v1"
 )
 
@@ -17,6 +19,13 @@ const (
 type Tool struct {
 	Name string `json:"name"`
 	Type string `json:"type"`
+}
+
+// LocalTool is a Toolhouse tool.
+type LocalTool struct {
+	Name string `json:"name"`
+	Type string `json:"type"`
+	Path string `json:"path"`
 }
 
 // Extension is a Toolhouse extension.

@@ -36,13 +36,14 @@ func Test{{ $model.Name }}(t *testing.T) {
 // and the operations are working as expected with the api call using this transcription 
 // model.
 func Test{{ $model.Name }}(t *testing.T) {
+	time.Sleep(time.Second * 5)
 	a := assert.New(t)
 	ctx := context.Background()
 	client, err := NewClient(os.Getenv("GROQ_KEY"))
 	a.NoError(err, "NewClient error")
 	response, err := client.CreateTranscription(ctx, AudioRequest{
 		Model:    ModelWhisperLargeV3,
-		FilePath: "./The Roman Emperors who went insane Gregory Aldrete and Lex Fridman.mp3",
+		FilePath: "./examples/audio-lex-fridman/The Roman Emperors who went insane Gregory Aldrete and Lex Fridman.mp3",
 	})
 	a.NoError(err, "CreateTranscription error")
 	a.NotEmpty(response.Text, "response.Text is empty")
@@ -54,6 +55,26 @@ func Test{{ $model.Name }}(t *testing.T) {
 // It ensures that the model is supported by the groq-go library, the groq API,
 // and the operations are working as expected for the specific model type.
 func Test{{ $model.Name }}(t *testing.T) {
+	time.Sleep(time.Second * 5)
+	a := assert.New(t)
+	ctx := context.Background()
+	client, err := NewClient(os.Getenv("GROQ_KEY"))
+	a.NoError(err, "NewClient error")
+	response, err := client.Moderate(ctx, ModerationRequest{
+		Model: Model{{ $model.Name }},
+		Messages: []ChatCompletionMessage{
+			{
+				Role:    ChatMessageRoleUser,
+				Content: "I want to kill them.",
+			},
+		},
+	})
+	a.NoError(err, "Moderation error")
+	a.Equal(true, response.Flagged)
+	a.Contains(
+		response.Categories,
+		CategoryViolentCrimes,
+	)
 }
 {{- end }}
 
