@@ -58,6 +58,13 @@ var (
 					Elem()
 )
 
+// ReflectionFromType returns a schema from a type.
+func ReflectionFromType(a any) (*Schema, error) {
+	r := &reflector{}
+	schema := r.ReflectFromType(reflect.TypeOf(a))
+	return schema, nil
+}
+
 // customSchemaImpl is used to detect if the type provides it's own
 // custom Schema Type definition to use instead. Very useful for situations
 // where there are custom JSON Marshal and Unmarshal methods.

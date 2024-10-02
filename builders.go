@@ -13,18 +13,19 @@ import (
 )
 
 // formBuilder is an interface for building a form.
-type formBuilder interface {
-	io.Closer
-	CreateFormFile(fieldname string, file *os.File) error
-	CreateFormFileReader(fieldname string, r io.Reader, filename string) error
-	WriteField(fieldname, value string) error
-	FormDataContentType() string
-}
-
-// defaultFormBuilder is a default implementation of FormBuilder.
-type defaultFormBuilder struct {
-	writer *multipart.Writer
-}
+type (
+	formBuilder interface {
+		io.Closer
+		CreateFormFile(fieldname string, file *os.File) error
+		CreateFormFileReader(fieldname string, r io.Reader, filename string) error
+		WriteField(fieldname, value string) error
+		FormDataContentType() string
+	}
+	// defaultFormBuilder is a default implementation of FormBuilder.
+	defaultFormBuilder struct {
+		writer *multipart.Writer
+	}
+)
 
 // newFormBuilder creates a new DefaultFormBuilder.
 func newFormBuilder(body io.Writer) *defaultFormBuilder {
