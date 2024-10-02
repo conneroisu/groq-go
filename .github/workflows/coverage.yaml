@@ -14,6 +14,11 @@ jobs:
     - name: Install dependencies
       run: |
         go mod download
+    - name: Run Integration tests
+      env:
+        GROQ_KEY: ${{ secrets.GROQ_KEY }}
+      run: |
+        go test -race -tags=integration ./...
     - name: Run Unit tests
       env:
         GROQ_KEY: ${{ secrets.GROQ_KEY }}
