@@ -20,93 +20,69 @@ const (
 	TranscriptionTimestampGranularitySegment TranscriptionTimestampGranularity = "segment" // TranscriptionTimestampGranularitySegment is the segment timestamp granularity.
 )
 
-// AudioResponseFormat is the response format for the audio API.
-//
-// Response formatted using AudioResponseFormatJSON by default.
-//
-// string
-type AudioResponseFormat string
+type (
+	// AudioResponseFormat is the response format for the audio API.
+	//
+	// Response formatted using AudioResponseFormatJSON by default.
+	//
+	// string
+	AudioResponseFormat string
+	// TranscriptionTimestampGranularity is the timestamp granularity for the transcription.
+	//
+	// string
+	TranscriptionTimestampGranularity string
+	// AudioRequest represents a request structure for audio API.
+	AudioRequest struct {
+		Model       AudioModel          // Model is the model to use for the transcription.
+		FilePath    string              // FilePath is either an existing file in your filesystem or a filename representing the contents of Reader.
+		Reader      io.Reader           // Reader is an optional io.Reader when you do not want to use an existing file.
+		Prompt      string              // Prompt is the prompt for the transcription.
+		Temperature float32             // Temperature is the temperature for the transcription.
+		Language    string              // Language is the language for the transcription. Only for transcription.
+		Format      AudioResponseFormat // Format is the format for the response.
+	}
+	// AudioResponse represents a response structure for audio API.
+	AudioResponse struct {
+		Task     string   `json:"task"`     // Task is the task of the response.
+		Language string   `json:"language"` // Language is the language of the response.
+		Duration float64  `json:"duration"` // Duration is the duration of the response.
+		Segments Segments `json:"segments"` // Segments is the segments of the response.
+		Words    Words    `json:"words"`    // Words is the words of the response.
+		Text     string   `json:"text"`     // Text is the text of the response.
 
-// TranscriptionTimestampGranularity is the timestamp granularity for the transcription.
-//
-// string
-type TranscriptionTimestampGranularity string
-
-// CreateTranscription calls the transcriptions endpoint with the given request.
-//
-// Returns transcribed text in the response_format specified in the request.
-func (c *Client) CreateTranscription(
-	ctx context.Context,
-	request AudioRequest,
-) (response AudioResponse, err error) {
-	return c.callAudioAPI(ctx, request, transcriptionsSuffix)
-}
-
-// CreateTranslation calls the translations endpoint with the given request.
-//
-// Returns the translated text in the response_format specified in the request.
-func (c *Client) CreateTranslation(
-	ctx context.Context,
-	request AudioRequest,
-) (response AudioResponse, err error) {
-	return c.callAudioAPI(ctx, request, translationsSuffix)
-}
-
-// AudioRequest represents a request structure for audio API.
-type AudioRequest struct {
-	Model       AudioModel          // Model is the model to use for the transcription.
-	FilePath    string              // FilePath is either an existing file in your filesystem or a filename representing the contents of Reader.
-	Reader      io.Reader           // Reader is an optional io.Reader when you do not want to use an existing file.
-	Prompt      string              // Prompt is the prompt for the transcription.
-	Temperature float32             // Temperature is the temperature for the transcription.
-	Language    string              // Language is the language for the transcription. Only for transcription.
-	Format      AudioResponseFormat // Format is the format for the response.
-}
-
-// AudioResponse represents a response structure for audio API.
-type AudioResponse struct {
-	Task     string   `json:"task"`     // Task is the task of the response.
-	Language string   `json:"language"` // Language is the language of the response.
-	Duration float64  `json:"duration"` // Duration is the duration of the response.
-	Segments Segments `json:"segments"` // Segments is the segments of the response.
-	Words    Words    `json:"words"`    // Words is the words of the response.
-	Text     string   `json:"text"`     // Text is the text of the response.
-
-	Header http.Header // Header is the header of the response.
-}
-
-// Words is the words of the response.
-type Words []struct {
-	Word  string  `json:"word"`  // Word is the word of the words.
-	Start float64 `json:"start"` // Start is the start of the words.
-	End   float64 `json:"end"`   // End is the end of the words.
-}
-
-// Segments is the segments of the response.
-type Segments []struct {
-	ID               int     `json:"id"`                // ID is the ID of the segment.
-	Seek             int     `json:"seek"`              // Seek is the seek of the segment.
-	Start            float64 `json:"start"`             // Start is the start of the segment.
-	End              float64 `json:"end"`               // End is the end of the segment.
-	Text             string  `json:"text"`              // Text is the text of the segment.
-	Tokens           []int   `json:"tokens"`            // Tokens is the tokens of the segment.
-	Temperature      float64 `json:"temperature"`       // Temperature is the temperature of the segment.
-	AvgLogprob       float64 `json:"avg_logprob"`       // AvgLogprob is the avg log prob of the segment.
-	CompressionRatio float64 `json:"compression_ratio"` // CompressionRatio is the compression ratio of the segment.
-	NoSpeechProb     float64 `json:"no_speech_prob"`    // NoSpeechProb is the no speech prob of the segment.
-	Transient        bool    `json:"transient"`         // Transient is the transient of the segment.
-}
+		Header http.Header // Header is the header of the response.
+	}
+	// Words is the words of the response.
+	Words []struct {
+		Word  string  `json:"word"`  // Word is the word of the words.
+		Start float64 `json:"start"` // Start is the start of the words.
+		End   float64 `json:"end"`   // End is the end of the words.
+	}
+	// Segments is the segments of the response.
+	Segments []struct {
+		ID               int     `json:"id"`                // ID is the ID of the segment.
+		Seek             int     `json:"seek"`              // Seek is the seek of the segment.
+		Start            float64 `json:"start"`             // Start is the start of the segment.
+		End              float64 `json:"end"`               // End is the end of the segment.
+		Text             string  `json:"text"`              // Text is the text of the segment.
+		Tokens           []int   `json:"tokens"`            // Tokens is the tokens of the segment.
+		Temperature      float64 `json:"temperature"`       // Temperature is the temperature of the segment.
+		AvgLogprob       float64 `json:"avg_logprob"`       // AvgLogprob is the avg log prob of the segment.
+		CompressionRatio float64 `json:"compression_ratio"` // CompressionRatio is the compression ratio of the segment.
+		NoSpeechProb     float64 `json:"no_speech_prob"`    // NoSpeechProb is the no speech prob of the segment.
+		Transient        bool    `json:"transient"`         // Transient is the transient of the segment.
+	}
+	// audioTextResponse is the response structure for the audio API when the
+	// response format is text.
+	audioTextResponse struct {
+		Text   string      `json:"text"` // Text is the text of the response.
+		header http.Header `json:"-"`    // Header is the response header.
+	}
+)
 
 // SetHeader sets the header of the response.
 func (r *AudioResponse) SetHeader(header http.Header) {
 	r.Header = header
-}
-
-// audioTextResponse is the response structure for the audio API when the
-// response format is text.
-type audioTextResponse struct {
-	Text   string      `json:"text"` // Text is the text of the response.
-	header http.Header `json:"-"`    // Header is the response header.
 }
 
 // SetHeader sets the header of the audio text response.
@@ -120,6 +96,26 @@ func (r *audioTextResponse) toAudioResponse() AudioResponse {
 		Text:   r.Text,
 		Header: r.header,
 	}
+}
+
+// CreateTranscription calls the transcriptions endpoint with the given request.
+//
+// Returns transcribed text in the response_format specified in the request.
+func (c *Client) CreateTranscription(
+	ctx context.Context,
+	request AudioRequest,
+) (AudioResponse, error) {
+	return c.callAudioAPI(ctx, request, transcriptionsSuffix)
+}
+
+// CreateTranslation calls the translations endpoint with the given request.
+//
+// Returns the translated text in the response_format specified in the request.
+func (c *Client) CreateTranslation(
+	ctx context.Context,
+	request AudioRequest,
+) (AudioResponse, error) {
+	return c.callAudioAPI(ctx, request, translationsSuffix)
 }
 
 // callAudioAPI calls the audio API with the given request.
