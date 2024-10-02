@@ -17,7 +17,6 @@ jobs:
     - name: Run Unit tests
       env:
         GROQ_KEY: ${{ secrets.GROQ_KEY }}
-        UNIT: true
       run: |
         go test -race -covermode atomic -coverprofile=covprofile ./...
     - name: Install goveralls
@@ -25,6 +24,7 @@ jobs:
     - name: Send coverage
       env:
         COVERALLS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GROQ_KEY: ${{ secrets.GROQ_KEY }}
         UNIT: true
       run: goveralls -coverprofile=covprofile -service=github
     # or use shogo82148/actions-goveralls
