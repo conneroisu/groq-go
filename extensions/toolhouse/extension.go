@@ -19,19 +19,30 @@ const (
 	applicationJSON  = "application/json"
 )
 
-// Extension is a Toolhouse extension.
-type Extension struct {
-	apiKey   string
-	baseURL  string
-	client   *http.Client
-	provider string
-	metadata map[string]any
-	bundle   string
-	tools    []Tool
-}
+type (
+	// Extension is a Toolhouse extension.
+	Extension struct {
+		apiKey   string
+		baseURL  string
+		client   *http.Client
+		provider string
+		metadata map[string]any
+		bundle   string
+		tools    []groq.Tool
+	}
 
-// Options is a function that sets options for a Toolhouse extension.
-type Options func(*Extension)
+	// Options is a function that sets options for a Toolhouse extension.
+	Options     func(*Extension)
+	runResponse struct {
+		Provider string `json:"provider"`
+		Content  struct {
+			Role       string `json:"role"`
+			ToolCallID string `json:"tool_call_id"`
+			Name       string `json:"name"`
+			Content    string `json:"content"`
+		} `json:"content"`
+	}
+)
 
 // WithBaseURL sets the base URL for the Toolhouse extension.
 func WithBaseURL(baseURL string) Options {
@@ -70,53 +81,57 @@ func NewExtension(apiKey string, opts ...Options) (e *Extension, err error) {
 func (e *Extension) Run(
 	ctx context.Context,
 	response groq.ChatCompletionResponse,
+	metadata map[string]any, // metadata is the metadata of the chat completion request.
 ) ([]groq.ChatCompletionMessage, error) {
+	e.metadata = metadata
 	if response.Choices[0].FinishReason != groq.FinishReasonFunctionCall && response.Choices[0].FinishReason != "tool_calls" {
-		print("not a function call")
-		return nil, nil
+		return nil, fmt.Errorf("Not a function call")
 	}
-	// hist[0].FunctionCall = nil
-	toolCalls := response.Choices[0].Message.ToolCalls
-	// TODO: Add local tools check here
-
 	respH := []groq.ChatCompletionMessage{}
-	for _, tool := range toolCalls {
+	for _, tool := range response.Choices[0].Message.ToolCalls {
 		buf := new(bytes.Buffer)
-		err := json.NewEncoder(buf).Encode(runToolRequest{
-			Tool:     tool,
+		bodyParams := request{
+			Content:  tool,
 			Provider: e.provider,
 			Metadata: e.metadata,
 			Bundle:   e.bundle,
-		})
+		}
+		err := json.NewEncoder(buf).Encode(bodyParams)
 		if err != nil {
 			return nil, err
 		}
-		runReq, err := http.NewRequestWithContext(
+		req, err := http.NewRequestWithContext(
 			ctx,
 			http.MethodPost,
 			fmt.Sprintf("%s%s", e.baseURL, runToolEndpoint),
-			bytes.NewBuffer(nil),
+			bytes.NewBuffer(buf.Bytes()),
 		)
 		if err != nil {
 			return nil, err
 		}
-		runReq.Header.Set("User-Agent", "Toolhouse/1.2.1 Python/3.11.0")
-		runReq.Header.Set("Authorization", fmt.Sprintf("Bearer %s", e.apiKey))
-		runReq.Header.Set("Content-Type", applicationJSON)
-		resp, err := e.client.Do(runReq)
+		req.Header.Set("User-Agent", "Toolhouse/1.2.1 Python/3.11.0")
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", e.apiKey))
+		req.Header.Set("Content-Type", applicationJSON)
+		resp, err := e.client.Do(req)
 		if err != nil {
 			return nil, err
 		}
 		defer resp.Body.Close()
+		if resp.StatusCode != http.StatusOK {
+			return nil, fmt.Errorf("%v", resp)
+		}
 		bdy, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return nil, err
 		}
-		var cCM groq.ChatCompletionMessage
-		err = json.Unmarshal(bdy, &cCM)
+		var runResp runResponse
+		err = json.Unmarshal(bdy, &runResp)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to unmarshal response body: %w: %s", err, string(bdy))
 		}
+
+		cCM := groq.ChatCompletionMessage{}
+		cCM.Content = runResp.Content.Content
 		cCM.Role = groq.ChatMessageRoleFunction
 		cCM.Name = tool.Function.Name
 		respH = append(respH, cCM)
@@ -124,16 +139,16 @@ func (e *Extension) Run(
 	return respH, nil
 }
 
-type runToolRequest struct {
-	Tool     groq.ToolCall  `json:"tool"`
+type request struct {
+	Content  groq.ToolCall  `json:"content,omitempty"`
 	Provider string         `json:"provider"`
 	Metadata map[string]any `json:"metadata"`
 	Bundle   string         `json:"bundle"`
 }
 
 // WithMetadata sets the metadata for the get tools request.
-func WithMetadata(metadata map[string]any) GetToolsOptions {
-	return func(r *getToolsRequest) {
+func WithMetadata(metadata map[string]any) HouseOptions {
+	return func(r *request) {
 		r.Metadata = metadata
 	}
 }
@@ -143,7 +158,7 @@ func WithMetadata(metadata map[string]any) GetToolsOptions {
 // It panics if an error occurs.
 func (e *Extension) MustGetTools(
 	ctx context.Context,
-	opts ...GetToolsOptions,
+	opts ...HouseOptions,
 ) []groq.Tool {
 	tools, err := e.GetTools(ctx, opts...)
 	if err != nil {
@@ -155,9 +170,9 @@ func (e *Extension) MustGetTools(
 // GetTools returns a list of tools that the extension can use.
 func (e *Extension) GetTools(
 	ctx context.Context,
-	opts ...GetToolsOptions,
+	opts ...HouseOptions,
 ) ([]groq.Tool, error) {
-	params := getToolsRequest{
+	params := request{
 		Bundle:   "default",
 		Provider: "openai",
 	}
@@ -187,61 +202,19 @@ func (e *Extension) GetTools(
 		return nil, err
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("request failed: %s", resp.Status)
+	}
 	bdy, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to read response body: %w: %s", err, string(bdy))
 	}
-	var ts tools
-	err = json.Unmarshal(bdy, &ts)
+	err = json.Unmarshal(bdy, &e.tools)
 	if err != nil {
 		return nil, err
 	}
-	e.tools = ts
-	return convertTools(ts)
+	return e.tools, nil
 }
 
-type getToolsRequest struct {
-	Provider string         `json:"provider"`
-	Metadata map[string]any `json:"metadata"`
-	Bundle   string         `json:"bundle"`
-}
-
-// GetToolsOptions represents the options for the GetTools method.
-type GetToolsOptions func(*getToolsRequest)
-
-type tools []Tool
-
-// Tool is a Toolhouse tool.
-type Tool struct {
-	Type     string   `json:"type"` // Type is the type of the tool.
-	Required []string `json:"required"`
-	Function function `json:"function"`
-}
-
-type function struct {
-	Name        string      `json:"name"`
-	Description string      `json:"description"`
-	Parameters  groq.Schema `json:"parameters"`
-}
-
-func convertTools(
-	tools []Tool,
-) ([]groq.Tool, error) {
-	resTools := make([]groq.Tool, len(tools))
-	for _, tool := range tools {
-		t := groq.Tool{
-			Type: groq.ToolTypeFunction,
-			Function: &groq.FunctionDefinition{
-				Name:        tool.Function.Name,
-				Description: tool.Function.Description,
-				Strict:      true,
-				Parameters:  tool.Function.Parameters,
-			},
-		}
-		if t.Type == "" || t.Function.Name == "" {
-			continue
-		}
-		resTools = append(resTools, t)
-	}
-	return resTools, nil
-}
+// HouseOptions represents the options for the GetTools method.
+type HouseOptions func(*request)

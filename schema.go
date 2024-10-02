@@ -22,32 +22,34 @@ const (
 	EmptyID schemaID = ""
 )
 
+// ReflectSchema returns a schema from a value.
+func ReflectSchema(a any) (*Schema, error) {
+	r := &reflector{}
+	schema := r.ReflectFromType(reflect.TypeOf(a))
+	return schema, nil
+}
+
 // Available Go defined types for JSON Schema Validation.
 //
 // https://datatracker.ietf.org/doc/html/draft-wright-json-schema-validation-00#section-7.3
 //
 // RFC draft-wright-json-schema-validation-00, section 7.3
 var (
-	trueSchema  = &Schema{boolean: &[]bool{true}[0]}
-	falseSchema = &Schema{boolean: &[]bool{false}[0]}
-	timeType    = reflect.TypeOf(time.Time{}) // date-time RFC section 7.3.1
-	ipType      = reflect.TypeOf(
-		net.IP{},
-	) // ipv4 and ipv6 RFC section 7.3.4, 7.3.5
-	uriType        = reflect.TypeOf(url.URL{}) // uri RFC section 7.3.6
-	byteSliceType  = reflect.TypeOf([]byte(nil))
-	rawMessageType = reflect.TypeOf(json.RawMessage{})
-	customType     = reflect.TypeOf((*customSchemaImpl)(nil)).
-			Elem()
-	extendType = reflect.TypeOf((*extendSchemaImpl)(nil)).
-			Elem()
-	customStructGetFieldDocString = reflect.TypeOf((*customSchemaGetFieldDocString)(nil)).
-					Elem()
-	protoEnumType             = reflect.TypeOf((*protoEnum)(nil)).Elem()
-	matchFirstCap             = regexp.MustCompile("(.)([A-Z][a-z]+)")
-	matchAllCap               = regexp.MustCompile("([a-z0-9])([A-Z])")
-	customAliasSchema         = reflect.TypeOf((*aliasSchemaImpl)(nil)).Elem()
-	customPropertyAliasSchema = reflect.TypeOf((*propertyAliasSchemaImpl)(nil)).
+	trueSchema                    = &Schema{boolean: &[]bool{true}[0]}
+	falseSchema                   = &Schema{boolean: &[]bool{false}[0]}
+	timeType                      = reflect.TypeOf(time.Time{}) // date-time RFC section 7.3.1
+	ipType                        = reflect.TypeOf(net.IP{})    // ipv4 and ipv6 RFC section 7.3.4, 7.3.5
+	uriType                       = reflect.TypeOf(url.URL{})   // uri RFC section 7.3.6
+	byteSliceType                 = reflect.TypeOf([]byte(nil))
+	rawMessageType                = reflect.TypeOf(json.RawMessage{})
+	customType                    = reflect.TypeOf((*customSchemaImpl)(nil)).Elem()
+	extendType                    = reflect.TypeOf((*extendSchemaImpl)(nil)).Elem()
+	customStructGetFieldDocString = reflect.TypeOf((*customSchemaGetFieldDocString)(nil)).Elem()
+	protoEnumType                 = reflect.TypeOf((*protoEnum)(nil)).Elem()
+	matchFirstCap                 = regexp.MustCompile("(.)([A-Z][a-z]+)")
+	matchAllCap                   = regexp.MustCompile("([a-z0-9])([A-Z])")
+	customAliasSchema             = reflect.TypeOf((*aliasSchemaImpl)(nil)).Elem()
+	customPropertyAliasSchema     = reflect.TypeOf((*propertyAliasSchemaImpl)(nil)).
 					Elem()
 )
 

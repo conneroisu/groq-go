@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/charmbracelet/log"
 	"github.com/conneroisu/groq-go"
 	"github.com/conneroisu/groq-go/extensions/toolhouse"
 )
@@ -19,6 +20,9 @@ func main() {
 
 // run runs the main function.
 func run() error {
+	log.SetLevel(log.DebugLevel)
+	log.SetOutput(os.Stdout)
+	log.SetReportCaller(true)
 	ctx := context.Background()
 	ext, err := toolhouse.NewExtension(os.Getenv("TOOLHOUSE_API_KEY"))
 	if err != nil {
@@ -27,19 +31,6 @@ func run() error {
 	client, err := groq.NewClient(os.Getenv("GROQ_KEY"))
 	if err != nil {
 		return err
-	}
-	ts := ext.MustGetTools(ctx,
-		toolhouse.WithMetadata(map[string]any{
-			"id":       "conner",
-			"timezone": 5,
-		},
-		))
-	ats := []groq.Tool{}
-	for _, t := range ts {
-		if t.Type == "" {
-			continue
-		}
-		ats = append(ats, t)
 	}
 	history := []groq.ChatCompletionMessage{
 		{
@@ -50,13 +41,20 @@ func run() error {
 	re, err := client.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
 		Model:    groq.ModelLlama3Groq70B8192ToolUsePreview,
 		Messages: history,
-		Tools:    ats,
+		Tools: ext.MustGetTools(ctx, toolhouse.WithMetadata(map[string]any{
+			"id":       "conner",
+			"timezone": 5,
+		})),
+		ToolChoice: "required",
 	})
 	if err != nil {
 		return fmt.Errorf("failed to create 1 chat completion: %w", err)
 	}
 	history = append(history, re.Choices[0].Message)
-	r, err := ext.Run(ctx, re)
+	r, err := ext.Run(ctx, re, map[string]any{
+		"id":       "conner",
+		"timezone": 5,
+	})
 	if err != nil {
 		return fmt.Errorf("failed to run tool: %w", err)
 	}
@@ -69,11 +67,17 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("failed to create 2 chat completion: %w", err)
 	}
-	fmt.Println(finalr.Choices[0].Message.Content)
+	history = append(history, finalr.Choices[0].Message)
 	jsnHistory, err := json.MarshalIndent(history, "", "  ")
 	if err != nil {
 		return fmt.Errorf("failed to marshal history: %w", err)
 	}
 	fmt.Println(string(jsnHistory))
 	return nil
+}
+
+func printHistoryContents(history []groq.ChatCompletionMessage) {
+	for _, m := range history {
+		fmt.Println(m.Content)
+	}
 }

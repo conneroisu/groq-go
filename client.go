@@ -13,6 +13,7 @@ import (
 )
 
 //go:generate go run ./scripts/generate-models/
+//go:generate make docs
 
 // Format is the format of a response.
 // string

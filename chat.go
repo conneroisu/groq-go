@@ -158,18 +158,6 @@ type (
 	ToolFunction struct {
 		Name string `json:"name"` // Name is the name of the tool function.
 	}
-	// FunctionDefinition represents the function definition.
-	FunctionDefinition struct {
-		Name        string `json:"name"`                  // Name is the name of the function.
-		Description string `json:"description,omitempty"` // Description is the description of the function.
-		Strict      bool   `json:"strict,omitempty"`      // Strict is the strictness of the function.
-		// Parameters is an object describing the function.
-		// You can pass json.RawMessage to describe the schema,
-		// or you can pass in a struct which serializes to the proper JSON schema.
-		// The jsonschema package is provided for convenience, but you should
-		// consider another specialized library if you require more complex schemas.
-		Parameters Schema `json:"parameters"`
-	}
 	// TopLogProbs represents the top log probs.
 	TopLogProbs struct {
 		Token   string  `json:"token"`           // Token is the token of the top log probs.
@@ -269,6 +257,24 @@ type (
 	// Note: Perhaps it is more elegant to abstract Stream using generics.
 	ChatCompletionStream struct {
 		*streamReader[ChatCompletionStreamResponse]
+	}
+	// FunctionDefinition represents the function definition.
+	FunctionDefinition struct {
+		Name        string              `json:"name"`
+		Description string              `json:"description"`
+		Parameters  ParameterDefinition `json:"parameters"`
+	}
+	// ParameterDefinition represents the parameter definition.
+	ParameterDefinition struct {
+		Type                 string                        `json:"type"`
+		Properties           map[string]PropertyDefinition `json:"properties"`
+		Required             []string                      `json:"required"`
+		AdditionalProperties bool                          `json:"additionalProperties,omitempty"`
+	}
+	// PropertyDefinition represents the property definition.
+	PropertyDefinition struct {
+		Type        string `json:"type"`
+		Description string `json:"description"`
 	}
 )
 
