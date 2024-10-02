@@ -360,13 +360,13 @@ func (c *Client) CreateChatCompletion(
 		return
 	}
 	err = c.sendRequest(req, &response)
-	// *response.History = []ChatCompletionMessage{}
-	// *response.History = append(
-	//         *response.History,
-	//         request.Messages...)
-	// *response.History = append(
-	//         *response.History,
-	//         response.Choices[0].Message)
+	response.History = []ChatCompletionMessage{}
+	response.History = append(
+		response.History,
+		request.Messages...)
+	response.History = append(
+		response.History,
+		response.Choices[0].Message)
 	return
 }
 

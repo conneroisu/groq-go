@@ -288,7 +288,7 @@ func convertTools(
 				Parameters:  *sch,
 			},
 		}
-		if t.Type == "" {
+		if t.Type == "" || t.Function.Name == "" {
 			continue
 		}
 		jsval, err := json.Marshal(tool)

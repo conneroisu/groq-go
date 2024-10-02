@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 
@@ -26,6 +27,27 @@ func run() error {
 	if err != nil {
 		return err
 	}
+	ts := ext.MustGetTools(ctx, toolhouse.WithBundle(
+		"default",
+	), toolhouse.WithMetadata(map[string]any{
+		"id":       "conner",
+		"timezone": 5,
+	},
+	), toolhouse.WithProvider(
+		"openai",
+	))
+	ats := []groq.Tool{}
+	for _, t := range ts {
+		jsV, err := json.MarshalIndent(t, "", "  ")
+		if err != nil {
+			return err
+		}
+		fmt.Println(string(jsV))
+		if t.Type == "" {
+			continue
+		}
+		ats = append(ats, t)
+	}
 	re, err := client.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
 		Model: groq.ModelLlama3Groq70B8192ToolUsePreview,
 		Messages: []groq.ChatCompletionMessage{
@@ -34,15 +56,7 @@ func run() error {
 				Content: "Write a python function to print the first 10 prime numbers then respond with the answer.",
 			},
 		},
-		Tools: ext.MustGetTools(ctx, toolhouse.WithBundle(
-			"default",
-		), toolhouse.WithMetadata(map[string]any{
-			"id":       "conner",
-			"timezone": 5,
-		},
-		), toolhouse.WithProvider(
-			"openai",
-		)),
+		Tools: ats,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to create chat completion: %w", err)
@@ -52,7 +66,7 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("failed to run tool: %w", err)
 	}
-	fmt.Println(r[0].Content)
+	fmt.Println("ran tool got:", r)
 	finalr, err := client.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
 		Model:     groq.ModelLlama3Groq70B8192ToolUsePreview,
 		Messages:  r,
