@@ -13,10 +13,48 @@ import (
 )
 
 //go:generate go run ./scripts/generate-models/
+//go:generate make docs
 
 // Format is the format of a response.
 // string
-type Format string
+type (
+	Format string
+	// Client is a Groq api client.
+	Client struct {
+		groqAPIKey         string // Groq API key
+		orgID              string // OrgID is the organization ID for the client.
+		baseURL            string // Base URL for the client.
+		emptyMessagesLimit uint   // EmptyMessagesLimit is the limit for the empty messages.
+		requestBuilder     requestBuilder
+		requestFormBuilder formBuilder
+		createFormBuilder  func(body io.Writer) formBuilder
+
+		client *http.Client // Client is the HTTP client to use
+		logger *slog.Logger // Logger is the logger for the client.
+	}
+
+	// RateLimitHeaders struct represents Groq rate limits headers.
+	RateLimitHeaders struct {
+		LimitRequests     int       `json:"x-ratelimit-limit-requests"`     // LimitRequests is the limit requests of the rate limit headers.
+		LimitTokens       int       `json:"x-ratelimit-limit-tokens"`       // LimitTokens is the limit tokens of the rate limit headers.
+		RemainingRequests int       `json:"x-ratelimit-remaining-requests"` // RemainingRequests is the remaining requests of the rate limit headers.
+		RemainingTokens   int       `json:"x-ratelimit-remaining-tokens"`   // RemainingTokens is the remaining tokens of the rate limit headers.
+		ResetRequests     ResetTime `json:"x-ratelimit-reset-requests"`     // ResetRequests is the reset requests of the rate limit headers.
+		ResetTokens       ResetTime `json:"x-ratelimit-reset-tokens"`       // ResetTokens is the reset tokens of the rate limit headers.
+	}
+	// ResetTime is a time.Time wrapper for the rate limit reset time.
+	// string
+	ResetTime string
+
+	// Opts is a function that sets options for a Groq client.
+	Opts func(*Client)
+
+	requestOption  func(*requestOptions)
+	fullURLOptions struct {
+		model string
+	}
+	fullURLOption func(*fullURLOptions)
+)
 
 const (
 	// FormatText is the text format. It is the default format of a
@@ -29,20 +67,6 @@ const (
 	// groqAPIURLv1 is the base URL for the Groq API.
 	groqAPIURLv1 = "https://api.groq.com/openai/v1"
 )
-
-// Client is a Groq api client.
-type Client struct {
-	groqAPIKey         string // Groq API key
-	orgID              string // OrgID is the organization ID for the client.
-	baseURL            string // Base URL for the client.
-	emptyMessagesLimit uint   // EmptyMessagesLimit is the limit for the empty messages.
-	requestBuilder     requestBuilder
-	requestFormBuilder formBuilder
-	createFormBuilder  func(body io.Writer) formBuilder
-
-	client *http.Client // Client is the HTTP client to use
-	logger *slog.Logger // Logger is the logger for the client.
-}
 
 // NewClient creates a new Groq client.
 func NewClient(groqAPIKey string, opts ...Opts) (*Client, error) {
@@ -76,9 +100,6 @@ func (c *Client) fullURL(suffix Endpoint, setters ...fullURLOption) string {
 	return fmt.Sprintf("%s%s", baseURL, suffix)
 }
 
-// Opts is a function that sets options for a Groq client.
-type Opts func(*Client)
-
 // WithClient sets the client for the Groq client.
 func WithClient(client *http.Client) Opts {
 	return func(c *Client) {
@@ -111,8 +132,6 @@ type requestOptions struct {
 	body   any
 	header http.Header
 }
-
-type requestOption func(*requestOptions)
 
 func withBody(body any) requestOption {
 	return func(args *requestOptions) {
@@ -186,13 +205,6 @@ func (c *Client) sendRequest(req *http.Request, v response) error {
 	return decodeResponse(res.Body, v)
 }
 
-// RawResponse is a response from the raw endpoint.
-type RawResponse struct {
-	io.ReadCloser
-
-	http.Header
-}
-
 func sendRequestStream[T streamer](
 	client *Client,
 	req *http.Request,
@@ -256,15 +268,9 @@ func decodeString(body io.Reader, output *string) error {
 	return nil
 }
 
-type fullURLOptions struct {
-	model Model
-}
-
-type fullURLOption func(*fullURLOptions)
-
-func withModel(model Model) fullURLOption {
+func withModel(model model) fullURLOption {
 	return func(args *fullURLOptions) {
-		args.model = model
+		args.model = string(model)
 	}
 }
 
@@ -285,20 +291,6 @@ func (c *Client) handleErrorResp(resp *http.Response) error {
 	errRes.Error.HTTPStatusCode = resp.StatusCode
 	return errRes.Error
 }
-
-// RateLimitHeaders struct represents Groq rate limits headers.
-type RateLimitHeaders struct {
-	LimitRequests     int       `json:"x-ratelimit-limit-requests"`     // LimitRequests is the limit requests of the rate limit headers.
-	LimitTokens       int       `json:"x-ratelimit-limit-tokens"`       // LimitTokens is the limit tokens of the rate limit headers.
-	RemainingRequests int       `json:"x-ratelimit-remaining-requests"` // RemainingRequests is the remaining requests of the rate limit headers.
-	RemainingTokens   int       `json:"x-ratelimit-remaining-tokens"`   // RemainingTokens is the remaining tokens of the rate limit headers.
-	ResetRequests     ResetTime `json:"x-ratelimit-reset-requests"`     // ResetRequests is the reset requests of the rate limit headers.
-	ResetTokens       ResetTime `json:"x-ratelimit-reset-tokens"`       // ResetTokens is the reset tokens of the rate limit headers.
-}
-
-// ResetTime is a time.Time wrapper for the rate limit reset time.
-// string
-type ResetTime string
 
 // String returns the string representation of the ResetTime.
 func (r ResetTime) String() string {

@@ -22,15 +22,25 @@ import (
 )
 
 const (
-	outputFile = "models.go"
+	modelFileName     = "models.go"
+	modelTestFileName = "models_test.go"
 )
 
-//go:embed models.go.tmpl
-var outputFileTemplate string
+var (
+	modelTemplate = template.New("models").Funcs(funcMap)
+	testTemplate  = template.New("test").Funcs(funcMap)
 
-type templateParams struct {
-	Models []ResponseModel `json:"models"`
-}
+	//go:embed models.go.tmpl
+	modelFileTemplate string
+	//go:embed models_test.go.tmpl
+	testFileTemplate string
+
+	funcMap = template.FuncMap{
+		"getCurrentDate": func() string {
+			return time.Now().Format("2006-01-02 15:04:05")
+		},
+	}
+)
 
 // main is the entry point for the application.
 func main() {
@@ -56,6 +66,64 @@ type ResponseModel struct {
 	Active        bool   `json:"active"`
 	ContextWindow int    `json:"context_window"`
 	PublicApps    any    `json:"public_apps"`
+}
+
+// CategorizedModels is a struct that contains all the models.
+type CategorizedModels struct {
+	ChatModels          []ResponseModel `json:"text"`
+	TranscriptionModels []ResponseModel `json:"transcription"`
+	TranslationModels   []ResponseModel `json:"translation"`
+	ModerationModels    []ResponseModel `json:"moderation"`
+	MultiModalModels    []ResponseModel `json:"multi_modal"`
+}
+
+// Categorize returns a Categorize struct with all the models.
+func (r *Response) Categorize() (CategorizedModels, error) {
+	var models CategorizedModels
+
+	nameModels(r.Data)
+	for _, model := range r.Data {
+		if isTextModel(model) {
+			models.ChatModels = append(models.ChatModels, model)
+		}
+		if isTranscriptionModel(model) {
+			models.TranscriptionModels = append(models.TranscriptionModels, model)
+		}
+		if isTranslationModel(model) {
+			models.TranslationModels = append(models.TranslationModels, model)
+		}
+		if isModerationModel(model) {
+			models.ModerationModels = append(models.ModerationModels, model)
+		}
+		if isMultiModalModel(model) {
+			models.MultiModalModels = append(models.MultiModalModels, model)
+		}
+	}
+	return models, nil
+}
+
+func isMultiModalModel(model ResponseModel) bool {
+	return false
+}
+
+func isTextModel(model ResponseModel) bool {
+	if model.ID != "llama-guard-3-8b" {
+		return model.ContextWindow > 1024
+	}
+	return false
+}
+
+func isModerationModel(model ResponseModel) bool {
+	// if the id of the model is llama-guard-3-8b
+	return model.ID == "llama-guard-3-8b"
+}
+
+func isTranslationModel(model ResponseModel) bool {
+	return model.ID == "whisper-large-v3"
+}
+
+func isTranscriptionModel(model ResponseModel) bool {
+	return model.ID == "whisper-large-v3"
 }
 
 // run runs the main function.
@@ -90,21 +158,37 @@ func run(_ context.Context) error {
 		return err
 	}
 	buf := new(bytes.Buffer)
-	models := response.Data
-	nameModels(models)
-	err = fillTemplate(buf, models)
+	ms, err := response.Categorize()
 	if err != nil {
 		return err
 	}
-	formatted, err := format.Source(buf.Bytes())
+	err = fillModelsTemplate(buf, ms)
 	if err != nil {
-		return fmt.Errorf(
-			"error formatting output: %w : %s",
-			err,
-			buf.String(),
-		)
+		return err
 	}
-	f, err := os.Create(outputFile)
+	formatted, err := cleanFile(buf)
+	if err != nil {
+		return err
+	}
+	f, err := os.Create(modelFileName)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	_, err = f.Write(formatted)
+	if err != nil {
+		return err
+	}
+	buf.Reset()
+	err = fillTestTemplate(buf, ms)
+	if err != nil {
+		return err
+	}
+	formatted, err = cleanFile(buf)
+	if err != nil {
+		return err
+	}
+	f, err = os.Create(modelTestFileName)
 	if err != nil {
 		return err
 	}
@@ -116,47 +200,28 @@ func run(_ context.Context) error {
 	return nil
 }
 
-func fillTemplate(w io.Writer, models []ResponseModel) error {
-	funcMap := template.FuncMap{
-		// isTextModel returns true if the model has a context window
-		// greater than 1024 and is not specific models like
-		// llama-guard-3-8b.
-		"isTextModel": func(model ResponseModel) bool {
-			if model.ID != "llama-guard-3-8b" {
-				return model.ContextWindow > 1024
-			}
-			return false
-		},
-		// isAudioModel returns true if the model has a context window
-		// less than 1024 and is not specific models like
-		// llama-guard-3-8b.
-		"isAudioModel": func(model ResponseModel) bool {
-			if model.ID != "llama-guard-3-8b" {
-				return model.ContextWindow < 1024
-			}
-			return false
-		},
-		// notModerationModel returns false if the model is
-		// a model that can be used for moderation.
-		//
-		// llama-guard-3-8b is a moderation model.
-		"notModerationModel": func(model ResponseModel) bool {
-			// if the id of the model is llama-guard-3-8b
-			return model.ID != "llama-guard-3-8b"
-		},
-		// getCurrentDate returns the current date in the format
-		// "2006-01-02 15:04:05".
-		"getCurrentDate": func() string {
-			return time.Now().Format("2006-01-02 15:04:05")
-		},
+func cleanFile(r io.Reader) ([]byte, error) {
+	b, err := io.ReadAll(r)
+	if err != nil {
+		return nil, err
 	}
-	tmpla, err := template.New("models").
-		Funcs(funcMap).
-		Parse(outputFileTemplate)
+	formatted, err := format.Source(b)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"error formatting output: %w : %s",
+			err,
+			b,
+		)
+	}
+	return formatted, nil
+}
+
+func fillModelsTemplate(w io.Writer, models CategorizedModels) (err error) {
+	modelTemplate, err = modelTemplate.Parse(modelFileTemplate)
 	if err != nil {
 		return err
 	}
-	err = tmpla.Execute(w, templateParams{Models: models})
+	err = modelTemplate.Execute(w, models)
 	if err != nil {
 		return err
 	}
@@ -173,4 +238,16 @@ func nameModels(models []ResponseModel) {
 	sort.Slice(models, func(i, j int) bool {
 		return models[i].Name < models[j].Name
 	})
+}
+
+func fillTestTemplate(w io.Writer, models CategorizedModels) (err error) {
+	testTemplate, err = testTemplate.Parse(testFileTemplate)
+	if err != nil {
+		return err
+	}
+	err = testTemplate.Execute(w, models)
+	if err != nil {
+		return err
+	}
+	return nil
 }

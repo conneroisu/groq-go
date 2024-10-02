@@ -13,18 +13,27 @@ import (
 )
 
 // formBuilder is an interface for building a form.
-type formBuilder interface {
-	io.Closer
-	CreateFormFile(fieldname string, file *os.File) error
-	CreateFormFileReader(fieldname string, r io.Reader, filename string) error
-	WriteField(fieldname, value string) error
-	FormDataContentType() string
-}
-
-// defaultFormBuilder is a default implementation of FormBuilder.
-type defaultFormBuilder struct {
-	writer *multipart.Writer
-}
+type (
+	formBuilder interface {
+		io.Closer
+		CreateFormFile(fieldname string, file *os.File) error
+		CreateFormFileReader(fieldname string, r io.Reader, filename string) error
+		WriteField(fieldname, value string) error
+		FormDataContentType() string
+	}
+	defaultFormBuilder struct {
+		writer *multipart.Writer
+	}
+	requestBuilder interface {
+		Build(
+			ctx context.Context,
+			method, url string,
+			body any,
+			header http.Header,
+		) (*http.Request, error)
+	}
+	httpRequestBuilder struct{}
+)
 
 // newFormBuilder creates a new DefaultFormBuilder.
 func newFormBuilder(body io.Writer) *defaultFormBuilder {
@@ -80,17 +89,6 @@ func (fb *defaultFormBuilder) FormDataContentType() string {
 	return fb.writer.FormDataContentType()
 }
 
-type requestBuilder interface {
-	Build(
-		ctx context.Context,
-		method, url string,
-		body any,
-		header http.Header,
-	) (*http.Request, error)
-}
-
-type httpRequestBuilder struct{}
-
 func newRequestBuilder() *httpRequestBuilder {
 	return &httpRequestBuilder{}
 }
@@ -104,7 +102,8 @@ func (b *httpRequestBuilder) Build(
 ) (req *http.Request, err error) {
 	var bodyReader io.Reader
 	if body != nil {
-		if v, ok := body.(io.Reader); ok {
+		v, ok := body.(io.Reader)
+		if ok {
 			bodyReader = v
 		} else {
 			var reqBytes []byte

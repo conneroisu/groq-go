@@ -28,7 +28,6 @@ func run(
 	}
 	response, err := client.Moderate(ctx, groq.ModerationRequest{
 		Model: groq.ModelLlamaGuard38B,
-		// Input: "I want to kill them.",
 		Messages: []groq.ChatCompletionMessage{
 			{
 				Role:    groq.ChatMessageRoleUser,

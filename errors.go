@@ -8,54 +8,48 @@ import (
 	"strings"
 )
 
-// DefaultErrorAccumulator is a default implementation of ErrorAccumulator
-type DefaultErrorAccumulator struct {
-	Buffer errorBuffer
-}
-
-// APIError provides error information returned by the Groq API.
-type APIError struct {
-	Code           any     `json:"code,omitempty"`  // Code is the code of the error.
-	Message        string  `json:"message"`         // Message is the message of the error.
-	Param          *string `json:"param,omitempty"` // Param is the param of the error.
-	Type           string  `json:"type"`            // Type is the type of the error.
-	HTTPStatusCode int     `json:"-"`               // HTTPStatusCode is the status code of the error.
-}
-
-// ErrChatCompletionInvalidModel is an error that occurs when the model is not
-// supported with a specific endpoint.
-type ErrChatCompletionInvalidModel struct {
-	Model    Model
-	Endpoint Endpoint
-}
-
-// Error implements the error interface.
-func (e ErrChatCompletionInvalidModel) Error() string {
-	return fmt.Errorf(
-		"this model (%s) is not supported with this method of interaction over %s, please use CreateCompletion client method instead",
-		e.Endpoint,
-		e.Model,
-	).
-		Error()
-}
-
-// ErrChatCompletionStreamNotSupported is an error that occurs when streaming
-// is not supported with the CreateChatCompletionStream method.
-type ErrChatCompletionStreamNotSupported struct {
-	model Model
-}
-
-// Error implements the error interface.
-func (e ErrChatCompletionStreamNotSupported) Error() string {
-	return fmt.Errorf("streaming is not supported with this method, please use CreateChatCompletionStream client method instead").
-		Error()
-}
-
-// ErrContentFieldsMisused is an error that occurs when both Content and
-// MultiContent properties are set.
-type ErrContentFieldsMisused struct {
-	field string
-}
+type (
+	// DefaultErrorAccumulator is a default implementation of ErrorAccumulator
+	DefaultErrorAccumulator struct {
+		Buffer errorBuffer
+	}
+	// APIError provides error information returned by the Groq API.
+	APIError struct {
+		Code           any     `json:"code,omitempty"`  // Code is the code of the error.
+		Message        string  `json:"message"`         // Message is the message of the error.
+		Param          *string `json:"param,omitempty"` // Param is the param of the error.
+		Type           string  `json:"type"`            // Type is the type of the error.
+		HTTPStatusCode int     `json:"-"`               // HTTPStatusCode is the status code of the error.
+	}
+	// ErrContentFieldsMisused is an error that occurs when both Content and
+	// MultiContent properties are set.
+	ErrContentFieldsMisused struct {
+		field string
+	}
+	// ErrTooManyEmptyStreamMessages is returned when the stream has sent too many
+	// empty messages.
+	ErrTooManyEmptyStreamMessages struct{}
+	errorAccumulator              interface {
+		// Write method writes bytes to the error accumulator
+		//
+		// It implements the io.Writer interface.
+		Write(p []byte) error
+		// Bytes method returns the bytes of the error accumulator.
+		Bytes() []byte
+	}
+	errorBuffer interface {
+		io.Writer
+		Len() int
+		Bytes() []byte
+	}
+	requestError struct {
+		HTTPStatusCode int
+		Err            error
+	}
+	errorResponse struct {
+		Error *APIError `json:"error,omitempty"`
+	}
+)
 
 // Error implements the error interface.
 func (e ErrContentFieldsMisused) Error() string {
@@ -63,70 +57,9 @@ func (e ErrContentFieldsMisused) Error() string {
 		Error()
 }
 
-// ErrCompletionUnsupportedModel is an error that occurs when the model is not
-// supported with the CreateCompletion method.
-type ErrCompletionUnsupportedModel struct{ Model Model }
-
-// Error implements the error interface.
-func (e ErrCompletionUnsupportedModel) Error() string {
-	return fmt.Errorf("this model (%s) is not supported with this method, please use CreateCompletion client method instead", e.Model).
-		Error()
-}
-
-// ErrCompletionStreamNotSupported is an error that occurs when streaming is
-// not supported with the CreateCompletionStream method.
-type ErrCompletionStreamNotSupported struct{}
-
-// Error implements the error interface.
-func (e ErrCompletionStreamNotSupported) Error() string {
-	return fmt.Errorf("streaming is not supported with this method, please use CreateCompletionStream client method instead").
-		Error()
-}
-
-// ErrCompletionRequestPromptTypeNotSupported is an error that occurs when the
-// type of CompletionRequest.Prompt only supports string and []string.
-type ErrCompletionRequestPromptTypeNotSupported struct{}
-
-// Error implements the error interface.
-func (e ErrCompletionRequestPromptTypeNotSupported) Error() string {
-	return fmt.Errorf("the type of CompletionRequest.Prompt only supports string and []string").
-		Error()
-}
-
-// ErrTooManyEmptyStreamMessages is returned when the stream has sent too many
-// empty messages.
-type ErrTooManyEmptyStreamMessages struct{}
-
 // Error returns the error message.
 func (e ErrTooManyEmptyStreamMessages) Error() string {
 	return "stream has sent too many empty messages"
-}
-
-// errorAccumulator is an interface for accumulating errors
-type errorAccumulator interface {
-	// Write method writes bytes to the error accumulator
-	//
-	// It implements the io.Writer interface.
-	Write(p []byte) error
-	// Bytes method returns the bytes of the error accumulator.
-	Bytes() []byte
-}
-
-type errorBuffer interface {
-	io.Writer
-	Len() int
-	Bytes() []byte
-}
-
-// requestError provides information about generic request errors.
-type requestError struct {
-	HTTPStatusCode int
-	Err            error
-}
-
-// errorResponse is a response from the error endpoint.
-type errorResponse struct {
-	Error *APIError `json:"error,omitempty"`
 }
 
 // newErrorAccumulator creates a new error accumulator
