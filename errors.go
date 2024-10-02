@@ -8,25 +8,48 @@ import (
 	"strings"
 )
 
-// DefaultErrorAccumulator is a default implementation of ErrorAccumulator
-type DefaultErrorAccumulator struct {
-	Buffer errorBuffer
-}
-
-// APIError provides error information returned by the Groq API.
-type APIError struct {
-	Code           any     `json:"code,omitempty"`  // Code is the code of the error.
-	Message        string  `json:"message"`         // Message is the message of the error.
-	Param          *string `json:"param,omitempty"` // Param is the param of the error.
-	Type           string  `json:"type"`            // Type is the type of the error.
-	HTTPStatusCode int     `json:"-"`               // HTTPStatusCode is the status code of the error.
-}
-
-// ErrContentFieldsMisused is an error that occurs when both Content and
-// MultiContent properties are set.
-type ErrContentFieldsMisused struct {
-	field string
-}
+type (
+	// DefaultErrorAccumulator is a default implementation of ErrorAccumulator
+	DefaultErrorAccumulator struct {
+		Buffer errorBuffer
+	}
+	// APIError provides error information returned by the Groq API.
+	APIError struct {
+		Code           any     `json:"code,omitempty"`  // Code is the code of the error.
+		Message        string  `json:"message"`         // Message is the message of the error.
+		Param          *string `json:"param,omitempty"` // Param is the param of the error.
+		Type           string  `json:"type"`            // Type is the type of the error.
+		HTTPStatusCode int     `json:"-"`               // HTTPStatusCode is the status code of the error.
+	}
+	// ErrContentFieldsMisused is an error that occurs when both Content and
+	// MultiContent properties are set.
+	ErrContentFieldsMisused struct {
+		field string
+	}
+	// ErrTooManyEmptyStreamMessages is returned when the stream has sent too many
+	// empty messages.
+	ErrTooManyEmptyStreamMessages struct{}
+	errorAccumulator              interface {
+		// Write method writes bytes to the error accumulator
+		//
+		// It implements the io.Writer interface.
+		Write(p []byte) error
+		// Bytes method returns the bytes of the error accumulator.
+		Bytes() []byte
+	}
+	errorBuffer interface {
+		io.Writer
+		Len() int
+		Bytes() []byte
+	}
+	requestError struct {
+		HTTPStatusCode int
+		Err            error
+	}
+	errorResponse struct {
+		Error *APIError `json:"error,omitempty"`
+	}
+)
 
 // Error implements the error interface.
 func (e ErrContentFieldsMisused) Error() string {
@@ -34,40 +57,9 @@ func (e ErrContentFieldsMisused) Error() string {
 		Error()
 }
 
-// ErrTooManyEmptyStreamMessages is returned when the stream has sent too many
-// empty messages.
-type ErrTooManyEmptyStreamMessages struct{}
-
 // Error returns the error message.
 func (e ErrTooManyEmptyStreamMessages) Error() string {
 	return "stream has sent too many empty messages"
-}
-
-// errorAccumulator is an interface for accumulating errors
-type errorAccumulator interface {
-	// Write method writes bytes to the error accumulator
-	//
-	// It implements the io.Writer interface.
-	Write(p []byte) error
-	// Bytes method returns the bytes of the error accumulator.
-	Bytes() []byte
-}
-
-type errorBuffer interface {
-	io.Writer
-	Len() int
-	Bytes() []byte
-}
-
-// requestError provides information about generic request errors.
-type requestError struct {
-	HTTPStatusCode int
-	Err            error
-}
-
-// errorResponse is a response from the error endpoint.
-type errorResponse struct {
-	Error *APIError `json:"error,omitempty"`
 }
 
 // newErrorAccumulator creates a new error accumulator
