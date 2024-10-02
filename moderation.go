@@ -29,33 +29,71 @@ type (
 )
 
 const (
-	// CategoryViolentCrimes (S1) is the violent crimes category. Responses that enable, encourage, or endorse the commission of violent crimes, including: (1) unlawful violence toward people (ex: terrorism, genocide, murder, hate-motivated violent crimes, child abuse, assault, battery, kidnapping) and (2) unlawful violence toward animals (ex: animal abuse)
+	// CategoryViolentCrimes (S1) is the violent crimes category.
+	//
+	// Responses that enable, encourage, or endorse the commission of
+	// violent crimes, including: (1) unlawful violence toward people
+	// (ex: terrorism, genocide, murder, hate-motivated violent crimes,
+	// child abuse, assault, battery, kidnapping) and (2) unlawful violence
+	// toward animals (ex: animal abuse)
 	CategoryViolentCrimes HarmfulCategory = "violent_crimes"
 	// CategoryNonviolentCrimes (S2) is the non-violent crimes category.
 	CategoryNonviolentCrimes HarmfulCategory = "non_violent_crimes"
 	// CategorySexRelatedCrimes (S3) is the sex-related crimes category.
 	CategorySexRelatedCrimes HarmfulCategory = "sex_related_crimes"
-	// CategoryChildSexualExploitation (S4) is the child sexual exploitation category. Responses that contain, describe, enable, encourage, or endorse the sexual abuse of children.
+	// CategoryChildSexualExploitation (S4) is the child sexual exploitation
+	// category.
+	//
+	// Responses that contain, describe, enable, encourage, or endorse the
+	// sexual abuse of children.
 	CategoryChildSexualExploitation HarmfulCategory = "child_sexual_exploitation"
-	// CategoryDefamation (S5) is the defamation category. Responses that contain, describe, enable, encourage, or endorse defamation.
+	// CategoryDefamation (S5) is the defamation category.
+	//
+	// Signifies responses that contain, describe, enable, encourage, or
+	// endorse defamation.
 	CategoryDefamation HarmfulCategory = "defamation"
-	// CategorySpecializedAdvice (S6) is the specialized advice category. Responses that contain, describe, enable, encourage, or endorse specialized advice.
+	// CategorySpecializedAdvice (S6) is the specialized advice category.
+	//
+	// Signifies responses contain, describe, enable, encourage, or endorse specialized advice.
 	CategorySpecializedAdvice HarmfulCategory = "specialized_advice"
-	// CategoryPrivacy (S7) is the privacy category. Responses that contain, describe, enable, encourage, or endorse privacy.
+	// CategoryPrivacy (S7) is the privacy category.
+	//
+	// Responses contain, describe, enable, encourage, or endorse privacy.
 	CategoryPrivacy HarmfulCategory = "privacy"
-	// CategoryIntellectualProperty (S8) is the intellectual property category. Responses that contain, describe, enable, encourage, or endorse intellectual property.
+	// CategoryIntellectualProperty (S8) is the intellectual property
+	// category. Responses that contain, describe, enable, encourage, or
+	// endorse intellectual property.
 	CategoryIntellectualProperty HarmfulCategory = "intellectual_property"
-	// CategoryIndiscriminateWeapons (S9) is the indiscriminate weapons category. Responses that contain, describe, enable, encourage, or endorse indiscriminate weapons.
+	// CategoryIndiscriminateWeapons (S9) is the indiscriminate weapons
+	// category.
+	//
+	// Responses that contain, describe, enable, encourage, or endorse
+	// indiscriminate weapons.
 	CategoryIndiscriminateWeapons HarmfulCategory = "indiscriminate_weapons"
-	// CategoryHate (S10) is the hate category. Responses that contain, describe, enable, encourage, or endorse hate.
+	// CategoryHate (S10) is the hate category.
+	//
+	// Responses contain, describe, enable, encourage, or endorse hate.
 	CategoryHate HarmfulCategory = "hate"
-	// CategorySuicideAndSelfHarm (S11) is the suicide/self-harm category. Responses that contain, describe, enable, encourage, or endorse suicide or self-harm.
+	// CategorySuicideAndSelfHarm (S11) is the suicide/self-harm category.
+	//
+	// Responses contain, describe, enable, encourage, or endorse suicide or self-harm.
 	CategorySuicideAndSelfHarm HarmfulCategory = "suicide_and_self_harm"
-	// CategorySexualContent (S12) is the sexual content category. Responses that contain, describe, enable, encourage, or endorse sexual content.
+	// CategorySexualContent (S12) is the sexual content category.
+	//
+	// Responses contain, describe, enable, encourage, or endorse
+	// sexual content.
 	CategorySexualContent HarmfulCategory = "sexual_content"
-	// CategoryElections (S13) is the elections category. Responses that contain factually incorrect information about electoral systems and processes, including in the time, place, or manner of voting in civic elections.
+	// CategoryElections (S13) is the elections category.
+	//
+	// Responses contain factually incorrect information about electoral
+	// systems and processes, including in the time, place, or manner of
+	// voting in civic elections.
 	CategoryElections HarmfulCategory = "elections"
-	// CategoryCodeInterpreterAbuse (S14) is the code interpreter abuse category. Responses that contain, describe, enable, encourage, or endorse code interpreter abuse.
+	// CategoryCodeInterpreterAbuse (S14) is the code interpreter abuse
+	// category.
+	//
+	// Responses that contain, describe, enable, encourage, or
+	// endorse code interpreter abuse.
 	CategoryCodeInterpreterAbuse HarmfulCategory = "code_interpreter_abuse"
 )
 
