@@ -21,10 +21,18 @@ type (
 		WriteField(fieldname, value string) error
 		FormDataContentType() string
 	}
-	// defaultFormBuilder is a default implementation of FormBuilder.
 	defaultFormBuilder struct {
 		writer *multipart.Writer
 	}
+	requestBuilder interface {
+		Build(
+			ctx context.Context,
+			method, url string,
+			body any,
+			header http.Header,
+		) (*http.Request, error)
+	}
+	httpRequestBuilder struct{}
 )
 
 // newFormBuilder creates a new DefaultFormBuilder.
@@ -80,17 +88,6 @@ func (fb *defaultFormBuilder) Close() error {
 func (fb *defaultFormBuilder) FormDataContentType() string {
 	return fb.writer.FormDataContentType()
 }
-
-type requestBuilder interface {
-	Build(
-		ctx context.Context,
-		method, url string,
-		body any,
-		header http.Header,
-	) (*http.Request, error)
-}
-
-type httpRequestBuilder struct{}
 
 func newRequestBuilder() *httpRequestBuilder {
 	return &httpRequestBuilder{}

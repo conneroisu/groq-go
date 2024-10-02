@@ -6,14 +6,27 @@ import (
 	"strings"
 )
 
-// HarmfulCategory is a category of harmful content.
-//
-// [Llama Guard 3](https://llama.meta.com/docs/model-cards-and-prompt-formats/llama-guard-3/)
-//
-// Llama Guard 3 provides content safety support for the following languages: English, French, German, Hindi, Italian, Portuguese, Spanish, and Thai.
-//
-// string
-type HarmfulCategory string
+// ModerationRequest represents a request structure for moderation API.
+type (
+	// HarmfulCategory is a category of harmful content.
+	//
+	// [Llama Guard 3](https://llama.meta.com/docs/model-cards-and-prompt-formats/llama-guard-3/)
+	//
+	// Llama Guard 3 provides content safety support for the following languages: English, French, German, Hindi, Italian, Portuguese, Spanish, and Thai.
+	//
+	// string
+	HarmfulCategory   string
+	ModerationRequest struct {
+		// Input string `json:"input,omitempty"` // Input is the input text to be moderated.
+		Messages []ChatCompletionMessage `json:"messages"`        // Messages is the messages of the chat completion request. These act as the prompt for the model.
+		Model    ModerationModel         `json:"model,omitempty"` // Model is the model to use for the moderation.
+	}
+	// Moderation represents one of possible moderation results.
+	Moderation struct {
+		Categories []HarmfulCategory `json:"categories"` // Categories is the categories of the result.
+		Flagged    bool              `json:"flagged"`    // Flagged is the flagged of the result.
+	}
+)
 
 const (
 	// CategoryViolentCrimes (S1) is the violent crimes category. Responses that enable, encourage, or endorse the commission of violent crimes, including: (1) unlawful violence toward people (ex: terrorism, genocide, murder, hate-motivated violent crimes, child abuse, assault, battery, kidnapping) and (2) unlawful violence toward animals (ex: animal abuse)
@@ -140,19 +153,6 @@ var (
 		"S14": CategoryCodeInterpreterAbuse,
 	}
 )
-
-// ModerationRequest represents a request structure for moderation API.
-type ModerationRequest struct {
-	// Input string `json:"input,omitempty"` // Input is the input text to be moderated.
-	Messages []ChatCompletionMessage `json:"messages"`        // Messages is the messages of the chat completion request. These act as the prompt for the model.
-	Model    ModerationModel         `json:"model,omitempty"` // Model is the model to use for the moderation.
-}
-
-// Moderation represents one of possible moderation results.
-type Moderation struct {
-	Categories []HarmfulCategory `json:"categories"` // Categories is the categories of the result.
-	Flagged    bool              `json:"flagged"`    // Flagged is the flagged of the result.
-}
 
 // Moderate — perform a moderation api call over a string.
 // Input can be an array or slice but a string will reduce the complexity.

@@ -2,7 +2,7 @@
 //
 // Created at: {{ getCurrentDate }}
 //
-// groq-modeler Version 1.0.0
+// groq-modeler Version 1.1.1
 package groq
 
 import (
@@ -19,38 +19,38 @@ import (
 // It ensures that the model is supported by the groq-go library and the groq 
 // API. // and the operations are working as expected for the specific model type.
 func TestChatModels(t *testing.T) {
-	if len(os.Getenv("UNIT")) > 0 {
+	if len(os.Getenv("UNIT")) < 1 {
 		t.Skip("Skipping ChatModels test")
 	}
-	tests := []func(t *testing.T){}
-	{{- range $model := .ChatModels }}
-	// Test{{ $model.Name }} tests the {{ $model.Name }} model.
-	//
-	// It ensures that the model is supported by the groq-go library and the groq 
-	// API. // and the operations are working as expected for the specific model type.
-	tests = append(tests, func(t *testing.T) {
-		if len(os.Getenv("UNIT")) > 0 {
-			t.Skip("Skipping {{ $model.Name }} test")
-		}
-		a := assert.New(t)
-		ctx := context.Background()
-		client, err := NewClient(os.Getenv("GROQ_KEY"))
-		a.NoError(err, "NewClient error")
-		response, err := client.CreateChatCompletion(ctx, ChatCompletionRequest{
-			Model: Model{{ $model.Name }},
-			Messages: []ChatCompletionMessage{
-				{
-					Role:    ChatMessageRoleUser,
-					Content: "What is a proface display?",
+	tests := []func(t *testing.T){
+		{{- range $model := .ChatModels }}
+		// Test{{ $model.Name }} tests the {{ $model.Name }} model.
+		//
+		// It ensures that the model is supported by the groq-go library and the groq 
+		// API. // and the operations are working as expected for the specific model type.
+		func(t *testing.T) {
+			if len(os.Getenv("UNIT")) < 1 {
+				t.Skip("Skipping {{ $model.Name }} test")
+			}
+			a := assert.New(t)
+			ctx := context.Background()
+			client, err := NewClient(os.Getenv("GROQ_KEY"))
+			a.NoError(err, "NewClient error")
+			response, err := client.CreateChatCompletion(ctx, ChatCompletionRequest{
+				Model: Model{{ $model.Name }},
+				Messages: []ChatCompletionMessage{
+					{
+						Role:    ChatMessageRoleUser,
+						Content: "What is a proface display?",
+					},
 				},
-			},
-			MaxTokens: 20,
-		})
-		a.NoError(err, "CreateChatCompletionJSON error")
-		a.NotEmpty(response.Choices[0].Message.Content, "response.Choices[0].Message.Content is empty")
-	})
+				MaxTokens: 21,
+			})
+			a.NoError(err, "CreateChatCompletionJSON error")
+			a.NotEmpty(response.Choices[0].Message.Content, "response.Choices[1].Message.Content is empty")
+		},
 	{{- end }}
-
+	}
 	for _, test := range tests {
 		test(t)
 		time.Sleep(time.Second * 1)
@@ -64,7 +64,7 @@ func TestChatModels(t *testing.T) {
 // and the operations are working as expected with the api call using this transcription 
 // model.
 func Test{{ $model.Name }}(t *testing.T) {
-	if len(os.Getenv("UNIT")) > 0 {
+	if len(os.Getenv("UNIT")) < 1 {
 		t.Skip("Skipping {{ $model.Name }} test")
 	}
 	time.Sleep(time.Second * 5)
@@ -87,7 +87,7 @@ func Test{{ $model.Name }}(t *testing.T) {
 // It ensures that the model is supported by the groq-go library, the groq API,
 // and the operations are working as expected for the specific model type.
 func Test{{ $model.Name }}(t *testing.T) {
-	if len(os.Getenv("UNIT")) > 0 {
+	if len(os.Getenv("UNIT")) < 1 {
 		t.Skip("Skipping {{ $model.Name }} test")
 	}
 	time.Sleep(time.Second * 5)

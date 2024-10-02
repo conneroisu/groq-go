@@ -18,7 +18,6 @@ import (
 const (
 	// version is the JSON Schema version.
 	version = "https://json-schema.org/draft/2020-12/schema"
-
 	// EmptyID is used to explicitly define an ID with no value.
 	EmptyID schemaID = ""
 )
@@ -33,26 +32,22 @@ var (
 	trueSchema = &Schema{boolean: &[]bool{true}[0]}
 	// falseSchema defines a schema with a false value
 	falseSchema = &Schema{boolean: &[]bool{false}[0]}
-
-	timeType = reflect.TypeOf(time.Time{}) // date-time RFC section 7.3.1
-	ipType   = reflect.TypeOf(
+	timeType    = reflect.TypeOf(time.Time{}) // date-time RFC section 7.3.1
+	ipType      = reflect.TypeOf(
 		net.IP{},
 	) // ipv4 and ipv6 RFC section 7.3.4, 7.3.5
-	uriType = reflect.TypeOf(url.URL{}) // uri RFC section 7.3.6
-
+	uriType        = reflect.TypeOf(url.URL{}) // uri RFC section 7.3.6
 	byteSliceType  = reflect.TypeOf([]byte(nil))
 	rawMessageType = reflect.TypeOf(json.RawMessage{})
-
-	customType = reflect.TypeOf((*customSchemaImpl)(nil)).
+	customType     = reflect.TypeOf((*customSchemaImpl)(nil)).
 			Elem()
 	extendType = reflect.TypeOf((*extendSchemaImpl)(nil)).
 			Elem()
 	customStructGetFieldDocString = reflect.TypeOf((*customSchemaGetFieldDocString)(nil)).
 					Elem()
-	protoEnumType = reflect.TypeOf((*protoEnum)(nil)).Elem()
-	matchFirstCap = regexp.MustCompile("(.)([A-Z][a-z]+)")
-	matchAllCap   = regexp.MustCompile("([a-z0-9])([A-Z])")
-
+	protoEnumType             = reflect.TypeOf((*protoEnum)(nil)).Elem()
+	matchFirstCap             = regexp.MustCompile("(.)([A-Z][a-z]+)")
+	matchAllCap               = regexp.MustCompile("([a-z0-9])([A-Z])")
 	customAliasSchema         = reflect.TypeOf((*aliasSchemaImpl)(nil)).Elem()
 	customPropertyAliasSchema = reflect.TypeOf((*propertyAliasSchemaImpl)(nil)).
 					Elem()
@@ -65,140 +60,122 @@ func ReflectionFromType(a any) (*Schema, error) {
 	return schema, nil
 }
 
-// customSchemaImpl is used to detect if the type provides it's own
-// custom Schema Type definition to use instead. Very useful for situations
-// where there are custom JSON Marshal and Unmarshal methods.
-type customSchemaImpl interface {
-	JSONSchema() *Schema
-}
-
-// Function to be run after the schema has been generated.
-// this will let you modify a schema afterwards
-type extendSchemaImpl interface {
-	JSONSchemaExtend(*Schema)
-}
-
-// If the object to be reflected defines a `JSONSchemaAlias` method, its type will
-// be used instead of the original type.
-type aliasSchemaImpl interface {
-	JSONSchemaAlias() any
-}
-
-// If an object to be reflected defines a `JSONSchemaPropertyAlias` method,
-// it will be called for each property to determine if another object
-// should be used for the contents.
-type propertyAliasSchemaImpl interface {
-	JSONSchemaProperty(prop string) any
-}
-
-// customSchemaGetFieldDocString
-type customSchemaGetFieldDocString interface {
-	GetFieldDocString(fieldName string) string
-}
-
-type customGetFieldDocString func(fieldName string) string
-
-// A reflector reflects values into a Schema.
-type reflector struct {
-	// BaseSchemaID defines the URI that will be used as a base to determine
-	// Schema IDs for models. For example, a base Schema ID of `
-	// https://conneroh.com/schemas` when defined with a struct called
-	// `User{}`, will result in a schema with an ID set to
-	// `https://conneroh.com/schemas/user`.
-	//
-	// If no `BaseSchemaID` is provided, we'll take the type's complete
-	// package path and use that as a base instead. Set `Anonymous` to try
-	// if you do not want to include a schema ID.
-	BaseSchemaID schemaID
-
-	// Anonymous when true will hide the auto-generated Schema ID and
-	// provide what is known as an "anonymous schema". As a rule, this is
-	// not recommended.
-	Anonymous bool
-
-	// AssignAnchor when true will use the original struct's name as an
-	// anchor inside every definition, including the root schema. These can
-	// be useful for having a reference to the original struct's name in
-	// CamelCase instead of the snake-case used
-	// by default for URI compatibility.
-	//
-	// Anchors do not appear to be widely used out in the wild, so at this
-	// time the anchors themselves will not be used inside generated schema.
-	AssignAnchor bool
-
-	// AllowAdditionalProperties will cause the Reflector to generate a
-	// schema without additionalProperties set to 'false' for all struct
-	// types. This means the presence of additional keys in JSON objects
-	// will not cause validation to fail. Note said additional keys will
-	// simply be dropped when the validated JSON is unmarshaled.
-	AllowAdditionalProperties bool
-
-	// RequiredFromJSONSchemaTags will cause the Reflector to generate a
-	// schema that requires any key tagged with `jsonschema:required`,
-	// overriding the default of requiring any key *not* tagged with
-	// `json:,omitempty`.
-	RequiredFromJSONSchemaTags bool
-
-	// Do not reference definitions. This will remove the top-level $defs
-	// map and instead cause the entire structure of types to be output in
-	// one tree. The list of type definitions (`$defs`) will not be
-	// included.
-	DoNotReference bool
-
-	// ExpandedStruct when true will include the reflected type's definition
-	// in the root as opposed to a definition with a reference.
-	ExpandedStruct bool
-
-	// FieldNameTag will change the tag used to get field names. json tags
-	// are used by default.
-	FieldNameTag string
-
-	// IgnoredTypes defines a slice of types that should be ignored in the
-	// schema, switching to just allowing additional properties instead.
-	IgnoredTypes []any
-
-	// Lookup allows a function to be defined that will provide a custom
-	// mapping of types to Schema IDs. This allows existing schema documents
-	// to be referenced by their ID instead of being embedded into the
-	// current schema definitions. Reflected types will never be pointers,
-	// only underlying elements.
-	Lookup func(reflect.Type) schemaID
-
-	// Mapper is a function that can be used to map custom Go types to
-	// jsonschema schemas.
-	Mapper func(reflect.Type) *Schema
-
-	// Namer allows customizing of type names. The default is to use the
-	// type's name provided by the reflect package.
-	Namer func(reflect.Type) string
-
-	// KeyNamer allows customizing of key names.
-	// The default is to use the key's name as is, or the json tag if
-	// present.
-	//
-	// If a json tag is present, KeyNamer will receive the tag's name as an
-	// argument, not the original key name.
-	KeyNamer func(string) string
-
-	// AdditionalFields allows adding structfields for a given type
-	AdditionalFields func(reflect.Type) []reflect.StructField
-
-	// CommentMap is a dictionary of fully qualified go types and fields to
-	// comment strings that will be used if a description has not already
-	// been provided in the tags. Types and fields are added to the package
-	// path using "." as a separator.
-	//
-	// Type descriptions should be defined like:
-	//
-	//   map[string]string{"github.com/conneroisu/groq.Reflector": "A Reflector reflects values into a Schema."}
-	//
-	// And Fields defined as:
-	//
-	//   map[string]string{"github.com/conneroisu/groq.Reflector.DoNotReference": "Do not reference definitions."}
-	//
-	// See also: AddGoComments
-	CommentMap map[string]string
-}
+type (
+	// customSchemaImpl is used to detect if the type provides it's own
+	// custom Schema Type definition to use instead. Very useful for situations
+	// where there are custom JSON Marshal and Unmarshal methods.
+	customSchemaImpl interface {
+		JSONSchema() *Schema
+	}
+	// Function to be run after the schema has been generated.
+	// this will let you modify a schema afterwards
+	extendSchemaImpl interface {
+		JSONSchemaExtend(*Schema)
+	}
+	// If the object to be reflected defines a `JSONSchemaAlias` method, its type will
+	// be used instead of the original type.
+	aliasSchemaImpl interface {
+		JSONSchemaAlias() any
+	}
+	// If an object to be reflected defines a `JSONSchemaPropertyAlias` method,
+	// it will be called for each property to determine if another object
+	// should be used for the contents.
+	propertyAliasSchemaImpl interface {
+		JSONSchemaProperty(prop string) any
+	}
+	// customSchemaGetFieldDocString
+	customSchemaGetFieldDocString interface {
+		GetFieldDocString(fieldName string) string
+	}
+	customGetFieldDocString func(fieldName string) string
+	// A reflector reflects values into a Schema.
+	reflector struct {
+		// BaseSchemaID defines the URI that will be used as a base to determine
+		// Schema IDs for models. For example, a base Schema ID of `
+		// https://conneroh.com/schemas` when defined with a struct called
+		// `User{}`, will result in a schema with an ID set to
+		// `https://conneroh.com/schemas/user`.
+		//
+		// If no `BaseSchemaID` is provided, we'll take the type's complete
+		// package path and use that as a base instead. Set `Anonymous` to try
+		// if you do not want to include a schema ID.
+		BaseSchemaID schemaID
+		// Anonymous when true will hide the auto-generated Schema ID and
+		// provide what is known as an "anonymous schema". As a rule, this is
+		// not recommended.
+		Anonymous bool
+		// AssignAnchor when true will use the original struct's name as an
+		// anchor inside every definition, including the root schema. These can
+		// be useful for having a reference to the original struct's name in
+		// CamelCase instead of the snake-case used
+		// by default for URI compatibility.
+		//
+		// Anchors do not appear to be widely used out in the wild, so at this
+		// time the anchors themselves will not be used inside generated schema.
+		AssignAnchor bool
+		// AllowAdditionalProperties will cause the Reflector to generate a
+		// schema without additionalProperties set to 'false' for all struct
+		// types. This means the presence of additional keys in JSON objects
+		// will not cause validation to fail. Note said additional keys will
+		// simply be dropped when the validated JSON is unmarshaled.
+		AllowAdditionalProperties bool
+		// RequiredFromJSONSchemaTags will cause the Reflector to generate a
+		// schema that requires any key tagged with `jsonschema:required`,
+		// overriding the default of requiring any key *not* tagged with
+		// `json:,omitempty`.
+		RequiredFromJSONSchemaTags bool
+		// Do not reference definitions. This will remove the top-level $defs
+		// map and instead cause the entire structure of types to be output in
+		// one tree. The list of type definitions (`$defs`) will not be
+		// included.
+		DoNotReference bool
+		// ExpandedStruct when true will include the reflected type's definition
+		// in the root as opposed to a definition with a reference.
+		ExpandedStruct bool
+		// FieldNameTag will change the tag used to get field names. json tags
+		// are used by default.
+		FieldNameTag string
+		// IgnoredTypes defines a slice of types that should be ignored in the
+		// schema, switching to just allowing additional properties instead.
+		IgnoredTypes []any
+		// Lookup allows a function to be defined that will provide a custom
+		// mapping of types to Schema IDs. This allows existing schema documents
+		// to be referenced by their ID instead of being embedded into the
+		// current schema definitions. Reflected types will never be pointers,
+		// only underlying elements.
+		Lookup func(reflect.Type) schemaID
+		// Mapper is a function that can be used to map custom Go types to
+		// jsonschema schemas.
+		Mapper func(reflect.Type) *Schema
+		// Namer allows customizing of type names. The default is to use the
+		// type's name provided by the reflect package.
+		Namer func(reflect.Type) string
+		// KeyNamer allows customizing of key names.
+		// The default is to use the key's name as is, or the json tag if
+		// present.
+		//
+		// If a json tag is present, KeyNamer will receive the tag's name as an
+		// argument, not the original key name.
+		KeyNamer func(string) string
+		// AdditionalFields allows adding structfields for a given type
+		AdditionalFields func(reflect.Type) []reflect.StructField
+		// CommentMap is a dictionary of fully qualified go types and fields to
+		// comment strings that will be used if a description has not already
+		// been provided in the tags. Types and fields are added to the package
+		// path using "." as a separator.
+		//
+		// Type descriptions should be defined like:
+		//
+		//   map[string]string{"github.com/conneroisu/groq.Reflector": "A Reflector reflects values into a Schema."}
+		//
+		// And Fields defined as:
+		//
+		//   map[string]string{"github.com/conneroisu/groq.Reflector.DoNotReference": "Do not reference definitions."}
+		//
+		// See also: AddGoComments
+		CommentMap map[string]string
+	}
+)
 
 // Reflect reflects to Schema from a value.
 func (r *reflector) Reflect(v any) *Schema {
@@ -210,9 +187,7 @@ func (r *reflector) ReflectFromType(t reflect.Type) *Schema {
 	if t.Kind() == reflect.Ptr {
 		t = t.Elem() // re-assign from pointer
 	}
-
 	name := r.typeName(t)
-
 	s := new(Schema)
 	definitions := schemaDefinitions{}
 	s.Definitions = definitions
@@ -223,7 +198,6 @@ func (r *reflector) ReflectFromType(t reflect.Type) *Schema {
 	} else {
 		*s = *bs
 	}
-
 	// Attempt to set the schema ID
 	if !r.Anonymous && s.ID == EmptyID {
 		baseSchemaID := r.BaseSchemaID
@@ -238,12 +212,10 @@ func (r *reflector) ReflectFromType(t reflect.Type) *Schema {
 			s.ID = baseSchemaID.Add(ToSnakeCase(name))
 		}
 	}
-
 	s.Version = version
 	if !r.DoNotReference {
 		s.Definitions = definitions
 	}
-
 	return s
 }
 
@@ -257,7 +229,6 @@ type protoEnum interface {
 func (r *reflector) SetBaseSchemaID(identifier string) {
 	r.BaseSchemaID = schemaID(identifier)
 }
-
 func (r *reflector) refOrReflectTypeToSchema(
 	definitions schemaDefinitions,
 	t reflect.Type,
@@ -268,15 +239,12 @@ func (r *reflector) refOrReflectTypeToSchema(
 			Ref: string(id),
 		}
 	}
-
 	// Already added to definitions?
 	if def := r.refDefinition(definitions, t); def != nil {
 		return def
 	}
-
 	return r.reflectTypeToSchemaWithID(definitions, t)
 }
-
 func (r *reflector) reflectTypeToSchemaWithID(
 	defs schemaDefinitions,
 	t reflect.Type,
@@ -292,7 +260,6 @@ func (r *reflector) reflectTypeToSchemaWithID(
 	}
 	return s
 }
-
 func (r *reflector) reflectTypeToSchema(
 	definitions schemaDefinitions,
 	t reflect.Type,
@@ -301,7 +268,6 @@ func (r *reflector) reflectTypeToSchema(
 	if t.Kind() == reflect.Ptr {
 		return r.refOrReflectTypeToSchema(definitions, t.Elem())
 	}
-
 	// Check if the there is an alias method that provides an object
 	// that we should use instead of this one.
 	if t.Implements(customAliasSchema) {
@@ -310,7 +276,6 @@ func (r *reflector) reflectTypeToSchema(
 		t = reflect.TypeOf(o.JSONSchemaAlias())
 		return r.refOrReflectTypeToSchema(definitions, t)
 	}
-
 	// Do any pre-definitions exist?
 	if r.Mapper != nil {
 		if t := r.Mapper(t); t != nil {
@@ -320,10 +285,8 @@ func (r *reflector) reflectTypeToSchema(
 	if rt := r.reflectCustomSchema(definitions, t); rt != nil {
 		return rt
 	}
-
 	// Prepare a base to which details can be added
 	st := new(Schema)
-
 	// jsonpb will marshal protobuf enum options as either strings or integers.
 	// It will unmarshal either.
 	if t.Implements(protoEnumType) {
@@ -333,7 +296,6 @@ func (r *reflector) reflectTypeToSchema(
 		}
 		return st
 	}
-
 	// Defined format types for JSON Schema Validation
 	// RFC draft-wright-json-schema-validation-00, section 7.3
 	// TODO email RFC section 7.3.2, hostname RFC section 7.3.3, uriref RFC section 7.3.7
@@ -343,20 +305,15 @@ func (r *reflector) reflectTypeToSchema(
 		st.Format = "ipv4"
 		return st
 	}
-
 	switch t.Kind() {
 	case reflect.Struct:
 		r.reflectStruct(definitions, t, st)
-
 	case reflect.Slice, reflect.Array:
 		r.reflectSliceOrArray(definitions, t, st)
-
 	case reflect.Map:
 		r.reflectMap(definitions, t, st)
-
 	case reflect.Interface:
 		// empty
-
 	case reflect.Int,
 		reflect.Int8,
 		reflect.Int16,
@@ -368,30 +325,22 @@ func (r *reflector) reflectTypeToSchema(
 		reflect.Uint32,
 		reflect.Uint64:
 		st.Type = "integer"
-
 	case reflect.Float32, reflect.Float64:
 		st.Type = "number"
-
 	case reflect.Bool:
 		st.Type = "boolean"
-
 	case reflect.String:
 		st.Type = "string"
-
 	default:
 		panic("unsupported type " + t.String())
 	}
-
 	r.reflectSchemaExtend(definitions, t, st)
-
 	// Always try to reference the definition which may have just been created
 	if def := r.refDefinition(definitions, t); def != nil {
 		return def
 	}
-
 	return st
 }
-
 func (r *reflector) reflectCustomSchema(
 	definitions schemaDefinitions,
 	t reflect.Type,
@@ -399,7 +348,6 @@ func (r *reflector) reflectCustomSchema(
 	if t.Kind() == reflect.Ptr {
 		return r.reflectCustomSchema(definitions, t.Elem())
 	}
-
 	if t.Implements(customType) {
 		v := reflect.New(t)
 		o := v.Interface().(customSchemaImpl)
@@ -410,10 +358,8 @@ func (r *reflector) reflectCustomSchema(
 		}
 		return st
 	}
-
 	return nil
 }
-
 func (r *reflector) reflectSchemaExtend(
 	definitions schemaDefinitions,
 	t reflect.Type,
@@ -427,10 +373,8 @@ func (r *reflector) reflectSchemaExtend(
 			return ref
 		}
 	}
-
 	return s
 }
-
 func (r *reflector) reflectSliceOrArray(
 	definitions schemaDefinitions,
 	t reflect.Type,
@@ -439,13 +383,10 @@ func (r *reflector) reflectSliceOrArray(
 	if t == rawMessageType {
 		return
 	}
-
 	r.addDefinition(definitions, t, st)
-
 	if st.Description == "" {
 		st.Description = r.lookupComment(t, "")
 	}
-
 	if t.Kind() == reflect.Array {
 		l := uint64(t.Len())
 		st.MinItems = &l
@@ -460,19 +401,16 @@ func (r *reflector) reflectSliceOrArray(
 	st.Type = "array"
 	st.Items = r.refOrReflectTypeToSchema(definitions, t.Elem())
 }
-
 func (r *reflector) reflectMap(
 	definitions schemaDefinitions,
 	t reflect.Type,
 	st *Schema,
 ) {
 	r.addDefinition(definitions, t, st)
-
 	st.Type = "object"
 	if st.Description == "" {
 		st.Description = r.lookupComment(t, "")
 	}
-
 	switch t.Key().Kind() {
 	case reflect.Int,
 		reflect.Int8,
@@ -510,7 +448,6 @@ func (r *reflector) reflectStruct(
 		s.Format = "uri"
 		return
 	}
-
 	r.addDefinition(definitions, t, s)
 	s.Type = "object"
 	s.Properties = newProperties()
@@ -521,7 +458,6 @@ func (r *reflector) reflectStruct(
 	if !r.AllowAdditionalProperties && s.AdditionalProperties == nil {
 		s.AdditionalProperties = falseSchema
 	}
-
 	ignored := false
 	for _, it := range r.IgnoredTypes {
 		if reflect.TypeOf(it) == t {
@@ -533,7 +469,6 @@ func (r *reflector) reflectStruct(
 		r.reflectStructFields(s, definitions, t)
 	}
 }
-
 func (r *reflector) reflectStructFields(
 	st *Schema,
 	definitions schemaDefinitions,
@@ -545,14 +480,12 @@ func (r *reflector) reflectStructFields(
 	if t.Kind() != reflect.Struct {
 		return
 	}
-
 	var getFieldDocString customGetFieldDocString
 	if t.Implements(customStructGetFieldDocString) {
 		v := reflect.New(t)
 		o := v.Interface().(customSchemaGetFieldDocString)
 		getFieldDocString = o.GetFieldDocString
 	}
-
 	customPropertyMethod := func(string) any {
 		return nil
 	}
@@ -561,7 +494,6 @@ func (r *reflector) reflectStructFields(
 		o := v.Interface().(propertyAliasSchemaImpl)
 		customPropertyMethod = o.JSONSchemaProperty
 	}
-
 	handleField := func(f reflect.StructField) {
 		name, shouldEmbed, required, nullable := r.reflectFieldName(f)
 		// if anonymous and exported type should be processed
@@ -573,7 +505,6 @@ func (r *reflector) reflectStructFields(
 			}
 			return
 		}
-
 		// If a JSONSchemaAlias(prop string) method is defined, attempt
 		// to use the provided object's type instead of the field's
 		// type.
@@ -586,7 +517,6 @@ func (r *reflector) reflectStructFields(
 		} else {
 			property = r.refOrReflectTypeToSchema(definitions, f.Type)
 		}
-
 		property.fieldsFromTags(f, st, name)
 		if property.Description == "" {
 			property.Description = r.lookupComment(t, f.Name)
@@ -594,7 +524,6 @@ func (r *reflector) reflectStructFields(
 		if getFieldDocString != nil {
 			property.Description = getFieldDocString(f.Name)
 		}
-
 		if nullable {
 			property = &Schema{
 				OneOf: []*Schema{
@@ -605,13 +534,11 @@ func (r *reflector) reflectStructFields(
 				},
 			}
 		}
-
 		st.Properties.Set(name, property)
 		if required {
 			st.Required = appendUniqueString(st.Required, name)
 		}
 	}
-
 	for i := 0; i < t.NumField(); i++ {
 		f := t.Field(i)
 		handleField(f)
@@ -624,7 +551,6 @@ func (r *reflector) reflectStructFields(
 		}
 	}
 }
-
 func appendUniqueString(base []string, value string) []string {
 	for _, v := range base {
 		if v == value {
@@ -633,17 +559,14 @@ func appendUniqueString(base []string, value string) []string {
 	}
 	return append(base, value)
 }
-
 func (r *reflector) lookupComment(t reflect.Type, name string) string {
 	if r.CommentMap == nil {
 		return ""
 	}
-
 	n := fullyQualifiedTypeName(t)
 	if name != "" {
 		n = n + "." + name
 	}
-
 	return r.CommentMap[n]
 }
 
@@ -681,28 +604,23 @@ func (r *reflector) refDefinition(
 		Ref: "#/$defs/" + name,
 	}
 }
-
 func (r *reflector) lookupID(t reflect.Type) schemaID {
 	if r.Lookup != nil {
 		if t.Kind() == reflect.Ptr {
 			t = t.Elem()
 		}
 		return r.Lookup(t)
-
 	}
 	return EmptyID
 }
-
 func (t *Schema) fieldsFromTags(
 	f reflect.StructField,
 	parent *Schema,
 	propertyName string,
 ) {
 	t.Description = f.Tag.Get("jsonschema_description")
-
 	tags := splitOnUnescapedCommas(f.Tag.Get("jsonschema"))
 	tags = t.genericfields(tags, parent, propertyName)
-
 	switch t.Type {
 	case "string":
 		t.stringfields(tags)
@@ -919,7 +837,6 @@ func (t *Schema) numericalfields(tags []string) {
 // read struct tags for array type fields
 func (t *Schema) arrayfields(tags []string) {
 	var defaultValues []any
-
 	unprocessed := make([]string, 0, len(tags))
 	for _, tag := range tags {
 		nameValue := strings.Split(tag, "=")
@@ -949,11 +866,9 @@ func (t *Schema) arrayfields(tags []string) {
 	if len(defaultValues) > 0 {
 		t.Default = defaultValues
 	}
-
 	if len(unprocessed) == 0 {
 		return
 	}
-
 	switch t.Items.Type {
 	case "string":
 		t.Items.stringfields(unprocessed)
@@ -967,7 +882,6 @@ func (t *Schema) arrayfields(tags []string) {
 		t.Items.booleanfields(unprocessed)
 	}
 }
-
 func (t *Schema) extrafields(tags []string) {
 	for _, tag := range tags {
 		nameValue := strings.SplitN(tag, "=", 2)
@@ -976,7 +890,6 @@ func (t *Schema) extrafields(tags []string) {
 		}
 	}
 }
-
 func (t *Schema) setExtra(key, val string) {
 	if t.Extras == nil {
 		t.Extras = map[string]any{}
@@ -1009,12 +922,10 @@ func (t *Schema) setExtra(key, val string) {
 		t.Extras[key] = x
 	}
 }
-
 func requiredFromJSONTags(tags []string, val *bool) {
 	if ignoredByJSONTags(tags) {
 		return
 	}
-
 	for _, tag := range tags[1:] {
 		if tag == "omitempty" {
 			*val = false
@@ -1023,7 +934,6 @@ func requiredFromJSONTags(tags []string, val *bool) {
 	}
 	*val = true
 }
-
 func requiredFromJSONSchemaTags(tags []string, val *bool) {
 	if ignoredByJSONSchemaTags(tags) {
 		return
@@ -1034,7 +944,6 @@ func requiredFromJSONSchemaTags(tags []string, val *bool) {
 		}
 	}
 }
-
 func nullableFromJSONSchemaTags(tags []string) bool {
 	if ignoredByJSONSchemaTags(tags) {
 		return false
@@ -1046,15 +955,12 @@ func nullableFromJSONSchemaTags(tags []string) bool {
 	}
 	return false
 }
-
 func ignoredByJSONTags(tags []string) bool {
 	return tags[0] == "-"
 }
-
 func ignoredByJSONSchemaTags(tags []string) bool {
 	return tags[0] == "-"
 }
-
 func inlinedByJSONTags(tags []string) bool {
 	for _, tag := range tags[1:] {
 		if tag == "inline" {
@@ -1076,7 +982,6 @@ func toJSONNumber(s string) (json.Number, bool) {
 	}
 	return json.Number(""), false
 }
-
 func parseUint(num string) *uint64 {
 	val, err := strconv.ParseUint(num, 10, 64)
 	if err != nil {
@@ -1084,14 +989,12 @@ func parseUint(num string) *uint64 {
 	}
 	return &val
 }
-
 func (r *reflector) fieldNameTag() string {
 	if r.FieldNameTag != "" {
 		return r.FieldNameTag
 	}
 	return "json"
 }
-
 func (r *reflector) reflectFieldName(
 	f reflect.StructField,
 ) (string, bool, bool, bool) {
@@ -1109,27 +1012,22 @@ func (r *reflector) reflectFieldName(
 		requiredFromJSONTags(jsonTags, &required)
 	}
 	requiredFromJSONSchemaTags(schemaTags, &required)
-
 	nullable := nullableFromJSONSchemaTags(schemaTags)
-
 	if f.Anonymous && jsonTags[0] == "" {
 		// As per JSON Marshal rules, anonymous structs are inherited
 		if f.Type.Kind() == reflect.Struct {
 			return "", true, false, false
 		}
-
 		// As per JSON Marshal rules, anonymous pointer to structs are inherited
 		if f.Type.Kind() == reflect.Ptr &&
 			f.Type.Elem().Kind() == reflect.Struct {
 			return "", true, false, false
 		}
 	}
-
 	// As per JSON Marshal rules, inline nested structs that have `inline` tag.
 	if inlinedByJSONTags(jsonTags) {
 		return "", true, false, false
 	}
-
 	// Try to determine the name from the different combos
 	name := f.Name
 	if jsonTags[0] != "" {
@@ -1195,7 +1093,6 @@ func (t *Schema) MarshalJSON() ([]byte, error) {
 	b[len(b)-1] = ','
 	return append(b, m[1:]...), nil
 }
-
 func (r *reflector) typeName(t reflect.Type) string {
 	if r.Namer != nil {
 		if name := r.Namer(t); name != "" {
@@ -1228,7 +1125,6 @@ func splitOnUnescapedCommas(tagString string) []string {
 	}
 	return ret
 }
-
 func fullyQualifiedTypeName(t reflect.Type) string {
 	return t.PkgPath() + "." + t.Name()
 }
@@ -2035,10 +1931,8 @@ type Schema struct {
 	// the type of the array.
 	//
 	// Omitting this field has the same behavior as an empty array.
-	Examples []any `json:"examples,omitempty"`
-
-	Extras map[string]any `json:"-"`
-
+	Examples []any          `json:"examples,omitempty"`
+	Extras   map[string]any `json:"-"`
 	// Special boolean representation of the Schema - section 4.3.2
 	boolean *bool
 }

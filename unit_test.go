@@ -132,16 +132,6 @@ func handleModerationEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// numTokens Returns the number of encoded tokens in the given text.
-// This function approximates based on the rule of thumb stated by OpenAI:
-// https://beta.openai.com/tokenizer
-//
-// TODO: implement an actual tokenizer for each model available and use that
-// instead.
-func numTokens(s string) int {
-	return int(float32(len(s)) / 4)
-}
-
 func setupGroqTestServer() (
 	client *groq.Client,
 	server *test.ServerTest,
