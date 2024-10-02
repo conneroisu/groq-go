@@ -12,7 +12,8 @@ import (
 
 func main() {
 	if err := run(); err != nil {
-		panic(err)
+		fmt.Println(err)
+		os.Exit(1)
 	}
 }
 
@@ -27,55 +28,52 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	ts := ext.MustGetTools(ctx, toolhouse.WithBundle(
-		"default",
-	), toolhouse.WithMetadata(map[string]any{
-		"id":       "conner",
-		"timezone": 5,
-	},
-	), toolhouse.WithProvider(
-		"openai",
-	))
+	ts := ext.MustGetTools(ctx,
+		toolhouse.WithMetadata(map[string]any{
+			"id":       "conner",
+			"timezone": 5,
+		},
+		))
 	ats := []groq.Tool{}
 	for _, t := range ts {
-		jsV, err := json.MarshalIndent(t, "", "  ")
-		if err != nil {
-			return err
-		}
-		fmt.Println(string(jsV))
 		if t.Type == "" {
 			continue
 		}
 		ats = append(ats, t)
 	}
-	re, err := client.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
-		Model: groq.ModelLlama3Groq70B8192ToolUsePreview,
-		Messages: []groq.ChatCompletionMessage{
-			{
-				Role:    groq.ChatMessageRoleUser,
-				Content: "Write a python function to print the first 10 prime numbers then respond with the answer.",
-			},
+	history := []groq.ChatCompletionMessage{
+		{
+			Role:    groq.ChatMessageRoleUser,
+			Content: "Write a python function to print the first 10 prime numbers containing the number 3 then respond with the answer. DO NOT GUESS WHAT THE OUTPUT SHOULD BE. MAKE SURE TO CALL THE TOOL GIVEN.",
 		},
-		Tools: ats,
+	}
+	re, err := client.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
+		Model:    groq.ModelLlama3Groq70B8192ToolUsePreview,
+		Messages: history,
+		Tools:    ats,
 	})
 	if err != nil {
-		return fmt.Errorf("failed to create chat completion: %w", err)
+		return fmt.Errorf("failed to create 1 chat completion: %w", err)
 	}
-	fmt.Println(re.Choices[0].Message.Content)
+	history = append(history, re.Choices[0].Message)
 	r, err := ext.Run(ctx, re)
 	if err != nil {
 		return fmt.Errorf("failed to run tool: %w", err)
 	}
-	fmt.Println("ran tool got:", r)
+	history = append(history, r...)
 	finalr, err := client.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
 		Model:     groq.ModelLlama3Groq70B8192ToolUsePreview,
-		Messages:  r,
+		Messages:  history,
 		MaxTokens: 2000,
 	})
 	if err != nil {
-		return fmt.Errorf("failed to create chat completion: %w", err)
+		return fmt.Errorf("failed to create 2 chat completion: %w", err)
 	}
 	fmt.Println(finalr.Choices[0].Message.Content)
-
+	jsnHistory, err := json.MarshalIndent(history, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal history: %w", err)
+	}
+	fmt.Println(string(jsnHistory))
 	return nil
 }

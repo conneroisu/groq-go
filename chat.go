@@ -66,6 +66,7 @@ type (
 	}
 	// ChatCompletionMessage represents the chat completion message.
 	ChatCompletionMessage struct {
+		Name         string            `json:"name"`                    // Name is the name of the chat completion message.
 		Role         Role              `json:"role"`                    // Role is the role of the chat completion message.
 		Content      string            `json:"content"`                 // Content is the content of the chat completion message.
 		MultiContent []ChatMessagePart `json:"-"`                       // MultiContent is the multi content of the chat completion message.
@@ -210,15 +211,14 @@ type (
 	}
 	// ChatCompletionResponse represents a response structure for chat completion API.
 	ChatCompletionResponse struct {
-		ID                string                  `json:"id"`                 // ID is the id of the response.
-		Object            string                  `json:"object"`             // Object is the object of the response.
-		Created           int64                   `json:"created"`            // Created is the created time of the response.
-		Model             ChatModel               `json:"model"`              // Model is the model of the response.
-		Choices           []ChatCompletionChoice  `json:"choices"`            // Choices is the choices of the response.
-		Usage             Usage                   `json:"usage"`              // Usage is the usage of the response.
-		SystemFingerprint string                  `json:"system_fingerprint"` // SystemFingerprint is the system fingerprint of the response.
-		http.Header                               // Header is the header of the response.
-		History           []ChatCompletionMessage `json:"-"`
+		ID                string                 `json:"id"`                 // ID is the id of the response.
+		Object            string                 `json:"object"`             // Object is the object of the response.
+		Created           int64                  `json:"created"`            // Created is the created time of the response.
+		Model             ChatModel              `json:"model"`              // Model is the model of the response.
+		Choices           []ChatCompletionChoice `json:"choices"`            // Choices is the choices of the response.
+		Usage             Usage                  `json:"usage"`              // Usage is the usage of the response.
+		SystemFingerprint string                 `json:"system_fingerprint"` // SystemFingerprint is the system fingerprint of the response.
+		http.Header                              // Header is the header of the response.
 	}
 	// ChatCompletionStreamChoiceDelta represents a response structure for chat completion API.
 	ChatCompletionStreamChoiceDelta struct {
@@ -279,6 +279,7 @@ func (m ChatCompletionMessage) MarshalJSON() ([]byte, error) {
 	}
 	if len(m.MultiContent) > 0 {
 		msg := struct {
+			Name         string            `json:"name,omitempty"`
 			Role         Role              `json:"role"`
 			Content      string            `json:"-"`
 			MultiContent []ChatMessagePart `json:"content,omitempty"`
@@ -289,6 +290,7 @@ func (m ChatCompletionMessage) MarshalJSON() ([]byte, error) {
 		return json.Marshal(msg)
 	}
 	msg := struct {
+		Name         string            `json:"name,omitempty"`
 		Role         Role              `json:"role"`
 		Content      string            `json:"content"`
 		MultiContent []ChatMessagePart `json:"-"`
@@ -302,6 +304,7 @@ func (m ChatCompletionMessage) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON method implements the json.Unmarshaler interface.
 func (m *ChatCompletionMessage) UnmarshalJSON(bs []byte) (err error) {
 	msg := struct {
+		Name         string `json:"name,omitempty"`
 		Role         Role   `json:"role"`
 		Content      string `json:"content"`
 		MultiContent []ChatMessagePart
@@ -315,7 +318,8 @@ func (m *ChatCompletionMessage) UnmarshalJSON(bs []byte) (err error) {
 		return nil
 	}
 	multiMsg := struct {
-		Role         Role `json:"role"`
+		Name         string `json:"name,omitempty"`
+		Role         Role   `json:"role"`
 		Content      string
 		MultiContent []ChatMessagePart `json:"content"`
 		FunctionCall *FunctionCall     `json:"function_call,omitempty"`
@@ -360,13 +364,6 @@ func (c *Client) CreateChatCompletion(
 		return
 	}
 	err = c.sendRequest(req, &response)
-	response.History = []ChatCompletionMessage{}
-	response.History = append(
-		response.History,
-		request.Messages...)
-	response.History = append(
-		response.History,
-		response.Choices[0].Message)
 	return
 }
 
