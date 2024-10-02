@@ -6,25 +6,24 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/charmbracelet/log"
 	"github.com/conneroisu/groq-go"
 	"github.com/conneroisu/groq-go/extensions/toolhouse"
 )
 
 func main() {
-	if err := run(); err != nil {
+	ctx := context.Background()
+	if err := run(ctx); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 }
 
-// run runs the main function.
-func run() error {
-	log.SetLevel(log.DebugLevel)
-	log.SetOutput(os.Stdout)
-	log.SetReportCaller(true)
-	ctx := context.Background()
-	ext, err := toolhouse.NewExtension(os.Getenv("TOOLHOUSE_API_KEY"))
+func run(ctx context.Context) error {
+	ext, err := toolhouse.NewExtension(os.Getenv("TOOLHOUSE_API_KEY"),
+		toolhouse.WithMetadata(map[string]any{
+			"id":       "conner",
+			"timezone": 5,
+		}))
 	if err != nil {
 		return err
 	}
@@ -38,23 +37,19 @@ func run() error {
 			Content: "Write a python function to print the first 10 prime numbers containing the number 3 then respond with the answer. DO NOT GUESS WHAT THE OUTPUT SHOULD BE. MAKE SURE TO CALL THE TOOL GIVEN.",
 		},
 	}
+	print(history[len(history)-1].Content)
 	re, err := client.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
-		Model:    groq.ModelLlama3Groq70B8192ToolUsePreview,
-		Messages: history,
-		Tools: ext.MustGetTools(ctx, toolhouse.WithMetadata(map[string]any{
-			"id":       "conner",
-			"timezone": 5,
-		})),
+		Model:      groq.ModelLlama3Groq70B8192ToolUsePreview,
+		Messages:   history,
+		Tools:      ext.MustGetTools(ctx),
 		ToolChoice: "required",
 	})
 	if err != nil {
 		return fmt.Errorf("failed to create 1 chat completion: %w", err)
 	}
 	history = append(history, re.Choices[0].Message)
-	r, err := ext.Run(ctx, re, map[string]any{
-		"id":       "conner",
-		"timezone": 5,
-	})
+	print(history[len(history)-1].ToolCalls[len(history[len(history)-1].ToolCalls)-1].Function.Arguments)
+	r, err := ext.Run(ctx, re)
 	if err != nil {
 		return fmt.Errorf("failed to run tool: %w", err)
 	}
@@ -68,16 +63,11 @@ func run() error {
 		return fmt.Errorf("failed to create 2 chat completion: %w", err)
 	}
 	history = append(history, finalr.Choices[0].Message)
+	print(history[len(history)-1].Content)
 	jsnHistory, err := json.MarshalIndent(history, "", "  ")
 	if err != nil {
 		return fmt.Errorf("failed to marshal history: %w", err)
 	}
 	fmt.Println(string(jsnHistory))
 	return nil
-}
-
-func printHistoryContents(history []groq.ChatCompletionMessage) {
-	for _, m := range history {
-		fmt.Println(m.Content)
-	}
 }

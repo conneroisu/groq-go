@@ -58,6 +58,13 @@ func WithClient(client *http.Client) Options {
 	}
 }
 
+// WithMetadata sets the metadata for the get tools request.
+func WithMetadata(metadata map[string]any) Options {
+	return func(r *Extension) {
+		r.metadata = metadata
+	}
+}
+
 // NewExtension creates a new Toolhouse extension.
 func NewExtension(apiKey string, opts ...Options) (e *Extension, err error) {
 	e = &Extension{
@@ -81,9 +88,7 @@ func NewExtension(apiKey string, opts ...Options) (e *Extension, err error) {
 func (e *Extension) Run(
 	ctx context.Context,
 	response groq.ChatCompletionResponse,
-	metadata map[string]any, // metadata is the metadata of the chat completion request.
 ) ([]groq.ChatCompletionMessage, error) {
-	e.metadata = metadata
 	if response.Choices[0].FinishReason != groq.FinishReasonFunctionCall && response.Choices[0].FinishReason != "tool_calls" {
 		return nil, fmt.Errorf("Not a function call")
 	}
@@ -129,11 +134,11 @@ func (e *Extension) Run(
 		if err != nil {
 			return nil, fmt.Errorf("failed to unmarshal response body: %w: %s", err, string(bdy))
 		}
-
-		cCM := groq.ChatCompletionMessage{}
-		cCM.Content = runResp.Content.Content
-		cCM.Role = groq.ChatMessageRoleFunction
-		cCM.Name = tool.Function.Name
+		cCM := groq.ChatCompletionMessage{
+			Content: runResp.Content.Content,
+			Name:    runResp.Content.Name,
+			Role:    groq.ChatMessageRoleFunction,
+		}
 		respH = append(respH, cCM)
 	}
 	return respH, nil
@@ -146,21 +151,13 @@ type request struct {
 	Bundle   string         `json:"bundle"`
 }
 
-// WithMetadata sets the metadata for the get tools request.
-func WithMetadata(metadata map[string]any) HouseOptions {
-	return func(r *request) {
-		r.Metadata = metadata
-	}
-}
-
 // MustGetTools returns a list of tools that the extension can use.
 //
 // It panics if an error occurs.
 func (e *Extension) MustGetTools(
 	ctx context.Context,
-	opts ...HouseOptions,
 ) []groq.Tool {
-	tools, err := e.GetTools(ctx, opts...)
+	tools, err := e.GetTools(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -170,14 +167,11 @@ func (e *Extension) MustGetTools(
 // GetTools returns a list of tools that the extension can use.
 func (e *Extension) GetTools(
 	ctx context.Context,
-	opts ...HouseOptions,
 ) ([]groq.Tool, error) {
 	params := request{
 		Bundle:   "default",
 		Provider: "openai",
-	}
-	for _, opt := range opts {
-		opt(&params)
+		Metadata: e.metadata,
 	}
 	jsonBytes, err := json.Marshal(params)
 	if err != nil {
@@ -215,6 +209,3 @@ func (e *Extension) GetTools(
 	}
 	return e.tools, nil
 }
-
-// HouseOptions represents the options for the GetTools method.
-type HouseOptions func(*request)

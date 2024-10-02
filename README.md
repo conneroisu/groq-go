@@ -15,6 +15,7 @@
 - Supports Tool Use.
 - Supports Function Calling.
 - JSON Schema Generation from structs.
+- Supports [Toolhouse](https://app.toolhouse.ai/) function calling.
 
 ## Installation
 
@@ -32,6 +33,7 @@ For introductory examples, see the [examples](https://github.com/conneroisu/groq
 - [vision](/examples/llava-blind)
 - [terminal-chat](/examples/terminal-chat)
 - [documentor-float](/examples/vhdl-documentor-json)
+- [toolhouse-python-code-interpreter](/examples/toolhouse-python-code-interpreter)
 
 External Repositories using groq-go:
 - [Automatic Git Commit Message Generator](https://github.com/conneroisu/gita)
