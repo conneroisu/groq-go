@@ -53,13 +53,6 @@ var (
 					Elem()
 )
 
-// ReflectionFromType returns a schema from a type.
-func ReflectionFromType(a any) (*Schema, error) {
-	r := &reflector{}
-	schema := r.ReflectFromType(reflect.TypeOf(a))
-	return schema, nil
-}
-
 type (
 	// Schema represents a JSON Schema object type.
 	// RFC draft-bhutton-json-Schema-00 section 4.3
