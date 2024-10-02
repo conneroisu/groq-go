@@ -210,15 +210,15 @@ type (
 	}
 	// ChatCompletionResponse represents a response structure for chat completion API.
 	ChatCompletionResponse struct {
-		ID                string                   `json:"id"`                 // ID is the id of the response.
-		Object            string                   `json:"object"`             // Object is the object of the response.
-		Created           int64                    `json:"created"`            // Created is the created time of the response.
-		Model             ChatModel                `json:"model"`              // Model is the model of the response.
-		Choices           []ChatCompletionChoice   `json:"choices"`            // Choices is the choices of the response.
-		Usage             Usage                    `json:"usage"`              // Usage is the usage of the response.
-		SystemFingerprint string                   `json:"system_fingerprint"` // SystemFingerprint is the system fingerprint of the response.
-		http.Header                                // Header is the header of the response.
-		History           []*ChatCompletionMessage `json:"-"`
+		ID                string                  `json:"id"`                 // ID is the id of the response.
+		Object            string                  `json:"object"`             // Object is the object of the response.
+		Created           int64                   `json:"created"`            // Created is the created time of the response.
+		Model             ChatModel               `json:"model"`              // Model is the model of the response.
+		Choices           []ChatCompletionChoice  `json:"choices"`            // Choices is the choices of the response.
+		Usage             Usage                   `json:"usage"`              // Usage is the usage of the response.
+		SystemFingerprint string                  `json:"system_fingerprint"` // SystemFingerprint is the system fingerprint of the response.
+		http.Header                               // Header is the header of the response.
+		History           []ChatCompletionMessage `json:"-"`
 	}
 	// ChatCompletionStreamChoiceDelta represents a response structure for chat completion API.
 	ChatCompletionStreamChoiceDelta struct {

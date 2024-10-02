@@ -21,9 +21,13 @@ const (
 
 // Extension is a Toolhouse extension.
 type Extension struct {
-	apiKey  string
-	baseURL string
-	client  *http.Client
+	apiKey   string
+	baseURL  string
+	client   *http.Client
+	provider string
+	metadata map[string]any
+	bundle   string
+	tools    []Tool
 }
 
 // LocalTool is a Toolhouse tool.
@@ -76,7 +80,6 @@ type StreamOptions func(*Request)
 // Request is the request to the Tool
 type Request struct {
 	History []groq.ChatCompletionMessage
-	Tools   []Tool
 }
 
 // Response is the response from the Toolhouse API when running a tool.
@@ -84,38 +87,74 @@ type Response struct {
 	Name string // Name is the name of the tool used.
 }
 
-// StreamResponse is the response from the Toolhouse API when streaming.
-type StreamResponse struct {
-	History []groq.ChatCompletionStreamResponse
-	Tools   []Tool
-}
-
 // Run runs the extension on the given history.
 func (e *Extension) Run(
 	ctx context.Context,
-	resp groq.ChatCompletionResponse,
+	response groq.ChatCompletionResponse,
 	opts ...RunOptions,
-) ([]*groq.ChatCompletionMessage, error) {
-	if resp.Choices[0].FinishReason != groq.FinishReasonFunctionCall {
-		return resp.History, nil
+) ([]groq.ChatCompletionMessage, error) {
+	hist := response.History
+	if response.Choices[0].FinishReason != groq.FinishReasonFunctionCall {
+		return hist, nil
 	}
 	// replace the existance of the function call with the tool call
-	resp.History[0].FunctionCall = nil
+	response.Choices[0].Message.FunctionCall = nil
+	toolCalls := response.Choices[0].Message.ToolCalls
+	// TODO: Add local tools check here
+
+	for _, tool := range toolCalls {
+		buf := new(bytes.Buffer)
+		err := json.NewEncoder(buf).Encode(runToolRequest{
+			Tool:     tool,
+			Provider: e.provider,
+			Metadata: e.metadata,
+			Bundle:   e.bundle,
+		})
+		if err != nil {
+			return nil, err
+		}
+		runReq, err := http.NewRequestWithContext(
+			ctx,
+			http.MethodPost,
+			fmt.Sprintf("%s%s", e.baseURL, runToolEndpoint),
+			bytes.NewBuffer(nil),
+		)
+		if err != nil {
+			return nil, err
+		}
+		runReq.Header.Set("User-Agent", "Toolhouse/1.2.1 Python/3.11.0")
+		runReq.Header.Set("Authorization", fmt.Sprintf("Bearer %s", e.apiKey))
+		runReq.Header.Set("Content-Type", applicationJSON)
+		resp, err := e.client.Do(runReq)
+		if err != nil {
+			return nil, err
+		}
+		defer resp.Body.Close()
+		bdy, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, err
+		}
+		var cCM groq.ChatCompletionMessage
+		err = json.Unmarshal(bdy, &cCM)
+		if err != nil {
+			return nil, err
+		}
+		hist = append(hist, cCM)
+	}
 	// resp.History[0].ToolCalls = []groq.ToolCall{
 	//         {
 	//                 Name: resp.History[len(resp.History)-1].FunctionCall.Name,
 	//         },
 	// }
-	return resp.History, nil
+	return hist, nil
 }
 
-// // Stream runs the extension on a stream from the groq api.
-// func (e *Extension) Stream(
-//         ctx context.Context,
-//         resp groq.ChatCompletionStreamResponse,
-// ) (groq.ChatCompletionStream, error) {
-//         return []groq.ChatCompletionStreamResponse{}, nil
-// }
+type runToolRequest struct {
+	Tool     groq.ToolCall  `json:"tool"`
+	Provider string         `json:"provider"`
+	Metadata map[string]any `json:"metadata"`
+	Bundle   string         `json:"bundle"`
+}
 
 // WithBundle sets the bundle for the get tools request.
 func WithBundle(bundle string) GetToolsOptions {
@@ -138,13 +177,25 @@ func WithMetadata(metadata map[string]any) GetToolsOptions {
 	}
 }
 
+func (e *Extension) MustGetTools(
+	ctx context.Context,
+	opts ...GetToolsOptions,
+) []groq.Tool {
+	tools, err := e.GetTools(ctx, opts...)
+	if err != nil {
+		panic(err)
+	}
+	return tools
+}
+
 // GetTools returns a list of tools that the extension can use.
 func (e *Extension) GetTools(
 	ctx context.Context,
 	opts ...GetToolsOptions,
 ) ([]groq.Tool, error) {
 	params := getToolsRequest{
-		Bundle: "default",
+		Bundle:   "default",
+		Provider: "openai",
 	}
 	for _, opt := range opts {
 		opt(&params)
@@ -181,6 +232,7 @@ func (e *Extension) GetTools(
 	if err != nil {
 		return nil, err
 	}
+	e.tools = ts
 	return convertTools(ts)
 }
 
@@ -227,7 +279,7 @@ func convertTools(
 		if err != nil {
 			return nil, err
 		}
-		resTools = append(resTools, groq.Tool{
+		t := groq.Tool{
 			Type: groq.ToolTypeFunction,
 			Function: &groq.FunctionDefinition{
 				Name:        tool.Function.Name,
@@ -235,7 +287,16 @@ func convertTools(
 				Strict:      true,
 				Parameters:  *sch,
 			},
-		})
+		}
+		if t.Type == "" {
+			continue
+		}
+		jsval, err := json.Marshal(tool)
+		if err != nil {
+			return nil, err
+		}
+		fmt.Println(string(jsval))
+		resTools = append(resTools, t)
 	}
 	return resTools, nil
 }
