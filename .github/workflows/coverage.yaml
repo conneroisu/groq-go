@@ -25,6 +25,7 @@ jobs:
       env:
         COVERALLS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         GROQ_KEY: ${{ secrets.GROQ_KEY }}
+        TOOLHOUSE_API_KEY: ${{ secrets.TOOLHOUSE_API_KEY }}
         UNIT: true
       run: goveralls -coverprofile=covprofile -service=github
     # or use shogo82148/actions-goveralls
