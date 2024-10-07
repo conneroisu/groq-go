@@ -1191,7 +1191,6 @@ func (r *reflector) reflectSliceOrArray(
 	}
 	if t.Kind() == reflect.Slice && t.Elem() == byteSliceType.Elem() {
 		st.Type = "string"
-		// NOTE: ContentMediaType is not set here
 		st.ContentEncoding = "base64"
 		return
 	}
