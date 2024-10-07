@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 
 	"github.com/conneroisu/groq-go"
@@ -29,6 +30,7 @@ type (
 		metadata map[string]any
 		bundle   string
 		tools    []groq.Tool
+		logger   *slog.Logger
 	}
 
 	// Options is a function that sets options for a Toolhouse extension.
@@ -65,6 +67,13 @@ func WithMetadata(metadata map[string]any) Options {
 	}
 }
 
+// WithLogger sets the logger for the Toolhouse extension.
+func WithLogger(logger *slog.Logger) Options {
+	return func(r *Extension) {
+		r.logger = logger
+	}
+}
+
 // NewExtension creates a new Toolhouse extension.
 func NewExtension(apiKey string, opts ...Options) (e *Extension, err error) {
 	e = &Extension{
@@ -73,6 +82,7 @@ func NewExtension(apiKey string, opts ...Options) (e *Extension, err error) {
 		client:   http.DefaultClient,
 		bundle:   "default",
 		provider: "openai",
+		logger:   slog.Default(),
 	}
 	for _, opt := range opts {
 		opt(e)
@@ -89,6 +99,7 @@ func (e *Extension) Run(
 	ctx context.Context,
 	response groq.ChatCompletionResponse,
 ) ([]groq.ChatCompletionMessage, error) {
+	e.logger.Debug("Running Toolhouse extension", "response", response)
 	if response.Choices[0].FinishReason != groq.FinishReasonFunctionCall && response.Choices[0].FinishReason != "tool_calls" {
 		return nil, fmt.Errorf("Not a function call")
 	}
@@ -168,12 +179,12 @@ func (e *Extension) MustGetTools(
 func (e *Extension) GetTools(
 	ctx context.Context,
 ) ([]groq.Tool, error) {
-	params := request{
+	e.logger.Debug("Getting tools from Toolhouse extension")
+	jsonBytes, err := json.Marshal(request{
 		Bundle:   "default",
 		Provider: "openai",
 		Metadata: e.metadata,
-	}
-	jsonBytes, err := json.Marshal(params)
+	})
 	if err != nil {
 		return nil, err
 	}
