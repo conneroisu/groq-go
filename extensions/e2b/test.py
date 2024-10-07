@@ -1,6 +1,6 @@
 import time
 
-from e2b import Sandbox
+from e2b.sandbox import Sandbox
 
 watcher = None
 
@@ -24,9 +24,15 @@ for i in range(10):
     # 2. 'Write' when the file is written to
     sandbox.filesystem.write(f"/home/file{i}.txt", f"Hello World {i}!")
     time.sleep(1)
+    sandbox.filesystem.make_dir(f"/home/dir{i}")
     sandbox.filesystem.read(f"/home/file{i}.txt")
+    sandbox.filesystem.list(f"/home/")
     time.sleep(1)
+    sandbox.filesystem.read_bytes(f"/home/file{i}.txt")
+    sandbox.filesystem.write_bytes(f"/home/file{i}.txt", b"Hello World {i}!")
     sandbox.filesystem.remove(f"/home/file{i}.txt")
+    sandbox.filesystem.remove(f"/home/dir{i}")
+    time.sleep(1)
     
     
 

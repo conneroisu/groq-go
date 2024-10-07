@@ -1,6 +1,8 @@
 package e2b_test
 
 import (
+	"fmt"
+	"log/slog"
 	"os"
 	"testing"
 
@@ -67,38 +69,47 @@ func TestPostSandbox(t *testing.T) {
 	if apiKey == "" {
 		t.Fatal("E2B_API_KEY is not set")
 	}
+	ll := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		AddSource: true,
+		Level:     slog.LevelDebug,
+	}))
+	sb, err := e2b.NewSandbox(apiKey, "base", e2b.WithLogger(ll))
+	a.NoError(err, "NewSandbox error")
+	defer func() {
+		err = sb.Close()
+		a.NoError(err, "Close error")
+	}()
+	err = sb.Mkdir("heelo")
+	a.NoError(err)
+	lsr, err := sb.Ls(".")
+	a.NoError(err)
+	fmt.Println(lsr)
+}
+
+// TestWriteRead tests the Write and Read methods of the Sandbox.
+// It creates a new sandbox, writes a file to it, reads the file back, and then closes the sandbox.
+// It ensures that the file contents are the same as the original file that was written.
+func TestWriteRead(t *testing.T) {
+	a := assert.New(t)
+	apiKey := os.Getenv("E2B_API_KEY")
+	if apiKey == "" {
+		t.Fatal("E2B_API_KEY is not set")
+	}
 	sb, err := e2b.NewSandbox(apiKey, "base")
 	a.NoError(err, "NewSandbox error")
 	defer func() {
 		err = sb.Close()
 		a.NoError(err, "Close error")
 	}()
+	filePath := "test.txt"
+	content := "Hello, world!"
+	err = sb.Write(filePath, []byte(content))
+	a.NoError(err, "Write error")
+	readContent, err := sb.Read(filePath)
+	a.NoError(err, "Read error")
+	a.Equal(content, string(readContent))
 }
 
-//
-// // TestWriteRead tests the Write and Read methods of the Sandbox.
-// // It creates a new sandbox, writes a file to it, reads the file back, and then closes the sandbox.
-// // It ensures that the file contents are the same as the original file that was written.
-// func TestWriteRead(t *testing.T) {
-//         a := assert.New(t)
-//         apiKey := os.Getenv("E2B_API_KEY")
-//         if apiKey == "" {
-//                 t.Fatal("E2B_API_KEY is not set")
-//         }
-//         sb, err := e2b.NewSandbox(apiKey, "base")
-//         a.NoError(err, "NewSandbox error")
-//         defer func() {
-//                 err = sb.Close()
-//                 a.NoError(err, "Close error")
-//         }()
-//         filePath := "test.txt"
-//         content := "Hello, world!"
-//         err = sb.Write(filePath, []byte(content))
-//         a.NoError(err, "Write error")
-//         readContent, err := sb.Read(filePath)
-//         a.NoError(err, "Read error")
-//         a.Equal(content, string(readContent))
-// }
 // ress, err := sb.Ls("/tmp/")
 // if err != nil {
 //         return Sandbox{}, err

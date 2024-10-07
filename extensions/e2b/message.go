@@ -28,7 +28,7 @@ type (
 		// Params is the params of the message.
 		Params []any `json:"params"`
 	}
-	// LsResponse is a JSON-RPC response.
+	// LsResponse is a JSON-RPC response when listing files and directories.
 	LsResponse struct {
 		// JSONRPC is the JSON-RPC version of the message.
 		JSONRPC string `json:"jsonrpc"`
@@ -37,6 +37,16 @@ type (
 		// ID is the ID of the message.
 		ID     int        `json:"id"`
 		Result []LsResult `json:"result"`
+	}
+	// ReadResponse is a JSON-RPC response when reading a file.
+	ReadResponse struct {
+		// JSONRPC is the JSON-RPC version of the message.
+		JSONRPC string `json:"jsonrpc"`
+		// Method is the method of the message.
+		Method Method `json:"method"`
+		// ID is the ID of the message.
+		ID     int    `json:"id"`
+		Result string `json:"result"`
 	}
 	// LsResult is a result of the list request.
 	LsResult struct {

@@ -22,26 +22,22 @@ type (
 	//
 	// The sandbox is like an isolated runtime or playground for the LLM.
 	Sandbox struct {
-		ID        string
-		Metadata  map[string]string `json:"metadata"`
-		Template  SandboxTemplate   `json:"templateID"`
-		SandboxID string            `json:"sandboxID"`
-		Alias     string            `json:"alias"`
-		ClientID  string            `json:"clientID"`
-
-		apiKey  string
-		baseURL string
-		client  *http.Client
-		ws      *websocket.Conn
-		msgCnt  int
-
-		mu *sync.Mutex
-
+		ID       string            `json:"sandboxID"`
+		Metadata map[string]string `json:"metadata"`
+		Template SandboxTemplate   `json:"templateID"`
+		Alias    string            `json:"alias"`
+		ClientID string            `json:"clientID"`
+		apiKey   string
+		baseURL  string
+		wsURL    string
+		client   *http.Client
+		ws       *websocket.Conn
+		msgCnt   int
+		mu       *sync.Mutex
 		// cwd      string
 		// envVars  map[string]string
 		logger *slog.Logger
 	}
-
 	// CreateSandboxResponse represents the response of the create sandbox http method.
 	CreateSandboxResponse struct {
 		Alias       string `json:"alias"`
@@ -50,7 +46,6 @@ type (
 		SandboxID   string `json:"sandboxID"`
 		TemplateID  string `json:"templateID"`
 	}
-
 	// Process is a process in the sandbox.
 	Process struct {
 		ext *Sandbox
@@ -90,15 +85,16 @@ const (
 	// EventTypeRemove is the type of event for the removal of a file or
 	// directory.
 	EventTypeRemove
-
-	defaultBaseURL = "https://api.e2b.dev"
-
-	wsRoute   = "/ws"
-	fileRoute = "/file"
+	defaultBaseURL  = "https://api.e2b.dev"
+	defaultWSScheme = "wss"
+	wsRoute         = "/ws"
+	fileRoute       = "/file"
 	// (GET/POST /sandboxes)
 	sandboxesRoute = "/sandboxes"
 	// (DELETE /sandboxes/:id)
 	deleteSandboxRoute = "/sandboxes/%s"
+	// Kernels Endpoint
+	kernelsRoute = "/api/kernels"
 )
 
 // NewSandbox creates a new sandbox.
@@ -140,10 +136,10 @@ func NewSandbox(
 	if err != nil {
 		return Sandbox{}, err
 	}
+	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusCreated {
 		return Sandbox{}, fmt.Errorf("request to create sandbox failed: %s", resp.Status)
 	}
-	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return Sandbox{}, err
@@ -154,17 +150,18 @@ func NewSandbox(
 		return Sandbox{}, err
 	}
 	sb.ID = res.SandboxID
-	sb.SandboxID = res.SandboxID
 	sb.Alias = res.Alias
 	sb.ClientID = res.ClientID
+	sb.wsURL = fmt.Sprintf("49982-%s-%s.e2b.dev",
+		res.SandboxID,
+		res.ClientID,
+	)
 	u := url.URL{
-		Scheme: "wss",
-		Host: fmt.Sprintf("49982-%s-%s.e2b.dev",
-			res.SandboxID,
-			res.ClientID,
-		),
-		Path: "/ws",
+		Scheme: defaultWSScheme,
+		Host:   sb.wsURL,
+		Path:   wsRoute,
 	}
+	sb.logger.Debug("Connecting to sandbox", "url", u.String())
 	ws, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	if err != nil {
 		return Sandbox{}, err
@@ -214,77 +211,28 @@ func (s *Sandbox) Reconnect(id string) error {
 func (s *Sandbox) StartProcess(
 	ctx context.Context,
 	cmd string,
-) (*Process, error) {
+) (proc *Process, err error) {
 	if ctx.Done() == nil {
 		return nil, ctx.Err()
 	}
 	return nil, nil
 }
 
-// Mkdir makes a directory in the sandbox file system.
-func (s *Sandbox) Mkdir(path string) error {
-	s.msgCnt++
-	msg := Request{
-		Params:  []any{path},
-		JSONRPC: rpc,
-		ID:      s.msgCnt,
-		Method:  filesystemMakeDir,
-	}
-	jsVal, err := json.Marshal(msg)
-	if err != nil {
-		return err
-	}
-	err = s.ws.WriteMessage(websocket.TextMessage, jsVal)
-	if err != nil {
-		return err
-	}
-	mt, msr, err := s.ws.ReadMessage()
-	if err != nil {
-		return err
-	}
-	fmt.Printf("Message type: %d\n", mt)
-	fmt.Printf("Message: %s\n", msr)
-	return nil
-}
-
-// Ls lists the files and/or directories in the sandbox file system at
-// the given path.
-func (s *Sandbox) Ls(path string) ([]string, error) {
-	s.msgCnt++
-	msg := Request{
-		Params:  []any{path},
-		JSONRPC: rpc,
-		ID:      s.msgCnt,
-		Method:  filesystemList,
-	}
-	jsVal, err := json.Marshal(msg)
-	if err != nil {
-		return nil, err
-	}
-	err = s.ws.WriteMessage(websocket.TextMessage, jsVal)
-	if err != nil {
-		return nil, err
-	}
-	mt, msr, err := s.ws.ReadMessage()
-	if err != nil {
-		return nil, err
-	}
-	println(fmt.Sprintf("Message type: %d", mt))
-	println(fmt.Sprintf("Message: %s", msr))
-	var res LsResponse
-	err = json.Unmarshal(msr, &res)
-	if err != nil {
-		return nil, err
-	}
-	names := make([]string, 0)
-	for _, r := range res.Result {
-		names = append(names, r.Name)
-	}
-	return names, nil
-}
-
-// ListKernels lists the kernels avaliable to the extension.
+// ListKernels lists the kernels in the sandbox.
 func (s *Sandbox) ListKernels() ([]Kernel, error) {
+	url := fmt.Sprintf("https://%s%s%s", "8888", s.wsURL[len("49982"):], kernelsRoute)
+	println(url)
+	resp, err := s.client.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println(string(body))
+	// var res ListKernelsResponse
 	return nil, nil
 }
 
