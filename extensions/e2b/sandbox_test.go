@@ -73,7 +73,7 @@ func TestPostSandbox(t *testing.T) {
 		AddSource: true,
 		Level:     slog.LevelDebug,
 	}))
-	sb, err := e2b.NewSandbox(apiKey, "base", e2b.WithLogger(ll))
+	sb, err := e2b.NewSandbox(apiKey, e2b.WithLogger(ll))
 	a.NoError(err, "NewSandbox error")
 	defer func() {
 		err = sb.Close()
@@ -95,7 +95,7 @@ func TestWriteRead(t *testing.T) {
 	if apiKey == "" {
 		t.Fatal("E2B_API_KEY is not set")
 	}
-	sb, err := e2b.NewSandbox(apiKey, "base")
+	sb, err := e2b.NewSandbox(apiKey)
 	a.NoError(err, "NewSandbox error")
 	defer func() {
 		err = sb.Close()

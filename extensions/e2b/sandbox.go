@@ -88,7 +88,6 @@ const (
 // NewSandbox creates a new sandbox.
 func NewSandbox(
 	apiKey string,
-	template SandboxTemplate,
 	opts ...Option,
 ) (Sandbox, error) {
 	sb := Sandbox{
@@ -176,6 +175,11 @@ func (s *Sandbox) WithTemplate(template SandboxTemplate) Option {
 // WithLogger sets the logger for the e2b sandbox.
 func WithLogger(logger *slog.Logger) Option {
 	return func(s *Sandbox) { s.logger = logger }
+}
+
+// WithTemplate sets the template for the e2b sandbox.
+func WithTemplate(template SandboxTemplate) Option {
+	return func(s *Sandbox) { s.Template = template }
 }
 
 // WithMetaData sets the meta data for the e2b sandbox.
