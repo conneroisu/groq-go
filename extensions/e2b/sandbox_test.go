@@ -108,6 +108,8 @@ func TestWriteRead(t *testing.T) {
 	readContent, err := sb.Read(filePath)
 	a.NoError(err, "Read error")
 	a.Equal(content, string(readContent))
+	err = sb.Stop()
+	a.NoError(err, "Stop error")
 }
 
 // ress, err := sb.Ls("/tmp/")

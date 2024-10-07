@@ -2,7 +2,6 @@ package e2b
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -22,18 +21,18 @@ type (
 	//
 	// The sandbox is like an isolated runtime or playground for the LLM.
 	Sandbox struct {
-		ID       string            `json:"sandboxID"`
-		Metadata map[string]string `json:"metadata"`
-		Template SandboxTemplate   `json:"templateID"`
-		Alias    string            `json:"alias"`
-		ClientID string            `json:"clientID"`
-		apiKey   string
-		baseURL  string
-		wsURL    string
-		client   *http.Client
-		ws       *websocket.Conn
-		msgCnt   int
-		mu       *sync.Mutex
+		ID         string            `json:"sandboxID"`
+		Metadata   map[string]string `json:"metadata"`
+		Template   SandboxTemplate   `json:"templateID"`
+		Alias      string            `json:"alias"`
+		ClientID   string            `json:"clientID"`
+		apiKey     string
+		baseAPIURL string
+		wsURL      string
+		client     *http.Client
+		ws         *websocket.Conn
+		msgCnt     int
+		mu         *sync.Mutex
 		// cwd      string
 		// envVars  map[string]string
 		logger *slog.Logger
@@ -45,10 +44,6 @@ type (
 		EnvdVersion string `json:"envdVersion"`
 		SandboxID   string `json:"sandboxID"`
 		TemplateID  string `json:"templateID"`
-	}
-	// Process is a process in the sandbox.
-	Process struct {
-		ext *Sandbox
 	}
 	// Event is a file system event.
 	Event struct {
@@ -65,13 +60,6 @@ type (
 	}
 	// OperationType is an operation type.
 	OperationType int
-	request       struct {
-		apiKey  string
-		cwd     string
-		envVars map[string]string
-		event   Event
-		timeout time.Duration
-	}
 	// Option is an option for the sandbox.
 	Option func(*Sandbox)
 )
@@ -104,10 +92,10 @@ func NewSandbox(
 	opts ...Option,
 ) (Sandbox, error) {
 	sb := Sandbox{
-		mu:       &sync.Mutex{},
-		apiKey:   apiKey,
-		Template: "base",
-		baseURL:  defaultBaseURL,
+		mu:         &sync.Mutex{},
+		apiKey:     apiKey,
+		Template:   "base",
+		baseAPIURL: defaultBaseURL,
 		Metadata: map[string]string{
 			"name": "groq-go",
 		},
@@ -123,7 +111,7 @@ func NewSandbox(
 	}
 	req, err := http.NewRequest(
 		http.MethodPost,
-		fmt.Sprintf("%s%s", sb.baseURL, sandboxesRoute),
+		fmt.Sprintf("%s%s", sb.baseAPIURL, sandboxesRoute),
 		bytes.NewBuffer([]byte(jsVal)),
 	)
 	if err != nil {
@@ -153,8 +141,8 @@ func NewSandbox(
 	sb.Alias = res.Alias
 	sb.ClientID = res.ClientID
 	sb.wsURL = fmt.Sprintf("49982-%s-%s.e2b.dev",
-		res.SandboxID,
-		res.ClientID,
+		sb.ID,
+		sb.ClientID,
 	)
 	u := url.URL{
 		Scheme: defaultWSScheme,
@@ -172,7 +160,7 @@ func NewSandbox(
 
 // WithBaseURL sets the base URL for the e2b sandbox.
 func (s *Sandbox) WithBaseURL(baseURL string) Option {
-	return func(s *Sandbox) { s.baseURL = baseURL }
+	return func(s *Sandbox) { s.baseAPIURL = baseURL }
 }
 
 // WithClient sets the client for the e2b sandbox.
@@ -201,47 +189,52 @@ func (s *Sandbox) KeepAlive(timeout time.Duration) error {
 }
 
 // Reconnect reconnects to the sandbox.
-func (s *Sandbox) Reconnect(id string) error {
+func (s *Sandbox) Reconnect( /* id string */ ) error {
+	u := url.URL{
+		Scheme: defaultWSScheme,
+		Host:   s.wsURL,
+		Path:   wsRoute,
+	}
+	s.logger.Debug("Reconnecting to sandbox", "url", u.String())
+	ws, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
+	if err != nil {
+		return err
+	}
+	s.ws = ws
 	return nil
 }
 
-// StartProcess starts a process in the sandbox.
+// NewProcess starts a process in the sandbox.
 //
 // If the context is cancelled, the process will be killed.
-func (s *Sandbox) StartProcess(
-	ctx context.Context,
+func (s *Sandbox) NewProcess(
 	cmd string,
-) (proc *Process, err error) {
-	if ctx.Done() == nil {
-		return nil, ctx.Err()
-	}
-	return nil, nil
+) (proc Process, err error) {
+	return Process{
+		cmd: cmd,
+	}, nil
 }
 
-// ListKernels lists the kernels in the sandbox.
-func (s *Sandbox) ListKernels() ([]Kernel, error) {
-	url := fmt.Sprintf("https://%s%s%s", "8888", s.wsURL[len("49982"):], kernelsRoute)
-	println(url)
-	resp, err := s.client.Get(url)
+// Stop stops the sandbox.
+func (s *Sandbox) Stop() error {
+	req, err := http.NewRequest(
+		http.MethodDelete,
+		fmt.Sprintf("%s%s", s.baseAPIURL, fmt.Sprintf(deleteSandboxRoute, s.ID)),
+		nil,
+	)
 	if err != nil {
-		return nil, err
+		return err
+	}
+	req.Header.Set("X-API-Key", s.apiKey)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+	resp, err := s.client.Do(req)
+	if err != nil {
+		return err
 	}
 	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
+	if resp.StatusCode != http.StatusNoContent {
+		return fmt.Errorf("request to delete sandbox failed: %s", resp.Status)
 	}
-	fmt.Println(string(body))
-	// var res ListKernelsResponse
-	return nil, nil
-}
-
-// CreateKernel creates a new kernel.
-func (s *Sandbox) CreateKernel() (Kernel, error) {
-	return Kernel{}, nil
-}
-
-// Close closes the sandbox.
-func (s *Sandbox) Close() error {
-	return s.ws.Close()
+	return nil
 }

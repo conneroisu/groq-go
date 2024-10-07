@@ -2,6 +2,7 @@ package e2b
 
 import (
 	"context"
+	"fmt"
 	"io"
 
 	"github.com/conneroisu/groq-go/pkg/mime"
@@ -88,4 +89,32 @@ func (k *Kernel) Shutdown() error {
 // Restart restarts a kernel.
 func (k *Kernel) Restart() error {
 	return nil
+}
+
+// ListKernels lists the kernels in the sandbox.
+func (s *Sandbox) ListKernels() ([]Kernel, error) {
+	url := fmt.Sprintf("https://%s%s%s", "8888", s.wsURL[len("49982"):], kernelsRoute)
+	println(url)
+	resp, err := s.client.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println(string(body))
+	// var res ListKernelsResponse
+	return nil, nil
+}
+
+// CreateKernel creates a new kernel.
+func (s *Sandbox) CreateKernel() (Kernel, error) {
+	return Kernel{}, nil
+}
+
+// Close closes the sandbox.
+func (s *Sandbox) Close() error {
+	return s.ws.Close()
 }
