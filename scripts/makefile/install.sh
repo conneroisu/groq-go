@@ -17,3 +17,9 @@ command -v staticcheck >/dev/null 2>&1 || go install honnef.co/go/tools/cmd/stat
 
 # Check if the command, gocovsh, exists, if not install it
 command -v gocovsh >/dev/null 2>&1 || go install github.com/boumenot/gocovsh@latest
+
+# Check if the command, protoc-gen-go, exists, if not install it
+command -v protoc-gen-go >/dev/null 2>&1 || go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.31.0
+
+# Check if the command, buf, exists, if not install it
+command -v buf >/dev/null 2>&1 || go install github.com/bufbuild/buf/cmd/buf@v1.21.0

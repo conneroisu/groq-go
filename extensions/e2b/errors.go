@@ -10,6 +10,12 @@ type (
 		Value     string
 		Traceback []string
 	}
+	ErrRPC struct {
+		Message string
+	}
+	ErrSandbox struct {
+		Message string
+	}
 	KernelException struct {
 		Message string
 	}
@@ -32,14 +38,10 @@ type (
 		raw          map[mime.Type]string
 	}
 
-	Logs struct {
-		Stdout []string `json:"stdout"`
-		Stderr []string `json:"stderr"`
-	}
 	Execution struct {
-		Results        []JupyterResult `json:"results"`
-		Logs           Logs            `json:"logs"`
-		Error          *APIError       `json:"error"`
-		ExecutionCount int             `json:"execution_count"`
+		Results []JupyterResult `json:"results"`
+		// Logs           Logs            `json:"logs"`
+		Error          *APIError `json:"error"`
+		ExecutionCount int       `json:"execution_count"`
 	}
 )
