@@ -162,10 +162,12 @@ func (s *Sandbox) Watch(
 
 // Upload uploads a file to the sandbox file system.
 func (s *Sandbox) Upload(r io.Reader, path string) error {
+	s.logger.Debug("Uploading file", "path", path)
 	return nil
 }
 
 // Download downloads a file from the sandbox file system.
 func (s *Sandbox) Download(path string) (io.ReadCloser, error) {
+	s.logger.Debug("Downloading file", "path", path)
 	return nil, nil
 }

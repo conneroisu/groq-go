@@ -242,3 +242,10 @@ func (s *Sandbox) Stop() error {
 	}
 	return nil
 }
+
+func (s *Sandbox) hostname() string {
+	return fmt.Sprintf("49982-%s-%s.e2b.dev",
+		s.ID,
+		s.ClientID,
+	)
+}
