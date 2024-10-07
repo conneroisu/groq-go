@@ -13,13 +13,12 @@ import (
 func (s *Sandbox) Mkdir(path string) error {
 	s.logger.Debug("Making directory", "path", path)
 	s.msgCnt++
-	msg := Request{
+	jsVal, err := json.Marshal(Request{
 		Params:  []any{path},
 		JSONRPC: rpc,
 		ID:      s.msgCnt,
 		Method:  filesystemMakeDir,
-	}
-	jsVal, err := json.Marshal(msg)
+	})
 	if err != nil {
 		return err
 	}
@@ -39,13 +38,12 @@ func (s *Sandbox) Mkdir(path string) error {
 func (s *Sandbox) Ls(path string) ([]LsResult, error) {
 	s.logger.Debug("Listing files and dirs", "path", path)
 	s.msgCnt++
-	msg := Request{
+	jsVal, err := json.Marshal(Request{
 		Params:  []any{path},
 		JSONRPC: rpc,
 		ID:      s.msgCnt,
 		Method:  filesystemList,
-	}
-	jsVal, err := json.Marshal(msg)
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -71,13 +69,12 @@ func (s *Sandbox) Read(
 ) ([]byte, error) {
 	s.logger.Debug("Reading from file", "path", path)
 	s.msgCnt++
-	req := Request{
+	jsnV, err := json.Marshal(Request{
 		JSONRPC: rpc,
 		Method:  filesystemRead,
 		Params:  []any{path},
 		ID:      s.msgCnt,
-	}
-	jsnV, err := json.Marshal(req)
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -126,16 +123,16 @@ func (s *Sandbox) Write(path string, data []byte) error {
 
 // ReadBytes reads a file from the sandbox file system.
 func (s *Sandbox) ReadBytes(path string) ([]byte, error) {
+	s.logger.Debug("Reading Bytes", "path", path)
 	s.msgCnt++
-	req := Request{
+	jsnV, err := json.Marshal(Request{
 		JSONRPC: rpc,
 		Method:  filesystemReadBytes,
 		Params: []any{
 			path,
 		},
 		ID: s.msgCnt,
-	}
-	jsnV, err := json.Marshal(req)
+	})
 	if err != nil {
 		return nil, err
 	}

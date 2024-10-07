@@ -16,6 +16,7 @@ sandbox = Sandbox(template="base")
 
 create_watcher(sandbox)  
 
+sandbox.keep_alive(101)
 # Create files in the /home directory inside the playground
 # We'll receive notifications for these events through the watcher we created above.
 for i in range(10):
