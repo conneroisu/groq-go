@@ -1,18 +1,20 @@
 package e2b
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
+	"net/url"
+	"sync"
 	"time"
 
 	gen "github.com/conneroisu/groq-go/extensions/e2b/gen"
+	"github.com/gorilla/websocket"
 )
-
-func init() {
-	gen.Init()
-}
 
 type (
 	// SandboxTemplate is a sandbox template.
@@ -21,35 +23,37 @@ type (
 	//
 	// The sandbox is like an isolated runtime or playground for the LLM.
 	Sandbox struct {
+		ID        string
+		Metadata  map[string]string `json:"metadata"`
+		Template  SandboxTemplate   `json:"templateID"`
+		SandboxID string            `json:"sandboxID"`
+		Alias     string            `json:"alias"`
+		ClientID  string            `json:"clientID"`
+
 		apiKey  string
 		baseURL string
 		client  *http.Client
+		ws      *websocket.Conn
+		msgCnt  int
 
-		metaData map[string]string
-		template SandboxTemplate
+		mu *sync.Mutex
+
 		// cwd      string
 		// envVars  map[string]string
 		logger *slog.Logger
 	}
+
+	// CreateSandboxResponse represents the response of the create sandbox http method.
+	CreateSandboxResponse struct {
+		Alias       string `json:"alias"`
+		ClientID    string `json:"clientID"`
+		EnvdVersion string `json:"envdVersion"`
+		SandboxID   string `json:"sandboxID"`
+		TemplateID  string `json:"templateID"`
+	}
+
 	// Process is a process in the sandbox.
 	Process struct {
-		ext *Sandbox
-	}
-	// Kernel is a code kernel.
-	//
-	// It is effectively a separate runtime environment inside of a sandbox.
-	//
-	// You can imagine kernel as a separate environment where code is
-	// executed.
-	//
-	// You can have multiple kernels running at the same time.
-	//
-	// Each kernel has its own state, so you can have multiple kernels
-	// running different code at the same time.
-	//
-	// A kernel will be kept alive with the sandbox even if you disconnect.
-	// So, it may be useful to defer the shutdown of the kernel.
-	Kernel struct {
 		ext *Sandbox
 	}
 	// Event is a file system event.
@@ -88,7 +92,7 @@ const (
 	// directory.
 	EventTypeRemove
 
-	defaultBaseURL = "https://api.e2b.dev/v2"
+	defaultBaseURL = "https://api.e2b.dev"
 
 	wsRoute   = "/ws"
 	fileRoute = "/file"
@@ -105,15 +109,79 @@ func NewSandbox(
 	opts ...Option,
 ) (Sandbox, error) {
 	sb := Sandbox{
+		mu:       &sync.Mutex{},
 		apiKey:   apiKey,
-		template: "base",
+		Template: "base",
 		baseURL:  defaultBaseURL,
-		client:   http.DefaultClient,
-		logger:   slog.Default(),
+		Metadata: map[string]string{
+			"name": "groq-go",
+		},
+		client: http.DefaultClient,
+		logger: slog.Default(),
+	}
+	jsVal, err := json.Marshal(sb)
+	if err != nil {
+		return Sandbox{}, err
 	}
 	for _, opt := range opts {
 		opt(&sb)
 	}
+	req, err := http.NewRequest(
+		http.MethodPost,
+		fmt.Sprintf("%s%s", sb.baseURL, sandboxesRoute),
+		bytes.NewBuffer([]byte(jsVal)),
+	)
+	if err != nil {
+		return Sandbox{}, err
+	}
+	req.Header.Set("X-API-Key", sb.apiKey)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+	resp, err := sb.client.Do(req)
+	if err != nil {
+		return Sandbox{}, err
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return Sandbox{}, err
+	}
+	var res CreateSandboxResponse
+	err = json.Unmarshal(body, &res)
+	if err != nil {
+		return Sandbox{}, err
+	}
+	sb.ID = res.SandboxID
+	sb.SandboxID = res.SandboxID
+	sb.Alias = res.Alias
+	sb.ClientID = res.ClientID
+	u := url.URL{
+		Scheme: "wss",
+		Host: fmt.Sprintf("49982-%s-%s.e2b.dev",
+			res.SandboxID,
+			res.ClientID,
+		),
+		Path: "/ws",
+	}
+	ws, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
+	if err != nil {
+		return Sandbox{}, err
+	}
+	sb.ws = ws
+	ress, err := sb.Ls("/tmp/")
+	if err != nil {
+		return Sandbox{}, err
+	}
+	err = sb.Mkdir("/tmp/groq-go")
+	if err != nil {
+		return Sandbox{}, err
+	}
+	// see if it there
+	ress, err = sb.Ls("/tmp/")
+	if err != nil {
+		return Sandbox{}, err
+	}
+	println(fmt.Sprintf("ress: %v", ress))
 	return sb, nil
 }
 
@@ -129,7 +197,7 @@ func WithClient(client *http.Client) Option {
 
 // WithTemplate sets the template for the e2b sandbox.
 func (s *Sandbox) WithTemplate(template SandboxTemplate) Option {
-	return func(s *Sandbox) { s.template = template }
+	return func(s *Sandbox) { s.Template = template }
 }
 
 // WithLogger sets the logger for the e2b sandbox.
@@ -139,7 +207,7 @@ func WithLogger(logger *slog.Logger) Option {
 
 // WithMetaData sets the meta data for the e2b sandbox.
 func WithMetaData(metaData map[string]string) Option {
-	return func(s *Sandbox) { s.metaData = metaData }
+	return func(s *Sandbox) { s.Metadata = metaData }
 }
 
 // Read reads a file from the sandbox file system.
@@ -151,6 +219,18 @@ func (s *Sandbox) Read(
 
 // Write writes to a file to the sandbox file system.
 func (s *Sandbox) Write(path string, data []byte) error {
+	req := gen.WatchDirRequest{
+		Path: path,
+	}
+	err := s.ws.WriteJSON(&req)
+	if err != nil {
+		return err
+	}
+	var res gen.WatchDirResponse
+	err = s.ws.ReadJSON(&res)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -199,13 +279,64 @@ func (s *Sandbox) StartProcess(
 
 // Mkdir makes a directory in the sandbox file system.
 func (s *Sandbox) Mkdir(path string) error {
+	s.msgCnt++
+	msg := Request{
+		Params:  []any{path},
+		JSONRPC: rpc,
+		ID:      s.msgCnt,
+		Method:  filesystemMakeDir,
+	}
+	jsVal, err := json.Marshal(msg)
+	if err != nil {
+		return err
+	}
+	err = s.ws.WriteMessage(websocket.TextMessage, jsVal)
+	if err != nil {
+		return err
+	}
+	mt, msr, err := s.ws.ReadMessage()
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Message type: %d\n", mt)
+	fmt.Printf("Message: %s\n", msr)
 	return nil
 }
 
 // Ls lists the files and/or directories in the sandbox file system at
 // the given path.
 func (s *Sandbox) Ls(path string) ([]string, error) {
-	return nil, nil
+	s.msgCnt++
+	msg := Request{
+		Params:  []any{path},
+		JSONRPC: rpc,
+		ID:      s.msgCnt,
+		Method:  filesystemList,
+	}
+	jsVal, err := json.Marshal(msg)
+	if err != nil {
+		return nil, err
+	}
+	err = s.ws.WriteMessage(websocket.TextMessage, jsVal)
+	if err != nil {
+		return nil, err
+	}
+	mt, msr, err := s.ws.ReadMessage()
+	if err != nil {
+		return nil, err
+	}
+	println(fmt.Sprintf("Message type: %d", mt))
+	println(fmt.Sprintf("Message: %s", msr))
+	var res LsResponse
+	err = json.Unmarshal(msr, &res)
+	if err != nil {
+		return nil, err
+	}
+	names := make([]string, 0)
+	for _, r := range res.Result {
+		names = append(names, r.Name)
+	}
+	return names, nil
 }
 
 // ListKernels lists the kernels avaliable to the extension.
@@ -218,12 +349,13 @@ func (s *Sandbox) CreateKernel() (Kernel, error) {
 	return Kernel{}, nil
 }
 
-// Shutdown shutdowns a kernel.
-func (k *Kernel) Shutdown(kernel Kernel) error {
-	return nil
+// String returns a string representation of the CreateSandboxResponse.
+func (c *CreateSandboxResponse) String() string {
+	b, _ := json.MarshalIndent(c, "", "	")
+	return string(b)
 }
 
-// RestartKernel restarts a kernel.
-func (k *Kernel) RestartKernel(kernel Kernel) error {
-	return nil
+// Close closes the sandbox.
+func (s *Sandbox) Close() error {
+	return s.ws.Close()
 }
