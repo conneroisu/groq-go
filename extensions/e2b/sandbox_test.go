@@ -1,7 +1,6 @@
 package e2b_test
 
 import (
-	"fmt"
 	"os"
 	"testing"
 
@@ -70,7 +69,6 @@ func TestPostSandbox(t *testing.T) {
 	}
 	sb, err := e2b.NewSandbox(apiKey, "base")
 	a.NoError(err, "NewSandbox error")
-	fmt.Println(sb.Metadata)
 	defer func() {
 		err = sb.Close()
 		a.NoError(err, "Close error")
@@ -101,3 +99,18 @@ func TestPostSandbox(t *testing.T) {
 //         a.NoError(err, "Read error")
 //         a.Equal(content, string(readContent))
 // }
+// ress, err := sb.Ls("/tmp/")
+// if err != nil {
+//         return Sandbox{}, err
+// }
+// println(fmt.Sprintf("ress: %v", ress))
+// err = sb.Mkdir("/tmp/groq-go")
+// if err != nil {
+//         return Sandbox{}, err
+// }
+// // see if it there
+// ress, err = sb.Ls("/tmp/")
+// if err != nil {
+//         return Sandbox{}, err
+// }
+// println(fmt.Sprintf("ress: %v", ress))

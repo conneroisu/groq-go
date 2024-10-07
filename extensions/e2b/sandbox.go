@@ -12,7 +12,6 @@ import (
 	"sync"
 	"time"
 
-	gen "github.com/conneroisu/groq-go/extensions/e2b/gen"
 	"github.com/gorilla/websocket"
 )
 
@@ -141,6 +140,9 @@ func NewSandbox(
 	if err != nil {
 		return Sandbox{}, err
 	}
+	if resp.StatusCode != http.StatusCreated {
+		return Sandbox{}, fmt.Errorf("request to create sandbox failed: %s", resp.Status)
+	}
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -168,20 +170,6 @@ func NewSandbox(
 		return Sandbox{}, err
 	}
 	sb.ws = ws
-	ress, err := sb.Ls("/tmp/")
-	if err != nil {
-		return Sandbox{}, err
-	}
-	err = sb.Mkdir("/tmp/groq-go")
-	if err != nil {
-		return Sandbox{}, err
-	}
-	// see if it there
-	ress, err = sb.Ls("/tmp/")
-	if err != nil {
-		return Sandbox{}, err
-	}
-	println(fmt.Sprintf("ress: %v", ress))
 	return sb, nil
 }
 
@@ -208,50 +196,6 @@ func WithLogger(logger *slog.Logger) Option {
 // WithMetaData sets the meta data for the e2b sandbox.
 func WithMetaData(metaData map[string]string) Option {
 	return func(s *Sandbox) { s.Metadata = metaData }
-}
-
-// Read reads a file from the sandbox file system.
-func (s *Sandbox) Read(
-	path string,
-) ([]byte, error) {
-	return nil, nil
-}
-
-// Write writes to a file to the sandbox file system.
-func (s *Sandbox) Write(path string, data []byte) error {
-	req := gen.WatchDirRequest{
-		Path: path,
-	}
-	err := s.ws.WriteJSON(&req)
-	if err != nil {
-		return err
-	}
-	var res gen.WatchDirResponse
-	err = s.ws.ReadJSON(&res)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// ReadBytes reads a file from the sandbox file system.
-func (s *Sandbox) ReadBytes(path string) ([]byte, error) {
-	return nil, nil
-}
-
-// Watch watches a directory in the sandbox file system.
-func (s *Sandbox) Watch(path string) (<-chan Event, error) {
-	return nil, nil
-}
-
-// Upload uploads a file to the sandbox file system.
-func (s *Sandbox) Upload(r io.Reader, path string) error {
-	return nil
-}
-
-// Download downloads a file from the sandbox file system.
-func (s *Sandbox) Download(path string) (io.ReadCloser, error) {
-	return nil, nil
 }
 
 // KeepAlive keeps the sandbox alive.
@@ -347,12 +291,6 @@ func (s *Sandbox) ListKernels() ([]Kernel, error) {
 // CreateKernel creates a new kernel.
 func (s *Sandbox) CreateKernel() (Kernel, error) {
 	return Kernel{}, nil
-}
-
-// String returns a string representation of the CreateSandboxResponse.
-func (c *CreateSandboxResponse) String() string {
-	b, _ := json.MarshalIndent(c, "", "	")
-	return string(b)
 }
 
 // Close closes the sandbox.
