@@ -110,6 +110,10 @@ func TestWriteRead(t *testing.T) {
 	readContent, err := sb.Read(filePath)
 	a.NoError(err, "Read error")
 	a.Equal(content, string(readContent))
+	readBytesContent, err := sb.ReadBytes(filePath)
+	println(string(readBytesContent))
+	a.NoError(err, "ReadBytes error")
+	a.Equal(content, string(readBytesContent))
 	err = sb.Stop(ctx)
 	a.NoError(err, "Stop error")
 }

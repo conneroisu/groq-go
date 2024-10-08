@@ -2,6 +2,7 @@ package e2b
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -34,9 +35,10 @@ type (
 		mu         *sync.Mutex
 		// cwd      string
 		// envVars  map[string]string
-		logger         *slog.Logger
-		requestBuilder requestBuilder
-		httpScheme     string
+		logger          *slog.Logger
+		requestBuilder  requestBuilder
+		httpScheme      string
+		defaultKernelID string
 	}
 	// CreateSandboxResponse represents the response of the create sandbox http method.
 	CreateSandboxResponse struct {
@@ -213,17 +215,11 @@ func NewSandbox(
 		return sb, err
 	}
 	sb.ws = ws
-	time.Sleep(time.Second * 1)
-	list, err := sb.Ls("root")
-	if err != nil {
-		return sb, err
-	}
-	fmt.Println(list)
 	kernelID, err := sb.Read("/root/.jupyter/kernel_id")
 	if err != nil {
 		return sb, err
 	}
-	fmt.Println(fmt.Sprintf("kernel id: %s", kernelID))
+	sb.defaultKernelID = string(kernelID)
 	return sb, nil
 }
 
@@ -474,13 +470,20 @@ func (s *Sandbox) ReadBytes(path string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	sid, message, err := s.ws.ReadMessage()
+	_, message, err := s.ws.ReadMessage()
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(string(message))
-	fmt.Println(sid)
-	return nil, nil
+	var rR ReadResponse
+	err = json.Unmarshal(message, &rR)
+	if err != nil {
+		return nil, err
+	}
+	sDec, err := base64.StdEncoding.DecodeString(string(rR.Result))
+	if err != nil {
+		return nil, err
+	}
+	return sDec, nil
 }
 
 // Watch watches a directory in the sandbox file system.
