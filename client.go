@@ -48,23 +48,11 @@ type (
 
 	// Opts is a function that sets options for a Groq client.
 	Opts func(*Client)
-
-	requestOption  func(*requestOptions)
-	fullURLOptions struct {
-		model string
-	}
-	fullURLOption func(*fullURLOptions)
-
 	// Usage Represents the total token usage per request to Groq.
 	Usage struct {
 		PromptTokens     int `json:"prompt_tokens"`
 		CompletionTokens int `json:"completion_tokens"`
 		TotalTokens      int `json:"total_tokens"`
-	}
-
-	requestOptions struct {
-		body   any
-		header http.Header
 	}
 )
 

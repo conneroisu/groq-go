@@ -53,6 +53,15 @@ To run the linter:
 ```bash
 task lint
 ```
+
+If you fork the repository, you should set up the following environment variables in ci/cd:
+
+```bash
+export E2B_API_KEY=your-e2b-api-key
+export GROQ_KEY=your-groq-key
+export TOOLHOUSE_API_KEY=your-toolhouse-api-key
+```
+
 ## Documentation
 
 The following documentation is generated from the source code using [gomarkdoc](https://github.com/princjef/gomarkdoc).

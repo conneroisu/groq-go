@@ -102,6 +102,17 @@ type (
 		Name  string `json:"name"`
 		IsDir bool   `json:"isDir"`
 	}
+	// ProcessRequest is a request for a process inside a sandbox.
+	ProcessRequest struct {
+		// JSONRPC is the JSON-RPC version of the message.
+		JSONRPC string `json:"jsonrpc"`
+		// Method is the method of the message.
+		Method Method `json:"method"`
+		// ID is the ID of the message.
+		ID int `json:"id"`
+		// Params is the params of the message.
+		Params []any `json:"params"`
+	}
 )
 
 const (
@@ -128,8 +139,9 @@ const (
 
 	defaultBaseURL  = "https://api.e2b.dev"
 	defaultWSScheme = "wss"
-	wsRoute         = "/ws"
-	fileRoute       = "/file"
+	// Routes
+	wsRoute   = "/ws"
+	fileRoute = "/file"
 	// (GET/POST /sandboxes)
 	sandboxesRoute = "/sandboxes"
 	// (DELETE /sandboxes/:id)

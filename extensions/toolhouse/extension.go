@@ -2,7 +2,6 @@
 package toolhouse
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -23,14 +22,15 @@ const (
 type (
 	// Extension is a Toolhouse extension.
 	Extension struct {
-		apiKey   string
-		baseURL  string
-		client   *http.Client
-		provider string
-		metadata map[string]any
-		bundle   string
-		tools    []groq.Tool
-		logger   *slog.Logger
+		apiKey         string
+		baseURL        string
+		client         *http.Client
+		provider       string
+		metadata       map[string]any
+		bundle         string
+		tools          []groq.Tool
+		logger         *slog.Logger
+		requestBuilder requestBuilder
 	}
 
 	// Options is a function that sets options for a Toolhouse extension.
@@ -77,12 +77,13 @@ func WithLogger(logger *slog.Logger) Options {
 // NewExtension creates a new Toolhouse extension.
 func NewExtension(apiKey string, opts ...Options) (e *Extension, err error) {
 	e = &Extension{
-		apiKey:   apiKey,
-		baseURL:  defaultBaseURL,
-		client:   http.DefaultClient,
-		bundle:   "default",
-		provider: "openai",
-		logger:   slog.Default(),
+		apiKey:         apiKey,
+		baseURL:        defaultBaseURL,
+		client:         http.DefaultClient,
+		bundle:         "default",
+		provider:       "openai",
+		logger:         slog.Default(),
+		requestBuilder: newRequestBuilder(),
 	}
 	for _, opt := range opts {
 		opt(e)
@@ -105,29 +106,20 @@ func (e *Extension) Run(
 	}
 	respH := []groq.ChatCompletionMessage{}
 	for _, tool := range response.Choices[0].Message.ToolCalls {
-		buf := new(bytes.Buffer)
-		bodyParams := request{
-			Content:  tool,
-			Provider: e.provider,
-			Metadata: e.metadata,
-			Bundle:   e.bundle,
-		}
-		err := json.NewEncoder(buf).Encode(bodyParams)
-		if err != nil {
-			return nil, err
-		}
-		req, err := http.NewRequestWithContext(
+		req, err := e.newRequest(
 			ctx,
 			http.MethodPost,
 			fmt.Sprintf("%s%s", e.baseURL, runToolEndpoint),
-			bytes.NewBuffer(buf.Bytes()),
+			withBody(request{
+				Content:  tool,
+				Provider: e.provider,
+				Metadata: e.metadata,
+				Bundle:   e.bundle,
+			}),
 		)
 		if err != nil {
 			return nil, err
 		}
-		req.Header.Set("User-Agent", "Toolhouse/1.2.1 Python/3.11.0")
-		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", e.apiKey))
-		req.Header.Set("Content-Type", applicationJSON)
 		resp, err := e.client.Do(req)
 		if err != nil {
 			return nil, err
@@ -180,28 +172,21 @@ func (e *Extension) GetTools(
 	ctx context.Context,
 ) ([]groq.Tool, error) {
 	e.logger.Debug("Getting tools from Toolhouse extension")
-	jsonBytes, err := json.Marshal(request{
-		Bundle:   "default",
-		Provider: "openai",
-		Metadata: e.metadata,
-	})
-	if err != nil {
-		return nil, err
-	}
-	body := bytes.NewBuffer(jsonBytes)
 	url := e.baseURL + getToolsEndpoint
-	req, err := http.NewRequestWithContext(
+	req, err := e.newRequest(
 		ctx,
 		http.MethodPost,
 		url,
-		body,
+		withBody(
+			request{
+				Bundle:   "default",
+				Provider: "openai",
+				Metadata: e.metadata,
+			}),
 	)
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("User-Agent", "Toolhouse/1.2.1 Python/3.11.0")
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", e.apiKey))
-	req.Header.Set("Content-Type", applicationJSON)
 	resp, err := e.client.Do(req)
 	if err != nil {
 		return nil, err
@@ -219,4 +204,31 @@ func (e *Extension) GetTools(
 		return nil, err
 	}
 	return e.tools, nil
+}
+
+func (e *Extension) newRequest(
+	ctx context.Context,
+	method, url string,
+	setters ...requestOption,
+) (*http.Request, error) {
+	// Default Options
+	args := &requestOptions{
+		body:   nil,
+		header: http.Header{},
+	}
+	for _, setter := range setters {
+		setter(args)
+	}
+	req, err := e.requestBuilder.Build(
+		ctx,
+		method,
+		url,
+		args.body,
+		args.header,
+	)
+	if err != nil {
+		return nil, err
+	}
+	e.setCommonHeaders(req)
+	return req, nil
 }

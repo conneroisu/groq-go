@@ -33,6 +33,15 @@ type (
 		) (*http.Request, error)
 	}
 	httpRequestBuilder struct{}
+	requestOptions     struct {
+		body   any
+		header http.Header
+	}
+	requestOption  func(*requestOptions)
+	fullURLOptions struct {
+		model string
+	}
+	fullURLOption func(*fullURLOptions)
 )
 
 // newFormBuilder creates a new DefaultFormBuilder.
