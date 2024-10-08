@@ -16,6 +16,10 @@ def on_stdout(message: ProcessMessage):
     print(f"Process {message.model_dump_json()}")
 
 
+
+    execution = sandbox.notebook.exec_cell("x+=1; x")
+    print(execution.text)  # outputs 2
+
 sandbox = Sandbox(template="base")
 
 create_watcher(sandbox)  

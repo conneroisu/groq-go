@@ -125,6 +125,9 @@ const (
 	filesystemMakeDir    Method = "filesystem_makeDir"
 	filesystemReadBytes  Method = "filesystem_readBase64"
 	filesystemWriteBytes Method = "filesystem_writeBase64"
+	processSubscribe     Method = "process_subscribe"
+	processUnsubscribe   Method = "process_unsubscribe"
+	processStart         Method = "process_start"
 	// TODO: Check this one.
 	filesystemSubscribe = "filesystem_subscribe"
 
@@ -165,7 +168,7 @@ func NewSandbox(
 		Template:   "base",
 		baseAPIURL: defaultBaseURL,
 		Metadata: map[string]string{
-			"name": "groq-go",
+			"sdk": "groq-go v1",
 		},
 		client:         http.DefaultClient,
 		logger:         slog.Default(),
@@ -210,6 +213,17 @@ func NewSandbox(
 		return sb, err
 	}
 	sb.ws = ws
+	time.Sleep(time.Second * 1)
+	list, err := sb.Ls("root")
+	if err != nil {
+		return sb, err
+	}
+	fmt.Println(list)
+	kernelID, err := sb.Read("/root/.jupyter/kernel_id")
+	if err != nil {
+		return sb, err
+	}
+	fmt.Println(fmt.Sprintf("kernel id: %s", kernelID))
 	return sb, nil
 }
 
@@ -221,7 +235,7 @@ func (s *Sandbox) KeepAlive(timeout time.Duration) error {
 }
 
 // Reconnect reconnects to the sandbox.
-func (s *Sandbox) Reconnect( /* id string */ ) error {
+func (s *Sandbox) Reconnect() error {
 	u := s.wsURL()
 	s.logger.Debug("Reconnecting to sandbox", "url", u.String())
 	ws, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
@@ -230,6 +244,11 @@ func (s *Sandbox) Reconnect( /* id string */ ) error {
 	}
 	s.ws = ws
 	return nil
+}
+
+// Disconnect disconnects from the sandbox.
+func (s *Sandbox) Disconnect() error {
+	return s.ws.Close()
 }
 
 // NewProcess starts a process in the sandbox.
@@ -265,8 +284,9 @@ func (s *Sandbox) Stop(ctx context.Context) error {
 	return nil
 }
 
-func (s *Sandbox) hostname() string {
-	return fmt.Sprintf("49982-%s-%s.e2b.dev",
+func (s *Sandbox) hostname(id string) string {
+	return fmt.Sprintf("https://%s-%s-%s.e2b.dev",
+		id,
 		s.ID,
 		s.ClientID,
 	)
@@ -292,4 +312,199 @@ func (s *Sandbox) httpURL(path string) url.URL {
 		),
 		Path: path,
 	}
+}
+
+// ListKernels lists the kernels in the sandbox.
+func (s *Sandbox) ListKernels(ctx context.Context) ([]ListKernelResponse, error) {
+	// url := fmt.Sprintf("https://%s%s%s", "8888", s.wsURL[len("49982"):], kernelsRoute)
+	u := s.hostname("8888")
+	req, err := s.newRequest(
+		ctx,
+		http.MethodGet,
+		fmt.Sprintf("%s%s", u, kernelsRoute),
+	)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := s.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	var res []ListKernelResponse
+	err = json.Unmarshal(body, &res)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+// Mkdir makes a directory in the sandbox file system.
+func (s *Sandbox) Mkdir(path string) error {
+	s.logger.Debug("Making directory", "path", path)
+	s.msgCnt++
+	jsVal, err := json.Marshal(Request{
+		Params:  []any{path},
+		JSONRPC: rpc,
+		ID:      s.msgCnt,
+		Method:  filesystemMakeDir,
+	})
+	if err != nil {
+		return err
+	}
+	err = s.ws.WriteMessage(websocket.TextMessage, jsVal)
+	if err != nil {
+		return err
+	}
+	_, _, err = s.ws.ReadMessage()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// Ls lists the files and/or directories in the sandbox file system at
+// the given path.
+func (s *Sandbox) Ls(path string) ([]LsResult, error) {
+	s.logger.Debug("Listing files and dirs", "path", path)
+	s.msgCnt++
+	jsVal, err := json.Marshal(Request{
+		Params:  []any{path},
+		JSONRPC: rpc,
+		ID:      s.msgCnt,
+		Method:  filesystemList,
+	})
+	if err != nil {
+		return nil, err
+	}
+	err = s.ws.WriteMessage(websocket.TextMessage, jsVal)
+	if err != nil {
+		return nil, err
+	}
+	_, msr, err := s.ws.ReadMessage()
+	if err != nil {
+		return nil, err
+	}
+	var res LsResponse
+	err = json.Unmarshal(msr, &res)
+	if err != nil {
+		return nil, err
+	}
+	return res.Result, nil
+}
+
+// Read reads a file from the sandbox file system.
+func (s *Sandbox) Read(
+	path string,
+) ([]byte, error) {
+	s.logger.Debug("Reading from file", "path", path)
+	s.msgCnt++
+	jsnV, err := json.Marshal(Request{
+		JSONRPC: rpc,
+		Method:  filesystemRead,
+		Params:  []any{path},
+		ID:      s.msgCnt,
+	})
+	if err != nil {
+		return nil, err
+	}
+	err = s.ws.WriteMessage(websocket.TextMessage, jsnV)
+	if err != nil {
+		return nil, err
+	}
+	_, message, err := s.ws.ReadMessage()
+	if err != nil {
+		return nil, err
+	}
+	var resp ReadResponse
+	err = json.Unmarshal(message, &resp)
+	if err != nil {
+		return nil, err
+	}
+	return []byte(resp.Result), nil
+}
+
+// Write writes to a file to the sandbox file system.
+func (s *Sandbox) Write(path string, data []byte) error {
+	s.logger.Debug("Writing to file", "path", path)
+	s.msgCnt++
+	jsnV, err := json.Marshal(Request{
+		JSONRPC: rpc,
+		Method:  filesystemWrite,
+		Params: []any{
+			path,
+			string(data),
+		},
+		ID: s.msgCnt,
+	})
+	if err != nil {
+		return err
+	}
+	err = s.ws.WriteMessage(websocket.TextMessage, jsnV)
+	if err != nil {
+		return err
+	}
+	_, _, err = s.ws.ReadMessage()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// ReadBytes reads a file from the sandbox file system.
+func (s *Sandbox) ReadBytes(path string) ([]byte, error) {
+	s.logger.Debug("Reading Bytes", "path", path)
+	s.msgCnt++
+	jsnV, err := json.Marshal(Request{
+		JSONRPC: rpc,
+		Method:  filesystemReadBytes,
+		Params: []any{
+			path,
+		},
+		ID: s.msgCnt,
+	})
+	if err != nil {
+		return nil, err
+	}
+	err = s.ws.WriteMessage(websocket.TextMessage, jsnV)
+	if err != nil {
+		return nil, err
+	}
+	sid, message, err := s.ws.ReadMessage()
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println(string(message))
+	fmt.Println(sid)
+	return nil, nil
+}
+
+// Watch watches a directory in the sandbox file system.
+//
+// This is intended to be run in a goroutine as it will block until the
+// connection is closed, an error occurs, or the context is canceled.
+func (s *Sandbox) Watch(
+	ctx context.Context,
+	path string,
+) (<-chan Event, error) {
+	// TODO: implement
+	return nil, nil
+}
+
+// Upload uploads a file to the sandbox file system.
+func (s *Sandbox) Upload(r io.Reader, path string) error {
+	s.logger.Debug("Uploading file", "path", path)
+	// TODO: implement
+	return nil
+}
+
+// Download downloads a file from the sandbox file system.
+func (s *Sandbox) Download(path string) (io.ReadCloser, error) {
+	s.logger.Debug("Downloading file", "path", path)
+	// TODO: implement
+	return nil, nil
 }

@@ -129,3 +129,21 @@ func TestWriteRead(t *testing.T) {
 //         return Sandbox{}, err
 // }
 // println(fmt.Sprintf("ress: %v", ress))
+
+func TestListKernels(t *testing.T) {
+	a := assert.New(t)
+	ctx := context.Background()
+	apiKey := os.Getenv("E2B_API_KEY")
+	if apiKey == "" {
+		t.Fatal("E2B_API_KEY is not set")
+	}
+	sb, err := e2b.NewSandbox(apiKey, e2b.WithTemplate("code-interpreter-stateful"))
+	a.NoError(err, "NewSandbox error")
+	defer func() {
+		err = sb.Close()
+		a.NoError(err, "Close error")
+	}()
+	kers, err := sb.ListKernels(ctx)
+	a.NoError(err)
+	fmt.Println(kers)
+}
