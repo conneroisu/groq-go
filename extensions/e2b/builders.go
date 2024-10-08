@@ -15,13 +15,6 @@ import (
 type (
 	requestOption func(*requestOptions)
 
-	// Usage Represents the total token usage per request to Groq.
-	Usage struct {
-		PromptTokens     int `json:"prompt_tokens"`
-		CompletionTokens int `json:"completion_tokens"`
-		TotalTokens      int `json:"total_tokens"`
-	}
-
 	requestOptions struct {
 		body   any
 		header http.Header
