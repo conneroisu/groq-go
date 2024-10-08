@@ -92,7 +92,8 @@ func NewSandbox(
 	apiKey string,
 	opts ...Option,
 ) (Sandbox, error) {
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 	sb := Sandbox{
 		mu:         &sync.Mutex{},
 		apiKey:     apiKey,
