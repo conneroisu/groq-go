@@ -1,6 +1,7 @@
 package e2b_test
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"os"
@@ -91,6 +92,7 @@ func TestPostSandbox(t *testing.T) {
 // It ensures that the file contents are the same as the original file that was written.
 func TestWriteRead(t *testing.T) {
 	a := assert.New(t)
+	ctx := context.Background()
 	apiKey := os.Getenv("E2B_API_KEY")
 	if apiKey == "" {
 		t.Fatal("E2B_API_KEY is not set")
@@ -108,7 +110,7 @@ func TestWriteRead(t *testing.T) {
 	readContent, err := sb.Read(filePath)
 	a.NoError(err, "Read error")
 	a.Equal(content, string(readContent))
-	err = sb.Stop()
+	err = sb.Stop(ctx)
 	a.NoError(err, "Stop error")
 }
 

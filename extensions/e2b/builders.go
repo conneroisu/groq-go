@@ -15,6 +15,15 @@ type (
 		body   any
 		header http.Header
 	}
+	requestBuilder interface {
+		Build(
+			ctx context.Context,
+			method, url string,
+			body any,
+			header http.Header,
+		) (*http.Request, error)
+	}
+	httpRequestBuilder struct{}
 )
 
 func (s *Sandbox) setCommonHeaders(req *http.Request) {
@@ -49,19 +58,6 @@ func (s *Sandbox) newRequest(
 	s.setCommonHeaders(req)
 	return req, nil
 }
-
-// formBuilder is an interface for building a form.
-type (
-	requestBuilder interface {
-		Build(
-			ctx context.Context,
-			method, url string,
-			body any,
-			header http.Header,
-		) (*http.Request, error)
-	}
-	httpRequestBuilder struct{}
-)
 
 func newRequestBuilder() *httpRequestBuilder {
 	return &httpRequestBuilder{}

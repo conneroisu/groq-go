@@ -117,9 +117,6 @@ func NewSandbox(
 	if err != nil {
 		return sb, err
 	}
-	req.Header.Set("X-API-Key", sb.apiKey)
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "application/json")
 	resp, err := sb.client.Do(req)
 	if err != nil {
 		return sb, err
@@ -193,18 +190,16 @@ func (s *Sandbox) NewProcess(
 }
 
 // Stop stops the sandbox.
-func (s *Sandbox) Stop() error {
-	req, err := http.NewRequest(
+func (s *Sandbox) Stop(ctx context.Context) error {
+	req, err := s.newRequest(
+		ctx,
 		http.MethodDelete,
 		fmt.Sprintf("%s%s", s.baseAPIURL, fmt.Sprintf(deleteSandboxRoute, s.ID)),
-		nil,
+		withBody(interface{}(nil)),
 	)
 	if err != nil {
 		return err
 	}
-	req.Header.Set("X-API-Key", s.apiKey)
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "application/json")
 	resp, err := s.client.Do(req)
 	if err != nil {
 		return err
