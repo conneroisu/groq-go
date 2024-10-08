@@ -116,6 +116,7 @@ const (
 	filesystemWriteBytes Method = "filesystem_writeBase64"
 	// TODO: Check this one.
 	filesystemSubscribe = "filesystem_subscribe"
+
 	// EventTypeCreate is the type of event for the creation of a file or
 	// directory.
 	EventTypeCreate OperationType = iota
