@@ -34,3 +34,8 @@ func WithTemplate(template SandboxTemplate) Option {
 func WithMetaData(metaData map[string]string) Option {
 	return func(s *Sandbox) { s.Metadata = metaData }
 }
+
+// WithHTTPScheme sets the http scheme for the e2b sandbox.
+func WithHTTPScheme(scheme string) Option {
+	return func(s *Sandbox) { s.httpScheme = scheme }
+}

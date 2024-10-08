@@ -28,7 +28,6 @@ type (
 		ClientID   string            `json:"clientID"`
 		apiKey     string
 		baseAPIURL string
-		wsURL      string
 		client     *http.Client
 		ws         *websocket.Conn
 		msgCnt     int
@@ -37,6 +36,7 @@ type (
 		// envVars  map[string]string
 		logger         *slog.Logger
 		requestBuilder requestBuilder
+		httpScheme     string
 	}
 	// CreateSandboxResponse represents the response of the create sandbox http method.
 	CreateSandboxResponse struct {
@@ -85,6 +85,8 @@ const (
 	deleteSandboxRoute = "/sandboxes/%s"
 	// Kernels Endpoint
 	kernelsRoute = "/api/kernels"
+
+	defaultHTTPScheme = "https"
 )
 
 // NewSandbox creates a new sandbox.
@@ -138,15 +140,7 @@ func NewSandbox(
 	sb.ID = res.SandboxID
 	sb.Alias = res.Alias
 	sb.ClientID = res.ClientID
-	sb.wsURL = fmt.Sprintf("49982-%s-%s.e2b.dev",
-		sb.ID,
-		sb.ClientID,
-	)
-	u := url.URL{
-		Scheme: defaultWSScheme,
-		Host:   sb.wsURL,
-		Path:   wsRoute,
-	}
+	u := sb.wsURL()
 	sb.logger.Debug("Connecting to sandbox", "url", u.String())
 	ws, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	if err != nil {
@@ -165,11 +159,7 @@ func (s *Sandbox) KeepAlive(timeout time.Duration) error {
 
 // Reconnect reconnects to the sandbox.
 func (s *Sandbox) Reconnect( /* id string */ ) error {
-	u := url.URL{
-		Scheme: defaultWSScheme,
-		Host:   s.wsURL,
-		Path:   wsRoute,
-	}
+	u := s.wsURL()
 	s.logger.Debug("Reconnecting to sandbox", "url", u.String())
 	ws, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	if err != nil {
@@ -217,4 +207,26 @@ func (s *Sandbox) hostname() string {
 		s.ID,
 		s.ClientID,
 	)
+}
+
+func (s *Sandbox) wsURL() url.URL {
+	return url.URL{
+		Scheme: defaultWSScheme,
+		Host: fmt.Sprintf("49982-%s-%s.e2b.dev",
+			s.ID,
+			s.ClientID,
+		),
+		Path: wsRoute,
+	}
+}
+
+func (s *Sandbox) httpURL(path string) url.URL {
+	return url.URL{
+		Scheme: defaultHTTPScheme,
+		Host: fmt.Sprintf("49982-%s-%s.e2b.dev",
+			s.ID,
+			s.ClientID,
+		),
+		Path: path,
+	}
 }

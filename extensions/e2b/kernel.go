@@ -93,9 +93,9 @@ func (k *Kernel) Restart() error {
 
 // ListKernels lists the kernels in the sandbox.
 func (s *Sandbox) ListKernels() ([]Kernel, error) {
-	url := fmt.Sprintf("https://%s%s%s", "8888", s.wsURL[len("49982"):], kernelsRoute)
-	println(url)
-	resp, err := s.client.Get(url)
+	// url := fmt.Sprintf("https://%s%s%s", "8888", s.wsURL[len("49982"):], kernelsRoute)
+	url := s.httpURL(kernelsRoute)
+	resp, err := s.client.Get(url.String())
 	if err != nil {
 		return nil, err
 	}
