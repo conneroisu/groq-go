@@ -1,7 +1,7 @@
 package e2b
 
 import (
-	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -35,7 +35,8 @@ type (
 		mu         *sync.Mutex
 		// cwd      string
 		// envVars  map[string]string
-		logger *slog.Logger
+		logger         *slog.Logger
+		requestBuilder requestBuilder
 	}
 	// CreateSandboxResponse represents the response of the create sandbox http method.
 	CreateSandboxResponse struct {
@@ -91,6 +92,7 @@ func NewSandbox(
 	apiKey string,
 	opts ...Option,
 ) (Sandbox, error) {
+	ctx := context.Background()
 	sb := Sandbox{
 		mu:         &sync.Mutex{},
 		apiKey:     apiKey,
@@ -99,20 +101,18 @@ func NewSandbox(
 		Metadata: map[string]string{
 			"name": "groq-go",
 		},
-		client: http.DefaultClient,
-		logger: slog.Default(),
-	}
-	jsVal, err := json.Marshal(sb)
-	if err != nil {
-		return sb, err
+		client:         http.DefaultClient,
+		logger:         slog.Default(),
+		requestBuilder: newRequestBuilder(),
 	}
 	for _, opt := range opts {
 		opt(&sb)
 	}
-	req, err := http.NewRequest(
+	req, err := sb.newRequest(
+		ctx,
 		http.MethodPost,
 		fmt.Sprintf("%s%s", sb.baseAPIURL, sandboxesRoute),
-		bytes.NewBuffer([]byte(jsVal)),
+		withBody(sb),
 	)
 	if err != nil {
 		return sb, err

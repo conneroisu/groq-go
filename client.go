@@ -54,6 +54,18 @@ type (
 		model string
 	}
 	fullURLOption func(*fullURLOptions)
+
+	// Usage Represents the total token usage per request to Groq.
+	Usage struct {
+		PromptTokens     int `json:"prompt_tokens"`
+		CompletionTokens int `json:"completion_tokens"`
+		TotalTokens      int `json:"total_tokens"`
+	}
+
+	requestOptions struct {
+		body   any
+		header http.Header
+	}
 )
 
 const (
@@ -118,24 +130,6 @@ func WithBaseURL(baseURL string) Opts {
 func WithLogger(logger *slog.Logger) Opts {
 	return func(c *Client) {
 		c.logger = logger
-	}
-}
-
-// Usage Represents the total token usage per request to Groq.
-type Usage struct {
-	PromptTokens     int `json:"prompt_tokens"`
-	CompletionTokens int `json:"completion_tokens"`
-	TotalTokens      int `json:"total_tokens"`
-}
-
-type requestOptions struct {
-	body   any
-	header http.Header
-}
-
-func withBody(body any) requestOption {
-	return func(args *requestOptions) {
-		args.body = body
 	}
 }
 

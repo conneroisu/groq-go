@@ -1,4 +1,4 @@
-package groq
+package e2b
 
 import (
 	"bytes"
@@ -11,6 +11,55 @@ import (
 	"os"
 	"path"
 )
+
+type (
+	requestOption func(*requestOptions)
+
+	// Usage Represents the total token usage per request to Groq.
+	Usage struct {
+		PromptTokens     int `json:"prompt_tokens"`
+		CompletionTokens int `json:"completion_tokens"`
+		TotalTokens      int `json:"total_tokens"`
+	}
+
+	requestOptions struct {
+		body   any
+		header http.Header
+	}
+)
+
+func (s *Sandbox) setCommonHeaders(req *http.Request) {
+	req.Header.Set("X-API-Key", s.apiKey)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+}
+
+func (s *Sandbox) newRequest(
+	ctx context.Context,
+	method, url string,
+	setters ...requestOption,
+) (*http.Request, error) {
+	// Default Options
+	args := &requestOptions{
+		body:   nil,
+		header: http.Header{},
+	}
+	for _, setter := range setters {
+		setter(args)
+	}
+	req, err := s.requestBuilder.Build(
+		ctx,
+		method,
+		url,
+		args.body,
+		args.header,
+	)
+	if err != nil {
+		return nil, err
+	}
+	s.setCommonHeaders(req)
+	return req, nil
+}
 
 // formBuilder is an interface for building a form.
 type (
