@@ -24,7 +24,7 @@ type (
 	// A kernel will be kept alive with the sandbox even if you disconnect.
 	// So, it may be useful to defer the shutdown of the kernel.
 	Kernel struct {
-		ext *Sandbox
+		sb *Sandbox
 	}
 	// ExecuteCellResponse represents the response of the execute cell method.
 	ExecuteCellResponse struct {
