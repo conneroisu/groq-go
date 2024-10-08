@@ -104,7 +104,7 @@ func NewSandbox(
 	}
 	jsVal, err := json.Marshal(sb)
 	if err != nil {
-		return Sandbox{}, err
+		return sb, err
 	}
 	for _, opt := range opts {
 		opt(&sb)
@@ -115,27 +115,27 @@ func NewSandbox(
 		bytes.NewBuffer([]byte(jsVal)),
 	)
 	if err != nil {
-		return Sandbox{}, err
+		return sb, err
 	}
 	req.Header.Set("X-API-Key", sb.apiKey)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
 	resp, err := sb.client.Do(req)
 	if err != nil {
-		return Sandbox{}, err
+		return sb, err
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusCreated {
-		return Sandbox{}, fmt.Errorf("request to create sandbox failed: %s", resp.Status)
-	}
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return Sandbox{}, err
+		return sb, err
+	}
+	if resp.StatusCode != http.StatusCreated {
+		return sb, fmt.Errorf("request to create sandbox failed: %s\nbody: %s", resp.Status, string(body))
 	}
 	var res CreateSandboxResponse
 	err = json.Unmarshal(body, &res)
 	if err != nil {
-		return Sandbox{}, err
+		return sb, err
 	}
 	sb.ID = res.SandboxID
 	sb.Alias = res.Alias
@@ -152,7 +152,7 @@ func NewSandbox(
 	sb.logger.Debug("Connecting to sandbox", "url", u.String())
 	ws, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	if err != nil {
-		return Sandbox{}, err
+		return sb, err
 	}
 	sb.ws = ws
 	return sb, nil
