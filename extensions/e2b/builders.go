@@ -59,7 +59,7 @@ func (s *Sandbox) newRequest(
 	return req, nil
 }
 
-func newRequestBuilder() *httpRequestBuilder {
+func newRequestBuilder() requestBuilder {
 	return &httpRequestBuilder{}
 }
 

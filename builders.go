@@ -89,7 +89,7 @@ func (fb *defaultFormBuilder) FormDataContentType() string {
 	return fb.writer.FormDataContentType()
 }
 
-func newRequestBuilder() *httpRequestBuilder {
+func newRequestBuilder() requestBuilder {
 	return &httpRequestBuilder{}
 }
 
