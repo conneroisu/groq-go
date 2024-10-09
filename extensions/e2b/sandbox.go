@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"math/rand"
 	"net/http"
 	"net/url"
 	"sync"
@@ -16,6 +17,15 @@ import (
 )
 
 type (
+	processSubscribeParams struct {
+		event ProcessEvents
+		id    string
+	}
+
+	// ProcessEvents is a process event type.
+	// string
+	ProcessEvents string
+
 	// SandboxTemplate is a sandbox template.
 	SandboxTemplate string
 	// Sandbox is a code sandbox.
@@ -40,7 +50,18 @@ type (
 		httpScheme      string
 		defaultKernelID string
 	}
-	// CreateSandboxResponse represents the response of the create sandbox http method.
+	// Process is a process in the sandbox.
+	Process struct {
+		ext *Sandbox
+
+		ID       string
+		ResultID string
+		cmd      string
+		cwd      string
+		env      map[string]string
+	}
+	// CreateSandboxResponse represents the response of the create sandbox
+	// http method.
 	CreateSandboxResponse struct {
 		Alias       string `json:"alias"`
 		ClientID    string `json:"clientID"`
@@ -104,22 +125,30 @@ type (
 		Name  string `json:"name"`
 		IsDir bool   `json:"isDir"`
 	}
-	// ProcessRequest is a request for a process inside a sandbox.
-	ProcessRequest struct {
-		// JSONRPC is the JSON-RPC version of the message.
-		JSONRPC string `json:"jsonrpc"`
-		// Method is the method of the message.
-		Method Method `json:"method"`
-		// ID is the ID of the message.
-		ID int `json:"id"`
-		// Params is the params of the message.
-		Params []any `json:"params"`
+	// ProcessRequestParams represents the params of the process request.
+	ProcessRequestParams struct {
+		// ID is the ID of the process.
+		ID string
+		// Command is the command to run.
+		Command string `json:"command"`
+		// Env is the environment variables.
+		Env map[string]string `json:"env"`
+		// Cwd is the current working directory.
+		//
+		// Blank means the current directory.
+		Cwd string `json:"cwd"`
 	}
 )
 
 const (
 	rpc = "2.0"
 
+	onStdout ProcessEvents = "onStdout"
+	onStderr ProcessEvents = "onStderr"
+	onExit   ProcessEvents = "onExit"
+
+	charset = "abcdefghijklmnopqrstuvwxyz" +
+		"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	filesystemWrite      Method = "filesystem_write"
 	filesystemRead       Method = "filesystem_read"
 	filesystemList       Method = "filesystem_list"
@@ -198,7 +227,10 @@ func NewSandbox(
 		return sb, err
 	}
 	if resp.StatusCode != http.StatusCreated {
-		return sb, fmt.Errorf("request to create sandbox failed: %s\nbody: %s", resp.Status, string(body))
+		return sb, fmt.Errorf(
+			"request to create sandbox failed: %s\nbody: %s",
+			resp.Status,
+			string(body))
 	}
 	var res CreateSandboxResponse
 	err = json.Unmarshal(body, &res)
@@ -311,13 +343,14 @@ func (s *Sandbox) httpURL(path string) url.URL {
 }
 
 // ListKernels lists the kernels in the sandbox.
+//
+// Make sure that the sandbox supports kernels before calling this method.
+// The template must be set to "code-interpreter-stateful" or similar.
 func (s *Sandbox) ListKernels(ctx context.Context) ([]ListKernelResponse, error) {
-	// url := fmt.Sprintf("https://%s%s%s", "8888", s.wsURL[len("49982"):], kernelsRoute)
-	u := s.hostname("8888")
 	req, err := s.newRequest(
 		ctx,
 		http.MethodGet,
-		fmt.Sprintf("%s%s", u, kernelsRoute),
+		fmt.Sprintf("%s%s", s.hostname("8888"), kernelsRoute),
 	)
 	if err != nil {
 		return nil, err
@@ -510,4 +543,140 @@ func (s *Sandbox) Download(path string) (io.ReadCloser, error) {
 	s.logger.Debug("Downloading file", "path", path)
 	// TODO: implement
 	return nil, nil
+}
+
+// {"jsonrpc": "2.0", "method": "process_start", "params": ["KkLECSZQiN5B", "cat file0.txt", {"PYTHONUNBUFFERED": "1"}, ""], "id": 12}
+// {"jsonrpc": "2.0", "method": "process_start", "params": ["Z9SalhcNx641", "cat file9.txt", {"PYTHONUNBUFFERED": "1"}, ""], "id": 341}
+// {"jsonrpc": "2.0", "method": "process_subscribe", "params": ["onExit", "N5hJqKkNXj1i"], "id": 15}
+// {"jsonrpc": "2.0", "method": "process_subscribe", "params": ["onStdout", "N5hJqKkNXj1i"], "id": 16}
+// {"jsonrpc": "2.0", "method": "process_unsubscribe", "params": ["0xa7966b61d145231b3b3ab8cd440edf58"], "id": 14}
+// {"jsonrpc": "2.0", "method": "process_unsubscribe", "params": ["0xb6b65c652bc5576751debfc82e864156"], "id": 17}
+
+type processSubscribeRequest struct {
+	// JSONRPC is the JSON-RPC version of the message.
+	JSONRPC string `json:"jsonrpc"`
+	// Method is the method of the message.
+	Method Method `json:"method"`
+	// ID is the ID of the message.
+	ID int `json:"id"`
+	// Params is the params of the message.
+	Params []any `json:"params"`
+}
+
+func createProcessID(n int) string {
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = charset[rand.Intn(len(charset))]
+	}
+	return string(b)
+}
+
+// StartProcess starts a process in the sandbox.
+func (s *Sandbox) StartProcess(
+	cmd string,
+) (proc Process, err error) {
+	s.msgCnt++
+	proc.ID = createProcessID(12)
+	req := Request{
+		JSONRPC: rpc,
+		Method:  processStart,
+		ID:      s.msgCnt,
+		Params: []any{
+			createProcessID(12),
+			cmd,
+			map[string]string{},
+			"",
+		},
+	}
+	jsVal, err := json.Marshal(req)
+	if err != nil {
+		return proc, err
+	}
+	err = s.ws.WriteMessage(websocket.TextMessage, jsVal)
+	if err != nil {
+		return proc, err
+	}
+	_, msr, err := s.ws.ReadMessage()
+	if err != nil {
+		return proc, err
+	}
+
+	// {"jsonrpc":"2.0","id":2,"result":"ewMUmGQ0vVmW"}
+	var res processStartResponse
+	err = json.Unmarshal(msr, &res)
+	if err != nil {
+		return proc, err
+	}
+	if res.Result == "" {
+		return proc, fmt.Errorf("process start failed got empty result id")
+	}
+	return Process{
+		ID:       proc.ID,
+		ResultID: res.Result,
+	}, nil
+}
+
+type processStartResponse struct {
+	// JSONRPC is the JSON-RPC version of the message.
+	JSONRPC string `json:"jsonrpc"`
+	// Method is the method of the message.
+	Method Method `json:"method"`
+	// ID is the ID of the message.
+	ID int `json:"id"`
+	// Result is the result of the message.
+	Result string `json:"result"`
+}
+
+func (s *Sandbox) subscribeProcess(ctx context.Context, id string, event ProcessEvents) error {
+	s.logger.Debug("Subscribing to process", "id", id)
+	req := Request{
+		JSONRPC: rpc,
+		Method:  processSubscribe,
+		ID:      s.msgCnt,
+		Params: []any{
+			event,
+			id,
+		},
+	}
+	jsVal, err := json.Marshal(req)
+	if err != nil {
+		return err
+	}
+	err = s.ws.WriteMessage(websocket.TextMessage, jsVal)
+	if err != nil {
+		return err
+	}
+	_, msr, err := s.ws.ReadMessage()
+	if err != nil {
+		return err
+	}
+	println(string(msr))
+	return nil
+}
+
+func (s *Sandbox) unsubscribeProcess(ctx context.Context, id string, event ProcessEvents) error {
+	s.logger.Debug("Unsubscribing from process", "id", id)
+	req := Request{
+		JSONRPC: rpc,
+		Method:  processUnsubscribe,
+		ID:      s.msgCnt,
+		Params: []any{
+			event,
+			id,
+		},
+	}
+	jsVal, err := json.Marshal(req)
+	if err != nil {
+		return err
+	}
+	err = s.ws.WriteMessage(websocket.TextMessage, jsVal)
+	if err != nil {
+		return err
+	}
+	_, msr, err := s.ws.ReadMessage()
+	if err != nil {
+		return err
+	}
+	println(string(msr))
+	return nil
 }

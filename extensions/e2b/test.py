@@ -13,12 +13,14 @@ def create_watcher(sandbox):
     watcher.start()  
 
 def on_stdout(message: ProcessMessage):
-    print(f"Process {message.model_dump_json()}")
+    print(f"on_stdout {message.model_dump_json()}")
 
+def on_exit(message: ProcessMessage):
+    print(f"On exit: {message}")
 
+def on_stderr(message: ProcessMessage):
+    print(f"on_stderr {message.model_dump_json()}")
 
-    execution = sandbox.notebook.exec_cell("x+=1; x")
-    print(execution.text)  # outputs 2
 
 sandbox = Sandbox(template="base")
 
@@ -57,23 +59,25 @@ create_watcher(sandbox)
 #  end = time.time()
 #  print(f"Time taken: {end - start}")
 #
-def on_exit(message: ProcessMessage):
-    print(f"Process {message} exited with ")
+
     
-# now doing the same thing with the process api
-start = time.time()
-for i in range(10): 
-    proc = sandbox.process.start(cmd=f"cat 'Hello World {i}!' > file{i}.txt", on_stdout=on_stdout, on_stderr=on_stdout, on_exit=on_exit)
-    proc.wait()
-    proc = sandbox.process.start(cmd=f"cat file{i}.txt")
-    proc.wait()
-    proc = sandbox.process.start(cmd=f"ls")
-    proc.wait()
-    proc = sandbox.process.start(cmd=f"cat file{i}.txt", on_stdout=on_stdout)
-    proc.wait()
-    sandbox.process.start(cmd=f"rm file{i}.txt")
-end = time.time()
-print(f"Time taken: {end - start}")
-    
+#  # now doing the same thing with the process api
+#  start = time.time()
+#  for i in range(10):
+#      proc = sandbox.process.start(cmd=f"cat 'Hello World {i}!' > file{i}.txt", on_stdout=on_stdout, on_stderr=on_stdout, on_exit=on_exit)
+#      proc.wait()
+#      proc = sandbox.process.start(cmd=f"cat file{i}.txt")
+#      proc.wait()
+#      proc = sandbox.process.start(cmd=f"ls")
+#      proc.wait()
+#      proc = sandbox.process.start(cmd=f"cat file{i}.txt", on_stdout=on_stdout)
+#      proc.wait()
+#      sandbox.process.start(cmd=f"rm file{i}.txt")
+#  end = time.time()
+#  print(f"Time taken: {end - start}")
+
+
+res = sandbox.process.start(cmd="echo 'Hello World!'", on_stdout=on_stdout, on_stderr=on_stderr, on_exit=on_exit).wait()
+print(res)
 
 sandbox.close()

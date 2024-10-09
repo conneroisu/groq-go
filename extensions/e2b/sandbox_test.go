@@ -151,3 +151,22 @@ func TestListKernels(t *testing.T) {
 	a.NoError(err)
 	fmt.Println(kers)
 }
+
+func TestCreateProcess(t *testing.T) {
+
+	a := assert.New(t)
+	apiKey := os.Getenv("E2B_API_KEY")
+	if apiKey == "" {
+		t.Skip("no api key set")
+	}
+	sb, err := e2b.NewSandbox(apiKey, e2b.WithTemplate("code-interpreter-stateful"))
+	a.NoError(err, "NewSandbox error")
+	defer func() {
+		err = sb.Close()
+		a.NoError(err, "Close error")
+	}()
+
+	proc, err := sb.StartProcess("echo 'Hello World'")
+	a.NoError(err)
+	fmt.Println(fmt.Sprintf("pid: %v", proc.ID))
+}
