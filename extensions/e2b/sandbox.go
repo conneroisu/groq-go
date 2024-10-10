@@ -102,16 +102,6 @@ type (
 		ID     int        `json:"id"`
 		Result []LsResult `json:"result"`
 	}
-	// ReadResponse is a JSON-RPC response when reading a file.
-	ReadResponse struct {
-		// JSONRPC is the JSON-RPC version of the message.
-		JSONRPC string `json:"jsonrpc"`
-		// Method is the method of the message.
-		Method Method `json:"method"`
-		// ID is the ID of the message.
-		ID     int    `json:"id"`
-		Result string `json:"result"`
-	}
 	// LsResult is a result of the list request.
 	LsResult struct {
 		Name  string `json:"name"`
@@ -403,7 +393,9 @@ func (s *Sandbox) Read(
 	if err != nil {
 		return "", err
 	}
-	var resp ReadResponse
+	var resp struct {
+		Result string `json:"result"`
+	}
 	err = json.Unmarshal(message, &resp)
 	if err != nil {
 		return "", err
@@ -447,12 +439,14 @@ func (s *Sandbox) ReadBytes(path string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	var rR ReadResponse
+	var rR struct {
+		Result string `json:"result"`
+	}
 	err = json.Unmarshal(message, &rR)
 	if err != nil {
 		return nil, err
 	}
-	sDec, err := base64.StdEncoding.DecodeString(string(rR.Result))
+	sDec, err := base64.StdEncoding.DecodeString(rR.Result)
 	if err != nil {
 		return nil, err
 	}
@@ -502,9 +496,15 @@ func createProcessID(n int) string {
 func (s *Sandbox) StartProcess(
 	cmd string,
 	opts ...ProcessOption,
-) (proc Process, err error) {
-	proc.ID = createProcessID(12)
-	err = s.writeRequest(Request{
+) (Process, error) {
+	proc := Process{
+		ID:  createProcessID(12),
+		ext: s,
+	}
+	for _, opt := range opts {
+		opt(&proc)
+	}
+	err := s.writeRequest(Request{
 		JSONRPC: rpc,
 		Method:  processStart,
 		Params: []any{
@@ -563,6 +563,7 @@ func (s *Sandbox) subscribeProcess(
 	println(string(msr))
 	return nil
 }
+
 func (s *Sandbox) unsubscribeProcess(ctx context.Context, id string, event ProcessEvents) error {
 	err := s.writeRequest(Request{
 		JSONRPC: rpc,
