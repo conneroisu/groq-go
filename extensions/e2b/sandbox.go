@@ -524,17 +524,13 @@ func (s *Sandbox) StartProcess(
 	}, nil
 }
 
-func (s *Sandbox) subscribeProcess(
-	ctx context.Context,
-	id string,
-	event ProcessEvents,
-) error {
+func (s *Sandbox) subscribeProcess(procID string, event ProcessEvents) error {
 	err := s.writeRequest(Request{
 		JSONRPC: rpc,
 		Method:  processUnsubscribe,
 		Params: []any{
 			event,
-			id,
+			procID,
 		},
 	})
 	if err != nil {
@@ -548,13 +544,13 @@ func (s *Sandbox) subscribeProcess(
 	return nil
 }
 
-func (s *Sandbox) unsubscribeProcess(ctx context.Context, id string, event ProcessEvents) error {
+func (s *Sandbox) unsubscribeProcess(procID string, event ProcessEvents) error {
 	err := s.writeRequest(Request{
 		JSONRPC: rpc,
 		Method:  processUnsubscribe,
 		Params: []any{
 			event,
-			id,
+			procID,
 		},
 	})
 	if err != nil {
