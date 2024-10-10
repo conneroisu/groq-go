@@ -107,19 +107,6 @@ type (
 		Name  string `json:"name"`
 		IsDir bool   `json:"isDir"`
 	}
-	// ProcessRequestParams represents the params of the process request.
-	ProcessRequestParams struct {
-		// ID is the ID of the process.
-		ID string
-		// Command is the command to run.
-		Command string `json:"command"`
-		// Env is the environment variables.
-		Env map[string]string `json:"env"`
-		// Cwd is the current working directory.
-		//
-		// Blank means the current directory.
-		Cwd string `json:"cwd"`
-	}
 )
 
 const (
@@ -531,6 +518,7 @@ func (s *Sandbox) StartProcess(
 		return proc, fmt.Errorf("process start failed got wrong result id; want %s, got %s", proc.ID, res.Result)
 	}
 	return Process{
+		ext:      s,
 		ID:       proc.ID,
 		ResultID: res.Result,
 	}, nil
