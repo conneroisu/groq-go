@@ -179,6 +179,7 @@ func NewSandbox(
 		client:         http.DefaultClient,
 		logger:         slog.Default(),
 		requestBuilder: newRequestBuilder(),
+		httpScheme:     defaultHTTPScheme,
 	}
 	for _, opt := range opts {
 		opt(&sb)
@@ -279,12 +280,17 @@ func (s *Sandbox) Stop(ctx context.Context) error {
 	}
 	return nil
 }
-func (s *Sandbox) hostname(id string) string {
-	return fmt.Sprintf("https://%s-%s-%s.e2b.dev",
-		id,
-		s.ID,
-		s.ClientID,
-	)
+func (s *Sandbox) hostname(id string, path string) *url.URL {
+	return &url.URL{
+		Scheme: s.httpScheme,
+		Host: fmt.Sprintf(
+			"%s-%s-%s.e2b.dev",
+			id,
+			s.ID,
+			s.ClientID,
+		),
+		Path: path,
+	}
 }
 func (s *Sandbox) wsURL() url.URL {
 	return url.URL{
@@ -296,16 +302,6 @@ func (s *Sandbox) wsURL() url.URL {
 		Path: wsRoute,
 	}
 }
-func (s *Sandbox) httpURL(path string) url.URL {
-	return url.URL{
-		Scheme: defaultHTTPScheme,
-		Host: fmt.Sprintf("49982-%s-%s.e2b.dev",
-			s.ID,
-			s.ClientID,
-		),
-		Path: path,
-	}
-}
 
 // ListKernels lists the kernels in the sandbox.
 //
@@ -315,7 +311,7 @@ func (s *Sandbox) ListKernels(ctx context.Context) ([]ListKernelResponse, error)
 	req, err := s.newRequest(
 		ctx,
 		http.MethodGet,
-		fmt.Sprintf("%s%s", s.hostname("8888"), kernelsRoute),
+		s.hostname("8888", kernelsRoute).String(),
 	)
 	if err != nil {
 		return nil, err
