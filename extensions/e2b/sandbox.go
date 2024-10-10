@@ -51,15 +51,6 @@ type (
 		cwd      string
 		env      map[string]string
 	}
-	// CreateSandboxResponse represents the response of the create sandbox
-	// http method.
-	CreateSandboxResponse struct {
-		Alias       string `json:"alias"`
-		ClientID    string `json:"clientID"`
-		EnvdVersion string `json:"envdVersion"`
-		SandboxID   string `json:"sandboxID"`
-		TemplateID  string `json:"templateID"`
-	}
 	// Event is a file system event.
 	Event struct {
 		// Path is the path of the event.
@@ -566,30 +557,20 @@ func (s *Sandbox) StartProcess(
 	if err != nil {
 		return proc, err
 	}
-	// {"jsonrpc":"2.0","id":2,"result":"ewMUmGQ0vVmW"}
-	var res processStartResponse
+	var res struct {
+		Result string `json:"result"`
+	}
 	err = json.Unmarshal(msr, &res)
 	if err != nil {
 		return proc, err
 	}
-	if res.Result == "" {
+	if res.Result == "" || len(res.Result) == 0 {
 		return proc, fmt.Errorf("process start failed got empty result id")
 	}
 	return Process{
 		ID:       proc.ID,
 		ResultID: res.Result,
 	}, nil
-}
-
-type processStartResponse struct {
-	// JSONRPC is the JSON-RPC version of the message.
-	JSONRPC string `json:"jsonrpc"`
-	// Method is the method of the message.
-	Method Method `json:"method"`
-	// ID is the ID of the message.
-	ID int `json:"id"`
-	// Result is the result of the message.
-	Result string `json:"result"`
 }
 
 func (s *Sandbox) subscribeProcess(
