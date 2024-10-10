@@ -5,10 +5,32 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/conneroisu/groq-go/extensions/e2b"
 	"github.com/stretchr/testify/assert"
+)
+
+var (
+	defaultLogger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		AddSource: true,
+		Level:     slog.LevelDebug,
+		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
+			if a.Key == "time" {
+				// remove it
+				return slog.Attr{}
+			}
+			if a.Key == "source" {
+				str := a.Value.String()
+				split := strings.Split(str, "/")
+				if len(split) > 2 {
+					a.Value = slog.StringValue(strings.Join(split[len(split)-2:], "/"))
+				}
+			}
+			return a
+		},
+	}))
 )
 
 // func TestCodeInterpreterContainer(t *testing.T) {
@@ -66,15 +88,12 @@ import (
 
 func TestPostSandbox(t *testing.T) {
 	a := assert.New(t)
+	ctx := context.Background()
 	apiKey := os.Getenv("E2B_API_KEY")
 	if apiKey == "" {
 		t.Fatal("E2B_API_KEY is not set")
 	}
-	ll := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
-		AddSource: true,
-		Level:     slog.LevelDebug,
-	}))
-	sb, err := e2b.NewSandbox(apiKey, e2b.WithLogger(ll))
+	sb, err := e2b.NewSandbox(ctx, apiKey, e2b.WithLogger(defaultLogger))
 	a.NoError(err, "NewSandbox error")
 	defer func() {
 		err = sb.Close()
@@ -84,7 +103,14 @@ func TestPostSandbox(t *testing.T) {
 	a.NoError(err)
 	lsr, err := sb.Ls(".")
 	a.NoError(err)
-	fmt.Println(lsr)
+	// [{.dockerenv false} {.e2b false} {bin false} {boot true} {code true} {dev true} {etc true} {home true} {lib false} {lib32 false} {lib64 false} {libx32 false} {lost+found true} {media true} {mnt true} {opt true} {proc true} {root true} {run true} {sbin false} {srv true} {swap true} {sys true} {tmp true} {usr true} {var true}]
+	names := []string{"boot", "code", "dev", "etc", "home"}
+	for _, name := range names {
+		a.Contains(lsr, e2b.LsResult{
+			Name:  name,
+			IsDir: true,
+		})
+	}
 }
 
 // TestWriteRead tests the Write and Read methods of the Sandbox.
@@ -97,7 +123,7 @@ func TestWriteRead(t *testing.T) {
 	if apiKey == "" {
 		t.Fatal("E2B_API_KEY is not set")
 	}
-	sb, err := e2b.NewSandbox(apiKey)
+	sb, err := e2b.NewSandbox(ctx, apiKey, e2b.WithLogger(defaultLogger))
 	a.NoError(err, "NewSandbox error")
 	defer func() {
 		err = sb.Close()
@@ -141,7 +167,7 @@ func TestListKernels(t *testing.T) {
 	if apiKey == "" {
 		t.Fatal("E2B_API_KEY is not set")
 	}
-	sb, err := e2b.NewSandbox(apiKey, e2b.WithTemplate("code-interpreter-stateful"))
+	sb, err := e2b.NewSandbox(ctx, apiKey, e2b.WithTemplate("code-interpreter-stateful"))
 	a.NoError(err, "NewSandbox error")
 	defer func() {
 		err = sb.Close()
@@ -155,11 +181,12 @@ func TestListKernels(t *testing.T) {
 func TestCreateProcess(t *testing.T) {
 
 	a := assert.New(t)
+	ctx := context.Background()
 	apiKey := os.Getenv("E2B_API_KEY")
 	if apiKey == "" {
 		t.Skip("no api key set")
 	}
-	sb, err := e2b.NewSandbox(apiKey, e2b.WithTemplate("code-interpreter-stateful"))
+	sb, err := e2b.NewSandbox(ctx, apiKey, e2b.WithTemplate("code-interpreter-stateful"))
 	a.NoError(err, "NewSandbox error")
 	defer func() {
 		err = sb.Close()

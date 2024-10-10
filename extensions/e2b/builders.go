@@ -9,8 +9,7 @@ import (
 )
 
 type (
-	requestOption func(*requestOptions)
-
+	requestOption  func(*requestOptions)
 	requestOptions struct {
 		body   any
 		header http.Header

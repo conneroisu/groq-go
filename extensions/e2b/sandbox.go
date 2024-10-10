@@ -51,6 +51,10 @@ type (
 		cwd      string
 		env      map[string]string
 	}
+	// Option is an option for the sandbox.
+	Option func(*Sandbox)
+	// ProcessOption is an option for a process.
+	ProcessOption func(*Process)
 	// CreateSandboxResponse represents the response of the create sandbox
 	// http method.
 	CreateSandboxResponse struct {
@@ -75,8 +79,6 @@ type (
 	}
 	// OperationType is an operation type.
 	OperationType int
-	// Option is an option for the sandbox.
-	Option func(*Sandbox)
 	// Method is a JSON-RPC method.
 	Method string
 	// Request is a JSON-RPC request.
@@ -172,11 +174,10 @@ const (
 
 // NewSandbox creates a new sandbox.
 func NewSandbox(
+	ctx context.Context,
 	apiKey string,
 	opts ...Option,
 ) (Sandbox, error) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 	sb := Sandbox{
 		mu:         &sync.Mutex{},
 		apiKey:     apiKey,
@@ -348,18 +349,11 @@ func (s *Sandbox) ListKernels(ctx context.Context) ([]ListKernelResponse, error)
 
 // Mkdir makes a directory in the sandbox file system.
 func (s *Sandbox) Mkdir(path string) error {
-	s.logger.Debug("Making directory", "path", path)
-	s.msgCnt++
-	jsVal, err := json.Marshal(Request{
-		Params:  []any{path},
+	err := s.writeRequest(Request{
 		JSONRPC: rpc,
-		ID:      s.msgCnt,
-		Method:  filesystemMakeDir,
+		Method:  filesystemWrite,
+		Params:  []any{path},
 	})
-	if err != nil {
-		return err
-	}
-	err = s.ws.WriteMessage(websocket.TextMessage, jsVal)
 	if err != nil {
 		return err
 	}
@@ -373,18 +367,11 @@ func (s *Sandbox) Mkdir(path string) error {
 // Ls lists the files and/or directories in the sandbox file system at
 // the given path.
 func (s *Sandbox) Ls(path string) ([]LsResult, error) {
-	s.logger.Debug("Listing files and dirs", "path", path)
-	s.msgCnt++
-	jsVal, err := json.Marshal(Request{
+	err := s.writeRequest(Request{
 		Params:  []any{path},
 		JSONRPC: rpc,
-		ID:      s.msgCnt,
 		Method:  filesystemList,
 	})
-	if err != nil {
-		return nil, err
-	}
-	err = s.ws.WriteMessage(websocket.TextMessage, jsVal)
 	if err != nil {
 		return nil, err
 	}
@@ -404,18 +391,11 @@ func (s *Sandbox) Ls(path string) ([]LsResult, error) {
 func (s *Sandbox) Read(
 	path string,
 ) (string, error) {
-	s.logger.Debug("Reading from file", "path", path)
-	s.msgCnt++
-	jsnV, err := json.Marshal(Request{
+	err := s.writeRequest(Request{
 		JSONRPC: rpc,
 		Method:  filesystemRead,
 		Params:  []any{path},
-		ID:      s.msgCnt,
 	})
-	if err != nil {
-		return "", err
-	}
-	err = s.ws.WriteMessage(websocket.TextMessage, jsnV)
 	if err != nil {
 		return "", err
 	}
@@ -433,21 +413,14 @@ func (s *Sandbox) Read(
 
 // Write writes to a file to the sandbox file system.
 func (s *Sandbox) Write(path string, data []byte) error {
-	s.logger.Debug("Writing to file", "path", path)
-	s.msgCnt++
-	jsnV, err := json.Marshal(Request{
+	err := s.writeRequest(Request{
 		JSONRPC: rpc,
 		Method:  filesystemWrite,
 		Params: []any{
 			path,
 			string(data),
 		},
-		ID: s.msgCnt,
 	})
-	if err != nil {
-		return err
-	}
-	err = s.ws.WriteMessage(websocket.TextMessage, jsnV)
 	if err != nil {
 		return err
 	}
@@ -460,20 +433,13 @@ func (s *Sandbox) Write(path string, data []byte) error {
 
 // ReadBytes reads a file from the sandbox file system.
 func (s *Sandbox) ReadBytes(path string) ([]byte, error) {
-	s.logger.Debug("Reading Bytes", "path", path)
-	s.msgCnt++
-	jsnV, err := json.Marshal(Request{
+	err := s.writeRequest(Request{
 		JSONRPC: rpc,
 		Method:  filesystemReadBytes,
 		Params: []any{
 			path,
 		},
-		ID: s.msgCnt,
 	})
-	if err != nil {
-		return nil, err
-	}
-	err = s.ws.WriteMessage(websocket.TextMessage, jsnV)
 	if err != nil {
 		return nil, err
 	}
@@ -507,14 +473,12 @@ func (s *Sandbox) Watch(
 
 // Upload uploads a file to the sandbox file system.
 func (s *Sandbox) Upload(r io.Reader, path string) error {
-	s.logger.Debug("Uploading file", "path", path)
 	// TODO: implement
 	return nil
 }
 
 // Download downloads a file from the sandbox file system.
 func (s *Sandbox) Download(path string) (io.ReadCloser, error) {
-	s.logger.Debug("Downloading file", "path", path)
 	// TODO: implement
 	return nil, nil
 }
@@ -537,25 +501,19 @@ func createProcessID(n int) string {
 // StartProcess starts a process in the sandbox.
 func (s *Sandbox) StartProcess(
 	cmd string,
+	opts ...ProcessOption,
 ) (proc Process, err error) {
-	s.msgCnt++
 	proc.ID = createProcessID(12)
-	req := Request{
+	err = s.writeRequest(Request{
 		JSONRPC: rpc,
 		Method:  processStart,
-		ID:      s.msgCnt,
 		Params: []any{
-			createProcessID(12),
+			proc.ID,
 			cmd,
 			map[string]string{},
 			"",
 		},
-	}
-	jsVal, err := json.Marshal(req)
-	if err != nil {
-		return proc, err
-	}
-	err = s.ws.WriteMessage(websocket.TextMessage, jsVal)
+	})
 	if err != nil {
 		return proc, err
 	}
@@ -573,6 +531,9 @@ func (s *Sandbox) StartProcess(
 	if res.Result == "" || len(res.Result) == 0 {
 		return proc, fmt.Errorf("process start failed got empty result id")
 	}
+	if proc.ID != res.Result {
+		return proc, fmt.Errorf("process start failed got wrong result id; want %s, got %s", proc.ID, res.Result)
+	}
 	return Process{
 		ID:       proc.ID,
 		ResultID: res.Result,
@@ -584,20 +545,14 @@ func (s *Sandbox) subscribeProcess(
 	id string,
 	event ProcessEvents,
 ) error {
-	s.logger.Debug("subscribing to process", "id", id, "event", event)
-	jsVal, err := json.Marshal(Request{
+	err := s.writeRequest(Request{
 		JSONRPC: rpc,
-		Method:  processSubscribe,
-		ID:      s.msgCnt,
+		Method:  processUnsubscribe,
 		Params: []any{
 			event,
 			id,
 		},
 	})
-	if err != nil {
-		return err
-	}
-	err = s.ws.WriteMessage(websocket.TextMessage, jsVal)
 	if err != nil {
 		return err
 	}
@@ -609,21 +564,14 @@ func (s *Sandbox) subscribeProcess(
 	return nil
 }
 func (s *Sandbox) unsubscribeProcess(ctx context.Context, id string, event ProcessEvents) error {
-	s.logger.Debug("unsubscribing from process", "id", id, "event", event)
-	req := Request{
+	err := s.writeRequest(Request{
 		JSONRPC: rpc,
 		Method:  processUnsubscribe,
-		ID:      s.msgCnt,
 		Params: []any{
 			event,
 			id,
 		},
-	}
-	jsVal, err := json.Marshal(req)
-	if err != nil {
-		return err
-	}
-	err = s.ws.WriteMessage(websocket.TextMessage, jsVal)
+	})
 	if err != nil {
 		return err
 	}
@@ -632,5 +580,20 @@ func (s *Sandbox) unsubscribeProcess(ctx context.Context, id string, event Proce
 		return err
 	}
 	println(string(msr))
+	return nil
+}
+
+func (s *Sandbox) writeRequest(req Request) (err error) {
+	s.logger.Debug("writing request", "method", req.Method, "id", req.ID, "params", req.Params)
+	s.msgCnt++
+	req.ID = s.msgCnt
+	jsVal, err := json.Marshal(req)
+	if err != nil {
+		return err
+	}
+	err = s.ws.WriteMessage(websocket.TextMessage, jsVal)
+	if err != nil {
+		return fmt.Errorf("failed to write %s request (%d): %w", req.Method, req.ID, err)
+	}
 	return nil
 }
