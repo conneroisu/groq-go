@@ -235,17 +235,6 @@ func (s *Sandbox) Disconnect() error {
 	return s.ws.Close()
 }
 
-// NewProcess starts a process in the sandbox.
-//
-// If the context is cancelled, the process will be killed.
-func (s *Sandbox) NewProcess(
-	cmd string,
-) (proc Process, err error) {
-	return Process{
-		cmd: cmd,
-	}, nil
-}
-
 // Stop stops the sandbox.
 func (s *Sandbox) Stop(ctx context.Context) error {
 	req, err := s.newRequest(
@@ -475,53 +464,55 @@ func createProcessID(n int) string {
 	return string(b)
 }
 
-// StartProcess starts a process in the sandbox.
-func (s *Sandbox) StartProcess(
+// NewProcess creates a new process startable in the sandbox.
+func (s *Sandbox) NewProcess(
 	cmd string,
 	opts ...ProcessOption,
 ) (Process, error) {
 	proc := Process{
 		ID:  createProcessID(12),
 		ext: s,
+		cmd: cmd,
 	}
 	for _, opt := range opts {
 		opt(&proc)
 	}
-	err := s.writeRequest(Request{
+	return proc, nil
+}
+
+// Start starts a process in the sandbox.
+func (p *Process) Start() (*Process, error) {
+	err := p.ext.writeRequest(Request{
 		JSONRPC: rpc,
 		Method:  processStart,
 		Params: []any{
-			proc.ID,
-			cmd,
+			p.ID,
+			p.cmd,
 			map[string]string{},
 			"",
 		},
 	})
 	if err != nil {
-		return proc, err
+		return p, err
 	}
-	_, msr, err := s.ws.ReadMessage()
+	_, msr, err := p.ext.ws.ReadMessage()
 	if err != nil {
-		return proc, err
+		return p, err
 	}
 	var res struct {
 		Result string `json:"result"`
 	}
 	err = json.Unmarshal(msr, &res)
 	if err != nil {
-		return proc, err
+		return p, err
 	}
 	if res.Result == "" || len(res.Result) == 0 {
-		return proc, fmt.Errorf("process start failed got empty result id")
+		return p, fmt.Errorf("process start failed got empty result id")
 	}
-	if proc.ID != res.Result {
-		return proc, fmt.Errorf("process start failed got wrong result id; want %s, got %s", proc.ID, res.Result)
+	if p.ID != res.Result {
+		return p, fmt.Errorf("process start failed got wrong result id; want %s, got %s", p.ID, res.Result)
 	}
-	return Process{
-		ext:      s,
-		ID:       proc.ID,
-		ResultID: res.Result,
-	}, nil
+	return p, nil
 }
 
 func (s *Sandbox) subscribeProcess(procID string, event ProcessEvents) error {

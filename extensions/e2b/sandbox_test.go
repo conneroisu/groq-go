@@ -143,8 +143,8 @@ func TestCreateProcess(t *testing.T) {
 		err = sb.Close()
 		a.NoError(err, "Close error")
 	}()
-
-	proc, err := sb.StartProcess("echo 'Hello World'")
-	a.NoError(err)
+	proc, err := sb.NewProcess("echo 'Hello World'")
+	a.NoError(err, "could not create process")
+	_, err = proc.Start()
 	a.NotEmpty(proc.ID)
 }
