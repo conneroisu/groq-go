@@ -51,6 +51,15 @@ type (
 		cwd      string
 		env      map[string]string
 	}
+	// CreateSandboxResponse represents the response of the create sandbox
+	// http method.
+	CreateSandboxResponse struct {
+		Alias       string `json:"alias"`
+		ClientID    string `json:"clientID"`
+		EnvdVersion string `json:"envdVersion"`
+		SandboxID   string `json:"sandboxID"`
+		TemplateID  string `json:"templateID"`
+	}
 	// Event is a file system event.
 	Event struct {
 		// Path is the path of the event.
@@ -213,16 +222,14 @@ func NewSandbox(
 	}
 	u := sb.wsURL()
 	sb.logger.Debug("Connecting to sandbox", "url", u.String())
-	ws, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
+	sb.ws, _, err = websocket.DefaultDialer.Dial(u.String(), nil)
 	if err != nil {
 		return sb, err
 	}
-	sb.ws = ws
-	kernelID, err := sb.Read("/root/.jupyter/kernel_id")
+	sb.defaultKernelID, err = sb.Read("/root/.jupyter/kernel_id")
 	if err != nil {
 		return sb, err
 	}
-	sb.defaultKernelID = string(kernelID)
 	return sb, nil
 }
 
@@ -234,14 +241,13 @@ func (s *Sandbox) KeepAlive(timeout time.Duration) error {
 }
 
 // Reconnect reconnects to the sandbox.
-func (s *Sandbox) Reconnect() error {
+func (s *Sandbox) Reconnect() (err error) {
 	u := s.wsURL()
 	s.logger.Debug("Reconnecting to sandbox", "url", u.String())
-	ws, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
+	s.ws, _, err = websocket.DefaultDialer.Dial(u.String(), nil)
 	if err != nil {
 		return err
 	}
-	s.ws = ws
 	return nil
 }
 
@@ -397,7 +403,7 @@ func (s *Sandbox) Ls(path string) ([]LsResult, error) {
 // Read reads a file from the sandbox file system.
 func (s *Sandbox) Read(
 	path string,
-) ([]byte, error) {
+) (string, error) {
 	s.logger.Debug("Reading from file", "path", path)
 	s.msgCnt++
 	jsnV, err := json.Marshal(Request{
@@ -407,22 +413,22 @@ func (s *Sandbox) Read(
 		ID:      s.msgCnt,
 	})
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	err = s.ws.WriteMessage(websocket.TextMessage, jsnV)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	_, message, err := s.ws.ReadMessage()
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	var resp ReadResponse
 	err = json.Unmarshal(message, &resp)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	return []byte(resp.Result), nil
+	return resp.Result, nil
 }
 
 // Write writes to a file to the sandbox file system.
