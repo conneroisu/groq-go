@@ -17,34 +17,26 @@ import (
 )
 
 type (
-	processSubscribeParams struct {
-		event ProcessEvents
-		id    string
-	}
-
 	// ProcessEvents is a process event type.
 	// string
 	ProcessEvents string
-
 	// SandboxTemplate is a sandbox template.
 	SandboxTemplate string
 	// Sandbox is a code sandbox.
 	//
 	// The sandbox is like an isolated runtime or playground for the LLM.
 	Sandbox struct {
-		ID         string            `json:"sandboxID"`
-		Metadata   map[string]string `json:"metadata"`
-		Template   SandboxTemplate   `json:"templateID"`
-		Alias      string            `json:"alias"`
-		ClientID   string            `json:"clientID"`
-		apiKey     string
-		baseAPIURL string
-		client     *http.Client
-		ws         *websocket.Conn
-		msgCnt     int
-		mu         *sync.Mutex
-		// cwd      string
-		// envVars  map[string]string
+		ID              string            `json:"sandboxID"`
+		Metadata        map[string]string `json:"metadata"`
+		Template        SandboxTemplate   `json:"templateID"`
+		Alias           string            `json:"alias"`
+		ClientID        string            `json:"clientID"`
+		apiKey          string
+		baseAPIURL      string
+		client          *http.Client
+		ws              *websocket.Conn
+		msgCnt          int
+		mu              *sync.Mutex
 		logger          *slog.Logger
 		requestBuilder  requestBuilder
 		httpScheme      string
@@ -52,8 +44,7 @@ type (
 	}
 	// Process is a process in the sandbox.
 	Process struct {
-		ext *Sandbox
-
+		ext      *Sandbox
 		ID       string
 		ResultID string
 		cmd      string
@@ -86,7 +77,6 @@ type (
 	OperationType int
 	// Option is an option for the sandbox.
 	Option func(*Sandbox)
-
 	// Method is a JSON-RPC method.
 	Method string
 	// Request is a JSON-RPC request.
@@ -141,13 +131,11 @@ type (
 )
 
 const (
-	rpc = "2.0"
-
+	rpc                    = "2.0"
 	onStdout ProcessEvents = "onStdout"
 	onStderr ProcessEvents = "onStderr"
 	onExit   ProcessEvents = "onExit"
-
-	charset = "abcdefghijklmnopqrstuvwxyz" +
+	charset                = "abcdefghijklmnopqrstuvwxyz" +
 		"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	filesystemWrite      Method = "filesystem_write"
 	filesystemRead       Method = "filesystem_read"
@@ -161,7 +149,6 @@ const (
 	processStart         Method = "process_start"
 	// TODO: Check this one.
 	filesystemSubscribe = "filesystem_subscribe"
-
 	// EventTypeCreate is the type of event for the creation of a file or
 	// directory.
 	EventTypeCreate OperationType = iota
@@ -170,7 +157,6 @@ const (
 	// EventTypeRemove is the type of event for the removal of a file or
 	// directory.
 	EventTypeRemove
-
 	defaultBaseURL  = "https://api.e2b.dev"
 	defaultWSScheme = "wss"
 	// Routes
@@ -181,8 +167,7 @@ const (
 	// (DELETE /sandboxes/:id)
 	deleteSandboxRoute = "/sandboxes/%s"
 	// Kernels Endpoint
-	kernelsRoute = "/api/kernels"
-
+	kernelsRoute      = "/api/kernels"
 	defaultHTTPScheme = "https"
 )
 
@@ -232,14 +217,10 @@ func NewSandbox(
 			resp.Status,
 			string(body))
 	}
-	var res CreateSandboxResponse
-	err = json.Unmarshal(body, &res)
+	err = json.Unmarshal(body, &sb)
 	if err != nil {
 		return sb, err
 	}
-	sb.ID = res.SandboxID
-	sb.Alias = res.Alias
-	sb.ClientID = res.ClientID
 	u := sb.wsURL()
 	sb.logger.Debug("Connecting to sandbox", "url", u.String())
 	ws, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
@@ -311,7 +292,6 @@ func (s *Sandbox) Stop(ctx context.Context) error {
 	}
 	return nil
 }
-
 func (s *Sandbox) hostname(id string) string {
 	return fmt.Sprintf("https://%s-%s-%s.e2b.dev",
 		id,
@@ -319,7 +299,6 @@ func (s *Sandbox) hostname(id string) string {
 		s.ClientID,
 	)
 }
-
 func (s *Sandbox) wsURL() url.URL {
 	return url.URL{
 		Scheme: defaultWSScheme,
@@ -330,7 +309,6 @@ func (s *Sandbox) wsURL() url.URL {
 		Path: wsRoute,
 	}
 }
-
 func (s *Sandbox) httpURL(path string) url.URL {
 	return url.URL{
 		Scheme: defaultHTTPScheme,
@@ -551,7 +529,6 @@ func (s *Sandbox) Download(path string) (io.ReadCloser, error) {
 // {"jsonrpc": "2.0", "method": "process_subscribe", "params": ["onStdout", "N5hJqKkNXj1i"], "id": 16}
 // {"jsonrpc": "2.0", "method": "process_unsubscribe", "params": ["0xa7966b61d145231b3b3ab8cd440edf58"], "id": 14}
 // {"jsonrpc": "2.0", "method": "process_unsubscribe", "params": ["0xb6b65c652bc5576751debfc82e864156"], "id": 17}
-
 type processSubscribeRequest struct {
 	// JSONRPC is the JSON-RPC version of the message.
 	JSONRPC string `json:"jsonrpc"`
@@ -600,7 +577,6 @@ func (s *Sandbox) StartProcess(
 	if err != nil {
 		return proc, err
 	}
-
 	// {"jsonrpc":"2.0","id":2,"result":"ewMUmGQ0vVmW"}
 	var res processStartResponse
 	err = json.Unmarshal(msr, &res)
@@ -627,9 +603,13 @@ type processStartResponse struct {
 	Result string `json:"result"`
 }
 
-func (s *Sandbox) subscribeProcess(ctx context.Context, id string, event ProcessEvents) error {
-	s.logger.Debug("Subscribing to process", "id", id)
-	req := Request{
+func (s *Sandbox) subscribeProcess(
+	ctx context.Context,
+	id string,
+	event ProcessEvents,
+) error {
+	s.logger.Debug("subscribing to process", "id", id, "event", event)
+	jsVal, err := json.Marshal(Request{
 		JSONRPC: rpc,
 		Method:  processSubscribe,
 		ID:      s.msgCnt,
@@ -637,8 +617,7 @@ func (s *Sandbox) subscribeProcess(ctx context.Context, id string, event Process
 			event,
 			id,
 		},
-	}
-	jsVal, err := json.Marshal(req)
+	})
 	if err != nil {
 		return err
 	}
@@ -653,9 +632,8 @@ func (s *Sandbox) subscribeProcess(ctx context.Context, id string, event Process
 	println(string(msr))
 	return nil
 }
-
 func (s *Sandbox) unsubscribeProcess(ctx context.Context, id string, event ProcessEvents) error {
-	s.logger.Debug("Unsubscribing from process", "id", id)
+	s.logger.Debug("unsubscribing from process", "id", id, "event", event)
 	req := Request{
 		JSONRPC: rpc,
 		Method:  processUnsubscribe,
