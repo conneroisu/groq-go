@@ -167,7 +167,7 @@ func TestListKernels(t *testing.T) {
 	if apiKey == "" {
 		t.Fatal("E2B_API_KEY is not set")
 	}
-	sb, err := e2b.NewSandbox(ctx, apiKey, e2b.WithTemplate("code-interpreter-stateful"))
+	sb, err := e2b.NewSandbox(ctx, apiKey, e2b.WithTemplate("code-interpreter-stateful"), e2b.WithLogger(defaultLogger))
 	a.NoError(err, "NewSandbox error")
 	defer func() {
 		err = sb.Close()
@@ -186,7 +186,7 @@ func TestCreateProcess(t *testing.T) {
 	if apiKey == "" {
 		t.Skip("no api key set")
 	}
-	sb, err := e2b.NewSandbox(ctx, apiKey, e2b.WithTemplate("code-interpreter-stateful"))
+	sb, err := e2b.NewSandbox(ctx, apiKey, e2b.WithTemplate("code-interpreter-stateful"), e2b.WithLogger(defaultLogger))
 	a.NoError(err, "NewSandbox error")
 	defer func() {
 		err = sb.Close()
@@ -195,5 +195,5 @@ func TestCreateProcess(t *testing.T) {
 
 	proc, err := sb.StartProcess("echo 'Hello World'")
 	a.NoError(err)
-	fmt.Println(fmt.Sprintf("pid: %v", proc.ID))
+	a.NotEmpty(proc.ID)
 }
