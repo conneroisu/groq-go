@@ -528,16 +528,6 @@ func (s *Sandbox) Download(path string) (io.ReadCloser, error) {
 // {"jsonrpc": "2.0", "method": "process_subscribe", "params": ["onStdout", "N5hJqKkNXj1i"], "id": 16}
 // {"jsonrpc": "2.0", "method": "process_unsubscribe", "params": ["0xa7966b61d145231b3b3ab8cd440edf58"], "id": 14}
 // {"jsonrpc": "2.0", "method": "process_unsubscribe", "params": ["0xb6b65c652bc5576751debfc82e864156"], "id": 17}
-type processSubscribeRequest struct {
-	// JSONRPC is the JSON-RPC version of the message.
-	JSONRPC string `json:"jsonrpc"`
-	// Method is the method of the message.
-	Method Method `json:"method"`
-	// ID is the ID of the message.
-	ID int `json:"id"`
-	// Params is the params of the message.
-	Params []any `json:"params"`
-}
 
 func createProcessID(n int) string {
 	b := make([]byte, n)
