@@ -131,22 +131,21 @@ type (
 )
 
 const (
-	rpc                    = "2.0"
-	onStdout ProcessEvents = "onStdout"
-	onStderr ProcessEvents = "onStderr"
-	onExit   ProcessEvents = "onExit"
-	charset                = "abcdefghijklmnopqrstuvwxyz" +
-		"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	filesystemWrite      Method = "filesystem_write"
-	filesystemRead       Method = "filesystem_read"
-	filesystemList       Method = "filesystem_list"
-	filesystemRemove     Method = "filesystem_remove"
-	filesystemMakeDir    Method = "filesystem_makeDir"
-	filesystemReadBytes  Method = "filesystem_readBase64"
-	filesystemWriteBytes Method = "filesystem_writeBase64"
-	processSubscribe     Method = "process_subscribe"
-	processUnsubscribe   Method = "process_unsubscribe"
-	processStart         Method = "process_start"
+	rpc                                = "2.0"
+	charset                            = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	onStdout             ProcessEvents = "onStdout"
+	onStderr             ProcessEvents = "onStderr"
+	onExit               ProcessEvents = "onExit"
+	filesystemWrite      Method        = "filesystem_write"
+	filesystemRead       Method        = "filesystem_read"
+	filesystemList       Method        = "filesystem_list"
+	filesystemRemove     Method        = "filesystem_remove"
+	filesystemMakeDir    Method        = "filesystem_makeDir"
+	filesystemReadBytes  Method        = "filesystem_readBase64"
+	filesystemWriteBytes Method        = "filesystem_writeBase64"
+	processSubscribe     Method        = "process_subscribe"
+	processUnsubscribe   Method        = "process_unsubscribe"
+	processStart         Method        = "process_start"
 	// TODO: Check this one.
 	filesystemSubscribe = "filesystem_subscribe"
 	// EventTypeCreate is the type of event for the creation of a file or
