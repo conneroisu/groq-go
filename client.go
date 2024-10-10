@@ -15,9 +15,9 @@ import (
 //go:generate go run ./scripts/generate-models/
 //go:generate make docs
 
-// Format is the format of a response.
-// string
 type (
+	// Format is the format of a response.
+	// string
 	Format string
 	// Client is a Groq api client.
 	Client struct {
@@ -32,7 +32,6 @@ type (
 		client *http.Client // Client is the HTTP client to use
 		logger *slog.Logger // Logger is the logger for the client.
 	}
-
 	// RateLimitHeaders struct represents Groq rate limits headers.
 	RateLimitHeaders struct {
 		LimitRequests     int       `json:"x-ratelimit-limit-requests"`     // LimitRequests is the limit requests of the rate limit headers.
@@ -54,6 +53,11 @@ type (
 		CompletionTokens int `json:"completion_tokens"`
 		TotalTokens      int `json:"total_tokens"`
 	}
+
+	fullURLOptions struct {
+		model string
+	}
+	fullURLOption func(*fullURLOptions)
 )
 
 const (
@@ -212,13 +216,6 @@ func sendRequestStream[T streamer](
 		errAccumulator:     newErrorAccumulator(),
 		Header:             resp.Header,
 	}, nil
-}
-
-func (c *Client) setCommonHeaders(req *http.Request) {
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.groqAPIKey))
-	if c.orgID != "" {
-		req.Header.Set("OpenAI-Organization", c.orgID)
-	}
 }
 
 func isFailureStatusCode(resp *http.Response) bool {
