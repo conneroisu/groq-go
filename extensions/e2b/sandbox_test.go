@@ -2,7 +2,6 @@ package e2b_test
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"os"
 	"strings"
@@ -18,6 +17,9 @@ var (
 		Level:     slog.LevelDebug,
 		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
 			if a.Key == "time" {
+				return slog.Attr{}
+			}
+			if a.Key == "level" {
 				return slog.Attr{}
 			}
 			if a.Key == "source" {
@@ -52,8 +54,6 @@ func TestPostSandbox(t *testing.T) {
 		err = sb.Close()
 		a.NoError(err, "Close error")
 	}()
-	err = sb.Mkdir("heelo")
-	a.NoError(err)
 	lsr, err := sb.Ls(".")
 	a.NoError(err)
 	// [{.dockerenv false} {.e2b false} {bin false} {boot true} {code true} {dev true} {etc true} {home true} {lib false} {lib32 false} {lib64 false} {libx32 false} {lost+found true} {media true} {mnt true} {opt true} {proc true} {root true} {run true} {sbin false} {srv true} {swap true} {sys true} {tmp true} {usr true} {var true}]
@@ -64,6 +64,14 @@ func TestPostSandbox(t *testing.T) {
 			IsDir: true,
 		})
 	}
+	err = sb.Mkdir("heelo")
+	a.NoError(err)
+	lsr, err = sb.Ls("/")
+	a.NoError(err)
+	a.Contains(lsr, e2b.LsResult{
+		Name:  "heelo",
+		IsDir: true,
+	})
 }
 
 // TestWriteRead tests the Write and Read methods of the Sandbox.
@@ -94,41 +102,6 @@ func TestWriteRead(t *testing.T) {
 	a.NoError(err, "Stop error")
 }
 
-// ress, err := sb.Ls("/tmp/")
-// if err != nil {
-//         return Sandbox{}, err
-// }
-// println(fmt.Sprintf("ress: %v", ress))
-// err = sb.Mkdir("/tmp/groq-go")
-// if err != nil {
-//         return Sandbox{}, err
-// }
-// // see if it there
-// ress, err = sb.Ls("/tmp/")
-// if err != nil {
-//         return Sandbox{}, err
-// }
-// println(fmt.Sprintf("ress: %v", ress))
-
-func TestListKernels(t *testing.T) {
-	a := assert.New(t)
-	ctx := context.Background()
-	sb, err := e2b.NewSandbox(
-		ctx,
-		getapiKey(t),
-		e2b.WithTemplate("code-interpreter-stateful"),
-		e2b.WithLogger(defaultLogger),
-	)
-	a.NoError(err, "NewSandbox error")
-	defer func() {
-		err = sb.Close()
-		a.NoError(err, "Close error")
-	}()
-	kers, err := sb.ListKernels(ctx)
-	a.NoError(err)
-	fmt.Println(kers)
-}
-
 func TestCreateProcess(t *testing.T) {
 	a := assert.New(t)
 	ctx := context.Background()
@@ -145,6 +118,6 @@ func TestCreateProcess(t *testing.T) {
 	}()
 	proc, err := sb.NewProcess("echo 'Hello World'")
 	a.NoError(err, "could not create process")
-	_, err = proc.Start()
+	err = proc.Start()
 	a.NotEmpty(proc.ID)
 }

@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-func (c *Sandbox) sendRequest(req *http.Request, v interface{}) error {
+func (s *Sandbox) sendRequest(req *http.Request, v interface{}) error {
 	req.Header.Set("Accept", "application/json")
 	// Check whether Content-Type is already set, Upload Files API requires
 	// Content-Type == multipart/form-data
@@ -15,7 +15,7 @@ func (c *Sandbox) sendRequest(req *http.Request, v interface{}) error {
 	if contentType == "" {
 		req.Header.Set("Content-Type", "application/json")
 	}
-	res, err := c.client.Do(req)
+	res, err := s.client.Do(req)
 	if err != nil {
 		return err
 	}
@@ -26,6 +26,16 @@ func (c *Sandbox) sendRequest(req *http.Request, v interface{}) error {
 	}
 	return decodeResponse(res.Body, v)
 }
+
+func (s *Sandbox) readWSResponse(v interface{}) (err error) {
+	_, resp, err := s.ws.ReadMessage()
+	if err != nil {
+		return err
+	}
+	s.logger.Debug("read", "resp", string(resp))
+	return decodeBytes(resp, v)
+}
+
 func decodeString(body io.Reader, output *string) error {
 	b, err := io.ReadAll(body)
 	if err != nil {
@@ -51,4 +61,13 @@ func getBody(resp *http.Response) string {
 		return ""
 	}
 	return string(b)
+}
+func decodeBytes(body []byte, v any) error {
+	switch o := v.(type) {
+	case *[]byte:
+		*o = body
+	default:
+		return json.Unmarshal(body, v)
+	}
+	return nil
 }

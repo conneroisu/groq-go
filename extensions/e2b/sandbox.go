@@ -26,20 +26,19 @@ type (
 	//
 	// The sandbox is like an isolated, but interactive system.
 	Sandbox struct {
-		ID              string            `json:"sandboxID"`
-		Metadata        map[string]string `json:"metadata"`
-		Template        SandboxTemplate   `json:"templateID"`
-		Alias           string            `json:"alias"`
-		ClientID        string            `json:"clientID"`
-		apiKey          string
-		baseAPIURL      string
-		client          *http.Client
-		ws              *websocket.Conn
-		msgCnt          int
-		logger          *slog.Logger
-		header          builders.Header
-		httpScheme      string
-		defaultKernelID string
+		ID         string            `json:"sandboxID"`
+		Metadata   map[string]string `json:"metadata"`
+		Template   SandboxTemplate   `json:"templateID"`
+		Alias      string            `json:"alias"`
+		ClientID   string            `json:"clientID"`
+		apiKey     string
+		baseAPIURL string
+		client     *http.Client
+		ws         *websocket.Conn
+		msgCnt     int
+		logger     *slog.Logger
+		header     builders.Header
+		httpScheme string
 	}
 	// Process is a process in the sandbox.
 	Process struct {
@@ -82,15 +81,18 @@ type (
 		// Params is the params of the message.
 		Params []any `json:"params"`
 	}
-	// LsResponse is a JSON-RPC response when listing files and directories.
-	LsResponse struct {
+	// Response is a JSON-RPC response.
+	Response[T any] struct {
 		// JSONRPC is the JSON-RPC version of the message.
 		JSONRPC string `json:"jsonrpc"`
 		// Method is the method of the message.
 		Method Method `json:"method"`
 		// ID is the ID of the message.
-		ID     int        `json:"id"`
-		Result []LsResult `json:"result"`
+		ID int `json:"id"`
+		// Result is the result of the message.
+		Result T `json:"result"`
+		// Error is the error of the message.
+		Error string `json:"error"`
 	}
 	// LsResult is a result of the list request.
 	LsResult struct {
@@ -117,15 +119,13 @@ const (
 	processStart         Method        = "process_start"
 	// TODO: Check this one.
 	filesystemSubscribe = "filesystem_subscribe"
-
-	defaultBaseURL     = "https://api.e2b.dev"
-	defaultWSScheme    = "wss"
-	wsRoute            = "/ws"
-	fileRoute          = "/file"
-	sandboxesRoute     = "/sandboxes"  // (GET/POST /sandboxes)
-	deleteSandboxRoute = "/sandboxes/" // (DELETE /sandboxes/:id)
-	kernelsRoute       = "/api/kernels"
-	defaultHTTPScheme  = "https"
+	defaultBaseURL      = "https://api.e2b.dev"
+	defaultWSScheme     = "wss"
+	wsRoute             = "/ws"
+	fileRoute           = "/file"
+	sandboxesRoute      = "/sandboxes"  // (GET/POST /sandboxes)
+	deleteSandboxRoute  = "/sandboxes/" // (DELETE /sandboxes/:id)
+	defaultHTTPScheme   = "https"
 	// EventTypeCreate is a type of event for the creation of a file/dir.
 	EventTypeCreate OperationType = iota
 	// EventTypeWrite is a type of event for the write to a file.
@@ -176,10 +176,6 @@ func NewSandbox(
 	u := sb.wsURL()
 	sb.logger.Debug("Connecting to sandbox", "url", u.String())
 	sb.ws, _, err = websocket.DefaultDialer.Dial(u.String(), nil)
-	if err != nil {
-		return sb, err
-	}
-	sb.defaultKernelID, err = sb.Read("/root/.jupyter/kernel_id")
 	if err != nil {
 		return sb, err
 	}
@@ -254,41 +250,23 @@ func (s *Sandbox) wsURL() url.URL {
 	}
 }
 
-// ListKernels lists the kernels in the sandbox.
-//
-// Make sure that the sandbox supports kernels before calling this method.
-// The template must be set to "code-interpreter-stateful" or similar.
-func (s *Sandbox) ListKernels(ctx context.Context) ([]ListKernelResponse, error) {
-	req, err := builders.NewRequest(
-		ctx,
-		s.header,
-		http.MethodGet,
-		s.hostname("8888", kernelsRoute).String(),
-	)
-	if err != nil {
-		return nil, err
-	}
-	var res []ListKernelResponse
-	err = s.sendRequest(req, &res)
-	if err != nil {
-		return nil, err
-	}
-	return res, nil
-}
-
 // Mkdir makes a directory in the sandbox file system.
 func (s *Sandbox) Mkdir(path string) error {
 	err := s.writeRequest(Request{
 		JSONRPC: rpc,
-		Method:  filesystemWrite,
+		Method:  filesystemMakeDir,
 		Params:  []any{path},
 	})
 	if err != nil {
 		return err
 	}
-	_, _, err = s.ws.ReadMessage()
+	var resp Response[string]
+	err = s.readWSResponse(&resp)
 	if err != nil {
 		return err
+	}
+	if resp.Error != "" {
+		return fmt.Errorf("failed to write to file: %s", resp.Error)
 	}
 	return nil
 }
@@ -308,7 +286,7 @@ func (s *Sandbox) Ls(path string) ([]LsResult, error) {
 	if err != nil {
 		return nil, err
 	}
-	var res LsResponse
+	var res Response[[]LsResult]
 	err = json.Unmarshal(msr, &res)
 	if err != nil {
 		return nil, err
@@ -328,16 +306,16 @@ func (s *Sandbox) Read(
 	if err != nil {
 		return "", err
 	}
-	_, message, err := s.ws.ReadMessage()
-	if err != nil {
-		return "", err
-	}
 	var resp struct {
 		Result string `json:"result"`
+		Error  string `json:"error"`
 	}
-	err = json.Unmarshal(message, &resp)
+	err = s.readWSResponse(&resp)
 	if err != nil {
 		return "", err
+	}
+	if resp.Error != "" {
+		return "", fmt.Errorf("failed to read file: %s", resp.Error)
 	}
 	return resp.Result, nil
 }
@@ -355,7 +333,7 @@ func (s *Sandbox) Write(path string, data []byte) error {
 	if err != nil {
 		return err
 	}
-	_, _, err = s.ws.ReadMessage()
+	err = s.readWSResponse(&Request{})
 	if err != nil {
 		return err
 	}
@@ -374,14 +352,10 @@ func (s *Sandbox) ReadBytes(path string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	_, message, err := s.ws.ReadMessage()
-	if err != nil {
-		return nil, err
-	}
 	var rR struct {
 		Result string `json:"result"`
 	}
-	err = json.Unmarshal(message, &rR)
+	err = s.readWSResponse(&rR)
 	if err != nil {
 		return nil, err
 	}
@@ -422,7 +396,6 @@ func (s *Sandbox) Download(path string) (io.ReadCloser, error) {
 // {"jsonrpc": "2.0", "method": "process_subscribe", "params": ["onStdout", "N5hJqKkNXj1i"], "id": 16}
 // {"jsonrpc": "2.0", "method": "process_unsubscribe", "params": ["0xa7966b61d145231b3b3ab8cd440edf58"], "id": 14}
 // {"jsonrpc": "2.0", "method": "process_unsubscribe", "params": ["0xb6b65c652bc5576751debfc82e864156"], "id": 17}
-
 func createProcessID(n int) string {
 	b := make([]byte, n)
 	for i := range b {
@@ -448,35 +421,30 @@ func (s *Sandbox) NewProcess(
 }
 
 // Start starts a process in the sandbox.
-func (p *Process) Start() (*Process, error) {
+func (p *Process) Start() error {
 	err := p.ext.writeRequest(Request{
 		JSONRPC: rpc,
 		Method:  processStart,
 		Params:  []any{p.ID, p.cmd, p.env, p.cwd},
 	})
 	if err != nil {
-		return p, err
-	}
-	_, msr, err := p.ext.ws.ReadMessage()
-	if err != nil {
-		return p, err
+		return err
 	}
 	var res struct {
 		Result string `json:"result"`
 	}
-	err = json.Unmarshal(msr, &res)
+	err = p.ext.readWSResponse(res)
 	if err != nil {
-		return p, err
+		return err
 	}
 	if res.Result == "" || len(res.Result) == 0 {
-		return p, fmt.Errorf("process start failed got empty result id")
+		return fmt.Errorf("process start failed got empty result id")
 	}
 	if p.ID != res.Result {
-		return p, fmt.Errorf("process start failed got wrong result id; want %s, got %s", p.ID, res.Result)
+		return fmt.Errorf("process start failed got wrong result id; want %s, got %s", p.ID, res.Result)
 	}
-	return p, nil
+	return nil
 }
-
 func (s *Sandbox) subscribeProcess(procID string, event ProcessEvents) error {
 	err := s.writeRequest(Request{
 		JSONRPC: rpc,
@@ -493,7 +461,6 @@ func (s *Sandbox) subscribeProcess(procID string, event ProcessEvents) error {
 	println(string(msr))
 	return nil
 }
-
 func (s *Sandbox) unsubscribeProcess(subID string) error {
 	err := s.writeRequest(Request{
 		JSONRPC: rpc,
@@ -510,15 +477,14 @@ func (s *Sandbox) unsubscribeProcess(subID string) error {
 	println(string(msr))
 	return nil
 }
-
 func (s *Sandbox) writeRequest(req Request) (err error) {
-	s.logger.Debug("writing request", "method", req.Method, "id", req.ID, "params", req.Params)
 	s.msgCnt++
 	req.ID = s.msgCnt
 	jsVal, err := json.Marshal(req)
 	if err != nil {
 		return err
 	}
+	s.logger.Debug("write", "method", req.Method, "id", req.ID, "params", req.Params)
 	err = s.ws.WriteMessage(websocket.TextMessage, jsVal)
 	if err != nil {
 		return fmt.Errorf("failed to write %s request (%d): %w", req.Method, req.ID, err)
