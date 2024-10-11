@@ -28,6 +28,9 @@ func (e *Extension) MustGetTools(
 func (e *Extension) GetTools(
 	ctx context.Context,
 ) ([]groq.Tool, error) {
+	if len(e.tools) > 0 {
+		return e.tools, nil
+	}
 	e.logger.Debug("Getting tools from Toolhouse extension")
 	url := e.baseURL + getToolsEndpoint
 	req, err := builders.NewRequest(
