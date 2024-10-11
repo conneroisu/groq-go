@@ -47,8 +47,8 @@ type (
 		ID       string
 		ResultID string
 		cmd      string
-		// cwd      string
-		// env      map[string]string
+		cwd      string
+		env      map[string]string
 	}
 	// Option is an option for the sandbox.
 	Option func(*Sandbox)
@@ -117,26 +117,21 @@ const (
 	processStart         Method        = "process_start"
 	// TODO: Check this one.
 	filesystemSubscribe = "filesystem_subscribe"
-	// EventTypeCreate is the type of event for the creation of a file or
-	// directory.
+
+	defaultBaseURL     = "https://api.e2b.dev"
+	defaultWSScheme    = "wss"
+	wsRoute            = "/ws"
+	fileRoute          = "/file"
+	sandboxesRoute     = "/sandboxes"  // (GET/POST /sandboxes)
+	deleteSandboxRoute = "/sandboxes/" // (DELETE /sandboxes/:id)
+	kernelsRoute       = "/api/kernels"
+	defaultHTTPScheme  = "https"
+	// EventTypeCreate is a type of event for the creation of a file/dir.
 	EventTypeCreate OperationType = iota
-	// EventTypeWrite is the type of event for the write to a file.
+	// EventTypeWrite is a type of event for the write to a file.
 	EventTypeWrite
-	// EventTypeRemove is the type of event for the removal of a file or
-	// directory.
+	// EventTypeRemove is a type of event for the removal of a file/dir.
 	EventTypeRemove
-	defaultBaseURL  = "https://api.e2b.dev"
-	defaultWSScheme = "wss"
-	// Routes
-	wsRoute   = "/ws"
-	fileRoute = "/file"
-	// (GET/POST /sandboxes)
-	sandboxesRoute = "/sandboxes"
-	// (DELETE /sandboxes/:id)
-	deleteSandboxRoute = "/sandboxes/"
-	// Kernels Endpoint
-	kernelsRoute      = "/api/kernels"
-	defaultHTTPScheme = "https"
 )
 
 // NewSandbox creates a new sandbox.
@@ -457,12 +452,7 @@ func (p *Process) Start() (*Process, error) {
 	err := p.ext.writeRequest(Request{
 		JSONRPC: rpc,
 		Method:  processStart,
-		Params: []any{
-			p.ID,
-			p.cmd,
-			map[string]string{},
-			"",
-		},
+		Params:  []any{p.ID, p.cmd, p.env, p.cwd},
 	})
 	if err != nil {
 		return p, err
@@ -491,10 +481,7 @@ func (s *Sandbox) subscribeProcess(procID string, event ProcessEvents) error {
 	err := s.writeRequest(Request{
 		JSONRPC: rpc,
 		Method:  processUnsubscribe,
-		Params: []any{
-			event,
-			procID,
-		},
+		Params:  []any{event, procID},
 	})
 	if err != nil {
 		return err

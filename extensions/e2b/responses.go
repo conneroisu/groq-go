@@ -20,14 +20,11 @@ func (c *Sandbox) sendRequest(req *http.Request, v interface{}) error {
 		return err
 	}
 	defer res.Body.Close()
-	if isFailureStatusCode(res) {
+	if res.StatusCode < http.StatusOK ||
+		res.StatusCode >= http.StatusBadRequest {
 		return fmt.Errorf("request to create sandbox failed: %s\nbody: %s", res.Status, getBody(res))
 	}
 	return decodeResponse(res.Body, v)
-}
-func isFailureStatusCode(resp *http.Response) bool {
-	return resp.StatusCode < http.StatusOK ||
-		resp.StatusCode >= http.StatusBadRequest
 }
 func decodeString(body io.Reader, output *string) error {
 	b, err := io.ReadAll(body)
