@@ -45,9 +45,6 @@ type (
 			Content    string `json:"content"`
 		} `json:"content"`
 	}
-	header struct {
-		e *Extension
-	}
 )
 
 // WithBaseURL sets the base URL for the Toolhouse extension.
