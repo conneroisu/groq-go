@@ -3,7 +3,6 @@ package e2b
 import (
 	"context"
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"io"
 	"log/slog"
@@ -228,28 +227,6 @@ func (s *Sandbox) Stop(ctx context.Context) error {
 	}
 	return nil
 }
-func (s *Sandbox) hostname(id string, path string) *url.URL {
-	return &url.URL{
-		Scheme: s.httpScheme,
-		Host: fmt.Sprintf(
-			"%s-%s-%s.e2b.dev",
-			id,
-			s.ID,
-			s.ClientID,
-		),
-		Path: path,
-	}
-}
-func (s *Sandbox) wsURL() url.URL {
-	return url.URL{
-		Scheme: defaultWSScheme,
-		Host: fmt.Sprintf("49982-%s-%s.e2b.dev",
-			s.ID,
-			s.ClientID,
-		),
-		Path: wsRoute,
-	}
-}
 
 // Mkdir makes a directory in the sandbox file system.
 func (s *Sandbox) Mkdir(path string) error {
@@ -283,12 +260,8 @@ func (s *Sandbox) Ls(path string) ([]LsResult, error) {
 	if err != nil {
 		return nil, err
 	}
-	_, msr, err := s.ws.ReadMessage()
-	if err != nil {
-		return nil, err
-	}
 	var res Response[[]LsResult, string]
-	err = json.Unmarshal(msr, &res)
+	err = s.readWSResponse(&res)
 	if err != nil {
 		return nil, err
 	}
@@ -416,9 +389,7 @@ func (s *Sandbox) NewProcess(
 // Start starts a process in the sandbox.
 func (p *Process) Start() error {
 	if p.env == nil {
-		p.env = map[string]string{
-			"PYTHONUNBUFFERED": "1",
-		}
+		p.env = map[string]string{"PYTHONUNBUFFERED": "1"}
 	}
 	err := p.ext.writeRequest(Request{
 		JSONRPC: rpc,
@@ -443,6 +414,11 @@ func (p *Process) Start() error {
 		return fmt.Errorf("process start failed got wrong result id; want %s, got %s", p.ID, res.Result)
 	}
 	return nil
+}
+
+// Close closes the sandbox.
+func (s *Sandbox) Close() error {
+	return s.ws.Close()
 }
 func (s *Sandbox) subscribeProcess(procID string, event ProcessEvents) error {
 	err := s.writeRequest(Request{
@@ -476,22 +452,13 @@ func (s *Sandbox) unsubscribeProcess(subID string) error {
 	println(string(msr))
 	return nil
 }
-func (s *Sandbox) writeRequest(req Request) (err error) {
-	s.msgCnt++
-	req.ID = s.msgCnt
-	jsVal, err := json.Marshal(req)
-	if err != nil {
-		return err
+func (s *Sandbox) wsURL() url.URL {
+	return url.URL{
+		Scheme: defaultWSScheme,
+		Host: fmt.Sprintf("49982-%s-%s.e2b.dev",
+			s.ID,
+			s.ClientID,
+		),
+		Path: wsRoute,
 	}
-	s.logger.Debug("write", "method", req.Method, "id", req.ID, "params", req.Params)
-	err = s.ws.WriteMessage(websocket.TextMessage, jsVal)
-	if err != nil {
-		return fmt.Errorf("failed to write %s request (%d): %w", req.Method, req.ID, err)
-	}
-	return nil
-}
-
-// Close closes the sandbox.
-func (s *Sandbox) Close() error {
-	return s.ws.Close()
 }

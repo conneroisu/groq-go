@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+
+	"github.com/gorilla/websocket"
 )
 
 func (s *Sandbox) sendRequest(req *http.Request, v interface{}) error {
@@ -68,6 +70,21 @@ func decodeBytes(body []byte, v any) error {
 		*o = body
 	default:
 		return json.Unmarshal(body, v)
+	}
+	return nil
+}
+
+func (s *Sandbox) writeRequest(req Request) (err error) {
+	s.msgCnt++
+	req.ID = s.msgCnt
+	jsVal, err := json.Marshal(req)
+	if err != nil {
+		return err
+	}
+	s.logger.Debug("write", "method", req.Method, "id", req.ID, "params", req.Params)
+	err = s.ws.WriteMessage(websocket.TextMessage, jsVal)
+	if err != nil {
+		return fmt.Errorf("failed to write %s request (%d): %w", req.Method, req.ID, err)
 	}
 	return nil
 }
