@@ -2,6 +2,7 @@ package e2b
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"time"
 
@@ -91,20 +92,15 @@ func (k *Kernel) ExecuteCell(
 
 // Shutdown shutdowns a kernel.
 func (k *Kernel) Shutdown() error {
-	return nil
+	return fmt.Errorf("not implemented")
 }
 
 // Restart restarts a kernel.
 func (k *Kernel) Restart() error {
-	return nil
+	return fmt.Errorf("not implemented")
 }
 
 // CreateKernel creates a new kernel.
 func (s *Sandbox) CreateKernel() (Kernel, error) {
-	return Kernel{}, nil
-}
-
-// Close closes the sandbox.
-func (s *Sandbox) Close() error {
-	return s.ws.Close()
+	return Kernel{}, fmt.Errorf("not implemented")
 }

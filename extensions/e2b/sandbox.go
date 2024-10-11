@@ -577,3 +577,8 @@ func (s *Sandbox) writeRequest(req Request) (err error) {
 	}
 	return nil
 }
+
+// Close closes the sandbox.
+func (s *Sandbox) Close() error {
+	return s.ws.Close()
+}
