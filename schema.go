@@ -841,8 +841,11 @@ type (
 		// the type of the array.
 		//
 		// Omitting this field has the same behavior as an empty array.
-		Examples []any          `json:"examples,omitempty"`
-		Extras   map[string]any `json:"-"`
+		Examples []any `json:"examples,omitempty"`
+		// Extras holds additional information about the schema.
+		//
+		// This field is not part of the official JSON Schema specification.
+		Extras map[string]any `json:"-"`
 		// Special boolean representation of the Schema - section 4.3.2
 		boolean *bool
 	}
@@ -1188,7 +1191,6 @@ func (r *reflector) reflectSliceOrArray(
 	}
 	if t.Kind() == reflect.Slice && t.Elem() == byteSliceType.Elem() {
 		st.Type = "string"
-		// NOTE: ContentMediaType is not set here
 		st.ContentEncoding = "base64"
 		return
 	}

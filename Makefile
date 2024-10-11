@@ -1,6 +1,6 @@
 # -include .env
 #  file: Makefile
-#  url: https://github.com/conneroisu/seltabl/Makefile
+#  url: https://github.com/conneroisu/groq-go/Makefile
 #  description: Makefile for the project
 
 export MAKEFLAGS += --always-make --print-directory

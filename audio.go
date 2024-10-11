@@ -7,6 +7,8 @@ import (
 	"io"
 	"net/http"
 	"os"
+
+	"github.com/conneroisu/groq-go/pkg/builders"
 )
 
 const (
@@ -132,12 +134,13 @@ func (c *Client) callAudioAPI(
 	if err != nil {
 		return AudioResponse{}, err
 	}
-	req, err := c.newRequest(
+	req, err := builders.NewRequest(
 		ctx,
+		c.header,
 		http.MethodPost,
 		c.fullURL(endpointSuffix, withModel(model(request.Model))),
-		withBody(&formBody),
-		withContentType(c.requestFormBuilder.FormDataContentType()),
+		builders.WithBody(&formBody),
+		builders.WithContentType(c.requestFormBuilder.FormDataContentType()),
 	)
 	if err != nil {
 		return AudioResponse{}, err
@@ -163,7 +166,7 @@ func (r AudioRequest) hasJSONResponse() bool {
 
 // audioMultipartForm creates a form with audio file contents and the name of
 // the model to use for audio processing.
-func audioMultipartForm(request AudioRequest, b formBuilder) error {
+func audioMultipartForm(request AudioRequest, b builders.FormBuilder) error {
 	err := createFileField(request, b)
 	if err != nil {
 		return err
@@ -210,7 +213,7 @@ func audioMultipartForm(request AudioRequest, b formBuilder) error {
 // or by using the reader.
 func createFileField(
 	request AudioRequest,
-	b formBuilder,
+	b builders.FormBuilder,
 ) (err error) {
 	if request.Reader != nil {
 		err := b.CreateFormFileReader("file", request.Reader, request.FilePath)

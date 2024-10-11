@@ -2,7 +2,6 @@ package groq
 
 import (
 	"bufio"
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -10,14 +9,16 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/conneroisu/groq-go/pkg/builders"
 )
 
 //go:generate go run ./scripts/generate-models/
 //go:generate make docs
 
-// Format is the format of a response.
-// string
 type (
+	// Format is the format of a response.
+	// string
 	Format string
 	// Client is a Groq api client.
 	Client struct {
@@ -25,14 +26,14 @@ type (
 		orgID              string // OrgID is the organization ID for the client.
 		baseURL            string // Base URL for the client.
 		emptyMessagesLimit uint   // EmptyMessagesLimit is the limit for the empty messages.
-		requestBuilder     requestBuilder
-		requestFormBuilder formBuilder
-		createFormBuilder  func(body io.Writer) formBuilder
+
+		header             builders.Header
+		requestFormBuilder builders.FormBuilder
+		createFormBuilder  func(body io.Writer) builders.FormBuilder
 
 		client *http.Client // Client is the HTTP client to use
 		logger *slog.Logger // Logger is the logger for the client.
 	}
-
 	// RateLimitHeaders struct represents Groq rate limits headers.
 	RateLimitHeaders struct {
 		LimitRequests     int       `json:"x-ratelimit-limit-requests"`     // LimitRequests is the limit requests of the rate limit headers.
@@ -48,8 +49,13 @@ type (
 
 	// Opts is a function that sets options for a Groq client.
 	Opts func(*Client)
+	// Usage Represents the total token usage per request to Groq.
+	Usage struct {
+		PromptTokens     int `json:"prompt_tokens"`
+		CompletionTokens int `json:"completion_tokens"`
+		TotalTokens      int `json:"total_tokens"`
+	}
 
-	requestOption  func(*requestOptions)
 	fullURLOptions struct {
 		model string
 	}
@@ -79,13 +85,18 @@ func NewClient(groqAPIKey string, opts ...Opts) (*Client, error) {
 		logger:             slog.Default(),
 		baseURL:            groqAPIURLv1,
 		emptyMessagesLimit: 10,
-		createFormBuilder: func(body io.Writer) formBuilder {
-			return newFormBuilder(body)
+		createFormBuilder: func(body io.Writer) builders.FormBuilder {
+			return builders.NewFormBuilder(body)
 		},
-		requestBuilder: newRequestBuilder(),
 	}
 	for _, opt := range opts {
 		opt(c)
+	}
+	c.header.SetCommonHeaders = func(req *http.Request) {
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.groqAPIKey))
+		if c.orgID != "" {
+			req.Header.Set("OpenAI-Organization", c.orgID)
+		}
 	}
 	return c, nil
 }
@@ -119,57 +130,6 @@ func WithLogger(logger *slog.Logger) Opts {
 	return func(c *Client) {
 		c.logger = logger
 	}
-}
-
-// Usage Represents the total token usage per request to Groq.
-type Usage struct {
-	PromptTokens     int `json:"prompt_tokens"`
-	CompletionTokens int `json:"completion_tokens"`
-	TotalTokens      int `json:"total_tokens"`
-}
-
-type requestOptions struct {
-	body   any
-	header http.Header
-}
-
-func withBody(body any) requestOption {
-	return func(args *requestOptions) {
-		args.body = body
-	}
-}
-
-func withContentType(contentType string) requestOption {
-	return func(args *requestOptions) {
-		args.header.Set("Content-Type", contentType)
-	}
-}
-
-func (c *Client) newRequest(
-	ctx context.Context,
-	method, url string,
-	setters ...requestOption,
-) (*http.Request, error) {
-	// Default Options
-	args := &requestOptions{
-		body:   nil,
-		header: http.Header{},
-	}
-	for _, setter := range setters {
-		setter(args)
-	}
-	req, err := c.requestBuilder.Build(
-		ctx,
-		method,
-		url,
-		args.body,
-		args.header,
-	)
-	if err != nil {
-		return nil, err
-	}
-	c.setCommonHeaders(req)
-	return req, nil
 }
 
 // response is an interface for a response.
@@ -230,13 +190,6 @@ func sendRequestStream[T streamer](
 		errAccumulator:     newErrorAccumulator(),
 		Header:             resp.Header,
 	}, nil
-}
-
-func (c *Client) setCommonHeaders(req *http.Request) {
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.groqAPIKey))
-	if c.orgID != "" {
-		req.Header.Set("OpenAI-Organization", c.orgID)
-	}
 }
 
 func isFailureStatusCode(resp *http.Response) bool {

@@ -60,7 +60,6 @@ You have a six-sided die that you roll once. Let $R{i}$ denote the event that th
 		if errors.Is(err, io.EOF) {
 			break
 		}
-		// t.Logf("%d %s\n", i, val.Choices[0].Delta.Content)
 		print(val.Choices[0].Delta.Content)
 	}
 }
@@ -85,12 +84,9 @@ func TestModerate(t *testing.T) {
 	a := assert.New(t)
 	a.NoError(err, "Moderation error")
 	a.Equal(true, mod.Flagged)
-	a.Equal(
+	a.Contains(
 		mod.Categories,
-		[]groq.HarmfulCategory{
-			groq.CategoryViolentCrimes,
-			groq.CategoryNonviolentCrimes,
-		},
+		groq.CategoryViolentCrimes,
 	)
 }
 

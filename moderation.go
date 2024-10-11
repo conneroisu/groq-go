@@ -4,6 +4,8 @@ import (
 	"context"
 	"net/http"
 	"strings"
+
+	"github.com/conneroisu/groq-go/pkg/builders"
 )
 
 // ModerationRequest represents a request structure for moderation API.
@@ -198,11 +200,12 @@ func (c *Client) Moderate(
 	ctx context.Context,
 	request ModerationRequest,
 ) (response Moderation, err error) {
-	req, err := c.newRequest(
+	req, err := builders.NewRequest(
 		ctx,
+		c.header,
 		http.MethodPost,
 		c.fullURL(chatCompletionsSuffix, withModel(model(request.Model))),
-		withBody(&request),
+		builders.WithBody(&request),
 	)
 	if err != nil {
 		return
