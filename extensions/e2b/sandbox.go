@@ -82,22 +82,23 @@ type (
 		Params []any `json:"params"`
 	}
 	// Response is a JSON-RPC response.
-	Response[T any] struct {
-		// JSONRPC is the JSON-RPC version of the message.
-		JSONRPC string `json:"jsonrpc"`
-		// Method is the method of the message.
-		Method Method `json:"method"`
+	Response[T any, Q any] struct {
 		// ID is the ID of the message.
 		ID int `json:"id"`
 		// Result is the result of the message.
 		Result T `json:"result"`
 		// Error is the error of the message.
-		Error string `json:"error"`
+		Error Q `json:"error"`
 	}
 	// LsResult is a result of the list request.
 	LsResult struct {
 		Name  string `json:"name"`
 		IsDir bool   `json:"isDir"`
+	}
+	// APIError is the error of the API.
+	APIError struct {
+		Code    int    `json:"code,omitempty"` // Code is the code of the error.
+		Message string `json:"message"`        // Message is the message of the error.
 	}
 )
 
@@ -260,7 +261,7 @@ func (s *Sandbox) Mkdir(path string) error {
 	if err != nil {
 		return err
 	}
-	var resp Response[string]
+	var resp Response[string, string]
 	err = s.readWSResponse(&resp)
 	if err != nil {
 		return err
@@ -286,7 +287,7 @@ func (s *Sandbox) Ls(path string) ([]LsResult, error) {
 	if err != nil {
 		return nil, err
 	}
-	var res Response[[]LsResult]
+	var res Response[[]LsResult, string]
 	err = json.Unmarshal(msr, &res)
 	if err != nil {
 		return nil, err
@@ -306,18 +307,15 @@ func (s *Sandbox) Read(
 	if err != nil {
 		return "", err
 	}
-	var resp struct {
-		Result string `json:"result"`
-		Error  string `json:"error"`
-	}
-	err = s.readWSResponse(&resp)
+	var res Response[string, string]
+	err = s.readWSResponse(&res)
 	if err != nil {
 		return "", err
 	}
-	if resp.Error != "" {
-		return "", fmt.Errorf("failed to read file: %s", resp.Error)
+	if res.Error != "" {
+		return "", fmt.Errorf("failed to read file: %s", res.Error)
 	}
-	return resp.Result, nil
+	return res.Result, nil
 }
 
 // Write writes to a file to the sandbox file system.
@@ -325,10 +323,7 @@ func (s *Sandbox) Write(path string, data []byte) error {
 	err := s.writeRequest(Request{
 		JSONRPC: rpc,
 		Method:  filesystemWrite,
-		Params: []any{
-			path,
-			string(data),
-		},
+		Params:  []any{path, string(data)},
 	})
 	if err != nil {
 		return err
@@ -345,9 +340,7 @@ func (s *Sandbox) ReadBytes(path string) ([]byte, error) {
 	err := s.writeRequest(Request{
 		JSONRPC: rpc,
 		Method:  filesystemReadBytes,
-		Params: []any{
-			path,
-		},
+		Params:  []any{path},
 	})
 	if err != nil {
 		return nil, err
@@ -422,6 +415,11 @@ func (s *Sandbox) NewProcess(
 
 // Start starts a process in the sandbox.
 func (p *Process) Start() error {
+	if p.env == nil {
+		p.env = map[string]string{
+			"PYTHONUNBUFFERED": "1",
+		}
+	}
 	err := p.ext.writeRequest(Request{
 		JSONRPC: rpc,
 		Method:  processStart,
@@ -430,12 +428,13 @@ func (p *Process) Start() error {
 	if err != nil {
 		return err
 	}
-	var res struct {
-		Result string `json:"result"`
-	}
-	err = p.ext.readWSResponse(res)
+	var res Response[string, APIError]
+	err = p.ext.readWSResponse(&res)
 	if err != nil {
 		return err
+	}
+	if res.Error.Code != 0 {
+		return fmt.Errorf("process start failed(%d): %s", res.Error.Code, res.Error.Message)
 	}
 	if res.Result == "" || len(res.Result) == 0 {
 		return fmt.Errorf("process start failed got empty result id")

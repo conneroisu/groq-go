@@ -108,7 +108,6 @@ func TestCreateProcess(t *testing.T) {
 	sb, err := e2b.NewSandbox(
 		ctx,
 		getapiKey(t),
-		e2b.WithTemplate("code-interpreter-stateful"),
 		e2b.WithLogger(defaultLogger),
 	)
 	a.NoError(err, "NewSandbox error")
@@ -116,8 +115,16 @@ func TestCreateProcess(t *testing.T) {
 		err = sb.Close()
 		a.NoError(err, "Close error")
 	}()
-	proc, err := sb.NewProcess("echo 'Hello World'")
+	proc, err := sb.NewProcess("echo 'Hello World!'", e2b.WithEnv(map[string]string{
+		"FOO": "bar",
+	}))
 	a.NoError(err, "could not create process")
 	err = proc.Start()
 	a.NotEmpty(proc.ID)
+	a.NoError(err)
+	proc, err = sb.NewProcess("echo 'Hello World!'")
+	a.NoError(err, "could not create process")
+	err = proc.Start()
+	a.NotEmpty(proc.ID)
+	a.NoError(err)
 }
