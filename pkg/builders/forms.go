@@ -9,6 +9,7 @@ import (
 )
 
 type (
+	// FormBuilder is an interface for building forms.
 	FormBuilder interface {
 		io.Closer
 		CreateFormFile(fieldname string, file *os.File) error

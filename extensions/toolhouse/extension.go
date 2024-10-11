@@ -10,6 +10,7 @@ import (
 	"net/http"
 
 	"github.com/conneroisu/groq-go"
+	"github.com/conneroisu/groq-go/pkg/builders"
 )
 
 const (
@@ -22,15 +23,15 @@ const (
 type (
 	// Extension is a Toolhouse extension.
 	Extension struct {
-		apiKey         string
-		baseURL        string
-		client         *http.Client
-		provider       string
-		metadata       map[string]any
-		bundle         string
-		tools          []groq.Tool
-		logger         *slog.Logger
-		requestBuilder requestBuilder
+		apiKey   string
+		baseURL  string
+		client   *http.Client
+		provider string
+		metadata map[string]any
+		bundle   string
+		tools    []groq.Tool
+		logger   *slog.Logger
+		header   builders.Header
 	}
 
 	// Options is a function that sets options for a Toolhouse extension.
@@ -43,6 +44,9 @@ type (
 			Name       string `json:"name"`
 			Content    string `json:"content"`
 		} `json:"content"`
+	}
+	header struct {
+		e *Extension
 	}
 )
 
@@ -77,13 +81,17 @@ func WithLogger(logger *slog.Logger) Options {
 // NewExtension creates a new Toolhouse extension.
 func NewExtension(apiKey string, opts ...Options) (e *Extension, err error) {
 	e = &Extension{
-		apiKey:         apiKey,
-		baseURL:        defaultBaseURL,
-		client:         http.DefaultClient,
-		bundle:         "default",
-		provider:       "openai",
-		logger:         slog.Default(),
-		requestBuilder: newRequestBuilder(),
+		apiKey:   apiKey,
+		baseURL:  defaultBaseURL,
+		client:   http.DefaultClient,
+		bundle:   "default",
+		provider: "openai",
+		logger:   slog.Default(),
+	}
+	e.header.SetCommonHeaders = func(req *http.Request) {
+		req.Header.Set("User-Agent", "Toolhouse/1.2.1 Python/3.11.0")
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", e.apiKey))
+		req.Header.Set("Content-Type", applicationJSON)
 	}
 	for _, opt := range opts {
 		opt(e)
@@ -106,11 +114,12 @@ func (e *Extension) Run(
 	}
 	respH := []groq.ChatCompletionMessage{}
 	for _, tool := range response.Choices[0].Message.ToolCalls {
-		req, err := e.newRequest(
+		req, err := builders.NewRequest(
 			ctx,
+			e.header,
 			http.MethodPost,
 			fmt.Sprintf("%s%s", e.baseURL, runToolEndpoint),
-			withBody(request{
+			builders.WithBody(request{
 				Content:  tool,
 				Provider: e.provider,
 				Metadata: e.metadata,
@@ -173,11 +182,12 @@ func (e *Extension) GetTools(
 ) ([]groq.Tool, error) {
 	e.logger.Debug("Getting tools from Toolhouse extension")
 	url := e.baseURL + getToolsEndpoint
-	req, err := e.newRequest(
+	req, err := builders.NewRequest(
 		ctx,
+		e.header,
 		http.MethodPost,
 		url,
-		withBody(
+		builders.WithBody(
 			request{
 				Bundle:   "default",
 				Provider: "openai",
@@ -206,29 +216,6 @@ func (e *Extension) GetTools(
 	return e.tools, nil
 }
 
-func (e *Extension) newRequest(
-	ctx context.Context,
-	method, url string,
-	setters ...requestOption,
-) (*http.Request, error) {
-	// Default Options
-	args := &requestOptions{
-		body:   nil,
-		header: http.Header{},
-	}
-	for _, setter := range setters {
-		setter(args)
-	}
-	req, err := e.requestBuilder.Build(
-		ctx,
-		method,
-		url,
-		args.body,
-		args.header,
-	)
-	if err != nil {
-		return nil, err
-	}
-	e.setCommonHeaders(req)
-	return req, nil
+func newHeader(e *Extension) *header {
+	return &header{e: e}
 }

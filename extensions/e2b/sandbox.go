@@ -13,6 +13,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/conneroisu/groq-go/pkg/builders"
 	"github.com/gorilla/websocket"
 )
 
@@ -38,7 +39,7 @@ type (
 		msgCnt          int
 		mu              *sync.Mutex
 		logger          *slog.Logger
-		requestBuilder  requestBuilder
+		header          builders.Header
 		httpScheme      string
 		defaultKernelID string
 	}
@@ -48,8 +49,8 @@ type (
 		ID       string
 		ResultID string
 		cmd      string
-		cwd      string
-		env      map[string]string
+		// cwd      string
+		// env      map[string]string
 	}
 	// Option is an option for the sandbox.
 	Option func(*Sandbox)
@@ -163,19 +164,24 @@ func NewSandbox(
 		Metadata: map[string]string{
 			"sdk": "groq-go v1",
 		},
-		client:         http.DefaultClient,
-		logger:         slog.Default(),
-		requestBuilder: newRequestBuilder(),
-		httpScheme:     defaultHTTPScheme,
+		client:     http.DefaultClient,
+		logger:     slog.Default(),
+		httpScheme: defaultHTTPScheme,
 	}
 	for _, opt := range opts {
 		opt(&sb)
 	}
-	req, err := sb.newRequest(
+	sb.header.SetCommonHeaders = func(req *http.Request) {
+		req.Header.Set("X-API-Key", sb.apiKey)
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Accept", "application/json")
+	}
+	req, err := builders.NewRequest(
 		ctx,
+		sb.header,
 		http.MethodPost,
 		fmt.Sprintf("%s%s", sb.baseAPIURL, sandboxesRoute),
-		withBody(sb),
+		builders.WithBody(sb),
 	)
 	if err != nil {
 		return sb, err
@@ -237,11 +243,12 @@ func (s *Sandbox) Disconnect() error {
 
 // Stop stops the sandbox.
 func (s *Sandbox) Stop(ctx context.Context) error {
-	req, err := s.newRequest(
+	req, err := builders.NewRequest(
 		ctx,
+		s.header,
 		http.MethodDelete,
 		fmt.Sprintf("%s%s", s.baseAPIURL, fmt.Sprintf(deleteSandboxRoute, s.ID)),
-		withBody(interface{}(nil)),
+		builders.WithBody(interface{}(nil)),
 	)
 	if err != nil {
 		return err
@@ -284,8 +291,9 @@ func (s *Sandbox) wsURL() url.URL {
 // Make sure that the sandbox supports kernels before calling this method.
 // The template must be set to "code-interpreter-stateful" or similar.
 func (s *Sandbox) ListKernels(ctx context.Context) ([]ListKernelResponse, error) {
-	req, err := s.newRequest(
+	req, err := builders.NewRequest(
 		ctx,
+		s.header,
 		http.MethodGet,
 		s.hostname("8888", kernelsRoute).String(),
 	)

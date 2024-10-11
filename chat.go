@@ -10,6 +10,8 @@ import (
 	"net/http"
 	"reflect"
 	"strings"
+
+	"github.com/conneroisu/groq-go/pkg/builders"
 )
 
 const (
@@ -361,11 +363,12 @@ func (c *Client) CreateChatCompletion(
 	request ChatCompletionRequest,
 ) (response ChatCompletionResponse, err error) {
 	request.Stream = false
-	req, err := c.newRequest(
+	req, err := builders.NewRequest(
 		ctx,
+		c.header,
 		http.MethodPost,
 		c.fullURL(chatCompletionsSuffix, withModel(model(request.Model))),
-		withBody(request))
+		builders.WithBody(request))
 	if err != nil {
 		return
 	}
@@ -383,11 +386,12 @@ func (c *Client) CreateChatCompletionStream(
 	request ChatCompletionRequest,
 ) (stream *ChatCompletionStream, err error) {
 	request.Stream = true
-	req, err := c.newRequest(
+	req, err := builders.NewRequest(
 		ctx,
+		c.header,
 		http.MethodPost,
 		c.fullURL(chatCompletionsSuffix, withModel(model(request.Model))),
-		withBody(request),
+		builders.WithBody(request),
 	)
 	if err != nil {
 		return nil, err
@@ -417,11 +421,12 @@ func (c *Client) CreateChatCompletionJSON(
 		Schema:      *schema,
 		Strict:      true,
 	}
-	req, err := c.newRequest(
+	req, err := builders.NewRequest(
 		ctx,
+		c.header,
 		http.MethodPost,
 		c.fullURL(chatCompletionsSuffix, withModel(model(request.Model))),
-		withBody(request),
+		builders.WithBody(request),
 	)
 	if err != nil {
 		return

@@ -8,11 +8,14 @@ import (
 	"net/http"
 )
 
+var builder = NewRequestBuilder()
+
 type (
-	Requester interface {
-		setCommonHeaders(req *http.Request)
-		RequestBuilder
+	// Header is an struct interface for setting common headers.
+	Header struct {
+		SetCommonHeaders func(req *http.Request)
 	}
+	// RequestBuilder is an interface for building requests.
 	RequestBuilder interface {
 		Build(
 			ctx context.Context,
@@ -26,9 +29,11 @@ type (
 		body   any
 		header http.Header
 	}
+	// RequestOption is an option for a request.
 	RequestOption func(*requestOptions)
 )
 
+// NewRequestBuilder creates a new default request builder.
 func NewRequestBuilder() RequestBuilder {
 	return &defaultRequestBuilder{}
 }
@@ -76,10 +81,17 @@ func WithBody(body any) RequestOption {
 	}
 }
 
+// WithContentType sets the content type for a request.
+func WithContentType(contentType string) RequestOption {
+	return func(args *requestOptions) {
+		args.header.Set("Content-Type", contentType)
+	}
+}
+
 // NewRequest creates a new request.
 func NewRequest(
 	ctx context.Context,
-	c Requester,
+	c Header,
 	method, url string,
 	setters ...RequestOption,
 ) (*http.Request, error) {
@@ -90,7 +102,7 @@ func NewRequest(
 	for _, setter := range setters {
 		setter(args)
 	}
-	req, err := c.Build(
+	req, err := builder.Build(
 		ctx,
 		method,
 		url,
@@ -100,6 +112,6 @@ func NewRequest(
 	if err != nil {
 		return nil, err
 	}
-	c.setCommonHeaders(req)
+	c.SetCommonHeaders(req)
 	return req, nil
 }
