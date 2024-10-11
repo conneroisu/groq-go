@@ -215,7 +215,3 @@ func (e *Extension) GetTools(
 	}
 	return e.tools, nil
 }
-
-func newHeader(e *Extension) *header {
-	return &header{e: e}
-}
