@@ -10,7 +10,6 @@ import (
 	"math/rand"
 	"net/http"
 	"net/url"
-	"sync"
 	"time"
 
 	"github.com/conneroisu/groq-go/pkg/builders"
@@ -25,7 +24,7 @@ type (
 	SandboxTemplate string
 	// Sandbox is a code sandbox.
 	//
-	// The sandbox is like an isolated runtime or playground for the LLM.
+	// The sandbox is like an isolated, but interactive system.
 	Sandbox struct {
 		ID              string            `json:"sandboxID"`
 		Metadata        map[string]string `json:"metadata"`
@@ -37,7 +36,6 @@ type (
 		client          *http.Client
 		ws              *websocket.Conn
 		msgCnt          int
-		mu              *sync.Mutex
 		logger          *slog.Logger
 		header          builders.Header
 		httpScheme      string
@@ -56,15 +54,6 @@ type (
 	Option func(*Sandbox)
 	// ProcessOption is an option for a process.
 	ProcessOption func(*Process)
-	// CreateSandboxResponse represents the response of the create sandbox
-	// http method.
-	CreateSandboxResponse struct {
-		Alias       string `json:"alias"`
-		ClientID    string `json:"clientID"`
-		EnvdVersion string `json:"envdVersion"`
-		SandboxID   string `json:"sandboxID"`
-		TemplateID  string `json:"templateID"`
-	}
 	// Event is a file system event.
 	Event struct {
 		// Path is the path of the event.
@@ -144,7 +133,7 @@ const (
 	// (GET/POST /sandboxes)
 	sandboxesRoute = "/sandboxes"
 	// (DELETE /sandboxes/:id)
-	deleteSandboxRoute = "/sandboxes/%s"
+	deleteSandboxRoute = "/sandboxes/"
 	// Kernels Endpoint
 	kernelsRoute      = "/api/kernels"
 	defaultHTTPScheme = "https"
@@ -157,7 +146,6 @@ func NewSandbox(
 	opts ...Option,
 ) (Sandbox, error) {
 	sb := Sandbox{
-		mu:         &sync.Mutex{},
 		apiKey:     apiKey,
 		Template:   "base",
 		baseAPIURL: defaultBaseURL,
@@ -186,22 +174,7 @@ func NewSandbox(
 	if err != nil {
 		return sb, err
 	}
-	resp, err := sb.client.Do(req)
-	if err != nil {
-		return sb, err
-	}
-	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return sb, err
-	}
-	if resp.StatusCode != http.StatusCreated {
-		return sb, fmt.Errorf(
-			"request to create sandbox failed: %s\nbody: %s",
-			resp.Status,
-			string(body))
-	}
-	err = json.Unmarshal(body, &sb)
+	err = sb.sendRequest(req, &sb)
 	if err != nil {
 		return sb, err
 	}
@@ -247,7 +220,7 @@ func (s *Sandbox) Stop(ctx context.Context) error {
 		ctx,
 		s.header,
 		http.MethodDelete,
-		fmt.Sprintf("%s%s", s.baseAPIURL, fmt.Sprintf(deleteSandboxRoute, s.ID)),
+		fmt.Sprintf("%s%s%s", s.baseAPIURL, deleteSandboxRoute, s.ID),
 		builders.WithBody(interface{}(nil)),
 	)
 	if err != nil {
@@ -300,17 +273,8 @@ func (s *Sandbox) ListKernels(ctx context.Context) ([]ListKernelResponse, error)
 	if err != nil {
 		return nil, err
 	}
-	resp, err := s.client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
 	var res []ListKernelResponse
-	err = json.Unmarshal(body, &res)
+	err = s.sendRequest(req, &res)
 	if err != nil {
 		return nil, err
 	}
@@ -543,14 +507,11 @@ func (s *Sandbox) subscribeProcess(procID string, event ProcessEvents) error {
 	return nil
 }
 
-func (s *Sandbox) unsubscribeProcess(procID string, event ProcessEvents) error {
+func (s *Sandbox) unsubscribeProcess(subID string) error {
 	err := s.writeRequest(Request{
 		JSONRPC: rpc,
 		Method:  processUnsubscribe,
-		Params: []any{
-			event,
-			procID,
-		},
+		Params:  []any{subID},
 	})
 	if err != nil {
 		return err
