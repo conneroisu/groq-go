@@ -363,9 +363,9 @@ func (s *Sandbox) ReadBytes(path string) ([]byte, error) {
 func (s *Sandbox) Watch(
 	ctx context.Context,
 	path string,
-) (<-chan Event, error) {
+	eCh chan<- Event,
+) error {
 	ch := make(chan []byte)
-	eCh := make(chan Event)
 	err := s.wsH.Write(Request{
 		JSONRPC: rpc,
 		Method:  filesystemSubscribe,
@@ -376,7 +376,7 @@ func (s *Sandbox) Watch(
 		ResponseCh: ch,
 	})
 	if err != nil {
-		return nil, err
+		return err
 	}
 	go func() {
 		for {
@@ -399,7 +399,7 @@ func (s *Sandbox) Watch(
 			}
 		}
 	}()
-	return eCh, nil
+	return nil
 }
 
 // Upload uploads a file to the sandbox file system.
@@ -469,7 +469,7 @@ func (s *Sandbox) Close() error {
 
 // Done returns a channel that is closed when the process is done.
 func (p *Process) Done() <-chan struct{} {
-	rCh, ok := p.wsH.idMap.Load(p.ID)
+	rCh, ok := p.wsH.Map.Load(p.ID)
 	if !ok {
 		return nil
 	}
@@ -508,7 +508,7 @@ func (p *Process) Subscribe(
 		case <-p.Done():
 			return
 		}
-		p.wsH.subMap.Delete(res.Result)
+		p.wsH.Map.Delete(res.Result)
 		respCh := make(chan []byte)
 		err = p.wsH.Write(Request{
 			JSONRPC:    rpc,
@@ -526,6 +526,7 @@ func (p *Process) Subscribe(
 		}
 	}()
 	eventByCh := make(chan []byte)
+	p.wsH.Map.Store(res.Result, eventByCh)
 	go func() {
 		for {
 			select {

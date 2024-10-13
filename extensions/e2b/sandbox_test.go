@@ -159,7 +159,8 @@ func TestFilesystemSubscribe(t *testing.T) {
 	)
 	a.NoError(err, "NewSandbox error")
 	// subscribe to a file
-	events, err := sb.Watch(ctx, "/tmp/")
+	events := make(chan e2b.Event)
+	err = sb.Watch(ctx, "/tmp/", events)
 	a.NoError(err)
 	go func() {
 		for event := range events {

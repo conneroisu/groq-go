@@ -15,8 +15,7 @@ type (
 	defaultWSHandler struct {
 		logger *slog.Logger
 		ws     *websocket.Conn
-		idMap  sync.Map
-		subMap sync.Map
+		Map    sync.Map
 		msgCnt int
 	}
 	decResp struct {
@@ -52,19 +51,11 @@ func newWSHandler(ctx context.Context, url string, logger *slog.Logger) (*defaul
 	return &h, nil
 }
 
-// UnSub subscribes to a subscription id
-func (h *defaultWSHandler) UnSub(id string) {
-	h.subMap.Delete(id)
-}
-
 // Write writes a request to the websocket.
 func (h *defaultWSHandler) Write(req Request) (err error) {
 	req.ID = h.msgCnt
 	h.logger.Debug("writing request", "method", req.Method, "id", req.ID, "params", req.Params)
-	h.idMap.Store(req.ID, req.ResponseCh)
-	if req.Method == processSubscribe || req.Method == filesystemSubscribe {
-		h.subMap.Store(req.ID, req.ResponseCh)
-	}
+	h.Map.Store(req.ID, req.ResponseCh)
 	jsVal, err := json.Marshal(req)
 	if err != nil {
 		return err
@@ -100,7 +91,7 @@ func (h *defaultWSHandler) read(ctx context.Context) (err error) {
 			}
 			h.logger.Debug("reading response", "method", decResp.Method, "id", decResp.ID, "body", string(resp))
 			if decResp.Params.Subscription != "" {
-				toR, ok := h.subMap.Load(decResp.Params.Subscription)
+				toR, ok := h.Map.Load(decResp.Params.Subscription)
 				if !ok {
 					h.logger.Debug("subscription not found", "id", decResp.Params.Subscription)
 				}
@@ -111,9 +102,16 @@ func (h *defaultWSHandler) read(ctx context.Context) (err error) {
 				toRCh <- resp
 			}
 			if decResp.ID != 0 {
-				toR, ok := h.idMap.Load(decResp.ID)
+				toR, ok := h.Map.Load(decResp.ID)
 				if !ok {
-					h.logger.Debug("response not found", "id", decResp.ID)
+					h.logger.Debug("response not found", "id", decResp.ID, "values", func() []string {
+						vals := make([]string, 0)
+						h.Map.Range(func(key, value any) bool {
+							vals = append(vals, fmt.Sprintf("%s: %v", key, value))
+							return true
+						})
+						return vals
+					}())
 				}
 				toRCh, ok := toR.(chan []byte)
 				if !ok {
