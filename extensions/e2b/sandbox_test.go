@@ -132,22 +132,21 @@ func TestCreateProcess(t *testing.T) {
 	defer cancel()
 	events := make(chan e2b.Event, 10)
 	go func() {
-		<-ctx.Done()
-		close(events)
-	}()
-	go func() {
-		for event := range events {
-			jsonBytes, err := json.MarshalIndent(event, "", "  ")
-			if err != nil {
-				a.Error(err)
+		for {
+			select {
+			case <-ctx.Done():
 				return
+			case event := <-events:
+				jsonBytes, err := json.MarshalIndent(event, "", "  ")
+				if err != nil {
+					a.Error(err)
+					return
+				}
+				print(string(jsonBytes))
 			}
-			print(string(jsonBytes))
 		}
 	}()
-	err = proc.Subscribe(ctx, e2b.SubscribeParams{
-		Event: e2b.OnStdout,
-		Ch:    events,
-	})
+	err = proc.Subscribe(ctx, e2b.OnStdout, events)
 	a.NoError(err)
+	time.Sleep(3 * time.Second)
 }

@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-
-	"github.com/gorilla/websocket"
 )
 
 func (s *Sandbox) sendRequest(req *http.Request, v interface{}) error {
@@ -27,15 +25,6 @@ func (s *Sandbox) sendRequest(req *http.Request, v interface{}) error {
 		return fmt.Errorf("request to create sandbox failed: %s\nbody: %s", res.Status, getBody(res))
 	}
 	return decodeResponse(res.Body, v)
-}
-
-func (s *Sandbox) readWSResponse(v interface{}) (err error) {
-	_, resp, err := s.ws.ReadMessage()
-	if err != nil {
-		return err
-	}
-	s.logger.Debug("read", "resp", string(resp))
-	return decodeBytes(resp, v)
 }
 
 func decodeString(body io.Reader, output *string) error {
@@ -63,28 +52,4 @@ func getBody(resp *http.Response) string {
 		return ""
 	}
 	return string(b)
-}
-func decodeBytes(body []byte, v any) error {
-	switch o := v.(type) {
-	case *[]byte:
-		*o = body
-	default:
-		return json.Unmarshal(body, v)
-	}
-	return nil
-}
-
-func (s *Sandbox) writeRequest(req Request) (err error) {
-	s.msgCnt++
-	req.ID = s.msgCnt
-	jsVal, err := json.Marshal(req)
-	if err != nil {
-		return err
-	}
-	s.logger.Debug("write", "method", req.Method, "id", req.ID, "params", req.Params)
-	err = s.ws.WriteMessage(websocket.TextMessage, jsVal)
-	if err != nil {
-		return fmt.Errorf("failed to write %s request (%d): %w", req.Method, req.ID, err)
-	}
-	return nil
 }
