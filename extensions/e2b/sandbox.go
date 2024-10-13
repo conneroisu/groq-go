@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log/slog"
 	"math/rand"
 	"net/http"
@@ -400,18 +399,6 @@ func (s *Sandbox) Watch(
 		}
 	}()
 	return nil
-}
-
-// Upload uploads a file to the sandbox file system.
-func (s *Sandbox) Upload(r io.Reader, path string) error {
-	// TODO: implement
-	return nil
-}
-
-// Download downloads a file from the sandbox file system.
-func (s *Sandbox) Download(path string) (io.ReadCloser, error) {
-	// TODO: implement
-	return nil, nil
 }
 
 // NewProcess creates a new process startable in the sandbox.
