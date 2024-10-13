@@ -32,7 +32,6 @@ type (
 		ClientID   string            `json:"clientID"`
 		apiKey     string
 		baseAPIURL string
-		msgCnt     int
 		logger     *slog.Logger
 		header     builders.Header
 		httpScheme string
@@ -42,7 +41,6 @@ type (
 	// Process is a process in the sandbox.
 	Process struct {
 		ext      *Sandbox
-		done     bool
 		ID       string
 		ResultID string
 		cmd      string
@@ -98,6 +96,8 @@ type (
 		ID int `json:"id"`
 		// Params is the params of the message.
 		Params []any `json:"params"`
+		// ResponseCh is the channel to write the response to.
+		ResponseCh chan []byte `json:"-"`
 	}
 	// Response is a JSON-RPC response.
 	Response[T any, Q any] struct {
@@ -217,7 +217,7 @@ func (s *Sandbox) Reconnect(ctx context.Context) (err error) {
 	u := s.wsURL()
 	s.logger.Debug("Reconnecting to sandbox", "url", u.String())
 	s.wsH, err = newWSHandler(ctx, u.String())
-	return nil
+	return err
 }
 
 // Disconnect disconnects from the sandbox.
@@ -251,12 +251,10 @@ func (s *Sandbox) Stop(ctx context.Context) error {
 // Mkdir makes a directory in the sandbox file system.
 func (s *Sandbox) Mkdir(path string) error {
 	respCh := make(chan []byte)
-	err := s.wsH.Write(WriteParams{
-		Request: Request{
-			JSONRPC: rpc,
-			Method:  filesystemMakeDir,
-			Params:  []any{path},
-		},
+	err := s.wsH.Write(Request{
+		JSONRPC:    rpc,
+		Method:     filesystemMakeDir,
+		Params:     []any{path},
 		ResponseCh: respCh,
 	})
 	if err != nil {
@@ -277,14 +275,15 @@ func (s *Sandbox) Mkdir(path string) error {
 // the given path.
 func (s *Sandbox) Ls(path string) ([]LsResult, error) {
 	respCh := make(chan []byte)
-	err := s.wsH.Write(WriteParams{
-		Request: Request{
-			Params:  []any{path},
-			JSONRPC: rpc,
-			Method:  filesystemList,
-		},
+	err := s.wsH.Write(Request{
+		Params:     []any{path},
+		JSONRPC:    rpc,
+		Method:     filesystemList,
 		ResponseCh: respCh,
 	})
+	if err != nil {
+		return nil, err
+	}
 	var res Response[[]LsResult, string]
 	err = json.Unmarshal(<-respCh, &res)
 	if err != nil {
@@ -298,14 +297,15 @@ func (s *Sandbox) Read(
 	path string,
 ) (string, error) {
 	respCh := make(chan []byte)
-	err := s.wsH.Write(WriteParams{
-		Request: Request{
-			JSONRPC: rpc,
-			Method:  filesystemRead,
-			Params:  []any{path},
-		},
+	err := s.wsH.Write(Request{
+		JSONRPC:    rpc,
+		Method:     filesystemRead,
+		Params:     []any{path},
 		ResponseCh: respCh,
 	})
+	if err != nil {
+		return "", err
+	}
 	var res Response[string, string]
 	err = json.Unmarshal(<-respCh, &res)
 	if err != nil {
@@ -320,12 +320,10 @@ func (s *Sandbox) Read(
 // Write writes to a file to the sandbox file system.
 func (s *Sandbox) Write(path string, data []byte) error {
 	respCh := make(chan []byte)
-	err := s.wsH.Write(WriteParams{
-		Request: Request{
-			JSONRPC: rpc,
-			Method:  filesystemWrite,
-			Params:  []any{path, string(data)},
-		},
+	err := s.wsH.Write(Request{
+		JSONRPC:    rpc,
+		Method:     filesystemWrite,
+		Params:     []any{path, string(data)},
 		ResponseCh: respCh,
 	})
 	if err != nil {
@@ -341,12 +339,10 @@ func (s *Sandbox) Write(path string, data []byte) error {
 // ReadBytes reads a file from the sandbox file system.
 func (s *Sandbox) ReadBytes(path string) ([]byte, error) {
 	resCh := make(chan []byte)
-	err := s.wsH.Write(WriteParams{
-		Request: Request{
-			JSONRPC: rpc,
-			Method:  filesystemReadBytes,
-			Params:  []any{path},
-		},
+	err := s.wsH.Write(Request{
+		JSONRPC:    rpc,
+		Method:     filesystemReadBytes,
+		Params:     []any{path},
 		ResponseCh: resCh,
 	})
 	if err != nil {
@@ -417,15 +413,12 @@ func (p *Process) Start() error {
 		p.env = map[string]string{"PYTHONUNBUFFERED": "1"}
 	}
 	respCh := make(chan []byte)
-	err := p.ext.wsH.Write(
-		WriteParams{
-			Request: Request{
-				JSONRPC: rpc,
-				Method:  processStart,
-				Params:  []any{p.ID, p.cmd, p.env, p.cwd},
-			},
-			ResponseCh: respCh,
-		})
+	err := p.ext.wsH.Write(Request{
+		JSONRPC:    rpc,
+		Method:     processStart,
+		Params:     []any{p.ID, p.cmd, p.env, p.cwd},
+		ResponseCh: respCh,
+	})
 	if err != nil {
 		return err
 	}
@@ -468,12 +461,10 @@ func (p *Process) Subscribe(
 	ch chan<- Event,
 ) error {
 	responseCh := make(chan []byte)
-	err := p.ext.wsH.Write(WriteParams{
-		Request: Request{
-			JSONRPC: rpc,
-			Method:  processSubscribe,
-			Params:  []any{event, p.ID},
-		},
+	err := p.ext.wsH.Write(Request{
+		JSONRPC:    rpc,
+		Method:     processSubscribe,
+		Params:     []any{event, p.ID},
 		ResponseCh: responseCh,
 	})
 	if err != nil {
@@ -498,15 +489,12 @@ func (p *Process) Subscribe(
 		}
 		p.ext.logger.Debug("unsubscribing from process", "id", p.ID, "event", event, "subID", res.Result)
 		respCh := make(chan []byte)
-		err = p.ext.wsH.Write(
-			WriteParams{
-				Request: Request{
-					JSONRPC: rpc,
-					Method:  processUnsubscribe,
-					Params:  []any{res.Result},
-				},
-				ResponseCh: respCh,
-			})
+		err = p.ext.wsH.Write(Request{
+			JSONRPC:    rpc,
+			Method:     processUnsubscribe,
+			Params:     []any{res.Result},
+			ResponseCh: respCh,
+		})
 		if err != nil {
 			println(err)
 		}
