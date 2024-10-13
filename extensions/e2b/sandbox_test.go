@@ -2,10 +2,12 @@ package e2b_test
 
 import (
 	"context"
+	"encoding/json"
 	"log/slog"
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/conneroisu/groq-go/extensions/e2b"
 	"github.com/stretchr/testify/assert"
@@ -122,9 +124,30 @@ func TestCreateProcess(t *testing.T) {
 	err = proc.Start()
 	a.NotEmpty(proc.ID)
 	a.NoError(err)
-	proc, err = sb.NewProcess("echo 'Hello World!'")
+	proc, err = sb.NewProcess("sleep 2 && echo 'Hello World!'")
 	a.NoError(err, "could not create process")
 	err = proc.Start()
 	a.NotEmpty(proc.ID)
+	ctx, cancel := context.WithTimeout(ctx, time.Second*6)
+	defer cancel()
+	events := make(chan e2b.Event, 10)
+	go func() {
+		<-ctx.Done()
+		close(events)
+	}()
+	go func() {
+		for event := range events {
+			jsonBytes, err := json.MarshalIndent(event, "", "  ")
+			if err != nil {
+				a.Error(err)
+				return
+			}
+			print(string(jsonBytes))
+		}
+	}()
+	err = proc.Subscribe(ctx, e2b.SubscribeParams{
+		Event: e2b.OnStdout,
+		Ch:    events,
+	})
 	a.NoError(err)
 }

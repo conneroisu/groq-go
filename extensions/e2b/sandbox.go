@@ -32,12 +32,12 @@ type (
 		ClientID   string            `json:"clientID"`
 		apiKey     string
 		baseAPIURL string
-		client     *http.Client
-		ws         *websocket.Conn
 		msgCnt     int
 		logger     *slog.Logger
 		header     builders.Header
 		httpScheme string
+		client     *http.Client
+		ws         *websocket.Conn
 	}
 	// Process is a process in the sandbox.
 	Process struct {
@@ -48,12 +48,28 @@ type (
 		cwd      string
 		env      map[string]string
 	}
+	// SubscribeParams is the params for subscribing to a process event.
+	SubscribeParams struct {
+		Event ProcessEvents
+		Ch    chan<- Event
+	}
 	// Option is an option for the sandbox.
 	Option func(*Sandbox)
 	// ProcessOption is an option for a process.
 	ProcessOption func(*Process)
 	// Event is a file system event.
+	// {\"jsonrpc\":\"2.0\",\"method\":\"process_subscription\",\"params\":{\"subscription\":\"0xc900b4c1c65808e80174d22e2ce9ecf4\",\"result\":{\"type\":\"Stdout\",\"line\":\"Hello World!\",\"timestamp\":1728774047677344401}}}\n
 	Event struct {
+		Params struct {
+			Subscription string `json:"subscription"`
+			Result       struct {
+				Type        string `json:"type"`
+				Line        string `json:"line"`
+				Timestamp   int64  `json:"timestamp"`
+				IsDirectory bool   `json:"isDirectory"`
+				Error       string `json:"error"`
+			} `json:"result"`
+		}
 		// Path is the path of the event.
 		Path string
 		// Name is the name of file or directory.
@@ -64,6 +80,8 @@ type (
 		Timestamp int64
 		// IsDir is true if the event is a directory.
 		IsDir bool
+		// Error is the possible error of the event.
+		Error string
 	}
 	// OperationType is an operation type.
 	OperationType int
@@ -102,21 +120,25 @@ type (
 )
 
 const (
-	rpc                                = "2.0"
-	charset                            = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	onStdout             ProcessEvents = "onStdout"
-	onStderr             ProcessEvents = "onStderr"
-	onExit               ProcessEvents = "onExit"
-	filesystemWrite      Method        = "filesystem_write"
-	filesystemRead       Method        = "filesystem_read"
-	filesystemList       Method        = "filesystem_list"
-	filesystemRemove     Method        = "filesystem_remove"
-	filesystemMakeDir    Method        = "filesystem_makeDir"
-	filesystemReadBytes  Method        = "filesystem_readBase64"
-	filesystemWriteBytes Method        = "filesystem_writeBase64"
-	processSubscribe     Method        = "process_subscribe"
-	processUnsubscribe   Method        = "process_unsubscribe"
-	processStart         Method        = "process_start"
+	// OnStdout is the event for the stdout.
+	OnStdout ProcessEvents = "onStdout"
+	// OnStderr is the event for the stderr.
+	OnStderr ProcessEvents = "onStderr"
+	// OnExit is the event for the exit.
+	OnExit ProcessEvents = "onExit"
+
+	rpc                         = "2.0"
+	charset                     = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	filesystemWrite      Method = "filesystem_write"
+	filesystemRead       Method = "filesystem_read"
+	filesystemList       Method = "filesystem_list"
+	filesystemRemove     Method = "filesystem_remove"
+	filesystemMakeDir    Method = "filesystem_makeDir"
+	filesystemReadBytes  Method = "filesystem_readBase64"
+	filesystemWriteBytes Method = "filesystem_writeBase64"
+	processSubscribe     Method = "process_subscribe"
+	processUnsubscribe   Method = "process_unsubscribe"
+	processStart         Method = "process_start"
 	// TODO: Check this one.
 	filesystemSubscribe = "filesystem_subscribe"
 	defaultBaseURL      = "https://api.e2b.dev"
@@ -362,8 +384,8 @@ func (s *Sandbox) Download(path string) (io.ReadCloser, error) {
 // {"jsonrpc": "2.0", "method": "process_subscribe", "params": ["onStdout", "N5hJqKkNXj1i"], "id": 16}
 // {"jsonrpc": "2.0", "method": "process_unsubscribe", "params": ["0xa7966b61d145231b3b3ab8cd440edf58"], "id": 14}
 // {"jsonrpc": "2.0", "method": "process_unsubscribe", "params": ["0xb6b65c652bc5576751debfc82e864156"], "id": 17}
-func createProcessID(n int) string {
-	b := make([]byte, n)
+func createProcessID() string {
+	b := make([]byte, 12)
 	for i := range b {
 		b[i] = charset[rand.Intn(len(charset))]
 	}
@@ -376,7 +398,7 @@ func (s *Sandbox) NewProcess(
 	opts ...ProcessOption,
 ) (Process, error) {
 	proc := Process{
-		ID:  createProcessID(12),
+		ID:  createProcessID(),
 		ext: s,
 		cmd: cmd,
 	}
@@ -420,38 +442,71 @@ func (p *Process) Start() error {
 func (s *Sandbox) Close() error {
 	return s.ws.Close()
 }
-func (s *Sandbox) subscribeProcess(procID string, event ProcessEvents) error {
-	err := s.writeRequest(Request{
+
+// Subscribe subscribes to a process event.
+func (p *Process) Subscribe(
+	ctx context.Context,
+	params SubscribeParams,
+) error {
+	err := p.ext.writeRequest(Request{
 		JSONRPC: rpc,
-		Method:  processUnsubscribe,
-		Params:  []any{event, procID},
+		Method:  processSubscribe,
+		Params:  []any{params.Event, p.ID},
 	})
 	if err != nil {
 		return err
 	}
-	_, msr, err := s.ws.ReadMessage()
+	var res Response[string, APIError]
+	err = p.ext.readWSResponse(&res)
 	if err != nil {
 		return err
 	}
-	println(string(msr))
-	return nil
+	if res.Error.Code != 0 {
+		return fmt.Errorf("process subscribe failed(%d): %s", res.Error.Code, res.Error.Message)
+	}
+	p.ext.logger.Debug("subscribed to process", "id", p.ID, "event", params.Event, "subID", res.Result)
+	errCh := make(chan error)
+	go func() {
+		<-ctx.Done()
+		p.ext.logger.Debug("unsubscribing from process", "id", p.ID, "event", params.Event, "subID", res.Result)
+		err = p.ext.writeRequest(Request{
+			JSONRPC: rpc,
+			Method:  processUnsubscribe,
+			Params:  []any{res.Result},
+		})
+		if err != nil {
+			errCh <- err
+		}
+		var unsubRes Response[bool, string]
+		err = p.ext.readWSResponse(&unsubRes)
+		if err != nil {
+			errCh <- err
+		}
+		errCh <- nil
+	}()
+	for {
+		select {
+		case <-ctx.Done():
+			return nil
+		case err := <-errCh:
+			return err
+		default:
+			var event Event
+			err = p.ext.readWSResponse(&event)
+			if err != nil {
+				return err
+			}
+			if event.Error != "" {
+				return fmt.Errorf("process subscribe failed(%d): %s", res.Error.Code, res.Error.Message)
+			}
+			if event.Params.Subscription != res.Result {
+				continue
+			}
+			params.Ch <- event
+		}
+	}
 }
-func (s *Sandbox) unsubscribeProcess(subID string) error {
-	err := s.writeRequest(Request{
-		JSONRPC: rpc,
-		Method:  processUnsubscribe,
-		Params:  []any{subID},
-	})
-	if err != nil {
-		return err
-	}
-	_, msr, err := s.ws.ReadMessage()
-	if err != nil {
-		return err
-	}
-	println(string(msr))
-	return nil
-}
+
 func (s *Sandbox) wsURL() url.URL {
 	return url.URL{
 		Scheme: defaultWSScheme,
