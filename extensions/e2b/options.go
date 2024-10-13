@@ -40,6 +40,11 @@ func WithHTTPScheme(scheme string) Option {
 	return func(s *Sandbox) { s.httpScheme = scheme }
 }
 
+// WithCwd sets the current working directory.
+func WithCwd(cwd string) Option {
+	return func(s *Sandbox) { s.Cwd = cwd }
+}
+
 // WithEnv sets the environment variables.
 func WithEnv(env map[string]string) ProcessOption {
 	return func(p *Process) {
@@ -47,8 +52,8 @@ func WithEnv(env map[string]string) ProcessOption {
 	}
 }
 
-// WithCwd sets the current working directory.
-func WithCwd(cwd string) ProcessOption {
+// WithProcessCwd sets the current working directory.
+func WithProcessCwd(cwd string) ProcessOption {
 	return func(p *Process) {
 		p.cwd = cwd
 	}

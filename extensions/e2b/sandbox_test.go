@@ -113,10 +113,6 @@ func TestCreateProcess(t *testing.T) {
 		e2b.WithLogger(defaultLogger),
 	)
 	a.NoError(err, "NewSandbox error")
-	defer func() {
-		err = sb.Close()
-		a.NoError(err, "Close error")
-	}()
 	proc, err := sb.NewProcess("echo 'Hello World!'", e2b.WithEnv(map[string]string{
 		"FOO": "bar",
 	}))
@@ -127,6 +123,7 @@ func TestCreateProcess(t *testing.T) {
 	proc, err = sb.NewProcess("sleep 2 && echo 'Hello World!'")
 	a.NoError(err, "could not create process")
 	err = proc.Start()
+	a.NoError(err)
 	a.NotEmpty(proc.ID)
 	ctx, cancel := context.WithTimeout(ctx, time.Second*6)
 	defer cancel()
@@ -147,6 +144,37 @@ func TestCreateProcess(t *testing.T) {
 		}
 	}()
 	err = proc.Subscribe(ctx, e2b.OnStdout, events)
+	a.NoError(err)
+	time.Sleep(3 * time.Second)
+}
+
+func TestFilesystemSubscribe(t *testing.T) {
+	a := assert.New(t)
+	ctx := context.Background()
+	sb, err := e2b.NewSandbox(
+		ctx,
+		getapiKey(t),
+		e2b.WithLogger(defaultLogger),
+		e2b.WithCwd("/tmp"),
+	)
+	a.NoError(err, "NewSandbox error")
+	// subscribe to a file
+	events, err := sb.Watch(ctx, "/tmp/")
+	a.NoError(err)
+	go func() {
+		for event := range events {
+			jsonBytes, err := json.MarshalIndent(event, "", "  ")
+			if err != nil {
+				a.Error(err)
+				return
+			}
+			print(string(jsonBytes))
+		}
+	}()
+	// create a file
+	err = sb.Write("/tmp/file.txt", []byte("Hello World!"))
+	a.NoError(err)
+	err = sb.Write("/tmp/file2.txt", []byte("Hello World!"))
 	a.NoError(err)
 	time.Sleep(3 * time.Second)
 }

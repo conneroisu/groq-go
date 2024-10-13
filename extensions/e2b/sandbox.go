@@ -36,11 +36,12 @@ type (
 		header     builders.Header
 		httpScheme string
 		client     *http.Client
-		wsH        *WSHandler
+		wsH        *defaultWSHandler
+		Cwd        string
 	}
 	// Process is a process in the sandbox.
 	Process struct {
-		ext      *Sandbox
+		wsH      *defaultWSHandler
 		ID       string
 		ResultID string
 		cmd      string
@@ -198,7 +199,7 @@ func NewSandbox(
 	}
 	u := sb.wsURL()
 	sb.logger.Debug("Connecting to sandbox", "url", u.String())
-	sb.wsH, err = newWSHandler(ctx, u.String())
+	sb.wsH, err = newWSHandler(ctx, u.String(), sb.logger)
 	if err != nil {
 		return sb, err
 	}
@@ -216,13 +217,8 @@ func (s *Sandbox) KeepAlive(timeout time.Duration) error {
 func (s *Sandbox) Reconnect(ctx context.Context) (err error) {
 	u := s.wsURL()
 	s.logger.Debug("Reconnecting to sandbox", "url", u.String())
-	s.wsH, err = newWSHandler(ctx, u.String())
+	s.wsH, err = newWSHandler(ctx, u.String(), s.logger)
 	return err
-}
-
-// Disconnect disconnects from the sandbox.
-func (s *Sandbox) Disconnect() error {
-	return s.wsH.ws.Close()
 }
 
 // Stop stops the sandbox.
@@ -368,8 +364,42 @@ func (s *Sandbox) Watch(
 	ctx context.Context,
 	path string,
 ) (<-chan Event, error) {
-	// TODO: implement
-	return nil, nil
+	ch := make(chan []byte)
+	eCh := make(chan Event)
+	err := s.wsH.Write(Request{
+		JSONRPC: rpc,
+		Method:  filesystemSubscribe,
+		Params: []any{
+			"watchDir",
+			path,
+		},
+		ResponseCh: ch,
+	})
+	if err != nil {
+		return nil, err
+	}
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				var event Event
+				err := json.Unmarshal(<-ch, &event)
+				if err != nil {
+					return
+				}
+				if event.Error != "" {
+					return
+				}
+				if event.Params.Subscription != path {
+					continue
+				}
+				eCh <- event
+			}
+		}
+	}()
+	return eCh, nil
 }
 
 // Upload uploads a file to the sandbox file system.
@@ -391,7 +421,7 @@ func (s *Sandbox) NewProcess(
 ) (Process, error) {
 	proc := Process{
 		ID:  createProcessID(),
-		ext: s,
+		wsH: s.wsH,
 		cmd: cmd,
 	}
 	for _, opt := range opts {
@@ -406,7 +436,7 @@ func (p *Process) Start() error {
 		p.env = map[string]string{"PYTHONUNBUFFERED": "1"}
 	}
 	respCh := make(chan []byte)
-	err := p.ext.wsH.Write(Request{
+	err := p.wsH.Write(Request{
 		JSONRPC:    rpc,
 		Method:     processStart,
 		Params:     []any{p.ID, p.cmd, p.env, p.cwd},
@@ -439,7 +469,7 @@ func (s *Sandbox) Close() error {
 
 // Done returns a channel that is closed when the process is done.
 func (p *Process) Done() <-chan struct{} {
-	rCh, ok := p.ext.wsH.idMap.Load(p.ID)
+	rCh, ok := p.wsH.idMap.Load(p.ID)
 	if !ok {
 		return nil
 	}
@@ -453,26 +483,24 @@ func (p *Process) Subscribe(
 	event ProcessEvents,
 	ch chan<- Event,
 ) error {
-	responseCh := make(chan []byte)
-	err := p.ext.wsH.Write(Request{
+	respCh := make(chan []byte)
+	err := p.wsH.Write(Request{
 		JSONRPC:    rpc,
 		Method:     processSubscribe,
 		Params:     []any{event, p.ID},
-		ResponseCh: responseCh,
+		ResponseCh: respCh,
 	})
 	if err != nil {
 		return err
 	}
 	var res Response[string, APIError]
-	resp := <-responseCh
-	err = json.Unmarshal(resp, &res)
+	err = json.Unmarshal(<-respCh, &res)
 	if err != nil {
 		return err
 	}
 	if res.Error.Code != 0 {
 		return fmt.Errorf("process subscribe failed(%d): %s", res.Error.Code, res.Error.Message)
 	}
-	p.ext.logger.Debug("subscribed to process", "id", p.ID, "event", event, "subID", res.Result)
 	go func() {
 		select {
 		case <-ctx.Done():
@@ -480,9 +508,9 @@ func (p *Process) Subscribe(
 		case <-p.Done():
 			return
 		}
-		p.ext.logger.Debug("unsubscribing from process", "id", p.ID, "event", event, "subID", res.Result)
+		p.wsH.subMap.Delete(res.Result)
 		respCh := make(chan []byte)
-		err = p.ext.wsH.Write(Request{
+		err = p.wsH.Write(Request{
 			JSONRPC:    rpc,
 			Method:     processUnsubscribe,
 			Params:     []any{res.Result},
@@ -498,7 +526,6 @@ func (p *Process) Subscribe(
 		}
 	}()
 	eventByCh := make(chan []byte)
-	p.ext.wsH.Sub(res.Result, eventByCh)
 	go func() {
 		for {
 			select {
@@ -522,7 +549,6 @@ func (p *Process) Subscribe(
 	}()
 	return nil
 }
-
 func (s *Sandbox) wsURL() url.URL {
 	return url.URL{
 		Scheme: defaultWSScheme,
@@ -533,7 +559,6 @@ func (s *Sandbox) wsURL() url.URL {
 		Path: wsRoute,
 	}
 }
-
 func createProcessID() string {
 	b := make([]byte, 12)
 	for i := range b {

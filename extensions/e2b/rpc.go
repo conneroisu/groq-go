@@ -4,20 +4,24 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"sync"
 
 	"github.com/gorilla/websocket"
 )
 
 type (
-	// WSHandler is a handler for websockets.
-	WSHandler struct {
+	// defaultWSHandler is a handler for websockets.
+	defaultWSHandler struct {
+		logger *slog.Logger
 		ws     *websocket.Conn
 		idMap  sync.Map
 		subMap sync.Map
+		msgCnt int
 	}
 	decResp struct {
-		ID     int `json:"id"`
+		Method string `json:"method"`
+		ID     int    `json:"id"`
 		Params struct {
 			Subscription string `json:"subscription"`
 		}
@@ -28,8 +32,12 @@ type (
 
 )
 
-func newWSHandler(ctx context.Context, url string) (*WSHandler, error) {
-	h := &WSHandler{}
+func newWSHandler(ctx context.Context, url string, logger *slog.Logger) (*defaultWSHandler, error) {
+	h := defaultWSHandler{
+		// logger: slog.New(slog.NewJSONHandler(io.Discard, nil)),
+		logger: logger,
+		msgCnt: 1,
+	}
 	var err error
 	h.ws, _, err = websocket.DefaultDialer.Dial(url, nil)
 	if err != nil {
@@ -41,22 +49,22 @@ func newWSHandler(ctx context.Context, url string) (*WSHandler, error) {
 			fmt.Println(err)
 		}
 	}()
-	return h, nil
-}
-
-// Sub subscribes to a subscription id
-func (h *WSHandler) Sub(id string, resCh chan []byte) {
-	h.subMap.Store(id, resCh)
+	return &h, nil
 }
 
 // UnSub subscribes to a subscription id
-func (h *WSHandler) UnSub(id string) {
+func (h *defaultWSHandler) UnSub(id string) {
 	h.subMap.Delete(id)
 }
 
 // Write writes a request to the websocket.
-func (h *WSHandler) Write(req Request) (err error) {
+func (h *defaultWSHandler) Write(req Request) (err error) {
+	req.ID = h.msgCnt
+	h.logger.Debug("writing request", "method", req.Method, "id", req.ID, "params", req.Params)
 	h.idMap.Store(req.ID, req.ResponseCh)
+	if req.Method == processSubscribe || req.Method == filesystemSubscribe {
+		h.subMap.Store(req.ID, req.ResponseCh)
+	}
 	jsVal, err := json.Marshal(req)
 	if err != nil {
 		return err
@@ -65,13 +73,14 @@ func (h *WSHandler) Write(req Request) (err error) {
 	if err != nil {
 		return fmt.Errorf("failed to write %s request (%d): %w", req.Method, req.ID, err)
 	}
+	h.msgCnt++
 	return nil
 }
 
 // Read reads a response from the websocket.
 //
 // If the context is cancelled, the websocket will be closed.
-func (h *WSHandler) read(ctx context.Context) (err error) {
+func (h *defaultWSHandler) read(ctx context.Context) (err error) {
 	defer func() {
 		err = h.ws.Close()
 	}()
@@ -89,21 +98,28 @@ func (h *WSHandler) read(ctx context.Context) (err error) {
 			if err != nil {
 				return err
 			}
+			h.logger.Debug("reading response", "method", decResp.Method, "id", decResp.ID, "body", string(resp))
 			if decResp.Params.Subscription != "" {
 				toR, ok := h.subMap.Load(decResp.Params.Subscription)
 				if !ok {
-					return fmt.Errorf("subscription not found: %s", decResp.Params.Subscription)
+					h.logger.Debug("subscription not found", "id", decResp.Params.Subscription)
 				}
-				toR.(chan []byte) <- resp
+				toRCh, ok := toR.(chan []byte)
+				if !ok {
+					h.logger.Debug("subscription not found", "id", decResp.Params.Subscription)
+				}
+				toRCh <- resp
 			}
-			if decResp.ID == 0 {
+			if decResp.ID != 0 {
 				toR, ok := h.idMap.Load(decResp.ID)
 				if !ok {
-					return fmt.Errorf("response not found: %d", decResp.ID)
+					h.logger.Debug("response not found", "id", decResp.ID)
 				}
-				toRCh := toR.(chan []byte)
+				toRCh, ok := toR.(chan []byte)
+				if !ok {
+					h.logger.Debug("responsech not found", "id", decResp.ID)
+				}
 				toRCh <- resp
-				// close(toRCh)
 			}
 		}
 	}
