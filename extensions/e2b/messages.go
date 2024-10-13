@@ -22,9 +22,16 @@ func (s *Sandbox) sendRequest(req *http.Request, v interface{}) error {
 		res.StatusCode >= http.StatusBadRequest {
 		return fmt.Errorf("request to create sandbox failed: %s\nbody: %s", res.Status, getBody(res))
 	}
-	return decodeResponse(res.Body, v)
+	if v == nil {
+		return nil
+	}
+	switch o := v.(type) {
+	case *string:
+		return decodeString(res.Body, o)
+	default:
+		return json.NewDecoder(res.Body).Decode(v)
+	}
 }
-
 func decodeString(body io.Reader, output *string) error {
 	b, err := io.ReadAll(body)
 	if err != nil {
@@ -32,17 +39,6 @@ func decodeString(body io.Reader, output *string) error {
 	}
 	*output = string(b)
 	return nil
-}
-func decodeResponse(body io.Reader, v any) error {
-	if v == nil {
-		return nil
-	}
-	switch o := v.(type) {
-	case *string:
-		return decodeString(body, o)
-	default:
-		return json.NewDecoder(body).Decode(v)
-	}
 }
 func getBody(resp *http.Response) string {
 	b, err := io.ReadAll(resp.Body)

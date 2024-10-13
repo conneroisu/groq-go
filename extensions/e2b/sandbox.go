@@ -384,13 +384,6 @@ func (s *Sandbox) Download(path string) (io.ReadCloser, error) {
 	return nil, nil
 }
 
-// {"jsonrpc": "2.0", "method": "process_start", "params": ["KkLECSZQiN5B", "cat file0.txt", {"PYTHONUNBUFFERED": "1"}, ""], "id": 12}
-// {"jsonrpc": "2.0", "method": "process_start", "params": ["Z9SalhcNx641", "cat file9.txt", {"PYTHONUNBUFFERED": "1"}, ""], "id": 341}
-// {"jsonrpc": "2.0", "method": "process_subscribe", "params": ["onExit", "N5hJqKkNXj1i"], "id": 15}
-// {"jsonrpc": "2.0", "method": "process_subscribe", "params": ["onStdout", "N5hJqKkNXj1i"], "id": 16}
-// {"jsonrpc": "2.0", "method": "process_unsubscribe", "params": ["0xa7966b61d145231b3b3ab8cd440edf58"], "id": 14}
-// {"jsonrpc": "2.0", "method": "process_unsubscribe", "params": ["0xb6b65c652bc5576751debfc82e864156"], "id": 17}
-
 // NewProcess creates a new process startable in the sandbox.
 func (s *Sandbox) NewProcess(
 	cmd string,
