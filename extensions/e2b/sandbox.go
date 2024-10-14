@@ -5,13 +5,16 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log/slog"
 	"math/rand"
 	"net/http"
 	"net/url"
+	"sync"
 	"time"
 
 	"github.com/conneroisu/groq-go/pkg/builders"
+	"github.com/gorilla/websocket"
 )
 
 type (
@@ -24,112 +27,116 @@ type (
 	//
 	// The sandbox is like an isolated, but interactive system.
 	Sandbox struct {
-		ID         string            `json:"sandboxID"`
-		Metadata   map[string]string `json:"metadata"`
-		Template   SandboxTemplate   `json:"templateID"`
-		Alias      string            `json:"alias"`
-		ClientID   string            `json:"clientID"`
-		apiKey     string
-		baseAPIURL string
-		logger     *slog.Logger
-		header     builders.Header
-		httpScheme string
-		client     *http.Client
-		wsH        *defaultWSHandler
-		Cwd        string
+		ID         string            `json:"sandboxID"`  // ID of the sandbox.
+		Metadata   map[string]string `json:"metadata"`   // Metadata of the sandbox.
+		Template   SandboxTemplate   `json:"templateID"` // Template of the sandbox.
+		ClientID   string            `json:"clientID"`   // ClientID of the sandbox.
+		Cwd        string            `json:"cwd"`        // Cwd is the sandbox's current working directory.
+		logger     *slog.Logger      `json:"-"`          // logger is the sandbox's logger.
+		apiKey     string            `json:"-"`          // apiKey is the sandbox's api key.
+		baseAPIURL string            `json:"-"`          // baseAPIURL is the base api url of the sandbox.
+		httpScheme string            `json:"-"`          // httpScheme is the sandbox's http scheme.
+		client     *http.Client      `json:"-"`          // client is the sandbox's http client.
+		header     builders.Header   `json:"-"`          // header is the sandbox's request header builder.
+		ws         *websocket.Conn   `json:"-"`          // ws is the sandbox's websocket connection.
+		Map        sync.Map          `json:"-"`          // Map is the map of the sandbox.
+		msgCnt     int               `json:"-"`          // msgCnt is the message count.
 	}
 	// Process is a process in the sandbox.
 	Process struct {
-		wsH      *defaultWSHandler
-		ID       string
-		ResultID string
-		cmd      string
-		cwd      string
-		env      map[string]string
+		ID  string            // ID is process id.
+		cmd string            // cmd is process's command.
+		cwd string            // cwd is process's current working directory.
+		env map[string]string // env is process's environment variables.
+		sb  *Sandbox          // sb is the sandbox the process belongs to.
 	}
 	// SubscribeParams is the params for subscribing to a process event.
 	SubscribeParams struct {
-		Event ProcessEvents
-		Ch    chan<- Event
+		Event ProcessEvents // Event is the event to subscribe to.
+		Ch    chan<- Event  // Ch is the channel to write the event to.
 	}
 	// Option is an option for the sandbox.
 	Option func(*Sandbox)
 	// ProcessOption is an option for a process.
 	ProcessOption func(*Process)
 	// Event is a file system event.
-	// {\"jsonrpc\":\"2.0\",\"method\":\"process_subscription\",\"params\":{\"subscription\":\"0xc900b4c1c65808e80174d22e2ce9ecf4\",\"result\":{\"type\":\"Stdout\",\"line\":\"Hello World!\",\"timestamp\":1728774047677344401}}}\n
 	Event struct {
-		Params struct {
-			Subscription string `json:"subscription"`
-			Result       struct {
-				Type        string `json:"type"`
-				Line        string `json:"line"`
-				Timestamp   int64  `json:"timestamp"`
-				IsDirectory bool   `json:"isDirectory"`
-				Error       string `json:"error"`
-			} `json:"result"`
-		}
-		// Path is the path of the event.
-		Path string
-		// Name is the name of file or directory.
-		Name string
-		// Operation is the operation type of the event.
-		Operation OperationType
-		// Timestamp is the timestamp of the event.
-		Timestamp int64
-		// IsDir is true if the event is a directory.
-		IsDir bool
-		// Error is the possible error of the event.
-		Error string
+		Params    EventParams   `json:"params"`    // Params is the parameters of the event.
+		Path      string        `json:"path"`      // Path is the path of the event.
+		Name      string        `json:"name"`      // Name is the name of file or directory.
+		Operation OperationType `json:"operation"` // Operation is the operation type of the event.
+		Timestamp int64         `json:"timestamp"` // Timestamp is the timestamp of the event.
+		Error     string        `json:"error"`     // Error is the possible error of the event.
+	}
+	// EventParams is the params for subscribing to a process event.
+	EventParams struct {
+		Subscription string      `json:"subscription"` // Subscription is the subscription id of the event.
+		Result       EventResult `json:"result"`       // Result is the result of the event.
+	}
+	// EventResult is a file system event response.
+	EventResult struct {
+		Type        string `json:"type"`
+		Line        string `json:"line"`
+		Timestamp   int64  `json:"timestamp"`
+		IsDirectory bool   `json:"isDirectory"`
+		Error       string `json:"error"`
 	}
 	// OperationType is an operation type.
 	OperationType int
-	// Method is a JSON-RPC method.
-	Method string
 	// Request is a JSON-RPC request.
 	Request struct {
-		// JSONRPC is the JSON-RPC version of the message.
-		JSONRPC string `json:"jsonrpc"`
-		// Method is the method of the message.
-		Method Method `json:"method"`
-		// ID is the ID of the message.
-		ID int `json:"id"`
-		// Params is the params of the message.
-		Params []any `json:"params"`
-		// ResponseCh is the channel to write the response to.
-		ResponseCh chan []byte `json:"-"`
+		JSONRPC    string      `json:"jsonrpc"` // JSONRPC is the JSON-RPC version of the request.
+		Method     Method      `json:"method"`  // Method is the request method.
+		ID         int         `json:"id"`      // ID of the request.
+		Params     []any       `json:"params"`  // Params of the request.
+		ResponseCh chan []byte `json:"-"`       // ResponseCh is the channel to write the response body to.
 	}
 	// Response is a JSON-RPC response.
 	Response[T any, Q any] struct {
-		// ID is the ID of the message.
-		ID int `json:"id"`
-		// Result is the result of the message.
-		Result T `json:"result"`
-		// Error is the error of the message.
-		Error Q `json:"error"`
+		ID     int `json:"id"`     // ID of the response.
+		Result T   `json:"result"` // Result of the response.
+		Error  Q   `json:"error"`  // Error of the message.
 	}
 	// LsResult is a result of the list request.
 	LsResult struct {
-		Name  string `json:"name"`
-		IsDir bool   `json:"isDir"`
+		Name  string `json:"name"`  // Name is the name of the file or directory.
+		IsDir bool   `json:"isDir"` // isDir is true if the entry is a directory.
 	}
 	// APIError is the error of the API.
 	APIError struct {
 		Code    int    `json:"code,omitempty"` // Code is the code of the error.
 		Message string `json:"message"`        // Message is the message of the error.
 	}
+	// Method is a JSON-RPC method.
+	Method  string
+	decResp struct {
+		Method string `json:"method"`
+		ID     int    `json:"id"`
+		Params struct {
+			Subscription string `json:"subscription"`
+		}
+	}
 )
 
 const (
-	// OnStdout is the event for the stdout.
-	OnStdout ProcessEvents = "onStdout"
-	// OnStderr is the event for the stderr.
-	OnStderr ProcessEvents = "onStderr"
-	// OnExit is the event for the exit.
-	OnExit ProcessEvents = "onExit"
+	OnStdout ProcessEvents = "onStdout" // OnStdout is the event for the stdout.
+	OnStderr ProcessEvents = "onStderr" // OnStderr is the event for the stderr.
+	OnExit   ProcessEvents = "onExit"   // OnExit is the event for the exit.
 
-	rpc                         = "2.0"
-	charset                     = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	EventTypeCreate OperationType = iota // EventTypeCreate is an event for the creation of a file/dir.
+	EventTypeWrite                       // EventTypeWrite is an event for the write to a file.
+	EventTypeRemove                      // EventTypeRemove is an event for the removal of a file/dir.
+
+	rpc                = "2.0"
+	charset            = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	defaultBaseURL     = "https://api.e2b.dev"
+	defaultWSScheme    = "wss"
+	wsRoute            = "/ws"
+	fileRoute          = "/file"
+	sandboxesRoute     = "/sandboxes"  // (GET/POST /sandboxes)
+	deleteSandboxRoute = "/sandboxes/" // (DELETE /sandboxes/:id)
+	defaultHTTPScheme  = "https"
+
 	filesystemWrite      Method = "filesystem_write"
 	filesystemRead       Method = "filesystem_read"
 	filesystemList       Method = "filesystem_list"
@@ -137,24 +144,10 @@ const (
 	filesystemMakeDir    Method = "filesystem_makeDir"
 	filesystemReadBytes  Method = "filesystem_readBase64"
 	filesystemWriteBytes Method = "filesystem_writeBase64"
+	filesystemSubscribe  Method = "filesystem_subscribe"
 	processSubscribe     Method = "process_subscribe"
 	processUnsubscribe   Method = "process_unsubscribe"
 	processStart         Method = "process_start"
-	// TODO: Check this one.
-	filesystemSubscribe = "filesystem_subscribe"
-	defaultBaseURL      = "https://api.e2b.dev"
-	defaultWSScheme     = "wss"
-	wsRoute             = "/ws"
-	fileRoute           = "/file"
-	sandboxesRoute      = "/sandboxes"  // (GET/POST /sandboxes)
-	deleteSandboxRoute  = "/sandboxes/" // (DELETE /sandboxes/:id)
-	defaultHTTPScheme   = "https"
-	// EventTypeCreate is a type of event for the creation of a file/dir.
-	EventTypeCreate OperationType = iota
-	// EventTypeWrite is a type of event for the write to a file.
-	EventTypeWrite
-	// EventTypeRemove is a type of event for the removal of a file/dir.
-	EventTypeRemove
 )
 
 // NewSandbox creates a new sandbox.
@@ -162,7 +155,7 @@ func NewSandbox(
 	ctx context.Context,
 	apiKey string,
 	opts ...Option,
-) (Sandbox, error) {
+) (*Sandbox, error) {
 	sb := Sandbox{
 		apiKey:     apiKey,
 		Template:   "base",
@@ -171,8 +164,9 @@ func NewSandbox(
 			"sdk": "groq-go v1",
 		},
 		client:     http.DefaultClient,
-		logger:     slog.Default(),
+		logger:     slog.New(slog.NewJSONHandler(io.Discard, nil)),
 		httpScheme: defaultHTTPScheme,
+		msgCnt:     1,
 	}
 	for _, opt := range opts {
 		opt(&sb)
@@ -187,36 +181,73 @@ func NewSandbox(
 		sb.header,
 		http.MethodPost,
 		fmt.Sprintf("%s%s", sb.baseAPIURL, sandboxesRoute),
-		builders.WithBody(sb),
+		builders.WithBody(&sb),
 	)
 	if err != nil {
-		return sb, err
+		return &sb, err
 	}
 	err = sb.sendRequest(req, &sb)
 	if err != nil {
-		return sb, err
+		return &sb, err
 	}
-	u := sb.wsURL()
-	sb.logger.Debug("Connecting to sandbox", "url", u.String())
-	sb.wsH, err = newWSHandler(ctx, u.String(), sb.logger)
+	sb.ws, _, err = websocket.DefaultDialer.Dial(sb.wsURL().String(), nil)
 	if err != nil {
-		return sb, err
+		return &sb, err
 	}
-	return sb, nil
+	go func() {
+		err := sb.read(ctx)
+		if err != nil {
+			fmt.Println(err)
+		}
+	}()
+	return &sb, nil
 }
 
 // KeepAlive keeps the sandbox alive.
 func (s *Sandbox) KeepAlive(timeout time.Duration) error {
-	time.Sleep(timeout)
-	// TODO: implement
+	req, err := builders.NewRequest(
+		context.Background(),
+		s.header,
+		http.MethodPost,
+		fmt.Sprintf("%s/sandboxes/%s/refreshes", s.baseAPIURL, s.ID),
+		builders.WithBody(struct {
+			Duration int `json:"duration"`
+		}{
+			Duration: int(timeout.Seconds()),
+		}),
+	)
+	if err != nil {
+		return err
+	}
+	resp, err := s.client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode < http.StatusOK ||
+		resp.StatusCode >= http.StatusBadRequest {
+		return fmt.Errorf("request to create sandbox failed: %s\nbody: %s", resp.Status, getBody(resp))
+	}
 	return nil
 }
 
 // Reconnect reconnects to the sandbox.
 func (s *Sandbox) Reconnect(ctx context.Context) (err error) {
+	if err := s.ws.Close(); err != nil {
+		return err
+	}
 	u := s.wsURL()
-	s.logger.Debug("Reconnecting to sandbox", "url", u.String())
-	s.wsH, err = newWSHandler(ctx, u.String(), s.logger)
+	s.logger.Debug("reconnecting to sandbox", "url", u.String())
+	s.ws, _, err = websocket.DefaultDialer.Dial(u.String(), nil)
+	if err != nil {
+		return err
+	}
+	go func() {
+		err := s.read(ctx)
+		if err != nil {
+			fmt.Println(err)
+		}
+	}()
 	return err
 }
 
@@ -246,7 +277,7 @@ func (s *Sandbox) Stop(ctx context.Context) error {
 // Mkdir makes a directory in the sandbox file system.
 func (s *Sandbox) Mkdir(path string) error {
 	respCh := make(chan []byte)
-	err := s.wsH.Write(Request{
+	err := s.WriteRequest(Request{
 		JSONRPC:    rpc,
 		Method:     filesystemMakeDir,
 		Params:     []any{path},
@@ -255,13 +286,12 @@ func (s *Sandbox) Mkdir(path string) error {
 	if err != nil {
 		return err
 	}
-	var resp Response[string, string]
-	err = json.Unmarshal(<-respCh, &resp)
+	resp, err := decodeResponse[string, APIError](<-respCh)
 	if err != nil {
 		return fmt.Errorf("failed to mkdir: %w", err)
 	}
-	if resp.Error != "" {
-		return fmt.Errorf("failed to write to file: %s", resp.Error)
+	if resp.Error.Code != 0 {
+		return fmt.Errorf("failed to write to file: %s", resp.Error.Message)
 	}
 	return nil
 }
@@ -270,7 +300,7 @@ func (s *Sandbox) Mkdir(path string) error {
 // the given path.
 func (s *Sandbox) Ls(path string) ([]LsResult, error) {
 	respCh := make(chan []byte)
-	err := s.wsH.Write(Request{
+	err := s.WriteRequest(Request{
 		Params:     []any{path},
 		JSONRPC:    rpc,
 		Method:     filesystemList,
@@ -279,8 +309,7 @@ func (s *Sandbox) Ls(path string) ([]LsResult, error) {
 	if err != nil {
 		return nil, err
 	}
-	var res Response[[]LsResult, string]
-	err = json.Unmarshal(<-respCh, &res)
+	res, err := decodeResponse[[]LsResult, string](<-respCh)
 	if err != nil {
 		return nil, err
 	}
@@ -292,7 +321,7 @@ func (s *Sandbox) Read(
 	path string,
 ) (string, error) {
 	respCh := make(chan []byte)
-	err := s.wsH.Write(Request{
+	err := s.WriteRequest(Request{
 		JSONRPC:    rpc,
 		Method:     filesystemRead,
 		Params:     []any{path},
@@ -301,8 +330,7 @@ func (s *Sandbox) Read(
 	if err != nil {
 		return "", err
 	}
-	var res Response[string, string]
-	err = json.Unmarshal(<-respCh, &res)
+	res, err := decodeResponse[string, string](<-respCh)
 	if err != nil {
 		return "", err
 	}
@@ -315,7 +343,7 @@ func (s *Sandbox) Read(
 // Write writes to a file to the sandbox file system.
 func (s *Sandbox) Write(path string, data []byte) error {
 	respCh := make(chan []byte)
-	err := s.wsH.Write(Request{
+	err := s.WriteRequest(Request{
 		JSONRPC:    rpc,
 		Method:     filesystemWrite,
 		Params:     []any{path, string(data)},
@@ -334,7 +362,7 @@ func (s *Sandbox) Write(path string, data []byte) error {
 // ReadBytes reads a file from the sandbox file system.
 func (s *Sandbox) ReadBytes(path string) ([]byte, error) {
 	resCh := make(chan []byte)
-	err := s.wsH.Write(Request{
+	err := s.WriteRequest(Request{
 		JSONRPC:    rpc,
 		Method:     filesystemReadBytes,
 		Params:     []any{path},
@@ -343,12 +371,11 @@ func (s *Sandbox) ReadBytes(path string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	var rR Response[string, string]
-	err = json.Unmarshal(<-resCh, &rR)
+	res, err := decodeResponse[string, string](<-resCh)
 	if err != nil {
 		return nil, err
 	}
-	sDec, err := base64.StdEncoding.DecodeString(rR.Result)
+	sDec, err := base64.StdEncoding.DecodeString(res.Result)
 	if err != nil {
 		return nil, err
 	}
@@ -364,19 +391,21 @@ func (s *Sandbox) Watch(
 	path string,
 	eCh chan<- Event,
 ) error {
-	ch := make(chan []byte)
-	err := s.wsH.Write(Request{
-		JSONRPC: rpc,
-		Method:  filesystemSubscribe,
-		Params: []any{
-			"watchDir",
-			path,
-		},
-		ResponseCh: ch,
+	respCh := make(chan []byte)
+	err := s.WriteRequest(Request{
+		JSONRPC:    rpc,
+		Method:     filesystemSubscribe,
+		Params:     []any{"watchDir", path},
+		ResponseCh: respCh,
 	})
 	if err != nil {
 		return err
 	}
+	res, err := decodeResponse[string, string](<-respCh)
+	if err != nil {
+		return err
+	}
+	s.Map.Store(res.Result, eCh)
 	go func() {
 		for {
 			select {
@@ -384,7 +413,7 @@ func (s *Sandbox) Watch(
 				return
 			default:
 				var event Event
-				err := json.Unmarshal(<-ch, &event)
+				err := json.Unmarshal(<-respCh, &event)
 				if err != nil {
 					return
 				}
@@ -408,7 +437,7 @@ func (s *Sandbox) NewProcess(
 ) (Process, error) {
 	proc := Process{
 		ID:  createProcessID(),
-		wsH: s.wsH,
+		sb:  s,
 		cmd: cmd,
 	}
 	for _, opt := range opts {
@@ -423,7 +452,7 @@ func (p *Process) Start() error {
 		p.env = map[string]string{"PYTHONUNBUFFERED": "1"}
 	}
 	respCh := make(chan []byte)
-	err := p.wsH.Write(Request{
+	err := p.sb.WriteRequest(Request{
 		JSONRPC:    rpc,
 		Method:     processStart,
 		Params:     []any{p.ID, p.cmd, p.env, p.cwd},
@@ -432,8 +461,7 @@ func (p *Process) Start() error {
 	if err != nil {
 		return err
 	}
-	var res Response[string, APIError]
-	err = json.Unmarshal(<-respCh, &res)
+	res, err := decodeResponse[string, APIError](<-respCh)
 	if err != nil {
 		return err
 	}
@@ -449,19 +477,13 @@ func (p *Process) Start() error {
 	return nil
 }
 
-// Close closes the sandbox.
-func (s *Sandbox) Close() error {
-	return s.wsH.ws.Close()
-}
-
 // Done returns a channel that is closed when the process is done.
 func (p *Process) Done() <-chan struct{} {
-	rCh, ok := p.wsH.Map.Load(p.ID)
+	rCh, ok := p.sb.Map.Load(p.ID)
 	if !ok {
 		return nil
 	}
 	return rCh.(<-chan struct{})
-
 }
 
 // Subscribe subscribes to a process event.
@@ -471,7 +493,7 @@ func (p *Process) Subscribe(
 	ch chan<- Event,
 ) error {
 	respCh := make(chan []byte)
-	err := p.wsH.Write(Request{
+	err := p.sb.WriteRequest(Request{
 		JSONRPC:    rpc,
 		Method:     processSubscribe,
 		Params:     []any{event, p.ID},
@@ -480,8 +502,7 @@ func (p *Process) Subscribe(
 	if err != nil {
 		return err
 	}
-	var res Response[string, APIError]
-	err = json.Unmarshal(<-respCh, &res)
+	res, err := decodeResponse[string, APIError](<-respCh)
 	if err != nil {
 		return err
 	}
@@ -491,13 +512,15 @@ func (p *Process) Subscribe(
 	go func() {
 		select {
 		case <-ctx.Done():
+			p.sb.Map.Delete(res.Result)
 			break
 		case <-p.Done():
-			return
+			p.sb.Map.Delete(res.Result)
+			break
 		}
-		p.wsH.Map.Delete(res.Result)
+		p.sb.Map.Delete(res.Result)
 		respCh := make(chan []byte)
-		err = p.wsH.Write(Request{
+		err = p.sb.WriteRequest(Request{
 			JSONRPC:    rpc,
 			Method:     processUnsubscribe,
 			Params:     []any{res.Result},
@@ -506,14 +529,16 @@ func (p *Process) Subscribe(
 		if err != nil {
 			println(err)
 		}
-		var unsubRes Response[bool, string]
-		err = json.Unmarshal(<-respCh, &unsubRes)
+		unsubRes, err := decodeResponse[bool, string](<-respCh)
 		if err != nil {
 			println(err)
 		}
+		if unsubRes.Error != "" {
+			println(unsubRes.Error)
+		}
 	}()
 	eventByCh := make(chan []byte)
-	p.wsH.Map.Store(res.Result, eventByCh)
+	p.sb.Map.Store(res.Result, eventByCh)
 	go func() {
 		for {
 			select {
@@ -537,8 +562,8 @@ func (p *Process) Subscribe(
 	}()
 	return nil
 }
-func (s *Sandbox) wsURL() url.URL {
-	return url.URL{
+func (s *Sandbox) wsURL() *url.URL {
+	return &url.URL{
 		Scheme: defaultWSScheme,
 		Host: fmt.Sprintf("49982-%s-%s.e2b.dev",
 			s.ID,
@@ -553,4 +578,163 @@ func createProcessID() string {
 		b[i] = charset[rand.Intn(len(charset))]
 	}
 	return string(b)
+}
+func (s *Sandbox) sendRequest(req *http.Request, v interface{}) error {
+	req.Header.Set("Accept", "application/json")
+	contentType := req.Header.Get("Content-Type")
+	if contentType == "" {
+		req.Header.Set("Content-Type", "application/json")
+	}
+	res, err := s.client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+	if res.StatusCode < http.StatusOK ||
+		res.StatusCode >= http.StatusBadRequest {
+		return fmt.Errorf("request to create sandbox failed: %s\nbody: %s", res.Status, getBody(res))
+	}
+	if v == nil {
+		return nil
+	}
+	switch o := v.(type) {
+	case *string:
+		return decodeString(res.Body, o)
+	default:
+		return json.NewDecoder(res.Body).Decode(v)
+	}
+}
+func decodeString(body io.Reader, output *string) error {
+	b, err := io.ReadAll(body)
+	if err != nil {
+		return err
+	}
+	*output = string(b)
+	return nil
+}
+func getBody(resp *http.Response) string {
+	b, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return ""
+	}
+	return string(b)
+}
+
+// WriteRequest writes a request to the websocket.
+func (s *Sandbox) WriteRequest(req Request) (err error) {
+	req.ID = s.msgCnt
+	defer func() { s.msgCnt++ }()
+	s.logger.Debug("writing request", "method", req.Method, "id", req.ID, "params", req.Params)
+	s.Map.Store(req.ID, req.ResponseCh)
+	jsVal, err := json.Marshal(req)
+	if err != nil {
+		return err
+	}
+	err = s.ws.WriteMessage(websocket.TextMessage, jsVal)
+	if err != nil {
+		return fmt.Errorf("failed to write %s request (%d): %w", req.Method, req.ID, err)
+	}
+	return nil
+}
+
+// Read reads a response from the websocket.
+//
+// If the context is cancelled, the websocket will be closed.
+func (s *Sandbox) read(ctx context.Context) (err error) {
+	defer func() {
+		err = s.ws.Close()
+	}()
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+			_, body, err := s.ws.ReadMessage()
+			if err != nil {
+				return err
+			}
+			var decResp decResp
+			err = json.Unmarshal(body, &decResp)
+			if err != nil {
+				return err
+			}
+			s.logger.Debug("read", "method", decResp.Method, "id", decResp.ID, "body", body)
+			if decResp.Params.Subscription != "" {
+				toR, ok := s.Map.Load(decResp.Params.Subscription)
+				if !ok {
+					s.logger.Debug("subscription not found", "id", decResp.Params.Subscription)
+				}
+				toRCh, ok := toR.(chan []byte)
+				if !ok {
+					s.logger.Debug("subscription not found", "id", decResp.Params.Subscription)
+				}
+				toRCh <- body
+				continue
+			}
+			// it is a id response
+			toR, ok := s.Map.Load(decResp.ID)
+			if !ok {
+				s.logger.Debug("response not found", "id", decResp.ID)
+			}
+			toRCh, ok := toR.(chan []byte)
+			if !ok {
+				s.logger.Debug("responsech not found", "id", decResp.ID)
+			}
+			toRCh <- body
+		}
+	}
+}
+
+// WithBaseURL sets the base URL for the e2b sandbox.
+func (s *Sandbox) WithBaseURL(baseURL string) Option {
+	return func(s *Sandbox) { s.baseAPIURL = baseURL }
+}
+
+// WithTemplate sets the template for the e2b sandbox.
+func (s *Sandbox) WithTemplate(template SandboxTemplate) Option {
+	return func(s *Sandbox) { s.Template = template }
+}
+
+// WithClient sets the client for the e2b sandbox.
+func WithClient(client *http.Client) Option {
+	return func(s *Sandbox) { s.client = client }
+}
+
+// WithLogger sets the logger for the e2b sandbox.
+func WithLogger(logger *slog.Logger) Option {
+	return func(s *Sandbox) { s.logger = logger }
+}
+
+// WithTemplate sets the template for the e2b sandbox.
+func WithTemplate(template SandboxTemplate) Option {
+	return func(s *Sandbox) { s.Template = template }
+}
+
+// WithMetaData sets the meta data for the e2b sandbox.
+func WithMetaData(metaData map[string]string) Option {
+	return func(s *Sandbox) { s.Metadata = metaData }
+}
+
+// WithCwd sets the current working directory.
+func WithCwd(cwd string) Option {
+	return func(s *Sandbox) { s.Cwd = cwd }
+}
+
+// WithEnv sets the environment variables.
+func WithEnv(env map[string]string) ProcessOption {
+	return func(p *Process) { p.env = env }
+}
+
+// WithProcessCwd sets the current working directory.
+func WithProcessCwd(cwd string) ProcessOption {
+	return func(p *Process) { p.cwd = cwd }
+}
+
+func decodeResponse[T any, Q any](body []byte) (*Response[T, Q], error) {
+	decResp := new(Response[T, Q])
+	err := json.Unmarshal(body, decResp)
+	if err != nil {
+		return nil, err
+	}
+	return decResp, nil
 }

@@ -52,15 +52,9 @@ func TestPostSandbox(t *testing.T) {
 		e2b.WithLogger(defaultLogger),
 	)
 	a.NoError(err, "NewSandbox error")
-	defer func() {
-		err = sb.Close()
-		a.NoError(err, "Close error")
-	}()
 	lsr, err := sb.Ls(".")
 	a.NoError(err)
-	// [{.dockerenv false} {.e2b false} {bin false} {boot true} {code true} {dev true} {etc true} {home true} {lib false} {lib32 false} {lib64 false} {libx32 false} {lost+found true} {media true} {mnt true} {opt true} {proc true} {root true} {run true} {sbin false} {srv true} {swap true} {sys true} {tmp true} {usr true} {var true}]
-	names := []string{"boot", "code", "dev", "etc", "home"}
-	for _, name := range names {
+	for _, name := range []string{"boot", "code", "dev", "etc", "home"} {
 		a.Contains(lsr, e2b.LsResult{
 			Name:  name,
 			IsDir: true,
@@ -88,10 +82,6 @@ func TestWriteRead(t *testing.T) {
 		e2b.WithLogger(defaultLogger),
 	)
 	a.NoError(err, "NewSandbox error")
-	defer func() {
-		err = sb.Close()
-		a.NoError(err, "Close error")
-	}()
 	err = sb.Write(filePath, []byte(content))
 	a.NoError(err, "Write error")
 	readContent, err := sb.Read(filePath)
@@ -113,9 +103,10 @@ func TestCreateProcess(t *testing.T) {
 		e2b.WithLogger(defaultLogger),
 	)
 	a.NoError(err, "NewSandbox error")
-	proc, err := sb.NewProcess("echo 'Hello World!'", e2b.WithEnv(map[string]string{
-		"FOO": "bar",
-	}))
+	proc, err := sb.NewProcess("echo 'Hello World!'",
+		e2b.WithEnv(map[string]string{
+			"FOO": "bar",
+		}))
 	a.NoError(err, "could not create process")
 	err = proc.Start()
 	a.NotEmpty(proc.ID)
@@ -178,4 +169,17 @@ func TestFilesystemSubscribe(t *testing.T) {
 	err = sb.Write("/tmp/file2.txt", []byte("Hello World!"))
 	a.NoError(err)
 	time.Sleep(3 * time.Second)
+}
+
+func TestKeepAlive(t *testing.T) {
+	a := assert.New(t)
+	ctx := context.Background()
+	sb, err := e2b.NewSandbox(
+		ctx,
+		getapiKey(t),
+		e2b.WithLogger(defaultLogger),
+	)
+	a.NoError(err, "NewSandbox error")
+	err = sb.KeepAlive(time.Minute * 2)
+	a.NoError(err)
 }
