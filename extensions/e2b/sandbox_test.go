@@ -104,13 +104,15 @@ func TestCreateProcess(t *testing.T) {
 	)
 	a.NoError(err, "NewSandbox error")
 	proc, err := sb.NewProcess("echo 'Hello World!'",
-		e2b.WithEnv(map[string]string{
-			"FOO": "bar",
-		}))
+		e2b.Process{
+			Env: map[string]string{
+				"FOO": "bar",
+			},
+		})
 	a.NoError(err, "could not create process")
 	err = proc.Start()
 	a.NoError(err)
-	proc, err = sb.NewProcess("sleep 2 && echo 'Hello World!'")
+	proc, err = sb.NewProcess("sleep 2 && echo 'Hello World!'", e2b.Process{})
 	a.NoError(err, "could not create process")
 	err = proc.Start()
 	a.NoError(err)

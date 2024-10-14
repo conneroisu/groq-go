@@ -61,12 +61,12 @@ type (
 	ProcessOption func(*Process)
 	// Event is a file system event.
 	Event struct {
-		Params    EventParams   `json:"params"`    // Params is the parameters of the event.
 		Path      string        `json:"path"`      // Path is the path of the event.
 		Name      string        `json:"name"`      // Name is the name of file or directory.
-		Operation OperationType `json:"operation"` // Operation is the operation type of the event.
 		Timestamp int64         `json:"timestamp"` // Timestamp is the timestamp of the event.
 		Error     string        `json:"error"`     // Error is the possible error of the event.
+		Params    EventParams   `json:"params"`    // Params is the parameters of the event.
+		Operation OperationType `json:"operation"` // Operation is the operation type of the event.
 	}
 	// EventParams is the params for subscribing to a process event.
 	EventParams struct {
@@ -433,11 +433,15 @@ func (s *Sandbox) Watch(
 // NewProcess creates a new process startable in the sandbox.
 func (s *Sandbox) NewProcess(
 	cmd string,
-	proc *Process,
+	proc Process,
 ) (*Process, error) {
 	proc.cmd = cmd
 	proc.id = createProcessID()
-	return proc, nil
+	proc.sb = s
+	if proc.Cwd == "" {
+		proc.Cwd = s.Cwd
+	}
+	return &proc, nil
 }
 
 // Start starts a process in the sandbox.
