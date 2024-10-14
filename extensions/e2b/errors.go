@@ -17,8 +17,6 @@ type (
 		ToolName string
 		ArgName  string
 	}
-	ErrArgumentsUnmarshallable struct {
-	}
 )
 
 // Error implements the error interface for ErrToolNotFound.
