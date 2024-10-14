@@ -58,12 +58,12 @@ func (s *Sandbox) modelLs(ctx context.Context, args ...string) (groq.ChatComplet
 }
 
 func (s *Sandbox) modelStartProcess(ctx context.Context, args ...string) (groq.ChatCompletionMessage, error) {
-	proc, err := s.NewProcess(args[0])
+	proc, err := s.NewProcess(args[0], &Process{})
 	if err != nil {
 		return groq.ChatCompletionMessage{}, err
 	}
 	return groq.ChatCompletionMessage{
-		Content: proc.ID,
+		Content: proc.id,
 		Role:    groq.ChatMessageRoleFunction,
 		Name:    "startProcess",
 	}, nil

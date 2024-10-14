@@ -44,11 +44,11 @@ type (
 	}
 	// Process is a process in the sandbox.
 	Process struct {
-		ID  string            // ID is process id.
-		cmd string            // cmd is process's command.
-		cwd string            // cwd is process's current working directory.
-		env map[string]string // env is process's environment variables.
 		sb  *Sandbox          // sb is the sandbox the process belongs to.
+		id  string            // ID is process id.
+		cmd string            // cmd is process's command.
+		Cwd string            // cwd is process's current working directory.
+		Env map[string]string // env is process's environment variables.
 	}
 	// SubscribeParams is the params for subscribing to a process event.
 	SubscribeParams struct {
@@ -433,29 +433,23 @@ func (s *Sandbox) Watch(
 // NewProcess creates a new process startable in the sandbox.
 func (s *Sandbox) NewProcess(
 	cmd string,
-	opts ...ProcessOption,
-) (Process, error) {
-	proc := Process{
-		ID:  createProcessID(),
-		sb:  s,
-		cmd: cmd,
-	}
-	for _, opt := range opts {
-		opt(&proc)
-	}
+	proc *Process,
+) (*Process, error) {
+	proc.cmd = cmd
+	proc.id = createProcessID()
 	return proc, nil
 }
 
 // Start starts a process in the sandbox.
 func (p *Process) Start() error {
-	if p.env == nil {
-		p.env = map[string]string{"PYTHONUNBUFFERED": "1"}
+	if p.Env == nil {
+		p.Env = map[string]string{"PYTHONUNBUFFERED": "1"}
 	}
 	respCh := make(chan []byte)
 	err := p.sb.WriteRequest(Request{
 		JSONRPC:    rpc,
 		Method:     processStart,
-		Params:     []any{p.ID, p.cmd, p.env, p.cwd},
+		Params:     []any{p.id, p.cmd, p.Env, p.Cwd},
 		ResponseCh: respCh,
 	})
 	if err != nil {
@@ -471,15 +465,15 @@ func (p *Process) Start() error {
 	if res.Result == "" || len(res.Result) == 0 {
 		return fmt.Errorf("process start failed got empty result id")
 	}
-	if p.ID != res.Result {
-		return fmt.Errorf("process start failed got wrong result id; want %s, got %s", p.ID, res.Result)
+	if p.id != res.Result {
+		return fmt.Errorf("process start failed got wrong result id; want %s, got %s", p.id, res.Result)
 	}
 	return nil
 }
 
 // Done returns a channel that is closed when the process is done.
 func (p *Process) Done() <-chan struct{} {
-	rCh, ok := p.sb.Map.Load(p.ID)
+	rCh, ok := p.sb.Map.Load(p.id)
 	if !ok {
 		return nil
 	}
@@ -496,7 +490,7 @@ func (p *Process) Subscribe(
 	err := p.sb.WriteRequest(Request{
 		JSONRPC:    rpc,
 		Method:     processSubscribe,
-		Params:     []any{event, p.ID},
+		Params:     []any{event, p.id},
 		ResponseCh: respCh,
 	})
 	if err != nil {
@@ -624,7 +618,7 @@ func getBody(resp *http.Response) string {
 func (s *Sandbox) WriteRequest(req Request) (err error) {
 	req.ID = s.msgCnt
 	defer func() { s.msgCnt++ }()
-	s.logger.Debug("writing request", "method", req.Method, "id", req.ID, "params", req.Params)
+	s.logger.Debug("write", "method", req.Method, "id", req.ID, "params", req.Params)
 	s.Map.Store(req.ID, req.ResponseCh)
 	jsVal, err := json.Marshal(req)
 	if err != nil {
@@ -718,16 +712,6 @@ func WithMetaData(metaData map[string]string) Option {
 // WithCwd sets the current working directory.
 func WithCwd(cwd string) Option {
 	return func(s *Sandbox) { s.Cwd = cwd }
-}
-
-// WithEnv sets the environment variables.
-func WithEnv(env map[string]string) ProcessOption {
-	return func(p *Process) { p.env = env }
-}
-
-// WithProcessCwd sets the current working directory.
-func WithProcessCwd(cwd string) ProcessOption {
-	return func(p *Process) { p.cwd = cwd }
 }
 
 func decodeResponse[T any, Q any](body []byte) (*Response[T, Q], error) {
