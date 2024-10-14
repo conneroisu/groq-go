@@ -80,7 +80,7 @@ NOTE: You are in the correct cwd. Just call the write tool with a name of hello.
 	resps, err := sb.RunTooling(ctx, response)
 	a.NoError(err)
 	sb.logger.Debug("tooling response", "response", resps)
-	lsres, err := sb.Ls(".")
+	lsres, err := sb.Ls(ctx, ".")
 	a.NoError(err)
 	a.Contains(lsres, LsResult{
 		Name:  "hello.txt",

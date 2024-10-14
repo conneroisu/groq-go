@@ -275,7 +275,7 @@ func (s *Sandbox) Stop(ctx context.Context) error {
 }
 
 // Mkdir makes a directory in the sandbox file system.
-func (s *Sandbox) Mkdir(path string) error {
+func (s *Sandbox) Mkdir(ctx context.Context, path string) error {
 	respCh := make(chan []byte)
 	err := s.WriteRequest(Request{
 		JSONRPC:    rpc,
@@ -286,20 +286,26 @@ func (s *Sandbox) Mkdir(path string) error {
 	if err != nil {
 		return err
 	}
-	resp, err := decodeResponse[string, APIError](<-respCh)
-	if err != nil {
-		return fmt.Errorf("failed to mkdir: %w", err)
+	select {
+	case body := <-respCh:
+		resp, err := decodeResponse[string, APIError](body)
+		if err != nil {
+			return fmt.Errorf("failed to mkdir: %w", err)
+		}
+		if resp.Error.Code != 0 {
+			return fmt.Errorf("failed to write to file: %s", resp.Error.Message)
+		}
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
 	}
-	if resp.Error.Code != 0 {
-		return fmt.Errorf("failed to write to file: %s", resp.Error.Message)
-	}
-	return nil
 }
 
 // Ls lists the files and/or directories in the sandbox file system at
 // the given path.
-func (s *Sandbox) Ls(path string) ([]LsResult, error) {
+func (s *Sandbox) Ls(ctx context.Context, path string) ([]LsResult, error) {
 	respCh := make(chan []byte)
+	defer close(respCh)
 	err := s.WriteRequest(Request{
 		Params:     []any{path},
 		JSONRPC:    rpc,
@@ -309,11 +315,16 @@ func (s *Sandbox) Ls(path string) ([]LsResult, error) {
 	if err != nil {
 		return nil, err
 	}
-	res, err := decodeResponse[[]LsResult, string](<-respCh)
-	if err != nil {
-		return nil, err
+	select {
+	case body := <-respCh:
+		res, err := decodeResponse[[]LsResult, string](body)
+		if err != nil {
+			return nil, err
+		}
+		return res.Result, nil
+	case <-ctx.Done():
+		return nil, ctx.Err()
 	}
-	return res.Result, nil
 }
 
 // Read reads a file from the sandbox file system.
@@ -360,8 +371,9 @@ func (s *Sandbox) Write(path string, data []byte) error {
 }
 
 // ReadBytes reads a file from the sandbox file system.
-func (s *Sandbox) ReadBytes(path string) ([]byte, error) {
+func (s *Sandbox) ReadBytes(ctx context.Context, path string) ([]byte, error) {
 	resCh := make(chan []byte)
+	defer close(resCh)
 	err := s.WriteRequest(Request{
 		JSONRPC:    rpc,
 		Method:     filesystemReadBytes,
@@ -371,15 +383,20 @@ func (s *Sandbox) ReadBytes(path string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	res, err := decodeResponse[string, string](<-resCh)
-	if err != nil {
-		return nil, err
+	select {
+	case body := <-resCh:
+		res, err := decodeResponse[string, string](body)
+		if err != nil {
+			return nil, err
+		}
+		sDec, err := base64.StdEncoding.DecodeString(res.Result)
+		if err != nil {
+			return nil, err
+		}
+		return sDec, nil
+	case <-ctx.Done():
+		return nil, ctx.Err()
 	}
-	sDec, err := base64.StdEncoding.DecodeString(res.Result)
-	if err != nil {
-		return nil, err
-	}
-	return sDec, nil
 }
 
 // Watch watches a directory in the sandbox file system.
@@ -392,6 +409,7 @@ func (s *Sandbox) Watch(
 	eCh chan<- Event,
 ) error {
 	respCh := make(chan []byte)
+	defer close(respCh)
 	err := s.WriteRequest(Request{
 		JSONRPC:    rpc,
 		Method:     filesystemSubscribe,
@@ -507,34 +525,6 @@ func (p *Process) Subscribe(
 	if res.Error.Code != 0 {
 		return fmt.Errorf("process subscribe failed(%d): %s", res.Error.Code, res.Error.Message)
 	}
-	go func() {
-		select {
-		case <-ctx.Done():
-			p.sb.Map.Delete(res.Result)
-			break
-		case <-p.Done():
-			p.sb.Map.Delete(res.Result)
-			break
-		}
-		p.sb.Map.Delete(res.Result)
-		respCh := make(chan []byte)
-		err = p.sb.WriteRequest(Request{
-			JSONRPC:    rpc,
-			Method:     processUnsubscribe,
-			Params:     []any{res.Result},
-			ResponseCh: respCh,
-		})
-		if err != nil {
-			println(err)
-		}
-		unsubRes, err := decodeResponse[bool, string](<-respCh)
-		if err != nil {
-			println(err)
-		}
-		if unsubRes.Error != "" {
-			println(unsubRes.Error)
-		}
-	}()
 	eventByCh := make(chan []byte)
 	p.sb.Map.Store(res.Result, eventByCh)
 	go func() {
@@ -558,6 +548,31 @@ func (p *Process) Subscribe(
 			}
 		}
 	}()
+	select {
+	case <-ctx.Done():
+		p.sb.Map.Delete(res.Result)
+		break
+	case <-p.Done():
+		p.sb.Map.Delete(res.Result)
+		break
+	}
+	p.sb.Map.Delete(res.Result)
+	err = p.sb.WriteRequest(Request{
+		JSONRPC:    rpc,
+		Method:     processUnsubscribe,
+		Params:     []any{res.Result},
+		ResponseCh: respCh,
+	})
+	if err != nil {
+		println(err)
+	}
+	unsubRes, err := decodeResponse[bool, string](<-respCh)
+	if err != nil {
+		println(err)
+	}
+	if unsubRes.Error != "" {
+		println(unsubRes.Error)
+	}
 	return nil
 }
 func (s *Sandbox) wsURL() *url.URL {

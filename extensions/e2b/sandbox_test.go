@@ -52,7 +52,7 @@ func TestPostSandbox(t *testing.T) {
 		e2b.WithLogger(defaultLogger),
 	)
 	a.NoError(err, "NewSandbox error")
-	lsr, err := sb.Ls(".")
+	lsr, err := sb.Ls(ctx, ".")
 	a.NoError(err)
 	for _, name := range []string{"boot", "code", "dev", "etc", "home"} {
 		a.Contains(lsr, e2b.LsResult{
@@ -60,9 +60,9 @@ func TestPostSandbox(t *testing.T) {
 			IsDir: true,
 		})
 	}
-	err = sb.Mkdir("heelo")
+	err = sb.Mkdir(ctx, "heelo")
 	a.NoError(err)
-	lsr, err = sb.Ls("/")
+	lsr, err = sb.Ls(ctx, "/")
 	a.NoError(err)
 	a.Contains(lsr, e2b.LsResult{
 		Name:  "heelo",
@@ -87,7 +87,7 @@ func TestWriteRead(t *testing.T) {
 	readContent, err := sb.Read(filePath)
 	a.NoError(err, "Read error")
 	a.Equal(content, string(readContent), "Read content does not match written content")
-	readBytesContent, err := sb.ReadBytes(filePath)
+	readBytesContent, err := sb.ReadBytes(ctx, filePath)
 	a.NoError(err, "ReadBytes error")
 	a.Equal(content, string(readBytesContent), "ReadBytes content does not match written content")
 	err = sb.Stop(ctx)

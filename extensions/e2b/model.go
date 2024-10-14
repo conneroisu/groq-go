@@ -6,8 +6,11 @@ import (
 	"github.com/conneroisu/groq-go"
 )
 
-func (s *Sandbox) modelMkdir(ctx context.Context, args ...string) (groq.ChatCompletionMessage, error) {
-	err := s.Mkdir(args[0])
+func (s *Sandbox) modelMkdir(
+	ctx context.Context,
+	args ...string,
+) (groq.ChatCompletionMessage, error) {
+	err := s.Mkdir(ctx, args[0])
 	if err != nil {
 		return groq.ChatCompletionMessage{}, err
 	}
@@ -46,7 +49,7 @@ func (s *Sandbox) modelWrite(ctx context.Context, args ...string) (groq.ChatComp
 }
 
 func (s *Sandbox) modelLs(ctx context.Context, args ...string) (groq.ChatCompletionMessage, error) {
-	res, err := s.Ls(args[0])
+	res, err := s.Ls(ctx, args[0])
 	if err != nil {
 		return groq.ChatCompletionMessage{}, err
 	}
