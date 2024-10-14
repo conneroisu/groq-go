@@ -57,19 +57,23 @@ func TestSandboxTooling(t *testing.T) {
 	client, err := groq.NewClient(getapiKey(t, "GROQ_KEY"))
 	a.NoError(err, "NewClient error")
 
-	tts, err := sb.getTools()
-	a.NoError(err)
 	// ask the ai to create a file with the data "Hello World!" in file "hello.txt"
 	response, err := client.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
 		Model: groq.ModelLlama3Groq70B8192ToolUsePreview,
 		Messages: []groq.ChatCompletionMessage{
 			{
-				Role:    groq.ChatMessageRoleUser,
-				Content: "Create a file called hello.txt with the data Hello World! NOTE: You are in the correct directory.",
+				Role: groq.ChatMessageRoleUser,
+				Content: `
+Create a file called 'hello.txt' with the data:
+<file name="hello.txt">
+Hello World! 
+</file>
+NOTE: You are in the correct cwd. Just call the write tool with a name of hello.txt and data of Hello World!
+`,
 			},
 		},
 		MaxTokens: 2000,
-		Tools:     tts,
+		Tools:     sb.getTools(),
 	})
 	a.NoError(err)
 	sb.logger.Debug("response from model", "response", response)

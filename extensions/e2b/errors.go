@@ -33,7 +33,3 @@ func (e ErrToolArgument) Error() string {
 func (e ErrMissingRequiredArgument) Error() string {
 	return fmt.Sprintf("missing required argument %s for tool %s", e.ArgName, e.ToolName)
 }
-
-func (e ErrArgumentsUnmarshallable) Error() string {
-	return "given json arguments cannot be unmarshalled"
-}

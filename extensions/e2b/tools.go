@@ -8,7 +8,7 @@ import (
 	"github.com/conneroisu/groq-go"
 )
 
-func (s *Sandbox) getTools() ([]groq.Tool, error) {
+func (s *Sandbox) getTools() []groq.Tool {
 	tools := []groq.Tool{
 		{
 			Type: groq.ToolTypeFunction,
@@ -76,7 +76,7 @@ func (s *Sandbox) getTools() ([]groq.Tool, error) {
 			Type: groq.ToolTypeFunction,
 			Function: groq.FunctionDefinition{
 				Name:        "read",
-				Description: "Read the contents of a file in the sandbox file system at a given path.",
+				Description: "Read the contents of a file in the sandbox file system at a given path",
 				Parameters: groq.ParameterDefinition{
 					Type: "object",
 					Properties: map[string]groq.PropertyDefinition{
@@ -97,13 +97,13 @@ func (s *Sandbox) getTools() ([]groq.Tool, error) {
 			Type: groq.ToolTypeFunction,
 			Function: groq.FunctionDefinition{
 				Name:        "write",
-				Description: "Write to a file in the sandbox file system at a given path.",
+				Description: "Write to a file in the sandbox file system at a given path",
 				Parameters: groq.ParameterDefinition{
 					Type: "object",
 					Properties: map[string]groq.PropertyDefinition{
 						"path": {
 							Type:        "string",
-							Description: "The path of the file to write to.",
+							Description: "The relative or absolute path of the file to write to.",
 						},
 						"data": {
 							Type:        "string",
@@ -129,15 +129,15 @@ func (s *Sandbox) getTools() ([]groq.Tool, error) {
 					Properties: map[string]groq.PropertyDefinition{
 						"cmd": {
 							Type:        "string",
-							Description: "The command to run to start the process.",
+							Description: "The command to run to start the process",
 						},
 						"cwd": {
 							Type:        "string",
-							Description: "The current working directory of the process.",
+							Description: "The current working directory of the process",
 						},
 						"timeout": {
 							Type:        "number",
-							Description: "The timeout in seconds to run the process.",
+							Description: "The timeout in seconds to run the process",
 						},
 					},
 					Required: []string{
@@ -149,7 +149,7 @@ func (s *Sandbox) getTools() ([]groq.Tool, error) {
 			Fn: s.modelStartProcess,
 		},
 	}
-	return tools, nil
+	return tools
 }
 
 // RunTooling runs the toolcalls in the response.
@@ -162,11 +162,7 @@ func (s *Sandbox) RunTooling(
 	}
 	respH := []groq.ChatCompletionMessage{}
 	for _, tool := range response.Choices[0].Message.ToolCalls {
-		tools, err := s.getTools()
-		if err != nil {
-			return nil, err
-		}
-		for _, t := range tools {
+		for _, t := range s.getTools() {
 			if t.Function.Name != tool.Function.Name {
 				continue
 			}
