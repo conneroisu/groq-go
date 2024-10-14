@@ -76,5 +76,10 @@ func TestSandboxTooling(t *testing.T) {
 	resps, err := sb.RunTooling(ctx, response)
 	a.NoError(err)
 	sb.logger.Debug("tooling response", "response", resps)
-
+	lsres, err := sb.Ls(".")
+	a.NoError(err)
+	a.Contains(lsres, LsResult{
+		Name:  "hello.txt",
+		IsDir: false,
+	})
 }

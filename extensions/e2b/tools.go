@@ -103,7 +103,7 @@ func (s *Sandbox) getTools() ([]groq.Tool, error) {
 					Properties: map[string]groq.PropertyDefinition{
 						"path": {
 							Type:        "string",
-							Description: "The path of the file to read",
+							Description: "The path of the file to write to.",
 						},
 						"data": {
 							Type:        "string",
@@ -205,7 +205,7 @@ func (s *Sandbox) runTool(
 	}
 	ps := make([]string, 0)
 	s.logger.Debug("params", "params", params)
-	for k, _ := range tool.Function.Parameters.Properties {
+	for k := range tool.Function.Parameters.Properties {
 		val, ok := params[k]
 		if !ok {
 			return groq.ChatCompletionMessage{}, ErrToolArgument{
