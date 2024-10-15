@@ -211,9 +211,7 @@ func (s *Sandbox) KeepAlive(timeout time.Duration) error {
 		fmt.Sprintf("%s/sandboxes/%s/refreshes", s.baseAPIURL, s.ID),
 		builders.WithBody(struct {
 			Duration int `json:"duration"`
-		}{
-			Duration: int(timeout.Seconds()),
-		}),
+		}{Duration: int(timeout.Seconds())}),
 	)
 	if err != nil {
 		return err
