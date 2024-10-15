@@ -40,7 +40,7 @@ type (
 		header     builders.Header   `json:"-"`          // header is the sandbox's request header builder.
 		ws         *websocket.Conn   `json:"-"`          // ws is the sandbox's websocket connection.
 		Map        sync.Map          `json:"-"`          // Map is the map of the sandbox.
-		msgCnt     int               `json:"-"`          // msgCnt is the message count.
+		idCh       chan int          `json:"-"`          // idCh is the channel to generate ids for requests.
 	}
 	// Process is a process in the sandbox.
 	Process struct {
@@ -165,7 +165,7 @@ func NewSandbox(
 		client:     http.DefaultClient,
 		logger:     slog.New(slog.NewJSONHandler(io.Discard, nil)),
 		httpScheme: defaultHTTPScheme,
-		msgCnt:     1,
+		idCh:       make(chan int),
 	}
 	for _, opt := range opts {
 		opt(&sb)
@@ -191,6 +191,7 @@ func NewSandbox(
 	if err != nil {
 		return &sb, err
 	}
+	go sb.identify(ctx)
 	go func() {
 		err := sb.read(ctx)
 		if err != nil {
@@ -219,7 +220,7 @@ func (s *Sandbox) KeepAlive(ctx context.Context, timeout time.Duration) error {
 	defer resp.Body.Close()
 	if resp.StatusCode < http.StatusOK ||
 		resp.StatusCode >= http.StatusBadRequest {
-		return fmt.Errorf("request to create sandbox failed: %s\nbody: %s", resp.Status, getBody(resp))
+		return fmt.Errorf("request to create sandbox failed: %s", resp.Status)
 	}
 	return nil
 }
@@ -259,8 +260,7 @@ func (s *Sandbox) Stop(ctx context.Context) error {
 		return err
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode < http.StatusOK ||
-		resp.StatusCode >= http.StatusBadRequest {
+	if resp.StatusCode != http.StatusNoContent {
 		return fmt.Errorf("request to delete sandbox failed: %s", resp.Status)
 	}
 	return nil
@@ -416,7 +416,11 @@ func (s *Sandbox) NewProcess(
 	proc Process,
 ) (*Process, error) {
 	proc.cmd = cmd
-	proc.id = createProcessID()
+	b := make([]byte, 12)
+	for i := range b {
+		b[i] = charset[rand.Intn(len(charset))]
+	}
+	proc.id = string(b)
 	proc.sb = s
 	if proc.Cwd == "" {
 		proc.Cwd = s.Cwd
@@ -536,13 +540,6 @@ func (s *Sandbox) wsURL() *url.URL {
 		Path: wsRoute,
 	}
 }
-func createProcessID() string {
-	b := make([]byte, 12)
-	for i := range b {
-		b[i] = charset[rand.Intn(len(charset))]
-	}
-	return string(b)
-}
 func (s *Sandbox) sendRequest(req *http.Request, v interface{}) error {
 	req.Header.Set("Accept", "application/json")
 	contentType := req.Header.Get("Content-Type")
@@ -556,32 +553,34 @@ func (s *Sandbox) sendRequest(req *http.Request, v interface{}) error {
 	defer res.Body.Close()
 	if res.StatusCode < http.StatusOK ||
 		res.StatusCode >= http.StatusBadRequest {
-		return fmt.Errorf("request to create sandbox failed: %s\nbody: %s", res.Status, getBody(res))
+		return fmt.Errorf("request to create sandbox failed: %s", res.Status)
 	}
 	if v == nil {
 		return nil
 	}
 	switch o := v.(type) {
 	case *string:
-		return decodeString(res.Body, o)
+		b, err := io.ReadAll(res.Body)
+		if err != nil {
+			return err
+		}
+		*o = string(b)
+		return nil
 	default:
 		return json.NewDecoder(res.Body).Decode(v)
 	}
 }
-func decodeString(body io.Reader, output *string) error {
-	b, err := io.ReadAll(body)
-	if err != nil {
-		return err
+func (s *Sandbox) identify(ctx context.Context) {
+	id := 1
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			s.idCh <- id
+			id++
+		}
 	}
-	*output = string(b)
-	return nil
-}
-func getBody(resp *http.Response) string {
-	b, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return ""
-	}
-	return string(b)
 }
 
 // WriteRequest writes a request to the websocket.
@@ -590,9 +589,8 @@ func (s *Sandbox) WriteRequest(method Method, params []any, respCh chan []byte) 
 		Method:  method,
 		JSONRPC: rpc,
 		Params:  params,
-		ID:      s.msgCnt,
+		ID:      <-s.idCh,
 	}
-	defer func() { s.msgCnt++ }()
 	s.logger.Debug("write", "method", req.Method, "id", req.ID, "params", req.Params)
 	s.Map.Store(req.ID, respCh)
 	jsVal, err := json.Marshal(req)
