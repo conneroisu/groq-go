@@ -128,7 +128,7 @@ const (
 
 	rpc                = "2.0"
 	charset            = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	defaultBaseURL     = "https://api.e2b.dev"
+	defaultBaseURL     = "api.e2b.dev"
 	defaultWSScheme    = "wss"
 	wsRoute            = "/ws"
 	fileRoute          = "/file"
@@ -179,7 +179,7 @@ func NewSandbox(
 		ctx,
 		sb.header,
 		http.MethodPost,
-		fmt.Sprintf("%s%s", sb.baseAPIURL, sandboxesRoute),
+		fmt.Sprintf("%s://%s%s", sb.httpScheme, sb.baseAPIURL, sandboxesRoute),
 		builders.WithBody(&sb),
 	)
 	if err != nil {
@@ -208,7 +208,7 @@ func (s *Sandbox) KeepAlive(timeout time.Duration) error {
 		context.Background(),
 		s.header,
 		http.MethodPost,
-		fmt.Sprintf("%s/sandboxes/%s/refreshes", s.baseAPIURL, s.ID),
+		fmt.Sprintf("%s://%s/sandboxes/%s/refreshes", s.httpScheme, s.baseAPIURL, s.ID),
 		builders.WithBody(struct {
 			Duration int `json:"duration"`
 		}{Duration: int(timeout.Seconds())}),
@@ -254,7 +254,7 @@ func (s *Sandbox) Stop(ctx context.Context) error {
 		ctx,
 		s.header,
 		http.MethodDelete,
-		fmt.Sprintf("%s%s%s", s.baseAPIURL, deleteSandboxRoute, s.ID),
+		fmt.Sprintf("%s://%s%s%s", s.httpScheme, s.baseAPIURL, deleteSandboxRoute, s.ID),
 		builders.WithBody(interface{}(nil)),
 	)
 	if err != nil {
