@@ -176,9 +176,7 @@ func NewSandbox(
 		req.Header.Set("Accept", "application/json")
 	}
 	req, err := builders.NewRequest(
-		ctx,
-		sb.header,
-		http.MethodPost,
+		ctx, sb.header, http.MethodPost,
 		fmt.Sprintf("%s://%s%s", sb.httpScheme, sb.baseAPIURL, sandboxesRoute),
 		builders.WithBody(&sb),
 	)
@@ -203,11 +201,9 @@ func NewSandbox(
 }
 
 // KeepAlive keeps the sandbox alive.
-func (s *Sandbox) KeepAlive(timeout time.Duration) error {
+func (s *Sandbox) KeepAlive(ctx context.Context, timeout time.Duration) error {
 	req, err := builders.NewRequest(
-		context.Background(),
-		s.header,
-		http.MethodPost,
+		ctx, s.header, http.MethodPost,
 		fmt.Sprintf("%s://%s/sandboxes/%s/refreshes", s.httpScheme, s.baseAPIURL, s.ID),
 		builders.WithBody(struct {
 			Duration int `json:"duration"`
@@ -251,9 +247,7 @@ func (s *Sandbox) Reconnect(ctx context.Context) (err error) {
 // Stop stops the sandbox.
 func (s *Sandbox) Stop(ctx context.Context) error {
 	req, err := builders.NewRequest(
-		ctx,
-		s.header,
-		http.MethodDelete,
+		ctx, s.header, http.MethodDelete,
 		fmt.Sprintf("%s://%s%s%s", s.httpScheme, s.baseAPIURL, deleteSandboxRoute, s.ID),
 		builders.WithBody(interface{}(nil)),
 	)
@@ -265,7 +259,8 @@ func (s *Sandbox) Stop(ctx context.Context) error {
 		return err
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusNoContent {
+	if resp.StatusCode < http.StatusOK ||
+		resp.StatusCode >= http.StatusBadRequest {
 		return fmt.Errorf("request to delete sandbox failed: %s", resp.Status)
 	}
 	return nil
@@ -430,13 +425,12 @@ func (s *Sandbox) NewProcess(
 }
 
 // Start starts a process in the sandbox.
-func (p *Process) Start(ctx context.Context) error {
+func (p *Process) Start(ctx context.Context) (err error) {
 	if p.Env == nil {
 		p.Env = map[string]string{"PYTHONUNBUFFERED": "1"}
 	}
 	respCh := make(chan []byte)
-	err := p.sb.WriteRequest(processStart, []any{p.id, p.cmd, p.Env, p.Cwd}, respCh)
-	if err != nil {
+	if err = p.sb.WriteRequest(processStart, []any{p.id, p.cmd, p.Env, p.Cwd}, respCh); err != nil {
 		return err
 	}
 	select {
@@ -646,7 +640,7 @@ func (s *Sandbox) read(ctx context.Context) (err error) {
 				toRCh <- body
 				continue
 			}
-			// it is a id response
+			// response has an id
 			toR, ok := s.Map.Load(decResp.ID)
 			if !ok {
 				s.logger.Debug("response not found", "id", decResp.ID)

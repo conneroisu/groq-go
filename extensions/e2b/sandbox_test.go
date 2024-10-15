@@ -180,6 +180,6 @@ func TestKeepAlive(t *testing.T) {
 		e2b.WithLogger(defaultLogger),
 	)
 	a.NoError(err, "NewSandbox error")
-	err = sb.KeepAlive(time.Minute * 2)
+	err = sb.KeepAlive(ctx, time.Minute*2)
 	a.NoError(err)
 }
