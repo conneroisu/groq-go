@@ -85,11 +85,10 @@ type (
 	OperationType int
 	// Request is a JSON-RPC request.
 	Request struct {
-		JSONRPC    string      `json:"jsonrpc"` // JSONRPC is the JSON-RPC version of the request.
-		Method     Method      `json:"method"`  // Method is the request method.
-		ID         int         `json:"id"`      // ID of the request.
-		Params     []any       `json:"params"`  // Params of the request.
-		ResponseCh chan []byte `json:"-"`       // ResponseCh is the channel to write the response body to.
+		JSONRPC string `json:"jsonrpc"` // JSONRPC is the JSON-RPC version of the request.
+		Method  Method `json:"method"`  // Method is the request method.
+		ID      int    `json:"id"`      // ID of the request.
+		Params  []any  `json:"params"`  // Params of the request.
 	}
 	// Response is a JSON-RPC response.
 	Response[T any, Q any] struct {
@@ -277,12 +276,7 @@ func (s *Sandbox) Stop(ctx context.Context) error {
 // Mkdir makes a directory in the sandbox file system.
 func (s *Sandbox) Mkdir(ctx context.Context, path string) error {
 	respCh := make(chan []byte)
-	err := s.WriteRequest(Request{
-		JSONRPC:    rpc,
-		Method:     filesystemMakeDir,
-		Params:     []any{path},
-		ResponseCh: respCh,
-	})
+	err := s.WriteRequest(filesystemMakeDir, []any{path}, respCh)
 	if err != nil {
 		return err
 	}
@@ -306,12 +300,7 @@ func (s *Sandbox) Mkdir(ctx context.Context, path string) error {
 func (s *Sandbox) Ls(ctx context.Context, path string) ([]LsResult, error) {
 	respCh := make(chan []byte)
 	defer close(respCh)
-	err := s.WriteRequest(Request{
-		Params:     []any{path},
-		JSONRPC:    rpc,
-		Method:     filesystemList,
-		ResponseCh: respCh,
-	})
+	err := s.WriteRequest(filesystemList, []any{path}, respCh)
 	if err != nil {
 		return nil, err
 	}
@@ -332,12 +321,7 @@ func (s *Sandbox) Read(
 	path string,
 ) (string, error) {
 	respCh := make(chan []byte)
-	err := s.WriteRequest(Request{
-		JSONRPC:    rpc,
-		Method:     filesystemRead,
-		Params:     []any{path},
-		ResponseCh: respCh,
-	})
+	err := s.WriteRequest(filesystemRead, []any{path}, respCh)
 	if err != nil {
 		return "", err
 	}
@@ -354,12 +338,7 @@ func (s *Sandbox) Read(
 // Write writes to a file to the sandbox file system.
 func (s *Sandbox) Write(path string, data []byte) error {
 	respCh := make(chan []byte)
-	err := s.WriteRequest(Request{
-		JSONRPC:    rpc,
-		Method:     filesystemWrite,
-		Params:     []any{path, string(data)},
-		ResponseCh: respCh,
-	})
+	err := s.WriteRequest(filesystemWrite, []any{path, string(data)}, respCh)
 	if err != nil {
 		return err
 	}
@@ -374,12 +353,7 @@ func (s *Sandbox) Write(path string, data []byte) error {
 func (s *Sandbox) ReadBytes(ctx context.Context, path string) ([]byte, error) {
 	resCh := make(chan []byte)
 	defer close(resCh)
-	err := s.WriteRequest(Request{
-		JSONRPC:    rpc,
-		Method:     filesystemReadBytes,
-		Params:     []any{path},
-		ResponseCh: resCh,
-	})
+	err := s.WriteRequest(filesystemReadBytes, []any{path}, resCh)
 	if err != nil {
 		return nil, err
 	}
@@ -410,12 +384,7 @@ func (s *Sandbox) Watch(
 ) error {
 	respCh := make(chan []byte)
 	defer close(respCh)
-	err := s.WriteRequest(Request{
-		JSONRPC:    rpc,
-		Method:     filesystemSubscribe,
-		Params:     []any{"watchDir", path},
-		ResponseCh: respCh,
-	})
+	err := s.WriteRequest(filesystemSubscribe, []any{"watchDir", path}, respCh)
 	if err != nil {
 		return err
 	}
@@ -463,34 +432,34 @@ func (s *Sandbox) NewProcess(
 }
 
 // Start starts a process in the sandbox.
-func (p *Process) Start() error {
+func (p *Process) Start(ctx context.Context) error {
 	if p.Env == nil {
 		p.Env = map[string]string{"PYTHONUNBUFFERED": "1"}
 	}
 	respCh := make(chan []byte)
-	err := p.sb.WriteRequest(Request{
-		JSONRPC:    rpc,
-		Method:     processStart,
-		Params:     []any{p.id, p.cmd, p.Env, p.Cwd},
-		ResponseCh: respCh,
-	})
+	err := p.sb.WriteRequest(processStart, []any{p.id, p.cmd, p.Env, p.Cwd}, respCh)
 	if err != nil {
 		return err
 	}
-	res, err := decodeResponse[string, APIError](<-respCh)
-	if err != nil {
-		return err
+	select {
+	case body := <-respCh:
+		res, err := decodeResponse[string, APIError](body)
+		if err != nil {
+			return err
+		}
+		if res.Error.Code != 0 {
+			return fmt.Errorf("process start failed(%d): %s", res.Error.Code, res.Error.Message)
+		}
+		if res.Result == "" || len(res.Result) == 0 {
+			return fmt.Errorf("process start failed got empty result id")
+		}
+		if p.id != res.Result {
+			return fmt.Errorf("process start failed got wrong result id; want %s, got %s", p.id, res.Result)
+		}
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
 	}
-	if res.Error.Code != 0 {
-		return fmt.Errorf("process start failed(%d): %s", res.Error.Code, res.Error.Message)
-	}
-	if res.Result == "" || len(res.Result) == 0 {
-		return fmt.Errorf("process start failed got empty result id")
-	}
-	if p.id != res.Result {
-		return fmt.Errorf("process start failed got wrong result id; want %s, got %s", p.id, res.Result)
-	}
-	return nil
 }
 
 // Done returns a channel that is closed when the process is done.
@@ -509,12 +478,7 @@ func (p *Process) Subscribe(
 	ch chan<- Event,
 ) error {
 	respCh := make(chan []byte)
-	err := p.sb.WriteRequest(Request{
-		JSONRPC:    rpc,
-		Method:     processSubscribe,
-		Params:     []any{event, p.id},
-		ResponseCh: respCh,
-	})
+	err := p.sb.WriteRequest(processSubscribe, []any{event, p.id}, respCh)
 	if err != nil {
 		return err
 	}
@@ -557,12 +521,7 @@ func (p *Process) Subscribe(
 		break
 	}
 	p.sb.Map.Delete(res.Result)
-	err = p.sb.WriteRequest(Request{
-		JSONRPC:    rpc,
-		Method:     processUnsubscribe,
-		Params:     []any{res.Result},
-		ResponseCh: respCh,
-	})
+	err = p.sb.WriteRequest(processUnsubscribe, []any{res.Result}, respCh)
 	if err != nil {
 		println(err)
 	}
@@ -634,11 +593,16 @@ func getBody(resp *http.Response) string {
 }
 
 // WriteRequest writes a request to the websocket.
-func (s *Sandbox) WriteRequest(req Request) (err error) {
-	req.ID = s.msgCnt
+func (s *Sandbox) WriteRequest(method Method, params []any, respCh chan []byte) error {
+	req := Request{
+		Method:  method,
+		JSONRPC: rpc,
+		Params:  params,
+		ID:      s.msgCnt,
+	}
 	defer func() { s.msgCnt++ }()
 	s.logger.Debug("write", "method", req.Method, "id", req.ID, "params", req.Params)
-	s.Map.Store(req.ID, req.ResponseCh)
+	s.Map.Store(req.ID, respCh)
 	jsVal, err := json.Marshal(req)
 	if err != nil {
 		return err
