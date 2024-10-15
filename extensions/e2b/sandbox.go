@@ -57,8 +57,6 @@ type (
 	}
 	// Option is an option for the sandbox.
 	Option func(*Sandbox)
-	// ProcessOption is an option for a process.
-	ProcessOption func(*Process)
 	// Event is a file system event.
 	Event struct {
 		Path      string        `json:"path"`      // Path is the path of the event.
@@ -311,6 +309,7 @@ func (s *Sandbox) Ls(ctx context.Context, path string) ([]LsResult, error) {
 
 // Read reads a file from the sandbox file system.
 func (s *Sandbox) Read(
+	ctx context.Context,
 	path string,
 ) (string, error) {
 	respCh := make(chan []byte)
@@ -318,14 +317,19 @@ func (s *Sandbox) Read(
 	if err != nil {
 		return "", err
 	}
-	res, err := decodeResponse[string, string](<-respCh)
-	if err != nil {
-		return "", err
+	select {
+	case <-ctx.Done():
+		return "", ctx.Err()
+	case body := <-respCh:
+		res, err := decodeResponse[string, string](body)
+		if err != nil {
+			return "", err
+		}
+		if res.Error != "" {
+			return "", fmt.Errorf("failed to read file: %s", res.Error)
+		}
+		return res.Result, nil
 	}
-	if res.Error != "" {
-		return "", fmt.Errorf("failed to read file: %s", res.Error)
-	}
-	return res.Result, nil
 }
 
 // Write writes to a file to the sandbox file system.

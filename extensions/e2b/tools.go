@@ -1,6 +1,7 @@
 package e2b
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -23,13 +24,21 @@ func (s *Sandbox) getTools() []groq.Tool {
 							Description: "The path of the directory to create",
 						},
 					},
-					Required: []string{
-						"path",
-					},
+					Required:             []string{"path"},
 					AdditionalProperties: false,
 				},
 			},
-			Fn: s.modelMkdir,
+			Fn: func(ctx context.Context, args ...string) (groq.ChatCompletionMessage, error) {
+				err := s.Mkdir(ctx, args[0])
+				if err != nil {
+					return groq.ChatCompletionMessage{}, err
+				}
+				return groq.ChatCompletionMessage{
+					Content: args[0],
+					Role:    groq.ChatMessageRoleFunction,
+					Name:    "mkdir",
+				}, nil
+			},
 		},
 		// {
 		//         Type: groq.ToolTypeFunction,
@@ -59,18 +68,25 @@ func (s *Sandbox) getTools() []groq.Tool {
 				Parameters: groq.ParameterDefinition{
 					Type: "object",
 					Properties: map[string]groq.PropertyDefinition{
-						"path": {
-							Type:        "string",
+						"path": {Type: "string",
 							Description: "The path of the directory to list",
 						},
 					},
-					Required: []string{
-						"path",
-					},
+					Required:             []string{"path"},
 					AdditionalProperties: false,
 				},
 			},
-			Fn: s.modelLs,
+			Fn: func(ctx context.Context, args ...string) (groq.ChatCompletionMessage, error) {
+				res, err := s.Ls(ctx, args[0])
+				if err != nil {
+					return groq.ChatCompletionMessage{}, err
+				}
+				return groq.ChatCompletionMessage{
+					Content: res[0].Name,
+					Role:    groq.ChatMessageRoleFunction,
+					Name:    "ls",
+				}, nil
+			},
 		},
 		{
 			Type: groq.ToolTypeFunction,
@@ -80,18 +96,25 @@ func (s *Sandbox) getTools() []groq.Tool {
 				Parameters: groq.ParameterDefinition{
 					Type: "object",
 					Properties: map[string]groq.PropertyDefinition{
-						"path": {
-							Type:        "string",
+						"path": {Type: "string",
 							Description: "The path of the file to read",
 						},
 					},
-					Required: []string{
-						"path",
-					},
+					Required:             []string{"path"},
 					AdditionalProperties: false,
 				},
 			},
-			Fn: s.modelRead,
+			Fn: func(ctx context.Context, args ...string) (groq.ChatCompletionMessage, error) {
+				content, err := s.Read(args[0])
+				if err != nil {
+					return groq.ChatCompletionMessage{}, err
+				}
+				return groq.ChatCompletionMessage{
+					Content: string(content),
+					Role:    groq.ChatMessageRoleFunction,
+					Name:    "read",
+				}, nil
+			},
 		},
 		{
 			Type: groq.ToolTypeFunction,
@@ -101,23 +124,31 @@ func (s *Sandbox) getTools() []groq.Tool {
 				Parameters: groq.ParameterDefinition{
 					Type: "object",
 					Properties: map[string]groq.PropertyDefinition{
-						"path": {
-							Type:        "string",
+						"path": {Type: "string",
 							Description: "The relative or absolute path of the file to write to.",
 						},
-						"data": {
-							Type:        "string",
+						"data": {Type: "string",
 							Description: "The data to write to the file",
 						},
 					},
-					Required: []string{
-						"path",
-						"data",
-					},
+					Required:             []string{"path", "data"},
 					AdditionalProperties: false,
 				},
 			},
-			Fn: s.modelWrite,
+			Fn: func(ctx context.Context, args ...string) (groq.ChatCompletionMessage, error) {
+				name := args[0]
+				data := args[1]
+				s.logger.Debug("writing to file", "name", name, "data", data)
+				err := s.Write(name, []byte(data))
+				if err != nil {
+					return groq.ChatCompletionMessage{}, err
+				}
+				return groq.ChatCompletionMessage{
+					Content: "Successfully wrote to file.",
+					Role:    groq.ChatMessageRoleFunction,
+					Name:    "write",
+				}, nil
+			},
 		},
 		{
 			Type: groq.ToolTypeFunction,
@@ -127,26 +158,55 @@ func (s *Sandbox) getTools() []groq.Tool {
 				Parameters: groq.ParameterDefinition{
 					Type: "object",
 					Properties: map[string]groq.PropertyDefinition{
-						"cmd": {
-							Type:        "string",
+						"cmd": {Type: "string",
 							Description: "The command to run to start the process",
 						},
-						"cwd": {
-							Type:        "string",
+						"cwd": {Type: "string",
 							Description: "The current working directory of the process",
 						},
-						"timeout": {
-							Type:        "number",
+						"timeout": {Type: "number",
 							Description: "The timeout in seconds to run the process",
 						},
 					},
-					Required: []string{
-						"cmd",
-					},
+					Required:             []string{"cmd"},
 					AdditionalProperties: false,
 				},
 			},
-			Fn: s.modelStartProcess,
+			Fn: func(ctx context.Context, args ...string) (groq.ChatCompletionMessage, error) {
+				proc, err := s.NewProcess(args[0], Process{})
+				if err != nil {
+					return groq.ChatCompletionMessage{}, err
+				}
+				events := make(chan Event, 100)
+				err = proc.Subscribe(ctx, OnStdout, events)
+				if err != nil {
+					return groq.ChatCompletionMessage{}, err
+				}
+				err = proc.Subscribe(ctx, OnStderr, events)
+				if err != nil {
+					return groq.ChatCompletionMessage{}, err
+				}
+				err = proc.Start(ctx)
+				if err != nil {
+					return groq.ChatCompletionMessage{}, err
+				}
+				buf := new(bytes.Buffer)
+				for {
+					select {
+					case <-ctx.Done():
+						return groq.ChatCompletionMessage{}, ctx.Err()
+					case event := <-events:
+						buf.Write([]byte(event.Params.Result.Line))
+					case <-proc.Done():
+						break
+					}
+				}
+				return groq.ChatCompletionMessage{
+					Content: buf.String(),
+					Role:    groq.ChatMessageRoleFunction,
+					Name:    "startProcess",
+				}, nil
+			},
 		},
 	}
 	return tools
