@@ -47,7 +47,7 @@ func TestChatModels(t *testing.T) {
 				MaxTokens: 2,
 			})
 			a.NoError(err, "CreateChatCompletionJSON error")
-			a.NotEmpty(response.Choices[0].Message.Content, "response.Choices[0].Message.Content is empty")
+			a.NotEmpty(response.Choices[0].Message.Content, "response.Choices[0].Message.Content is empty for model {{ $model.Name }} calling CreateChatCompletionJSON")
 		},
 	{{- end }}
 	}
@@ -77,7 +77,7 @@ func Test{{ $model.Name }}(t *testing.T) {
 		FilePath: "./examples/audio-lex-fridman/The Roman Emperors who went insane Gregory Aldrete and Lex Fridman.mp3",
 	})
 	a.NoError(err, "CreateTranscription error")
-	a.NotEmpty(response.Text, "response.Text is empty")
+	a.NotEmpty(response.Text, "response.Text is empty for model WhisperLargeV3 calling CreateTranscription")
 }
 {{- end }}
 
