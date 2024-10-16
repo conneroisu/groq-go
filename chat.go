@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/conneroisu/groq-go/pkg/builders"
 )
@@ -141,6 +142,7 @@ type (
 		ToolChoice        any                           `json:"tool_choice,omitempty"`         // This can be either a string or an ToolChoice object.
 		StreamOptions     *StreamOptions                `json:"stream_options,omitempty"`      // Options for streaming response. Only set this when you set stream: true.
 		ParallelToolCalls any                           `json:"parallel_tool_calls,omitempty"` // Disable the default behavior of parallel tool calls by setting it: false.
+		RetryDelay        time.Duration                 `json:"-"`                             // RetryDelay is the delay between retries.
 	}
 	// ToolType is the tool type.
 	//
@@ -148,8 +150,8 @@ type (
 	ToolType string
 	// Tool represents the tool.
 	Tool struct {
-		Type     ToolType            `json:"type"`               // Type is the type of the tool.
-		Function *FunctionDefinition `json:"function,omitempty"` // Function is the function of the tool.
+		Type     ToolType           `json:"type"`               // Type is the type of the tool.
+		Function FunctionDefinition `json:"function,omitempty"` // Function is the tool's functional definition.
 	}
 	// ToolChoice represents the tool choice.
 	ToolChoice struct {
@@ -357,6 +359,20 @@ func (r *ChatCompletionResponse) SetHeader(h http.Header) {
 	r.Header = h
 }
 
+// MustCreateChatCompletion method is an API call to create a chat completion.
+//
+// It panics if an error occurs.
+func (c *Client) MustCreateChatCompletion(
+	ctx context.Context,
+	request ChatCompletionRequest,
+) (response ChatCompletionResponse) {
+	response, err := c.CreateChatCompletion(ctx, request)
+	if err != nil {
+		panic(err)
+	}
+	return response
+}
+
 // CreateChatCompletion method is an API call to create a chat completion.
 func (c *Client) CreateChatCompletion(
 	ctx context.Context,
@@ -373,6 +389,11 @@ func (c *Client) CreateChatCompletion(
 		return
 	}
 	err = c.sendRequest(req, &response)
+	reqErr, ok := err.(*APIError)
+	if ok && (reqErr.HTTPStatusCode == http.StatusServiceUnavailable || reqErr.HTTPStatusCode == http.StatusInternalServerError) {
+		time.Sleep(request.RetryDelay)
+		return c.CreateChatCompletion(ctx, request)
+	}
 	return
 }
 
@@ -434,7 +455,11 @@ func (c *Client) CreateChatCompletionJSON(
 	var response ChatCompletionResponse
 	err = c.sendRequest(req, &response)
 	if err != nil {
-		return
+		reqErr, ok := err.(*APIError)
+		if ok && (reqErr.HTTPStatusCode == http.StatusServiceUnavailable || reqErr.HTTPStatusCode == http.StatusInternalServerError) {
+			time.Sleep(request.RetryDelay)
+			return c.CreateChatCompletionJSON(ctx, request, output)
+		}
 	}
 	content := response.Choices[0].Message.Content
 	split := strings.Split(content, "```")

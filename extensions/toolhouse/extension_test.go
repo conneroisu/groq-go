@@ -2,12 +2,36 @@ package toolhouse_test
 
 import (
 	"context"
+	"log/slog"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/conneroisu/groq-go"
 	"github.com/conneroisu/groq-go/extensions/toolhouse"
 	"github.com/stretchr/testify/assert"
+)
+
+var (
+	defaultLogger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		AddSource: true,
+		Level:     slog.LevelDebug,
+		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
+			if a.Key == "time" {
+				return slog.Attr{}
+			}
+			if a.Key == "level" {
+				return slog.Attr{}
+			}
+			if a.Key == "source" {
+				str := a.Value.String()
+				split := strings.Split(str, "/")
+				if len(split) > 2 {
+					a.Value = slog.StringValue(strings.Join(split[len(split)-2:], "/"))
+				}
+			}
+			return a
+		}}))
 )
 
 func TestNewExtension(t *testing.T) {
@@ -21,7 +45,9 @@ func TestNewExtension(t *testing.T) {
 		toolhouse.WithMetadata(map[string]any{
 			"id":       "conner",
 			"timezone": 5,
-		}))
+		}),
+		toolhouse.WithLogger(defaultLogger),
+	)
 	a.NoError(err)
 	client, err := groq.NewClient(os.Getenv("GROQ_KEY"))
 	a.NoError(err)

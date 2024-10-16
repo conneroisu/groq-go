@@ -6,6 +6,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 
@@ -17,7 +18,11 @@ var (
 )
 
 func main() {
-	if err := run(context.Background()); err != nil {
+	if err := run(
+		context.Background(),
+		os.Stdin,
+		os.Stdout,
+	); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
@@ -25,6 +30,8 @@ func main() {
 
 func run(
 	ctx context.Context,
+	r io.Reader,
+	w io.Writer,
 ) error {
 	key := os.Getenv("GROQ_KEY")
 	client, err := groq.NewClient(key)
@@ -32,33 +39,31 @@ func run(
 		return err
 	}
 	for {
-		err = input(ctx, client)
+		err = input(ctx, r, w, client)
 		if err != nil {
 			return err
 		}
 	}
 }
 
-func input(ctx context.Context, client *groq.Client) error {
+func input(ctx context.Context, r io.Reader, w io.Writer, client *groq.Client) error {
 	fmt.Println("")
 	fmt.Print("->")
-	reader := bufio.NewReader(os.Stdin)
+	reader := bufio.NewReader(r)
+	writer := w
 	var lines []string
-	for {
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		default:
-			line, err := reader.ReadString('\n')
-			if err != nil {
-				return err
-			}
-			if len(strings.TrimSpace(line)) == 0 {
-				break
-			}
-			lines = append(lines, line)
-			continue
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+		line, err := reader.ReadString('\n')
+		if err != nil {
+			return err
 		}
+		if len(strings.TrimSpace(line)) == 0 {
+			break
+		}
+		lines = append(lines, line)
 		break
 	}
 	in := strings.Join(lines, "\n")
@@ -66,11 +71,10 @@ func input(ctx context.Context, client *groq.Client) error {
 		Role:    groq.ChatMessageRoleUser,
 		Content: in,
 	})
-
 	output, err := client.CreateChatCompletionStream(
 		ctx,
 		groq.ChatCompletionRequest{
-			Model:     groq.ModelLlama3170BVersatile,
+			Model:     groq.ModelGemma29BIt,
 			Messages:  history,
 			MaxTokens: 2000,
 		},
@@ -78,8 +82,8 @@ func input(ctx context.Context, client *groq.Client) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println("")
-	fmt.Print("ai: ")
+	fmt.Fprintln(writer, "")
+	fmt.Fprint(writer, "ai: ")
 	for {
 		response, err := output.Recv()
 		if err != nil {
@@ -88,7 +92,7 @@ func input(ctx context.Context, client *groq.Client) error {
 		if response.Choices[0].FinishReason == groq.FinishReasonStop {
 			break
 		}
-		fmt.Print(response.Choices[0].Delta.Content)
+		fmt.Fprint(writer, response.Choices[0].Delta.Content)
 	}
 	return nil
 }

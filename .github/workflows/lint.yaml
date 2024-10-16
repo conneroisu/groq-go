@@ -1,4 +1,4 @@
-name: Dev Lint
+name: Lint
 on:
   workflow_dispatch:
     inputs:
