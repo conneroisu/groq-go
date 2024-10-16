@@ -29,6 +29,7 @@ var (
 				split := strings.Split(str, "/")
 				if len(split) > 2 {
 					a.Value = slog.StringValue(strings.Join(split[len(split)-2:], "/"))
+					a.Value = slog.StringValue(strings.Replace(a.Value.String(), "}", "", -1))
 				}
 			}
 			return a
@@ -82,9 +83,9 @@ func TestWriteRead(t *testing.T) {
 		e2b.WithLogger(defaultLogger),
 	)
 	a.NoError(err, "NewSandbox error")
-	err = sb.Write(filePath, []byte(content))
+	err = sb.Write(ctx, filePath, []byte(content))
 	a.NoError(err, "Write error")
-	readContent, err := sb.Read(filePath)
+	readContent, err := sb.Read(ctx, filePath)
 	a.NoError(err, "Read error")
 	a.Equal(content, string(readContent), "Read content does not match written content")
 	readBytesContent, err := sb.ReadBytes(ctx, filePath)
@@ -125,7 +126,7 @@ func TestCreateProcess(t *testing.T) {
 			case <-ctx.Done():
 				return
 			case event := <-events:
-				jsonBytes, err := json.MarshalIndent(event, "", "  ")
+				jsonBytes, err := json.MarshalIndent(&event, "", "  ")
 				if err != nil {
 					a.Error(err)
 					return
@@ -164,9 +165,9 @@ func TestFilesystemSubscribe(t *testing.T) {
 		}
 	}()
 	// create a file
-	err = sb.Write("/tmp/file.txt", []byte("Hello World!"))
+	err = sb.Write(ctx, "/tmp/file.txt", []byte("Hello World!"))
 	a.NoError(err)
-	err = sb.Write("/tmp/file2.txt", []byte("Hello World!"))
+	err = sb.Write(ctx, "/tmp/file2.txt", []byte("Hello World!"))
 	a.NoError(err)
 	time.Sleep(3 * time.Second)
 }

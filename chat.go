@@ -148,9 +148,8 @@ type (
 	ToolType string
 	// Tool represents the tool.
 	Tool struct {
-		Type     ToolType                                                                 `json:"type"`               // Type is the type of the tool.
-		Function FunctionDefinition                                                       `json:"function,omitempty"` // Function is the tool's functional definition.
-		Fn       func(ctx context.Context, args ...string) (ChatCompletionMessage, error) `json:"-"`                  // Fn is the optional local function to call for the tool.
+		Type     ToolType           `json:"type"`               // Type is the type of the tool.
+		Function FunctionDefinition `json:"function,omitempty"` // Function is the tool's functional definition.
 	}
 	// ToolChoice represents the tool choice.
 	ToolChoice struct {
