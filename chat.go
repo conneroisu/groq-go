@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/conneroisu/groq-go/pkg/builders"
 )
@@ -141,6 +142,7 @@ type (
 		ToolChoice        any                           `json:"tool_choice,omitempty"`         // This can be either a string or an ToolChoice object.
 		StreamOptions     *StreamOptions                `json:"stream_options,omitempty"`      // Options for streaming response. Only set this when you set stream: true.
 		ParallelToolCalls any                           `json:"parallel_tool_calls,omitempty"` // Disable the default behavior of parallel tool calls by setting it: false.
+		RetryDelay        time.Duration                 `json:"-"`                             // RetryDelay is the delay between retries.
 	}
 	// ToolType is the tool type.
 	//
@@ -389,6 +391,7 @@ func (c *Client) CreateChatCompletion(
 	err = c.sendRequest(req, &response)
 	reqErr, ok := err.(*APIError)
 	if ok && (reqErr.HTTPStatusCode == http.StatusServiceUnavailable || reqErr.HTTPStatusCode == http.StatusInternalServerError) {
+		time.Sleep(request.RetryDelay)
 		return c.CreateChatCompletion(ctx, request)
 	}
 	return
@@ -454,6 +457,7 @@ func (c *Client) CreateChatCompletionJSON(
 	if err != nil {
 		reqErr, ok := err.(*APIError)
 		if ok && (reqErr.HTTPStatusCode == http.StatusServiceUnavailable || reqErr.HTTPStatusCode == http.StatusInternalServerError) {
+			time.Sleep(request.RetryDelay)
 			return c.CreateChatCompletionJSON(ctx, request, output)
 		}
 	}
