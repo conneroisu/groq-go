@@ -503,48 +503,42 @@ func (p *Process) Subscribe(
 	}
 	eventByCh := make(chan []byte)
 	p.sb.Map.Store(res.Result, eventByCh)
-	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			default:
-				var event Event
-				err := json.Unmarshal(<-eventByCh, &event)
-				if err != nil {
-					return
-				}
-				if event.Error != "" {
-					return
-				}
-				if event.Params.Subscription != res.Result {
-					continue
-				}
-				eCh <- event
+	for {
+		select {
+		case eventBd := <-eventByCh:
+			var event Event
+			err = json.Unmarshal(eventBd, &event)
+			if err != nil {
+				return err
 			}
+			if event.Error != "" {
+				return fmt.Errorf("failed to read event: %s", event.Error)
+			}
+			if event.Params.Subscription != res.Result {
+				return fmt.Errorf("subscription id mismatch")
+			}
+			eCh <- event
+		case <-ctx.Done():
+			close(eventByCh)
+			p.sb.Map.Delete(res.Result)
+			finishCtx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			p.sb.logger.Debug("unsubscribing from process", "event", event, "id", res.Result)
+			err = p.sb.WriteRequest(finishCtx, processUnsubscribe, []any{res.Result}, respCh)
+			if err != nil {
+				return err
+			}
+			unsubRes, err := decodeResponse[bool, string](<-respCh)
+			if err != nil {
+				return err
+			}
+			if unsubRes.Error != "" || !unsubRes.Result {
+				return fmt.Errorf("failed to unsubscribe from process: %s", unsubRes.Error)
+			}
+			return nil
+		case <-p.Done():
+			return nil
 		}
-	}()
-	select {
-	case <-ctx.Done():
-		close(eventByCh)
-		p.sb.Map.Delete(res.Result)
-		finishCtx, cancel := context.WithCancel(context.Background())
-		defer cancel()
-		p.sb.logger.Debug("unsubscribing from process", "event", event, "id", res.Result)
-		err = p.sb.WriteRequest(finishCtx, processUnsubscribe, []any{res.Result}, respCh)
-		if err != nil {
-			return err
-		}
-		unsubRes, err := decodeResponse[bool, string](<-respCh)
-		if err != nil {
-			return err
-		}
-		if unsubRes.Error != "" || !unsubRes.Result {
-			return fmt.Errorf("failed to unsubscribe from process: %s", unsubRes.Error)
-		}
-		return nil
-	case <-p.Done():
-		return nil
 	}
 }
 func (s *Sandbox) wsURL() *url.URL {
