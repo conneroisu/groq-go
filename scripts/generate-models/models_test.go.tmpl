@@ -47,7 +47,7 @@ func TestChatModels(t *testing.T) {
 				MaxTokens: 2,
 			})
 			a.NoError(err, "CreateChatCompletionJSON error")
-			a.NotEmpty(response.Choices[0].Message.Content, "response.Choices[1].Message.Content is empty")
+			a.NotEmpty(response.Choices[0].Message.Content, "response.Choices[0].Message.Content is empty")
 		},
 	{{- end }}
 	}
