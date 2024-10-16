@@ -526,17 +526,15 @@ func (p *Process) Subscribe(
 	}()
 	select {
 	case <-ctx.Done():
-		p.sb.Map.Delete(res.Result)
+		close(eventByCh)
 		break
 	case <-p.Done():
-		p.sb.Map.Delete(res.Result)
 		break
 	}
 	finishCtx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	p.sb.Map.Delete(res.Result)
-	p.sb.logger.Debug("unsubscribing from process", "id", res.Result)
-	err = p.sb.WriteRequest(finishCtx, processUnsubscribe, []any{res.Result}, nil)
+	p.sb.logger.Debug("unsubscribing from process", "event", event, "id", res.Result)
+	err = p.sb.WriteRequest(finishCtx, processUnsubscribe, []any{res.Result}, respCh)
 	if err != nil {
 		return err
 	}

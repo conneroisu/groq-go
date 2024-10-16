@@ -24,13 +24,20 @@ var (
 			if a.Key == "level" {
 				return slog.Attr{}
 			}
-			if a.Key == "source" {
+			if a.Key == slog.SourceKey {
 				str := a.Value.String()
 				split := strings.Split(str, "/")
 				if len(split) > 2 {
 					a.Value = slog.StringValue(strings.Join(split[len(split)-2:], "/"))
 					a.Value = slog.StringValue(strings.Replace(a.Value.String(), "}", "", -1))
 				}
+				a.Key = a.Value.String()
+				a.Value = slog.IntValue(0)
+			}
+			if a.Key == "body" {
+				a.Value = slog.StringValue(strings.Replace(a.Value.String(), "/", "", -1))
+				a.Value = slog.StringValue(strings.Replace(a.Value.String(), "\n", "", -1))
+				a.Value = slog.StringValue(strings.Replace(a.Value.String(), "\"", "", -1))
 			}
 			return a
 		}}))
@@ -117,27 +124,18 @@ func TestCreateProcess(t *testing.T) {
 	a.NoError(err, "could not create process")
 	err = proc.Start(ctx)
 	a.NoError(err)
+	events := make(chan e2b.Event, 10)
 	ctx, cancel := context.WithTimeout(ctx, time.Second*6)
 	defer cancel()
-	events := make(chan e2b.Event, 10)
-	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case event := <-events:
-				jsonBytes, err := json.MarshalIndent(&event, "", "  ")
-				if err != nil {
-					a.Error(err)
-					return
-				}
-				print(string(jsonBytes))
-			}
-		}
-	}()
 	err = proc.Subscribe(ctx, e2b.OnStdout, events)
 	a.NoError(err)
-	time.Sleep(3 * time.Second)
+	event := <-events
+	jsonBytes, err := json.MarshalIndent(&event, "", "  ")
+	if err != nil {
+		a.Error(err)
+		return
+	}
+	t.Logf("test got event: %s", string(jsonBytes))
 }
 
 func TestFilesystemSubscribe(t *testing.T) {
@@ -161,7 +159,7 @@ func TestFilesystemSubscribe(t *testing.T) {
 				a.Error(err)
 				return
 			}
-			print(string(jsonBytes))
+			t.Logf("test got event: %s", string(jsonBytes))
 		}
 	}()
 	// create a file

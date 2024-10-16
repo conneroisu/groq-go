@@ -27,7 +27,13 @@ var (
 				split := strings.Split(str, "/")
 				if len(split) > 2 {
 					a.Value = slog.StringValue(strings.Join(split[len(split)-2:], "/"))
+					a.Value = slog.StringValue(strings.Replace(a.Value.String(), "}", "", -1))
 				}
+			}
+			if a.Key == "body" {
+				a.Value = slog.StringValue(strings.Replace(a.Value.String(), "/", "", -1))
+				a.Value = slog.StringValue(strings.Replace(a.Value.String(), "\n", "", -1))
+				a.Value = slog.StringValue(strings.Replace(a.Value.String(), "\"", "", -1))
 			}
 			return a
 		}}))

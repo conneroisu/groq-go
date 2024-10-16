@@ -73,7 +73,7 @@ var (
 			if err != nil {
 				return groq.ChatCompletionMessage{}, err
 			}
-			jsonBytes, err := json.MarshalIndent(res, "", "  ")
+			jsonBytes, err := json.Marshal(res)
 			if err != nil {
 				return groq.ChatCompletionMessage{}, err
 			}
