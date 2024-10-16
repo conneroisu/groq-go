@@ -527,25 +527,25 @@ func (p *Process) Subscribe(
 	select {
 	case <-ctx.Done():
 		close(eventByCh)
-		break
+		p.sb.Map.Delete(res.Result)
+		finishCtx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+		p.sb.logger.Debug("unsubscribing from process", "event", event, "id", res.Result)
+		err = p.sb.WriteRequest(finishCtx, processUnsubscribe, []any{res.Result}, respCh)
+		if err != nil {
+			return err
+		}
+		unsubRes, err := decodeResponse[bool, string](<-respCh)
+		if err != nil {
+			return err
+		}
+		if unsubRes.Error != "" || !unsubRes.Result {
+			return fmt.Errorf("failed to unsubscribe from process: %s", unsubRes.Error)
+		}
+		return nil
 	case <-p.Done():
-		break
+		return nil
 	}
-	finishCtx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	p.sb.logger.Debug("unsubscribing from process", "event", event, "id", res.Result)
-	err = p.sb.WriteRequest(finishCtx, processUnsubscribe, []any{res.Result}, respCh)
-	if err != nil {
-		return err
-	}
-	unsubRes, err := decodeResponse[bool, string](<-respCh)
-	if err != nil {
-		return err
-	}
-	if unsubRes.Error != "" || !unsubRes.Result {
-		return fmt.Errorf("failed to unsubscribe from process: %s", unsubRes.Error)
-	}
-	return nil
 }
 func (s *Sandbox) wsURL() *url.URL {
 	return &url.URL{
