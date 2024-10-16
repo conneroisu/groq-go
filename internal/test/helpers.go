@@ -55,3 +55,8 @@ func (t *TokenRoundTripper) RoundTrip(
 	req.Header.Set("Authorization", "Bearer "+t.Token)
 	return t.Fallback.RoundTrip(req)
 }
+
+// IsUnitTest returns true if the unit test environment variable is set.
+func IsUnitTest() bool {
+	return os.Getenv("UNIT") != ""
+}
