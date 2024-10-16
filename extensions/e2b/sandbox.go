@@ -510,7 +510,7 @@ func (p *Process) Subscribe(
 				return
 			default:
 				var event Event
-				err = json.Unmarshal(<-eventByCh, &event)
+				err := json.Unmarshal(<-eventByCh, &event)
 				if err != nil {
 					return
 				}
