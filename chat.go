@@ -452,7 +452,10 @@ func (c *Client) CreateChatCompletionJSON(
 	var response ChatCompletionResponse
 	err = c.sendRequest(req, &response)
 	if err != nil {
-		return
+		reqErr, ok := err.(*requestError)
+		if ok && reqErr.HTTPStatusCode == http.StatusServiceUnavailable {
+			return c.CreateChatCompletionJSON(ctx, request, output)
+		}
 	}
 	content := response.Choices[0].Message.Content
 	split := strings.Split(content, "```")
