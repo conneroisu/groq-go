@@ -35,7 +35,7 @@ type (
 
 		logger     *slog.Logger    `json:"-"` // logger is the sandbox's logger.
 		apiKey     string          `json:"-"` // apiKey is the sandbox's api key.
-		baseAPIURL string          `json:"-"` // baseAPIURL is the base api url of the sandbox.
+		baseURL    string          `json:"-"` // baseAPIURL is the base api url of the sandbox.
 		httpScheme string          `json:"-"` // httpScheme is the sandbox's http scheme.
 		client     *http.Client    `json:"-"` // client is the sandbox's http client.
 		header     builders.Header `json:"-"` // header is the sandbox's request header builder.
@@ -156,9 +156,9 @@ func NewSandbox(
 	opts ...Option,
 ) (*Sandbox, error) {
 	sb := Sandbox{
-		apiKey:     apiKey,
-		Template:   "base",
-		baseAPIURL: defaultBaseURL,
+		apiKey:   apiKey,
+		Template: "base",
+		baseURL:  defaultBaseURL,
 		Metadata: map[string]string{
 			"sdk": "groq-go v1",
 		},
@@ -178,7 +178,7 @@ func NewSandbox(
 	}
 	req, err := builders.NewRequest(
 		ctx, sb.header, http.MethodPost,
-		fmt.Sprintf("%s://%s%s", sb.httpScheme, sb.baseAPIURL, sandboxesRoute),
+		fmt.Sprintf("%s://%s%s", sb.httpScheme, sb.baseURL, sandboxesRoute),
 		builders.WithBody(&sb),
 	)
 	if err != nil {
@@ -206,7 +206,7 @@ func NewSandbox(
 func (s *Sandbox) KeepAlive(ctx context.Context, timeout time.Duration) error {
 	req, err := builders.NewRequest(
 		ctx, s.header, http.MethodPost,
-		fmt.Sprintf("%s://%s/sandboxes/%s/refreshes", s.httpScheme, s.baseAPIURL, s.ID),
+		fmt.Sprintf("%s://%s/sandboxes/%s/refreshes", s.httpScheme, s.baseURL, s.ID),
 		builders.WithBody(struct {
 			Duration int `json:"duration"`
 		}{Duration: int(timeout.Seconds())}),
@@ -250,7 +250,7 @@ func (s *Sandbox) Reconnect(ctx context.Context) (err error) {
 func (s *Sandbox) Stop(ctx context.Context) error {
 	req, err := builders.NewRequest(
 		ctx, s.header, http.MethodDelete,
-		fmt.Sprintf("%s://%s%s%s", s.httpScheme, s.baseAPIURL, deleteSandboxRoute, s.ID),
+		fmt.Sprintf("%s://%s%s%s", s.httpScheme, s.baseURL, deleteSandboxRoute, s.ID),
 		builders.WithBody(interface{}(nil)),
 	)
 	if err != nil {
@@ -697,7 +697,7 @@ func (s *Sandbox) read(ctx context.Context) (err error) {
 
 // WithBaseURL sets the base URL for the e2b sandbox.
 func (s *Sandbox) WithBaseURL(baseURL string) Option {
-	return func(s *Sandbox) { s.baseAPIURL = baseURL }
+	return func(s *Sandbox) { s.baseURL = baseURL }
 }
 
 // WithTemplate sets the template for the e2b sandbox.

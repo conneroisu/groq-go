@@ -142,7 +142,7 @@ var (
 		Type: groq.ToolTypeFunction,
 		Function: groq.FunctionDefinition{
 			Name:        "mkdir",
-			Description: "Make a directory in the sandbox file system at a given path.",
+			Description: "Make a directory in the sandbox file system at a given path",
 			Parameters: groq.ParameterDefinition{
 				Type: "object",
 				Properties: map[string]groq.PropertyDefinition{
@@ -160,7 +160,7 @@ var (
 		Type: groq.ToolTypeFunction,
 		Function: groq.FunctionDefinition{
 			Name:        "ls",
-			Description: "List the files and directories in the sandbox file system at a given path.",
+			Description: "List the files and directories in the sandbox file system at a given path",
 			Parameters: groq.ParameterDefinition{
 				Type: "object",
 				Properties: map[string]groq.PropertyDefinition{
@@ -199,7 +199,7 @@ var (
 				Type: "object",
 				Properties: map[string]groq.PropertyDefinition{
 					"path": {Type: "string",
-						Description: "The relative or absolute path of the file to write to.",
+						Description: "The relative or absolute path of the file to write to",
 					},
 					"data": {Type: "string",
 						Description: "The data to write to the file",
