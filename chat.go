@@ -387,6 +387,10 @@ func (c *Client) CreateChatCompletion(
 		return
 	}
 	err = c.sendRequest(req, &response)
+	reqErr, ok := err.(*requestError)
+	if ok && reqErr.HTTPStatusCode == http.StatusServiceUnavailable {
+		return c.CreateChatCompletion(ctx, request)
+	}
 	return
 }
 
