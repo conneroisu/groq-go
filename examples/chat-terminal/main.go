@@ -57,7 +57,7 @@ func input(ctx context.Context, client *groq.Client) error {
 				break
 			}
 			lines = append(lines, line)
-			continue
+			break
 		}
 		break
 	}
@@ -66,11 +66,10 @@ func input(ctx context.Context, client *groq.Client) error {
 		Role:    groq.ChatMessageRoleUser,
 		Content: in,
 	})
-
 	output, err := client.CreateChatCompletionStream(
 		ctx,
 		groq.ChatCompletionRequest{
-			Model:     groq.ModelLlama3170BVersatile,
+			Model:     groq.ModelGemma29BIt,
 			Messages:  history,
 			MaxTokens: 2000,
 		},
