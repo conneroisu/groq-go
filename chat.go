@@ -387,8 +387,8 @@ func (c *Client) CreateChatCompletion(
 		return
 	}
 	err = c.sendRequest(req, &response)
-	reqErr, ok := err.(*requestError)
-	if ok && reqErr.HTTPStatusCode == http.StatusServiceUnavailable {
+	errResp, ok := err.(*APIError)
+	if ok && errResp.HTTPStatusCode == http.StatusServiceUnavailable {
 		return c.CreateChatCompletion(ctx, request)
 	}
 	return
@@ -452,7 +452,7 @@ func (c *Client) CreateChatCompletionJSON(
 	var response ChatCompletionResponse
 	err = c.sendRequest(req, &response)
 	if err != nil {
-		reqErr, ok := err.(*requestError)
+		reqErr, ok := err.(*APIError)
 		if ok && reqErr.HTTPStatusCode == http.StatusServiceUnavailable {
 			return c.CreateChatCompletionJSON(ctx, request, output)
 		}
