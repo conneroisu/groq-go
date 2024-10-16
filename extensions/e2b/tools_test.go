@@ -2,8 +2,6 @@ package e2b
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"log/slog"
 	"os"
 	"strings"
@@ -58,15 +56,9 @@ func TestSandboxTooling(t *testing.T) {
 	a.NoError(err, "NewSandbox error")
 	client, err := groq.NewClient(getapiKey(t, "GROQ_KEY"))
 	a.NoError(err, "NewClient error")
-
-	tools := sb.toolW.GetTools()
-	jsonBytes, err := json.MarshalIndent(tools, "", "  ")
-	if err != nil {
-		a.Error(err)
-	}
-	fmt.Println(string(jsonBytes))
+	tools := sb.GetTools()
 	// ask the ai to create a file with the data "Hello World!" in file "hello.txt"
-	response, err := client.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
+	response := client.MustCreateChatCompletion(ctx, groq.ChatCompletionRequest{
 		Model: groq.ModelLlama3Groq70B8192ToolUsePreview,
 		Messages: []groq.ChatCompletionMessage{
 			{
@@ -83,7 +75,6 @@ NOTE: You are in the correct cwd. Just call the write tool with a name of hello.
 		MaxTokens: 2000,
 		Tools:     tools,
 	})
-	a.NoError(err)
 	sb.logger.Debug("response from model", "response", response)
 	resps, err := sb.RunTooling(ctx, response)
 	a.NoError(err)

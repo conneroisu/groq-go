@@ -357,6 +357,20 @@ func (r *ChatCompletionResponse) SetHeader(h http.Header) {
 	r.Header = h
 }
 
+// MustCreateChatCompletion method is an API call to create a chat completion.
+//
+// It panics if an error occurs.
+func (c *Client) MustCreateChatCompletion(
+	ctx context.Context,
+	request ChatCompletionRequest,
+) (response ChatCompletionResponse) {
+	response, err := c.CreateChatCompletion(ctx, request)
+	if err != nil {
+		panic(err)
+	}
+	return response
+}
+
 // CreateChatCompletion method is an API call to create a chat completion.
 func (c *Client) CreateChatCompletion(
 	ctx context.Context,

@@ -10,6 +10,7 @@ import (
 )
 
 type (
+	// SbFn is a function that can be used to run a tool.
 	SbFn func(ctx context.Context, s *Sandbox, params *Params) (groq.ChatCompletionMessage, error)
 	// ToolingWrapper is a wrapper for groq.Tool that allows for custom functions working with a sandbox.
 	ToolingWrapper struct {
@@ -26,13 +27,18 @@ type (
 	}
 )
 
-// GetTools returns the tools wrapped by the ToolWrapper.
-func (t *ToolingWrapper) GetTools() []groq.Tool {
+// getTools returns the tools wrapped by the ToolWrapper.
+func (t *ToolingWrapper) getTools() []groq.Tool {
 	tools := make([]groq.Tool, 0)
 	for tool := range t.ToolMap {
 		tools = append(tools, *tool)
 	}
 	return tools
+}
+
+// GetTools returns the tools wrapped by the ToolWrapper.
+func (s *Sandbox) GetTools() []groq.Tool {
+	return s.toolW.getTools()
 }
 
 // GetToolFn returns the function for the tool with the
@@ -245,7 +251,7 @@ func (s *Sandbox) RunTooling(
 	}
 	respH := []groq.ChatCompletionMessage{}
 	for _, tool := range response.Choices[0].Message.ToolCalls {
-		for _, t := range s.toolW.GetTools() {
+		for _, t := range s.toolW.getTools() {
 			if t.Function.Name != tool.Function.Name {
 				continue
 			}
