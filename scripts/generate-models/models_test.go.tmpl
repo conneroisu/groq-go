@@ -35,7 +35,7 @@ func TestChatModels{{ $model.Name }}(t *testing.T) {
 				Content: "What is a proface display?",
 			},
 		},
-		MaxTokens: 5,
+		MaxTokens: 10,
 		RetryDelay: time.Second * 2,
 	})
 	a.NoError(err, "CreateChatCompletionJSON error")
