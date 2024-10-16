@@ -487,7 +487,7 @@ func (p *Process) Done() <-chan struct{} {
 func (p *Process) Subscribe(
 	ctx context.Context,
 	event ProcessEvents,
-	ch chan<- Event,
+	eCh chan<- Event,
 ) error {
 	respCh := make(chan []byte)
 	err := p.sb.WriteRequest(ctx, processSubscribe, []any{event, p.id}, respCh)
@@ -520,7 +520,7 @@ func (p *Process) Subscribe(
 				if event.Params.Subscription != res.Result {
 					continue
 				}
-				ch <- event
+				eCh <- event
 			}
 		}
 	}()
@@ -532,11 +532,11 @@ func (p *Process) Subscribe(
 		p.sb.Map.Delete(res.Result)
 		break
 	}
-	finishCtx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	finishCtx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	p.sb.Map.Delete(res.Result)
 	p.sb.logger.Debug("unsubscribing from process", "id", res.Result)
-	err = p.sb.WriteRequest(finishCtx, processUnsubscribe, []any{res.Result}, respCh)
+	err = p.sb.WriteRequest(finishCtx, processUnsubscribe, []any{res.Result}, nil)
 	if err != nil {
 		return err
 	}
