@@ -581,18 +581,6 @@ func (s *Sandbox) sendRequest(req *http.Request, v interface{}) error {
 		return json.NewDecoder(res.Body).Decode(v)
 	}
 }
-func (s *Sandbox) identify(ctx context.Context) {
-	id := 1
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		default:
-			s.idCh <- id
-			id++
-		}
-	}
-}
 
 // WriteRequest writes a request to the websocket.
 func (s *Sandbox) WriteRequest(
@@ -688,13 +676,21 @@ func (s *Sandbox) read(ctx context.Context) (err error) {
 }
 
 // WithBaseURL sets the base URL for the e2b sandbox.
-func (s *Sandbox) WithBaseURL(baseURL string) Option {
+func WithBaseURL(baseURL string) Option {
 	return func(s *Sandbox) { s.baseURL = baseURL }
 }
 
-// WithTemplate sets the template for the e2b sandbox.
-func (s *Sandbox) WithTemplate(template SandboxTemplate) Option {
-	return func(s *Sandbox) { s.Template = template }
+func (s *Sandbox) identify(ctx context.Context) {
+	id := 1
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			s.idCh <- id
+			id++
+		}
+	}
 }
 
 // WithClient sets the client for the e2b sandbox.
