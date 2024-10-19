@@ -261,7 +261,8 @@ func (s *Sandbox) Stop(ctx context.Context) error {
 		return err
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusNoContent {
+	if resp.StatusCode < http.StatusOK ||
+		resp.StatusCode >= http.StatusBadRequest {
 		return fmt.Errorf("request to delete sandbox failed: %s", resp.Status)
 	}
 	return nil
@@ -270,7 +271,7 @@ func (s *Sandbox) Stop(ctx context.Context) error {
 // Mkdir makes a directory in the sandbox file system.
 func (s *Sandbox) Mkdir(ctx context.Context, path string) error {
 	respCh := make(chan []byte)
-	err := s.WriteRequest(ctx, filesystemMakeDir, []any{path}, respCh)
+	err := s.writeRequest(ctx, filesystemMakeDir, []any{path}, respCh)
 	if err != nil {
 		return err
 	}
@@ -294,7 +295,7 @@ func (s *Sandbox) Mkdir(ctx context.Context, path string) error {
 func (s *Sandbox) Ls(ctx context.Context, path string) ([]LsResult, error) {
 	respCh := make(chan []byte)
 	defer close(respCh)
-	err := s.WriteRequest(ctx, filesystemList, []any{path}, respCh)
+	err := s.writeRequest(ctx, filesystemList, []any{path}, respCh)
 	if err != nil {
 		return nil, err
 	}
@@ -316,7 +317,7 @@ func (s *Sandbox) Read(
 	path string,
 ) (string, error) {
 	respCh := make(chan []byte)
-	err := s.WriteRequest(ctx, filesystemRead, []any{path}, respCh)
+	err := s.writeRequest(ctx, filesystemRead, []any{path}, respCh)
 	if err != nil {
 		return "", err
 	}
@@ -338,7 +339,7 @@ func (s *Sandbox) Read(
 // Write writes to a file to the sandbox file system.
 func (s *Sandbox) Write(ctx context.Context, path string, data []byte) error {
 	respCh := make(chan []byte)
-	err := s.WriteRequest(ctx, filesystemWrite, []any{path, string(data)}, respCh)
+	err := s.writeRequest(ctx, filesystemWrite, []any{path, string(data)}, respCh)
 	if err != nil {
 		return err
 	}
@@ -358,7 +359,7 @@ func (s *Sandbox) Write(ctx context.Context, path string, data []byte) error {
 func (s *Sandbox) ReadBytes(ctx context.Context, path string) ([]byte, error) {
 	resCh := make(chan []byte)
 	defer close(resCh)
-	err := s.WriteRequest(ctx, filesystemReadBytes, []any{path}, resCh)
+	err := s.writeRequest(ctx, filesystemReadBytes, []any{path}, resCh)
 	if err != nil {
 		return nil, err
 	}
@@ -391,7 +392,7 @@ func (s *Sandbox) Watch(
 ) error {
 	respCh := make(chan []byte)
 	defer close(respCh)
-	err := s.WriteRequest(ctx, filesystemSubscribe, []any{"watchDir", path}, respCh)
+	err := s.writeRequest(ctx, filesystemSubscribe, []any{"watchDir", path}, respCh)
 	if err != nil {
 		return err
 	}
@@ -448,7 +449,7 @@ func (p *Process) Start(ctx context.Context) (err error) {
 		p.Env = map[string]string{"PYTHONUNBUFFERED": "1"}
 	}
 	respCh := make(chan []byte)
-	if err = p.sb.WriteRequest(ctx, processStart, []any{p.id, p.cmd, p.Env, p.Cwd}, respCh); err != nil {
+	if err = p.sb.writeRequest(ctx, processStart, []any{p.id, p.cmd, p.Env, p.Cwd}, respCh); err != nil {
 		return err
 	}
 	select {
@@ -490,7 +491,7 @@ func (p *Process) Subscribe(
 	eCh chan<- Event,
 ) error {
 	respCh := make(chan []byte)
-	err := p.sb.WriteRequest(ctx, processSubscribe, []any{event, p.id}, respCh)
+	err := p.sb.writeRequest(ctx, processSubscribe, []any{event, p.id}, respCh)
 	if err != nil {
 		return err
 	}
@@ -524,7 +525,7 @@ func (p *Process) Subscribe(
 			finishCtx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			p.sb.logger.Debug("unsubscribing from process", "event", event, "id", res.Result)
-			err = p.sb.WriteRequest(finishCtx, processUnsubscribe, []any{res.Result}, respCh)
+			err = p.sb.writeRequest(finishCtx, processUnsubscribe, []any{res.Result}, respCh)
 			if err != nil {
 				return err
 			}
@@ -536,6 +537,7 @@ func (p *Process) Subscribe(
 				return fmt.Errorf("failed to unsubscribe from process: %s", unsubRes.Error)
 			}
 			return nil
+		// TODO: make this a timeout that comes from a function param.
 		case <-p.Done():
 			return nil
 		}
@@ -581,6 +583,45 @@ func (s *Sandbox) sendRequest(req *http.Request, v interface{}) error {
 		return json.NewDecoder(res.Body).Decode(v)
 	}
 }
+
+// WithBaseURL sets the base URL for the e2b sandbox.
+func WithBaseURL(baseURL string) Option {
+	return func(s *Sandbox) { s.baseURL = baseURL }
+}
+
+// WithClient sets the client for the e2b sandbox.
+func WithClient(client *http.Client) Option {
+	return func(s *Sandbox) { s.client = client }
+}
+
+// WithLogger sets the logger for the e2b sandbox.
+func WithLogger(logger *slog.Logger) Option {
+	return func(s *Sandbox) { s.logger = logger }
+}
+
+// WithTemplate sets the template for the e2b sandbox.
+func WithTemplate(template SandboxTemplate) Option {
+	return func(s *Sandbox) { s.Template = template }
+}
+
+// WithMetaData sets the meta data for the e2b sandbox.
+func WithMetaData(metaData map[string]string) Option {
+	return func(s *Sandbox) { s.Metadata = metaData }
+}
+
+// WithCwd sets the current working directory.
+func WithCwd(cwd string) Option {
+	return func(s *Sandbox) { s.Cwd = cwd }
+}
+
+func decodeResponse[T any, Q any](body []byte) (*Response[T, Q], error) {
+	decResp := new(Response[T, Q])
+	err := json.Unmarshal(body, decResp)
+	if err != nil {
+		return nil, err
+	}
+	return decResp, nil
+}
 func (s *Sandbox) identify(ctx context.Context) {
 	id := 1
 	for {
@@ -593,51 +634,6 @@ func (s *Sandbox) identify(ctx context.Context) {
 		}
 	}
 }
-
-// WriteRequest writes a request to the websocket.
-func (s *Sandbox) WriteRequest(
-	ctx context.Context,
-	method Method,
-	params []any,
-	respCh chan []byte,
-) error {
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	case id := <-s.idCh:
-		req := Request{
-			Method:  method,
-			JSONRPC: rpc,
-			Params:  params,
-			ID:      id,
-		}
-		s.logger.Debug("request",
-			"method", req.Method,
-			"id", req.ID,
-			"params", req.Params,
-			"sandbox", s.ID,
-		)
-		s.Map.Store(req.ID, respCh)
-		jsVal, err := json.Marshal(req)
-		if err != nil {
-			return err
-		}
-		err = s.ws.WriteMessage(websocket.TextMessage, jsVal)
-		if err != nil {
-			return fmt.Errorf(
-				"writing %s request failed (%d): %w",
-				method,
-				req.ID,
-				err,
-			)
-		}
-		return nil
-	}
-}
-
-// Read reads a response from the websocket.
-//
-// If the context is cancelled, the websocket will be closed.
 func (s *Sandbox) read(ctx context.Context) (err error) {
 	defer func() {
 		err = s.ws.Close()
@@ -686,47 +682,42 @@ func (s *Sandbox) read(ctx context.Context) (err error) {
 		}
 	}
 }
-
-// WithBaseURL sets the base URL for the e2b sandbox.
-func (s *Sandbox) WithBaseURL(baseURL string) Option {
-	return func(s *Sandbox) { s.baseURL = baseURL }
-}
-
-// WithTemplate sets the template for the e2b sandbox.
-func (s *Sandbox) WithTemplate(template SandboxTemplate) Option {
-	return func(s *Sandbox) { s.Template = template }
-}
-
-// WithClient sets the client for the e2b sandbox.
-func WithClient(client *http.Client) Option {
-	return func(s *Sandbox) { s.client = client }
-}
-
-// WithLogger sets the logger for the e2b sandbox.
-func WithLogger(logger *slog.Logger) Option {
-	return func(s *Sandbox) { s.logger = logger }
-}
-
-// WithTemplate sets the template for the e2b sandbox.
-func WithTemplate(template SandboxTemplate) Option {
-	return func(s *Sandbox) { s.Template = template }
-}
-
-// WithMetaData sets the meta data for the e2b sandbox.
-func WithMetaData(metaData map[string]string) Option {
-	return func(s *Sandbox) { s.Metadata = metaData }
-}
-
-// WithCwd sets the current working directory.
-func WithCwd(cwd string) Option {
-	return func(s *Sandbox) { s.Cwd = cwd }
-}
-
-func decodeResponse[T any, Q any](body []byte) (*Response[T, Q], error) {
-	decResp := new(Response[T, Q])
-	err := json.Unmarshal(body, decResp)
-	if err != nil {
-		return nil, err
+func (s *Sandbox) writeRequest(
+	ctx context.Context,
+	method Method,
+	params []any,
+	respCh chan []byte,
+) error {
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case id := <-s.idCh:
+		req := Request{
+			Method:  method,
+			JSONRPC: rpc,
+			Params:  params,
+			ID:      id,
+		}
+		s.logger.Debug("request",
+			"method", req.Method,
+			"id", req.ID,
+			"params", req.Params,
+			"sandbox", s.ID,
+		)
+		s.Map.Store(req.ID, respCh)
+		jsVal, err := json.Marshal(req)
+		if err != nil {
+			return err
+		}
+		err = s.ws.WriteMessage(websocket.TextMessage, jsVal)
+		if err != nil {
+			return fmt.Errorf(
+				"writing %s request failed (%d): %w",
+				method,
+				req.ID,
+				err,
+			)
+		}
+		return nil
 	}
-	return decResp, nil
 }

@@ -19,11 +19,14 @@ import (
 	"testing"
 
 	"github.com/conneroisu/groq-go"
-	"github.com/conneroisu/groq-go/internal/test"
+	"github.com/conneroisu/groq-go/pkg/test"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestTestServer(t *testing.T) {
+	if !test.IsUnitTest() {
+		t.Skip()
+	}
 	num := rand.Intn(100)
 	a := assert.New(t)
 	ctx := context.Background()

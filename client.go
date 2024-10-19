@@ -14,7 +14,7 @@ import (
 )
 
 //go:generate go run ./scripts/generate-models/
-//go:generate make docs
+//go:generate gomarkdoc -o README.md -e .
 
 type (
 	// Format is the format of a response.

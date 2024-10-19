@@ -10,6 +10,8 @@ import (
 	"github.com/conneroisu/groq-go/pkg/builders"
 )
 
+//go:generate gomarkdoc -o README.md -e .
+
 const (
 	defaultBaseURL   = "https://api.toolhouse.ai/v1"
 	getToolsEndpoint = "/get_tools"
@@ -18,8 +20,8 @@ const (
 )
 
 type (
-	// Extension is a Toolhouse extension.
-	Extension struct {
+	// Toolhouse is a Toolhouse extension.
+	Toolhouse struct {
 		apiKey   string
 		baseURL  string
 		client   *http.Client
@@ -32,12 +34,12 @@ type (
 	}
 
 	// Options is a function that sets options for a Toolhouse extension.
-	Options func(*Extension)
+	Options func(*Toolhouse)
 )
 
 // NewExtension creates a new Toolhouse extension.
-func NewExtension(apiKey string, opts ...Options) (e *Extension, err error) {
-	e = &Extension{
+func NewExtension(apiKey string, opts ...Options) (e *Toolhouse, err error) {
+	e = &Toolhouse{
 		apiKey:   apiKey,
 		baseURL:  defaultBaseURL,
 		client:   http.DefaultClient,

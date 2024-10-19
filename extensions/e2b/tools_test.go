@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/conneroisu/groq-go"
+	"github.com/conneroisu/groq-go/pkg/test"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -48,8 +49,8 @@ func getapiKey(t *testing.T, val string) string {
 }
 
 func TestSandboxTooling(t *testing.T) {
-	if os.Getenv("UNIT") == "" {
-		t.Skip("Skipping Tooling test")
+	if !test.IsUnitTest() {
+		t.Skip()
 	}
 	a := assert.New(t)
 	ctx := context.Background()

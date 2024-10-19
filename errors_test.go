@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	groq "github.com/conneroisu/groq-go"
-	"github.com/conneroisu/groq-go/internal/test"
+	"github.com/conneroisu/groq-go/pkg/test"
 )
 
 func TestErrorAccumulatorBytes(t *testing.T) {
