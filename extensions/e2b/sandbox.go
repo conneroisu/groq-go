@@ -537,6 +537,7 @@ func (p *Process) Subscribe(
 				return fmt.Errorf("failed to unsubscribe from process: %s", unsubRes.Error)
 			}
 			return nil
+		// TODO: make this a timeout that comes from a function param.
 		case <-p.Done():
 			return nil
 		}
