@@ -31,7 +31,6 @@ type handler func(w http.ResponseWriter, r *http.Request)
 func NewTestServer() *ServerTest {
 	return &ServerTest{
 		handlers: make(map[string]handler),
-		Logger:   defaultLogger,
 	}
 }
 
