@@ -24,7 +24,7 @@ import (
 )
 
 func TestTestServer(t *testing.T) {
-	if os.Getenv("UNIT") == "" {
+	if !test.IsUnitTest() {
 		t.Skip()
 	}
 	num := rand.Intn(100)

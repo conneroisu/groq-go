@@ -261,7 +261,8 @@ func (s *Sandbox) Stop(ctx context.Context) error {
 		return err
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusNoContent {
+	if resp.StatusCode < http.StatusOK ||
+		resp.StatusCode >= http.StatusBadRequest {
 		return fmt.Errorf("request to delete sandbox failed: %s", resp.Status)
 	}
 	return nil

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/conneroisu/groq-go/extensions/e2b"
+	"github.com/conneroisu/groq-go/pkg/test"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -52,6 +53,9 @@ func getapiKey(t *testing.T) string {
 }
 
 func TestPostSandbox(t *testing.T) {
+	if !test.IsUnitTest() {
+		t.Skip()
+	}
 	a := assert.New(t)
 	ctx := context.Background()
 	sb, err := e2b.NewSandbox(
@@ -80,6 +84,9 @@ func TestPostSandbox(t *testing.T) {
 
 // TestWriteRead tests the Write and Read methods of the Sandbox.
 func TestWriteRead(t *testing.T) {
+	if !test.IsUnitTest() {
+		t.Skip()
+	}
 	filePath := "test.txt"
 	content := "Hello, world!"
 	a := assert.New(t)
@@ -103,6 +110,9 @@ func TestWriteRead(t *testing.T) {
 }
 
 func TestCreateProcess(t *testing.T) {
+	if !test.IsUnitTest() {
+		t.Skip()
+	}
 	a := assert.New(t)
 	ctx := context.Background()
 	sb, err := e2b.NewSandbox(
@@ -139,6 +149,9 @@ func TestCreateProcess(t *testing.T) {
 }
 
 func TestFilesystemSubscribe(t *testing.T) {
+	if !test.IsUnitTest() {
+		t.Skip()
+	}
 	a := assert.New(t)
 	ctx := context.Background()
 	sb, err := e2b.NewSandbox(
@@ -171,6 +184,9 @@ func TestFilesystemSubscribe(t *testing.T) {
 }
 
 func TestKeepAlive(t *testing.T) {
+	if !test.IsUnitTest() {
+		t.Skip()
+	}
 	a := assert.New(t)
 	ctx := context.Background()
 	sb, err := e2b.NewSandbox(
