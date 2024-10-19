@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/conneroisu/groq-go/internal/test"
+	"github.com/conneroisu/groq-go/pkg/test"
 	"github.com/stretchr/testify/assert"
 )
 

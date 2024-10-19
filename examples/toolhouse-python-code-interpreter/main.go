@@ -1,3 +1,7 @@
+// Package main shows an example of using the toolhouse go package.
+//
+// It shows how one can add the python code interpreter to their toolhouse
+// tools and use it to execute groq powered llms's code.
 package main
 
 import (

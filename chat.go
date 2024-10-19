@@ -456,7 +456,8 @@ func (c *Client) CreateChatCompletionJSON(
 	err = c.sendRequest(req, &response)
 	if err != nil {
 		reqErr, ok := err.(*APIError)
-		if ok && (reqErr.HTTPStatusCode == http.StatusServiceUnavailable || reqErr.HTTPStatusCode == http.StatusInternalServerError) {
+		if ok && (reqErr.HTTPStatusCode == http.StatusServiceUnavailable ||
+			reqErr.HTTPStatusCode == http.StatusInternalServerError) {
 			time.Sleep(request.RetryDelay)
 			return c.CreateChatCompletionJSON(ctx, request, output)
 		}
@@ -466,10 +467,7 @@ func (c *Client) CreateChatCompletionJSON(
 	if len(split) > 1 {
 		content = split[1]
 	}
-	err = json.Unmarshal(
-		[]byte(content),
-		&output,
-	)
+	err = json.Unmarshal([]byte(content), &output)
 	if err != nil {
 		return fmt.Errorf(
 			"error unmarshalling response (%s) to output: %v",
