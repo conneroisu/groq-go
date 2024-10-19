@@ -7,7 +7,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/conneroisu/groq-go/internal/test"
+	"github.com/conneroisu/groq-go/pkg/test"
 )
 
 // TestErrTestErrorAccumulatorWriteFailed_Error tests the Error method of ErrTestErrorAccumulatorWriteFailed.
