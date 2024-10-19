@@ -3,6 +3,7 @@ module github.com/conneroisu/groq-go
 go 1.23.1
 
 require (
+	github.com/gorilla/websocket v1.5.3
 	github.com/stretchr/testify v1.9.0
 	github.com/wk8/go-ordered-map/v2 v2.1.8
 )
