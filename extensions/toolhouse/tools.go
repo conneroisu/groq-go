@@ -14,7 +14,7 @@ import (
 // MustGetTools returns a list of tools that the extension can use.
 //
 // It panics if an error occurs.
-func (e *Extension) MustGetTools(
+func (e *Toolhouse) MustGetTools(
 	ctx context.Context,
 ) []groq.Tool {
 	tools, err := e.GetTools(ctx)
@@ -25,7 +25,7 @@ func (e *Extension) MustGetTools(
 }
 
 // GetTools returns a list of tools that the extension can use.
-func (e *Extension) GetTools(
+func (e *Toolhouse) GetTools(
 	ctx context.Context,
 ) ([]groq.Tool, error) {
 	if len(e.tools) > 0 {

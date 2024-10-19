@@ -680,8 +680,6 @@ func (s *Sandbox) read(ctx context.Context) (err error) {
 		}
 	}
 }
-
-// writeRequest writes a request to the websocket.
 func (s *Sandbox) writeRequest(
 	ctx context.Context,
 	method Method,

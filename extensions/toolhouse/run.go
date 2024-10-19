@@ -23,7 +23,7 @@ type (
 // MustRun runs the extension on the given history.
 //
 // It panics if an error occurs.
-func (e *Extension) MustRun(
+func (e *Toolhouse) MustRun(
 	ctx context.Context,
 	response groq.ChatCompletionResponse,
 ) []groq.ChatCompletionMessage {
@@ -35,7 +35,7 @@ func (e *Extension) MustRun(
 }
 
 // Run runs the extension on the given history.
-func (e *Extension) Run(
+func (e *Toolhouse) Run(
 	ctx context.Context,
 	response groq.ChatCompletionResponse,
 ) ([]groq.ChatCompletionMessage, error) {
