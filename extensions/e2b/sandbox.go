@@ -9,7 +9,6 @@ import (
 	"log/slog"
 	"math/rand"
 	"net/http"
-	"net/url"
 	"sync"
 	"time"
 
@@ -33,16 +32,16 @@ type (
 		ClientID string            `json:"clientID"`   // ClientID of the sandbox.
 		Cwd      string            `json:"cwd"`        // Cwd is the sandbox's current working directory.
 
-		logger     *slog.Logger    `json:"-"` // logger is the sandbox's logger.
-		apiKey     string          `json:"-"` // apiKey is the sandbox's api key.
-		baseURL    string          `json:"-"` // baseAPIURL is the base api url of the sandbox.
-		httpScheme string          `json:"-"` // httpScheme is the sandbox's http scheme.
-		client     *http.Client    `json:"-"` // client is the sandbox's http client.
-		header     builders.Header `json:"-"` // header is the sandbox's request header builder.
-		ws         *websocket.Conn `json:"-"` // ws is the sandbox's websocket connection.
-		Map        sync.Map        `json:"-"` // Map is the map of the sandbox.
-		idCh       chan int        `json:"-"` // idCh is the channel to generate ids for requests.
-		toolW      ToolingWrapper  `json:"-"` // toolW is the tooling wrapper for the sandbox.
+		logger  *slog.Logger            `json:"-"` // logger is the sandbox's logger.
+		apiKey  string                  `json:"-"` // apiKey is the sandbox's api key.
+		baseURL string                  `json:"-"` // baseAPIURL is the base api url of the sandbox.
+		client  *http.Client            `json:"-"` // client is the sandbox's http client.
+		header  builders.Header         `json:"-"` // header is the sandbox's request header builder.
+		ws      *websocket.Conn         `json:"-"` // ws is the sandbox's websocket connection.
+		wsURL   func(s *Sandbox) string `json:"-"` // wsURL is the sandbox's websocket url.
+		Map     sync.Map                `json:"-"` // Map is the map of the sandbox.
+		idCh    chan int                `json:"-"` // idCh is the channel to generate ids for requests.
+		toolW   ToolingWrapper          `json:"-"` // toolW is the tooling wrapper for the sandbox.
 	}
 	// Process is a process in the sandbox.
 	Process struct {
@@ -128,13 +127,12 @@ const (
 
 	rpc                = "2.0"
 	charset            = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	defaultBaseURL     = "api.e2b.dev"
+	defaultBaseURL     = "https://api.e2b.dev"
 	defaultWSScheme    = "wss"
 	wsRoute            = "/ws"
 	fileRoute          = "/file"
 	sandboxesRoute     = "/sandboxes"  // (GET/POST /sandboxes)
 	deleteSandboxRoute = "/sandboxes/" // (DELETE /sandboxes/:id)
-	defaultHTTPScheme  = "https"
 
 	filesystemWrite      Method = "filesystem_write"
 	filesystemRead       Method = "filesystem_read"
@@ -162,11 +160,13 @@ func NewSandbox(
 		Metadata: map[string]string{
 			"sdk": "groq-go v1",
 		},
-		client:     http.DefaultClient,
-		logger:     slog.New(slog.NewJSONHandler(io.Discard, nil)),
-		httpScheme: defaultHTTPScheme,
-		idCh:       make(chan int),
-		toolW:      defaultToolWrapper,
+		client: http.DefaultClient,
+		logger: slog.New(slog.NewJSONHandler(io.Discard, nil)),
+		idCh:   make(chan int),
+		toolW:  defaultToolWrapper,
+		wsURL: func(s *Sandbox) string {
+			return fmt.Sprintf("wss://49982-%s-%s.e2b.dev/ws", s.ID, s.ClientID)
+		},
 	}
 	for _, opt := range opts {
 		opt(&sb)
@@ -178,7 +178,7 @@ func NewSandbox(
 	}
 	req, err := builders.NewRequest(
 		ctx, sb.header, http.MethodPost,
-		fmt.Sprintf("%s://%s%s", sb.httpScheme, sb.baseURL, sandboxesRoute),
+		fmt.Sprintf("%s%s", sb.baseURL, sandboxesRoute),
 		builders.WithBody(&sb),
 	)
 	if err != nil {
@@ -188,7 +188,7 @@ func NewSandbox(
 	if err != nil {
 		return &sb, err
 	}
-	sb.ws, _, err = websocket.DefaultDialer.Dial(sb.wsURL().String(), nil)
+	sb.ws, _, err = websocket.DefaultDialer.Dial(sb.wsURL(&sb), nil)
 	if err != nil {
 		return &sb, err
 	}
@@ -206,7 +206,7 @@ func NewSandbox(
 func (s *Sandbox) KeepAlive(ctx context.Context, timeout time.Duration) error {
 	req, err := builders.NewRequest(
 		ctx, s.header, http.MethodPost,
-		fmt.Sprintf("%s://%s/sandboxes/%s/refreshes", s.httpScheme, s.baseURL, s.ID),
+		fmt.Sprintf("%s/sandboxes/%s/refreshes", s.baseURL, s.ID),
 		builders.WithBody(struct {
 			Duration int `json:"duration"`
 		}{Duration: int(timeout.Seconds())}),
@@ -231,9 +231,8 @@ func (s *Sandbox) Reconnect(ctx context.Context) (err error) {
 	if err := s.ws.Close(); err != nil {
 		return err
 	}
-	u := s.wsURL()
-	s.logger.Debug("reconnecting to sandbox", "url", u.String())
-	s.ws, _, err = websocket.DefaultDialer.Dial(u.String(), nil)
+	urlu := fmt.Sprintf("wss://49982-%s-%s.e2b.dev/ws", s.ID, s.ClientID)
+	s.ws, _, err = websocket.DefaultDialer.Dial(urlu, nil)
 	if err != nil {
 		return err
 	}
@@ -250,7 +249,7 @@ func (s *Sandbox) Reconnect(ctx context.Context) (err error) {
 func (s *Sandbox) Stop(ctx context.Context) error {
 	req, err := builders.NewRequest(
 		ctx, s.header, http.MethodDelete,
-		fmt.Sprintf("%s://%s%s%s", s.httpScheme, s.baseURL, deleteSandboxRoute, s.ID),
+		fmt.Sprintf("%s%s%s", s.baseURL, deleteSandboxRoute, s.ID),
 		builders.WithBody(interface{}(nil)),
 	)
 	if err != nil {
@@ -543,16 +542,6 @@ func (p *Process) Subscribe(
 		}
 	}
 }
-func (s *Sandbox) wsURL() *url.URL {
-	return &url.URL{
-		Scheme: defaultWSScheme,
-		Host: fmt.Sprintf("49982-%s-%s.e2b.dev",
-			s.ID,
-			s.ClientID,
-		),
-		Path: wsRoute,
-	}
-}
 func (s *Sandbox) sendRequest(req *http.Request, v interface{}) error {
 	req.Header.Set("Accept", "application/json")
 	contentType := req.Header.Get("Content-Type")
@@ -612,6 +601,11 @@ func WithMetaData(metaData map[string]string) Option {
 // WithCwd sets the current working directory.
 func WithCwd(cwd string) Option {
 	return func(s *Sandbox) { s.Cwd = cwd }
+}
+
+// WithWsURL sets the websocket url for the e2b sandbox.
+func WithWsURL(wsURL func(s *Sandbox) string) Option {
+	return func(s *Sandbox) { s.wsURL = wsURL }
 }
 
 func decodeResponse[T any, Q any](body []byte) (*Response[T, Q], error) {
