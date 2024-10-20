@@ -20,6 +20,11 @@ type (
 	}
 	Composer interface {
 		GetTools() []groq.Tool
+		ListIntegrations() []Integration
+	}
+	Integration struct {
+		Name string `json:"name"`
+		ID   int    `json:"id"`
 	}
 )
 
