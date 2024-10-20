@@ -166,8 +166,10 @@ func TestNewSandbox(t *testing.T) {
 	proc, err := sb.NewProcess("sleep 5 && echo 'hello world!'", Process{})
 	a.NoError(err)
 	events := make(chan Event, 10)
+	// start the process
 	err = proc.Start(ctx)
 	a.NoError(err)
+	// subscribe to the process's stdout
 	err = proc.Subscribe(ctx, OnStdout, events)
 	a.NoError(err)
 	event := <-events
