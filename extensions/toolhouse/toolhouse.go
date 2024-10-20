@@ -10,8 +10,6 @@ import (
 	"github.com/conneroisu/groq-go/pkg/builders"
 )
 
-//go:generate gomarkdoc -o README.md -e .
-
 const (
 	defaultBaseURL   = "https://api.toolhouse.ai/v1"
 	getToolsEndpoint = "/get_tools"
