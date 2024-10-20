@@ -7,16 +7,22 @@ import (
 )
 
 type (
-	// Requester is an interface for an instance that sends rpc requests.
+	// Requester is an interface for an instance that sends requests to a filesystem.
 	//
 	// Implementations should be conccurent safe.
 	Requester interface {
+		// Write writes a file to the filesystem.
 		Write(
 			ctx context.Context,
 			method Method,
 			params []any,
 			respCh chan []byte,
 		)
+		// Read reads a file from the filesystem.
+		Read(
+			ctx context.Context,
+			path string,
+		) (string, error)
 	}
 	// Receiver is an interface for a constantly receiving instance.
 	//
@@ -32,6 +38,10 @@ type (
 	// Sandboxer is an interface for a sandbox.
 	Sandboxer interface {
 		Lifer
+		// NewProcess creates a new process.
+		NewProcess(
+			cmd string,
+		) (*Processor, error)
 	}
 	// Processor is an interface for a process.
 	Processor interface {
@@ -40,7 +50,11 @@ type (
 			cmd string,
 			timeout time.Duration,
 		)
-		Subscriber
+		Subscribe(
+			ctx context.Context,
+			event ProcessEvents,
+			eCh chan<- Event,
+		)
 	}
 	// Lifer is an interface for keeping sandboxes alive.
 	Lifer interface {
@@ -50,15 +64,11 @@ type (
 		// the error will be ctx.Err().
 		KeepAlive(ctx context.Context, timeout time.Duration) error
 	}
-	// Subscriber is an interface for an instance that can subscribe to an event.
-	Subscriber interface {
-		Subscribe(
-			ctx context.Context,
-			event ProcessEvents,
-			eCh chan<- Event,
-		)
-	}
 	// Watcher is an interface for a instance that can watch a filesystem.
 	Watcher interface {
+		Watch(
+			ctx context.Context,
+			path string,
+		) (<-chan Event, error)
 	}
 )

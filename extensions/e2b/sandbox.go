@@ -51,11 +51,6 @@ type (
 		Cwd string            // cwd is process's current working directory.
 		Env map[string]string // env is process's environment variables.
 	}
-	// SubscribeParams is the params for subscribing to a process event.
-	SubscribeParams struct {
-		Event ProcessEvents // Event is the event to subscribe to.
-		Ch    chan<- Event  // Ch is the channel to write the event to.
-	}
 	// Option is an option for the sandbox.
 	Option func(*Sandbox)
 	// Event is a file system event.
