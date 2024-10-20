@@ -2,7 +2,6 @@ package test
 
 import (
 	"log"
-	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"regexp"
@@ -21,7 +20,6 @@ func GetTestToken() string {
 // ServerTest is a test server for the groq api.
 type ServerTest struct {
 	handlers map[string]handler
-	Logger   *slog.Logger
 }
 
 // handler is a function that handles a request.
