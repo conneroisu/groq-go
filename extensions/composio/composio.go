@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	defaultBaseURL = "https://backend.composio.dev/api/v2"
+	composioBaseURL = "https://backend.composio.dev/api/v2"
 )
 
 type (
@@ -39,13 +39,14 @@ type (
 	ComposerOption func(*Composio)
 )
 
+// NewComposer creates a new composio client.
 func NewComposer(apiKey string, opts ...ComposerOption) (*Composio, error) {
 	c := &Composio{
 		apiKey: apiKey,
 		header: builders.Header{SetCommonHeaders: func(req *http.Request) {
 			req.Header.Set("X-API-Key", apiKey)
 		}},
-		baseURL: defaultBaseURL,
+		baseURL: composioBaseURL,
 		client:  http.DefaultClient,
 		logger:  slog.Default(),
 	}
@@ -91,6 +92,8 @@ func (c *Composio) doRequest(req *http.Request, v interface{}) error {
 		return json.NewDecoder(res.Body).Decode(v)
 	}
 }
+
+// GetTools returns the tools for the composio client.
 func (c *Composio) GetTools() ([]groq.Tool, error) {
 	req, err := builders.NewRequest(
 		context.Background(),
