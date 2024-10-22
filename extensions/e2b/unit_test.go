@@ -134,12 +134,11 @@ func TestCreateProcess(t *testing.T) {
 	a.NoError(err, "could not create process")
 	err = proc.Start(ctx)
 	a.NoError(err)
-	events := make(chan e2b.Event, 10)
 	ctx, cancel := context.WithTimeout(ctx, time.Second*6)
 	defer cancel()
-	err = proc.Subscribe(ctx, e2b.OnStdout, events)
+	stdoutEvents, err := proc.SubscribeStdout()
 	a.NoError(err)
-	event := <-events
+	event := <-stdoutEvents
 	jsonBytes, err := json.MarshalIndent(&event, "", "  ")
 	if err != nil {
 		a.Error(err)

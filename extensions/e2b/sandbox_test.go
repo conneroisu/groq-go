@@ -165,12 +165,11 @@ func TestNewSandbox(t *testing.T) {
 	// create a process
 	proc, err := sb.NewProcess("sleep 5 && echo 'hello world!'", Process{})
 	a.NoError(err)
-	events := make(chan Event, 10)
 	// start the process
 	err = proc.Start(ctx)
 	a.NoError(err)
 	// subscribe to the process's stdout
-	err = proc.Subscribe(ctx, OnStdout, events)
+	events, err := proc.SubscribeStdout()
 	a.NoError(err)
 	event := <-events
 	jsnBytes, err := json.MarshalIndent(&event, "", "  ")

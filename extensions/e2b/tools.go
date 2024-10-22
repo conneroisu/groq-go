@@ -110,12 +110,11 @@ var (
 			if err != nil {
 				return groq.ChatCompletionMessage{}, err
 			}
-			events := make(chan Event, 100)
-			err = proc.Subscribe(ctx, OnStdout, events)
+			stdevents, err := proc.SubscribeStdout()
 			if err != nil {
 				return groq.ChatCompletionMessage{}, err
 			}
-			err = proc.Subscribe(ctx, OnStderr, events)
+			_, err = proc.SubscribeStderr()
 			if err != nil {
 				return groq.ChatCompletionMessage{}, err
 			}
@@ -129,7 +128,7 @@ var (
 					select {
 					case <-ctx.Done():
 						return
-					case event := <-events:
+					case event := <-stdevents:
 						buf.Write([]byte(event.Params.Result.Line))
 					case <-proc.Done():
 						break

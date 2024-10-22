@@ -46,6 +46,7 @@ type (
 	// Process is a process in the sandbox.
 	Process struct {
 		sb  *Sandbox          // sb is the sandbox the process belongs to.
+		ctx context.Context   // ctx is the context for the process.
 		id  string            // ID is process id.
 		cmd string            // cmd is process's command.
 		Cwd string            // cwd is process's current working directory.
@@ -446,6 +447,7 @@ func (p *Process) Start(ctx context.Context) (err error) {
 	if err = p.sb.writeRequest(ctx, processStart, []any{p.id, p.cmd, p.Env, p.Cwd}, respCh); err != nil {
 		return err
 	}
+	p.ctx = ctx
 	select {
 	case body := <-respCh:
 		res, err := decodeResponse[string, APIError](body)
@@ -476,10 +478,28 @@ func (p *Process) Done() <-chan struct{} {
 	return rCh.(<-chan struct{})
 }
 
+// SubscribeStdout subscribes to the process's stdout.
+func (p *Process) SubscribeStdout() (events chan Event, err error) {
+	err = p.subscribe(p.ctx, OnStdout, events)
+	return
+}
+
+// SubscribeStderr subscribes to the process's stderr.
+func (p *Process) SubscribeStderr() (events chan Event, err error) {
+	err = p.subscribe(p.ctx, OnStderr, events)
+	return
+}
+
+// SubscribeExit subscribes to the process's exit.
+func (p *Process) SubscribeExit() (events chan Event, err error) {
+	err = p.subscribe(p.ctx, OnExit, events)
+	return
+}
+
 // Subscribe subscribes to a process event.
 //
 // It creates a go routine to read the process events.
-func (p *Process) Subscribe(
+func (p *Process) subscribe(
 	ctx context.Context,
 	event ProcessEvents,
 	eCh chan<- Event,
@@ -627,8 +647,13 @@ func (s *Sandbox) read(ctx context.Context) (err error) {
 	defer func() {
 		err = s.ws.Close()
 	}()
+	retryCh := make(chan chan []byte, 3)
 	for {
 		select {
+		case retryCh <- make(chan []byte):
+			continue
+		case body := <-<-retryCh:
+			var decResp decResp
 		case <-ctx.Done():
 			return ctx.Err()
 		default:
@@ -658,16 +683,19 @@ func (s *Sandbox) read(ctx context.Context) (err error) {
 				toRCh <- body
 				continue
 			}
-			// response has an id
-			toR, ok := s.Map.Load(decResp.ID)
-			if !ok {
-				s.logger.Debug("response not found", "id", decResp.ID)
+			if decResp.ID != 0 {
+				// response has an id
+				toR, ok := s.Map.Load(decResp.ID)
+				if !ok {
+					s.logger.Debug("response not found", "id", decResp.ID)
+				}
+				toRCh, ok := toR.(chan []byte)
+				if !ok {
+					s.logger.Debug("responsech not found", "id", decResp.ID)
+				}
+				toRCh <- body
 			}
-			toRCh, ok := toR.(chan []byte)
-			if !ok {
-				s.logger.Debug("responsech not found", "id", decResp.ID)
-			}
-			toRCh <- body
+			retryCh <- make(chan []byte)
 		}
 	}
 }
