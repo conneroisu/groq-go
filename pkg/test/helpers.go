@@ -1,8 +1,11 @@
 package test
 
 import (
+	"fmt"
+	"log/slog"
 	"net/http"
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -60,3 +63,34 @@ func (t *TokenRoundTripper) RoundTrip(
 func IsUnitTest() bool {
 	return os.Getenv("UNIT") != ""
 }
+
+// GetAPIKey returns the api key.
+func GetAPIKey(key string) (string, error) {
+	apiKey := os.Getenv(key)
+	if apiKey == "" {
+		return "", fmt.Errorf("api key is required")
+	}
+	return apiKey, nil
+}
+
+// DefaultLogger is a default logger.
+var DefaultLogger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+	AddSource: true,
+	Level:     slog.LevelDebug,
+	ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
+		if a.Key == "time" {
+			return slog.Attr{}
+		}
+		if a.Key == "level" {
+			return slog.Attr{}
+		}
+		if a.Key == slog.SourceKey {
+			str := a.Value.String()
+			split := strings.Split(str, "/")
+			if len(split) > 2 {
+				a.Value = slog.StringValue(strings.Join(split[len(split)-2:], "/"))
+				a.Value = slog.StringValue(strings.Replace(a.Value.String(), "}", "", -1))
+			}
+		}
+		return a
+	}}))
