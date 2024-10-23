@@ -23,6 +23,7 @@ type (
 		logger  *slog.Logger
 		header  builders.Header
 		baseURL string
+		tools   Tools
 	}
 	// Composer is an interface for composio.
 	Composer interface {
@@ -36,41 +37,6 @@ type (
 	}
 	// ComposerOption is an option for the composio client.
 	ComposerOption func(*Composio)
-	// Tool represents a composio tool.
-	Tool struct {
-		groqTool    groq.Tool
-		Enum        string   `json:"enum"`
-		Tags        []string `json:"tags"`
-		Logo        string   `json:"logo"`
-		AppID       string   `json:"appId"`
-		AppName     string   `json:"appName"`
-		DisplayName string   `json:"displayName"`
-		Response    struct {
-			Properties struct {
-				Data struct {
-					Title string `json:"title"`
-					Type  string `json:"type"`
-				} `json:"data"`
-				Successful struct {
-					Description string `json:"description"`
-					Title       string `json:"title"`
-					Type        string `json:"type"`
-				} `json:"successful"`
-				Error struct {
-					AnyOf []struct {
-						Type string `json:"type"`
-					} `json:"anyOf"`
-					Default     any    `json:"default"`
-					Description string `json:"description"`
-					Title       string `json:"title"`
-				} `json:"error"`
-			} `json:"properties"`
-			Required []string `json:"required"`
-			Title    string   `json:"title"`
-			Type     string   `json:"type"`
-		} `json:"response"`
-		Deprecated bool `json:"deprecated"`
-	}
 )
 
 // NewComposer creates a new composio client.

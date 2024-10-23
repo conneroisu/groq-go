@@ -2,7 +2,9 @@
 package toolhouse
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
 	"log/slog"
 	"net/http"
 
@@ -58,4 +60,45 @@ func NewExtension(apiKey string, opts ...Options) (e *Toolhouse, err error) {
 		return
 	}
 	return e, nil
+}
+
+func (e *Toolhouse) sendRequest(req *http.Request, v interface{}) error {
+	req.Header.Set("Accept", "application/json")
+	contentType := req.Header.Get("Content-Type")
+	if contentType == "" {
+		req.Header.Set("Content-Type", "application/json")
+	}
+	res, err := e.client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+	if res.StatusCode < http.StatusOK ||
+		res.StatusCode >= http.StatusBadRequest {
+		return fmt.Errorf("failed to send http request: %s", res.Status)
+	}
+	if v == nil {
+		return nil
+	}
+	switch o := v.(type) {
+	case *string:
+		b, err := io.ReadAll(res.Body)
+		if err != nil {
+			return err
+		}
+		*o = string(b)
+		return nil
+	default:
+		e.logger.Debug("decoding json response")
+		err = json.NewDecoder(res.Body).Decode(v)
+		if err != nil {
+			read, err := io.ReadAll(res.Body)
+			if err != nil {
+				return err
+			}
+			e.logger.Debug("failed to decode response", "response", string(read))
+			return fmt.Errorf("failed to decode response: %s", string(read))
+		}
+		return nil
+	}
 }
