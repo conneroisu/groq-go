@@ -1,7 +1,6 @@
 package composio
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -39,7 +38,7 @@ type (
 	ComposerOption func(*Composio)
 	// Tool represents a composio tool.
 	Tool struct {
-		groq.Tool
+		groqTool    groq.Tool
 		Enum        string   `json:"enum"`
 		Tags        []string `json:"tags"`
 		Logo        string   `json:"logo"`
@@ -72,13 +71,6 @@ type (
 		} `json:"response"`
 		Deprecated bool `json:"deprecated"`
 	}
-	// ToolsParams represents the parameters for the tools request.
-	ToolsParams struct {
-		App      string `url:"appNames"`
-		Tags     string `url:"tags"`
-		EntityID string `url:"user_uuid"`
-		UseCase  string `url:"useCase"`
-	}
 )
 
 // NewComposer creates a new composio client.
@@ -98,41 +90,6 @@ func NewComposer(apiKey string, opts ...ComposerOption) (*Composio, error) {
 	return c, nil
 }
 
-// GetTools returns the tools for the composio client.
-func (c *Composio) GetTools(params ToolsParams) ([]Tool, error) {
-	url := fmt.Sprintf("%s/actions", c.baseURL)
-	if params.App != "" {
-		url = fmt.Sprintf("%s?appNames=%s", url, params.App)
-	}
-	if params.Tags != "" {
-		url = fmt.Sprintf("%s?tags=%s", url, params.Tags)
-	}
-	if params.EntityID != "" {
-		url = fmt.Sprintf("%s?user_uuid=%s", url, params.EntityID)
-	}
-	if params.UseCase != "" {
-		url = fmt.Sprintf("%s?useCase=%s", url, params.UseCase)
-	}
-	req, err := builders.NewRequest(
-		context.Background(),
-		c.header,
-		http.MethodGet,
-		url,
-		builders.WithBody(nil),
-	)
-	if err != nil {
-		return nil, err
-	}
-	var tools struct {
-		Tools []Tool `json:"items"`
-	}
-	err = c.doRequest(req, &tools)
-	if err != nil {
-		return nil, err
-	}
-	c.logger.Debug("tools", "toolslen", len(tools.Tools))
-	return tools.Tools, nil
-}
 func (c *Composio) doRequest(req *http.Request, v interface{}) error {
 	req.Header.Set("Accept", "application/json")
 	contentType := req.Header.Get("Content-Type")
@@ -166,7 +123,5 @@ func (c *Composio) doRequest(req *http.Request, v interface{}) error {
 
 // WithLogger sets the logger for the composio client.
 func WithLogger(logger *slog.Logger) ComposerOption {
-	return func(c *Composio) {
-		c.logger = logger
-	}
+	return func(c *Composio) { c.logger = logger }
 }
