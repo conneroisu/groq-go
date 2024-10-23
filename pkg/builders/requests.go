@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-var builder = NewRequestBuilder()
+var builder RequestBuilder = &defaultRequestBuilder{}
 
 type (
 	// Header is an struct interface for setting common headers.

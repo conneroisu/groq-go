@@ -7,8 +7,8 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/conneroisu/groq-go"
 	"github.com/conneroisu/groq-go/pkg/builders"
+	"github.com/conneroisu/groq-go/pkg/tools"
 )
 
 // MustGetTools returns a list of tools that the extension can use.
@@ -16,7 +16,7 @@ import (
 // It panics if an error occurs.
 func (e *Toolhouse) MustGetTools(
 	ctx context.Context,
-) []groq.Tool {
+) []tools.Tool {
 	tools, err := e.GetTools(ctx)
 	if err != nil {
 		panic(err)
@@ -27,10 +27,7 @@ func (e *Toolhouse) MustGetTools(
 // GetTools returns a list of tools that the extension can use.
 func (e *Toolhouse) GetTools(
 	ctx context.Context,
-) ([]groq.Tool, error) {
-	if len(e.tools) > 0 {
-		return e.tools, nil
-	}
+) ([]tools.Tool, error) {
 	e.logger.Debug("Getting tools from Toolhouse extension")
 	url := e.baseURL + getToolsEndpoint
 	req, err := builders.NewRequest(
@@ -60,9 +57,10 @@ func (e *Toolhouse) GetTools(
 	if err != nil {
 		return nil, fmt.Errorf("failed to read response body: %w: %s", err, string(bdy))
 	}
-	err = json.Unmarshal(bdy, &e.tools)
+	var tooling []tools.Tool
+	err = json.Unmarshal(bdy, &tooling)
 	if err != nil {
 		return nil, err
 	}
-	return e.tools, nil
+	return tooling, nil
 }

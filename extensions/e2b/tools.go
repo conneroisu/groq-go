@@ -7,14 +7,15 @@ import (
 	"fmt"
 
 	"github.com/conneroisu/groq-go"
+	"github.com/conneroisu/groq-go/pkg/tools"
 )
 
 type (
 	// SbFn is a function that can be used to run a tool.
 	SbFn func(ctx context.Context, s *Sandbox, params *Params) (groq.ChatCompletionMessage, error)
-	// ToolingWrapper is a wrapper for groq.Tool that allows for custom functions working with a sandbox.
+	// ToolingWrapper is a wrapper for tools.Tool that allows for custom functions working with a sandbox.
 	ToolingWrapper struct {
-		ToolMap map[*groq.Tool]SbFn
+		ToolMap map[*tools.Tool]SbFn
 	}
 	// Params are the parameters for any function call.
 	Params struct {
@@ -28,8 +29,8 @@ type (
 )
 
 // getTools returns the tools wrapped by the ToolWrapper.
-func (t *ToolingWrapper) getTools() []groq.Tool {
-	tools := make([]groq.Tool, 0)
+func (t *ToolingWrapper) getTools() []tools.Tool {
+	tools := make([]tools.Tool, 0)
 	for tool := range t.ToolMap {
 		tools = append(tools, *tool)
 	}
@@ -37,7 +38,7 @@ func (t *ToolingWrapper) getTools() []groq.Tool {
 }
 
 // GetTools returns the tools wrapped by the ToolWrapper.
-func (s *Sandbox) GetTools() []groq.Tool {
+func (s *Sandbox) GetTools() []tools.Tool {
 	return s.toolW.getTools()
 }
 
@@ -56,7 +57,7 @@ var (
 	defaultToolWrapper = ToolingWrapper{
 		ToolMap: toolMap,
 	}
-	toolMap = map[*groq.Tool]SbFn{
+	toolMap = map[*tools.Tool]SbFn{
 		&mkdirTool: func(ctx context.Context, s *Sandbox, params *Params) (groq.ChatCompletionMessage, error) {
 			err := s.Mkdir(ctx, params.Path)
 			if err != nil {
@@ -143,14 +144,14 @@ var (
 			}, nil
 		},
 	}
-	mkdirTool = groq.Tool{
-		Type: groq.ToolTypeFunction,
-		Function: groq.FunctionDefinition{
+	mkdirTool = tools.Tool{
+		Type: tools.ToolTypeFunction,
+		Function: tools.FunctionDefinition{
 			Name:        "mkdir",
 			Description: "Make a directory in the sandbox file system at a given path",
-			Parameters: groq.ParameterDefinition{
+			Parameters: tools.FunctionParameters{
 				Type: "object",
-				Properties: map[string]groq.PropertyDefinition{
+				Properties: map[string]tools.PropertyDefinition{
 					"path": {
 						Type:        "string",
 						Description: "The path of the directory to create",
@@ -161,14 +162,14 @@ var (
 			},
 		},
 	}
-	lsTool = groq.Tool{
-		Type: groq.ToolTypeFunction,
-		Function: groq.FunctionDefinition{
+	lsTool = tools.Tool{
+		Type: tools.ToolTypeFunction,
+		Function: tools.FunctionDefinition{
 			Name:        "ls",
 			Description: "List the files and directories in the sandbox file system at a given path",
-			Parameters: groq.ParameterDefinition{
+			Parameters: tools.FunctionParameters{
 				Type: "object",
-				Properties: map[string]groq.PropertyDefinition{
+				Properties: map[string]tools.PropertyDefinition{
 					"path": {Type: "string",
 						Description: "The path of the directory to list",
 					},
@@ -178,14 +179,14 @@ var (
 			},
 		},
 	}
-	readTool = groq.Tool{
-		Type: groq.ToolTypeFunction,
-		Function: groq.FunctionDefinition{
+	readTool = tools.Tool{
+		Type: tools.ToolTypeFunction,
+		Function: tools.FunctionDefinition{
 			Name:        "read",
 			Description: "Read the contents of a file in the sandbox file system at a given path",
-			Parameters: groq.ParameterDefinition{
+			Parameters: tools.FunctionParameters{
 				Type: "object",
-				Properties: map[string]groq.PropertyDefinition{
+				Properties: map[string]tools.PropertyDefinition{
 					"path": {Type: "string",
 						Description: "The path of the file to read",
 					},
@@ -195,14 +196,14 @@ var (
 			},
 		},
 	}
-	writeTool = groq.Tool{
-		Type: groq.ToolTypeFunction,
-		Function: groq.FunctionDefinition{
+	writeTool = tools.Tool{
+		Type: tools.ToolTypeFunction,
+		Function: tools.FunctionDefinition{
 			Name:        "write",
 			Description: "Write to a file in the sandbox file system at a given path",
-			Parameters: groq.ParameterDefinition{
+			Parameters: tools.FunctionParameters{
 				Type: "object",
-				Properties: map[string]groq.PropertyDefinition{
+				Properties: map[string]tools.PropertyDefinition{
 					"path": {Type: "string",
 						Description: "The relative or absolute path of the file to write to",
 					},
@@ -215,14 +216,14 @@ var (
 			},
 		},
 	}
-	startProcessTool = groq.Tool{
-		Type: groq.ToolTypeFunction,
-		Function: groq.FunctionDefinition{
+	startProcessTool = tools.Tool{
+		Type: tools.ToolTypeFunction,
+		Function: tools.FunctionDefinition{
 			Name:        "start_process",
 			Description: "Start a process in the sandbox.",
-			Parameters: groq.ParameterDefinition{
+			Parameters: tools.FunctionParameters{
 				Type: "object",
-				Properties: map[string]groq.PropertyDefinition{
+				Properties: map[string]tools.PropertyDefinition{
 					"cmd": {Type: "string",
 						Description: "The command to run to start the process",
 					},
@@ -266,8 +267,8 @@ func (s *Sandbox) RunTooling(
 
 func (s *Sandbox) runTool(
 	ctx context.Context,
-	tool groq.Tool,
-	call groq.ToolCall,
+	tool tools.Tool,
+	call tools.ToolCall,
 ) (groq.ChatCompletionMessage, error) {
 	s.logger.Debug("running tool", "tool", tool.Function.Name, "call", call.Function.Name)
 	var params *Params

@@ -1,6 +1,9 @@
 package composio
 
 import (
+	"context"
+	"encoding/json"
+	"os"
 	"testing"
 
 	"github.com/conneroisu/groq-go/pkg/test"
@@ -13,6 +16,7 @@ func TestGetTools(t *testing.T) {
 		t.Skip()
 	}
 	a := assert.New(t)
+	ctx := context.Background()
 	key, err := test.GetAPIKey("COMPOSIO_API_KEY")
 	a.NoError(err)
 	client, err := NewComposer(
@@ -20,10 +24,14 @@ func TestGetTools(t *testing.T) {
 		WithLogger(test.DefaultLogger),
 	)
 	a.NoError(err)
-	ts, err := client.GetTools(ToolsParams{
-		// App:   "GITHUB",
-		Tags: "Authentication",
-	})
+	ts, err := client.GetTools(ctx)
 	a.NoError(err)
 	a.NotEmpty(ts)
+	jsval, err := json.MarshalIndent(ts, "", "  ")
+	a.NoError(err)
+	f, err := os.Create("tools.json")
+	a.NoError(err)
+	defer f.Close()
+	_, err = f.Write(jsval)
+	a.NoError(err)
 }

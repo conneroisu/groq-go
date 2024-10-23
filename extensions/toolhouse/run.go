@@ -7,11 +7,12 @@ import (
 
 	"github.com/conneroisu/groq-go"
 	"github.com/conneroisu/groq-go/pkg/builders"
+	"github.com/conneroisu/groq-go/pkg/tools"
 )
 
 type (
 	request struct {
-		Content  groq.ToolCall  `json:"content,omitempty"`
+		Content  tools.ToolCall `json:"content,omitempty"`
 		Provider string         `json:"provider"`
 		Metadata map[string]any `json:"metadata"`
 		Bundle   string         `json:"bundle"`
@@ -38,7 +39,7 @@ func (e *Toolhouse) Run(
 	response groq.ChatCompletionResponse,
 ) ([]groq.ChatCompletionMessage, error) {
 	var respH []groq.ChatCompletionMessage
-	var toolCall groq.ToolCall
+	var toolCall tools.ToolCall
 	e.logger.Debug("Running Toolhouse extension", "response", response)
 	if response.Choices[0].FinishReason != groq.FinishReasonFunctionCall && response.Choices[0].FinishReason != "tool_calls" {
 		return nil, fmt.Errorf("Not a function call")

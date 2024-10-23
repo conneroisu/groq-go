@@ -8,7 +8,6 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/conneroisu/groq-go"
 	"github.com/conneroisu/groq-go/pkg/builders"
 )
 
@@ -28,7 +27,6 @@ type (
 		provider string
 		metadata map[string]any
 		bundle   string
-		tools    []groq.Tool
 		logger   *slog.Logger
 		header   builders.Header
 	}

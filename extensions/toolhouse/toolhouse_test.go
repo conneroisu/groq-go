@@ -9,6 +9,7 @@ import (
 
 	"github.com/conneroisu/groq-go"
 	"github.com/conneroisu/groq-go/extensions/toolhouse"
+	"github.com/conneroisu/groq-go/pkg/test"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -37,7 +38,7 @@ var (
 func TestNewExtension(t *testing.T) {
 	a := assert.New(t)
 	ctx := context.Background()
-	if os.Getenv("UNIT") == "" {
+	if !test.IsUnitTest() {
 		t.Skip("Skipping Toolhouse extension test")
 	}
 
@@ -57,11 +58,12 @@ func TestNewExtension(t *testing.T) {
 			Content: "Write a python function to print the first 10 prime numbers containing the number 3 then respond with the answer. DO NOT GUESS WHAT THE OUTPUT SHOULD BE. MAKE SURE TO CALL THE TOOL GIVEN.",
 		},
 	}
-	print(history[len(history)-1].Content)
+	tooling, err := ext.GetTools(ctx)
+	a.NoError(err)
 	re, err := client.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
 		Model:      groq.ModelLlama3Groq70B8192ToolUsePreview,
 		Messages:   history,
-		Tools:      ext.MustGetTools(ctx),
+		Tools:      tooling,
 		ToolChoice: "required",
 	})
 	a.NoError(err)

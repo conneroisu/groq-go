@@ -6,13 +6,14 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"net/url"
 
 	"github.com/conneroisu/groq-go"
 	"github.com/conneroisu/groq-go/pkg/builders"
 )
 
 const (
-	composioBaseURL = "https://backend.composio.dev/api/v2"
+	composioBaseURL = "https://backend.composio.dev/api/v1"
 )
 
 type (
@@ -23,11 +24,10 @@ type (
 		logger  *slog.Logger
 		header  builders.Header
 		baseURL string
-		tools   Tools
 	}
 	// Composer is an interface for composio.
 	Composer interface {
-		GetTools() []groq.Tool
+		GetTools(opts ...ToolsOption) ([]groq.Tool, error)
 		ListIntegrations() []Integration
 	}
 	// Integration represents a composio integration.
@@ -37,6 +37,8 @@ type (
 	}
 	// ComposerOption is an option for the composio client.
 	ComposerOption func(*Composio)
+	// ToolsOption is an option for the tools request.
+	ToolsOption func(*url.URL)
 )
 
 // NewComposer creates a new composio client.

@@ -1,0 +1,192 @@
+{
+  "items": [
+    {
+      "name": "AGENCYZOOM_LOG_THE_USER_IN",
+      "enum": "AGENCYZOOM_LOG_THE_USER_IN",
+      "tags": [
+        "Authentication"
+      ],
+      "logo": "https://raw.githubusercontent.com/ComposioHQ/open-logos/refs/heads/master/agencyzoom_logo.jpeg",
+      "appId": "agencyzoom",
+      "appName": "agencyzoom",
+      "displayName": "Log the user in",
+      "description": "POST /v1/api/auth/login: Authenticates users and returns a JWT upon successful\n    login. Requires a JSON payload with credentials. Responses include a 200\n    with the token, and error codes 400 or 500 for invalid credentials or server\n    errors.",
+      "parameters": {
+        "description": "Request schema for `LogTheUserIn`",
+        "properties": {
+          "username": {
+            "description": "The user name, which is the user\"s email",
+            "title": "Username",
+            "type": "string"
+          },
+          "password": {
+            "description": "The user\"s password",
+            "title": "Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "username",
+          "password"
+        ],
+        "title": "LogTheUserInRequest",
+        "type": "object"
+      },
+      "response": {
+        "properties": {
+          "data": {
+            "title": "Data",
+            "type": "object"
+          },
+          "successful": {
+            "description": "Whether or not the action execution was successful or not",
+            "title": "Successful",
+            "type": "boolean"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Error if any occurred during the execution of the action",
+            "title": "Error"
+          }
+        },
+        "required": [
+          "data",
+          "successful"
+        ],
+        "title": "LogTheUserInResponse",
+        "type": "object"
+      },
+      "deprecated": false,
+      "display_name": "Log the user in"
+    },
+    {
+      "name": "AGENCYZOOM_V4_SSO_LOG_THE_USER_IN",
+      "enum": "AGENCYZOOM_V4_SSO_LOG_THE_USER_IN",
+      "tags": [
+        "Authentication"
+      ],
+      "logo": "https://raw.githubusercontent.com/ComposioHQ/open-logos/refs/heads/master/agencyzoom_logo.jpeg",
+      "appId": "agencyzoom",
+      "appName": "agencyzoom",
+      "displayName": "V4 sso log the user in",
+      "description": "POST /v1/api/auth/ssologin: Endpoint for Single Sign-On (SSO) authentication.\n    Send JSON login details to receive a JWT token upon success, or error messages\n    for invalid credentials or server issues.",
+      "parameters": {
+        "description": "Request schema for `V4SsoLogTheUserIn`",
+        "properties": {
+          "username": {
+            "description": "The user name, which is the user\"s email",
+            "title": "Username",
+            "type": "string"
+          },
+          "password": {
+            "description": "The user\"s password",
+            "title": "Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "username",
+          "password"
+        ],
+        "title": "V4SsoLogTheUserInRequest",
+        "type": "object"
+      },
+      "response": {
+        "properties": {
+          "data": {
+            "title": "Data",
+            "type": "object"
+          },
+          "successful": {
+            "description": "Whether or not the action execution was successful or not",
+            "title": "Successful",
+            "type": "boolean"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Error if any occurred during the execution of the action",
+            "title": "Error"
+          }
+        },
+        "required": [
+          "data",
+          "successful"
+        ],
+        "title": "V4SsoLogTheUserInResponse",
+        "type": "object"
+      },
+      "deprecated": false,
+      "display_name": "V4 sso log the user in"
+    },
+    {
+      "name": "AGENCYZOOM_LOG_THE_USER_OUT",
+      "enum": "AGENCYZOOM_LOG_THE_USER_OUT",
+      "tags": [
+        "Authentication"
+      ],
+      "logo": "https://raw.githubusercontent.com/ComposioHQ/open-logos/refs/heads/master/agencyzoom_logo.jpeg",
+      "appId": "agencyzoom",
+      "appName": "agencyzoom",
+      "displayName": "Log the user out",
+      "description": "Log out endpoint: POST /v1/api/auth/logout allows users to securely sign\n    off. Returns success status on proper execution, error messages for invalid\n    credentials or server issues.",
+      "parameters": {
+        "description": "Request schema for `LogTheUserOut`",
+        "properties": {},
+        "title": "LogTheUserOutRequest",
+        "type": "object"
+      },
+      "response": {
+        "properties": {
+          "data": {
+            "title": "Data",
+            "type": "object"
+          },
+          "successful": {
+            "description": "Whether or not the action execution was successful or not",
+            "title": "Successful",
+            "type": "boolean"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Error if any occurred during the execution of the action",
+            "title": "Error"
+          }
+        },
+        "required": [
+          "data",
+          "successful"
+        ],
+        "title": "LogTheUserOutResponse",
+        "type": "object"
+      },
+      "deprecated": false,
+      "display_name": "Log the user out"
+    }
+  ],
+  "page": 1,
+  "totalPages": 1
+}

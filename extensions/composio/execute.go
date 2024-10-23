@@ -32,13 +32,16 @@ func (c *Composio) Run(
 		if err != nil {
 			return nil, err
 		}
-		var toolResp ToolResponse
+		var toolResp struct {
+			Properties struct {
+				Data       interface{} `json:"data"`
+				Successful interface{} `json:"successful"`
+				Error      interface{} `json:"error"`
+			} `json:"properties"`
+		}
 		err = c.doRequest(req, &toolResp)
 		if err != nil {
 			return nil, err
-		}
-		if toolResp.Response.Properties.Error.Default != nil {
-			return nil, fmt.Errorf("error running tool: %s", toolResp.Response.Properties.Error.Default)
 		}
 		err = json.Unmarshal(bdy, &toolResp)
 		if err != nil {
@@ -46,7 +49,7 @@ func (c *Composio) Run(
 		}
 		respH = append(respH, groq.ChatCompletionMessage{
 			Content: string(bdy),
-			Name:    toolResp.Response.Title,
+			Name:    toolCall.ID,
 			Role:    groq.ChatMessageRoleFunction,
 		})
 	}

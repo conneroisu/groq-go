@@ -5,37 +5,27 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/conneroisu/groq-go"
 	"github.com/conneroisu/groq-go/pkg/builders"
 )
 
-type (
-	// ToolsParams represents the parameters for the tools request.
-	ToolsParams struct {
-		App      string `url:"appNames"`
-		Tags     string `url:"tags"`
-		EntityID string `url:"user_uuid"`
-		UseCase  string `url:"useCase"`
-	}
+var _ groq.Tool = &Tool{}
 
-	// Tools is a map of tools.
-	Tools map[string]Tool
-	// Tool represents a composio tool.
+type (
+	// Tool represents a composio tool as returned by the api.
 	Tool struct {
-		groqTool    groq.Tool
-		Enum        string       `json:"enum"`
-		Tags        []string     `json:"tags"`
-		Logo        string       `json:"logo"`
-		AppID       string       `json:"appId"`
-		AppName     string       `json:"appName"`
-		DisplayName string       `json:"displayName"`
-		Response    ToolResponse `json:"response"`
-		Deprecated  bool         `json:"deprecated"`
-	}
-	// ToolResponse represents the response for a tool.
-	ToolResponse struct {
-		Response struct {
+		Name        string                  `json:"name"`
+		Enum        string                  `json:"enum"`
+		Tags        []string                `json:"tags"`
+		Logo        string                  `json:"logo"`
+		AppID       string                  `json:"appId"`
+		AppName     string                  `json:"appName"`
+		DisplayName string                  `json:"displayName"`
+		Description string                  `json:"description"`
+		Parameters  groq.FunctionParameters `json:"parameters"`
+		Response    struct {
 			Properties struct {
 				Data struct {
 					Title string `json:"title"`
@@ -59,37 +49,34 @@ type (
 			Title    string   `json:"title"`
 			Type     string   `json:"type"`
 		} `json:"response"`
+		Deprecated   bool   `json:"deprecated"`
+		DisplayName0 string `json:"display_name"`
 	}
 )
 
 // GetTools returns the tools for the composio client.
-func (c *Composio) GetTools(params ToolsParams) ([]Tool, error) {
-	ul := fmt.Sprintf("%s/actions", c.baseURL)
-	u, err := url.Parse(ul)
+func (c *Composio) GetTools(
+	ctx context.Context,
+	opts ...ToolsOption,
+) ([]groq.Tool, error) {
+	uri := fmt.Sprintf("%s/actions", c.baseURL)
+	u, err := url.Parse(uri)
 	if err != nil {
 		return nil, err
 	}
 	ps := url.Values{}
-	if params.App != "" {
-		ps.Add("appNames", params.App)
-	}
-	if params.Tags != "" {
-		ps.Add("tags", params.Tags)
-	}
-	if params.EntityID != "" {
-		ps.Add("user_uuid", params.EntityID)
-	}
-	if params.UseCase != "" {
-		ps.Add("useCase", params.UseCase)
+	for _, opt := range opts {
+		opt(u)
 	}
 	u.RawQuery = ps.Encode()
-	uuuu := u.String()
-	c.logger.Debug("tools", "url", uuuu)
+	uri = u.String()
+	c.logger.Debug("tools", "url", uri)
+
 	req, err := builders.NewRequest(
-		context.Background(),
+		ctx,
 		c.header,
 		http.MethodGet,
-		uuuu,
+		uri,
 		builders.WithBody(nil),
 	)
 	if err != nil {
@@ -103,8 +90,57 @@ func (c *Composio) GetTools(params ToolsParams) ([]Tool, error) {
 		return nil, err
 	}
 	c.logger.Debug("tools", "toolslen", len(items.Tools))
-	for _, tool := range items.Tools {
-		c.tools[tool.groqTool.Function.Name] = tool
+	return groqTools(items.Tools), nil
+}
+func groqTools(tools []Tool) []groq.Tool {
+	groqTools := make([]groq.Tool, 0, len(tools))
+	for _, tool := range tools {
+		groqTools = append(groqTools, &tool)
 	}
-	return items.Tools, nil
+	return groqTools
+}
+
+// Function returns the function definition of the tool.
+func (t *Tool) Function() groq.FunctionDefinition {
+	return groq.FunctionDefinition{
+		Name:        t.Name,
+		Description: t.Description,
+		Parameters:  t.Parameters,
+	}
+}
+
+// WithTags sets the tags for the tools request.
+func WithTags(tags ...string) ToolsOption {
+	return func(u *url.URL) {
+		ps := u.Query()
+		ps.Add("tags", strings.Join(tags, ","))
+		u.RawQuery = ps.Encode()
+	}
+}
+
+// WithApp sets the app for the tools request.
+func WithApp(app string) ToolsOption {
+	return func(u *url.URL) {
+		ps := u.Query()
+		ps.Add("appNames", app)
+		u.RawQuery = ps.Encode()
+	}
+}
+
+// WithEntityID sets the entity id for the tools request.
+func WithEntityID(entityID string) ToolsOption {
+	return func(u *url.URL) {
+		ps := u.Query()
+		ps.Add("user_uuid", entityID)
+		u.RawQuery = ps.Encode()
+	}
+}
+
+// WithUseCase sets the use case for the tools request.
+func WithUseCase(useCase string) ToolsOption {
+	return func(u *url.URL) {
+		ps := u.Query()
+		ps.Add("useCase", useCase)
+		u.RawQuery = ps.Encode()
+	}
 }
