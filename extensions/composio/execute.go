@@ -10,45 +10,65 @@ import (
 	"github.com/conneroisu/groq-go/pkg/builders"
 )
 
+type request struct {
+	ConnectedAccountID string         `json:"connectedAccountId"`
+	EntityID           string         `json:"entityId"`
+	AppName            string         `json:"appName"`
+	Input              map[string]any `json:"input"`
+	Text               string         `json:"text,omitempty"`
+	AuthConfig         map[string]any `json:"authConfig,omitempty"`
+}
+
 // Run runs the composio client on a chat completion response.
 func (c *Composio) Run(
 	ctx context.Context,
 	response groq.ChatCompletionResponse,
 ) ([]groq.ChatCompletionMessage, error) {
 	var respH []groq.ChatCompletionMessage
-	var bdy []byte
-	if response.Choices[0].FinishReason != groq.FinishReasonFunctionCall && response.Choices[0].FinishReason != "tool_calls" {
+	if response.Choices[0].FinishReason != groq.FinishReasonFunctionCall &&
+		response.Choices[0].FinishReason != "tool_calls" {
 		return nil, fmt.Errorf("Not a function call")
 	}
+	connectedAccount, err := c.GetConnectedAccounts(ctx, WithShowActiveOnly(true))
+	if err != nil {
+		return nil, err
+	}
+	c.logger.Debug("connected accounts", "accounts", connectedAccount)
 	for _, toolCall := range response.Choices[0].Message.ToolCalls {
-		callURL := fmt.Sprintf("%s/%s/execute", c.baseURL, toolCall.ID)
+		callURL := fmt.Sprintf("%s/v2/actions/%s/execute", c.baseURL, toolCall.Function.Name)
+		c.logger.Debug("calling tool", "url", callURL, "input", toolCall.Function.Arguments)
+		var args map[string]any
+		if json.Valid([]byte(toolCall.Function.Arguments)) {
+			err = json.Unmarshal([]byte(toolCall.Function.Arguments), &args)
+			if err != nil {
+				return nil, err
+			}
+			c.logger.Debug("arguments", "args", args)
+		}
 		req, err := builders.NewRequest(
 			ctx,
 			c.header,
 			http.MethodPost,
 			callURL,
-			builders.WithBody(toolCall.Function.Arguments),
+			builders.WithBody(&request{
+				ConnectedAccountID: connectedAccount.Items[0].ID,
+				EntityID:           "default",
+				AppName:            toolCall.Function.Name,
+				Input:              args,
+				Text:               "",
+				AuthConfig:         map[string]any{},
+			}),
 		)
 		if err != nil {
 			return nil, err
 		}
-		var toolResp struct {
-			Properties struct {
-				Data       interface{} `json:"data"`
-				Successful interface{} `json:"successful"`
-				Error      interface{} `json:"error"`
-			} `json:"properties"`
-		}
-		err = c.doRequest(req, &toolResp)
+		var body string
+		err = c.doRequest(req, &body)
 		if err != nil {
-			return nil, err
-		}
-		err = json.Unmarshal(bdy, &toolResp)
-		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to do request: %w", err)
 		}
 		respH = append(respH, groq.ChatCompletionMessage{
-			Content: string(bdy),
+			Content: string(body),
 			Name:    toolCall.ID,
 			Role:    groq.ChatMessageRoleFunction,
 		})

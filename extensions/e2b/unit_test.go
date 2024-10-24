@@ -3,45 +3,13 @@ package e2b_test
 import (
 	"context"
 	"encoding/json"
-	"log/slog"
 	"os"
-	"strings"
 	"testing"
 	"time"
 
 	"github.com/conneroisu/groq-go/extensions/e2b"
 	"github.com/conneroisu/groq-go/pkg/test"
 	"github.com/stretchr/testify/assert"
-)
-
-var (
-	defaultLogger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
-		AddSource: true,
-		Level:     slog.LevelDebug,
-		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
-			if a.Key == "time" {
-				return slog.Attr{}
-			}
-			if a.Key == "level" {
-				return slog.Attr{}
-			}
-			if a.Key == slog.SourceKey {
-				str := a.Value.String()
-				split := strings.Split(str, "/")
-				if len(split) > 2 {
-					a.Value = slog.StringValue(strings.Join(split[len(split)-2:], "/"))
-					a.Value = slog.StringValue(strings.Replace(a.Value.String(), "}", "", -1))
-				}
-				a.Key = a.Value.String()
-				a.Value = slog.IntValue(0)
-			}
-			if a.Key == "body" {
-				a.Value = slog.StringValue(strings.Replace(a.Value.String(), "/", "", -1))
-				a.Value = slog.StringValue(strings.Replace(a.Value.String(), "\n", "", -1))
-				a.Value = slog.StringValue(strings.Replace(a.Value.String(), "\"", "", -1))
-			}
-			return a
-		}}))
 )
 
 func getapiKey(t *testing.T) string {
@@ -61,7 +29,7 @@ func TestPostSandbox(t *testing.T) {
 	sb, err := e2b.NewSandbox(
 		ctx,
 		getapiKey(t),
-		e2b.WithLogger(defaultLogger),
+		e2b.WithLogger(test.DefaultLogger),
 	)
 	a.NoError(err, "NewSandbox error")
 	lsr, err := sb.Ls(ctx, ".")
@@ -94,7 +62,7 @@ func TestWriteRead(t *testing.T) {
 	sb, err := e2b.NewSandbox(
 		ctx,
 		getapiKey(t),
-		e2b.WithLogger(defaultLogger),
+		e2b.WithLogger(test.DefaultLogger),
 	)
 	a.NoError(err, "NewSandbox error")
 	err = sb.Write(ctx, filePath, []byte(content))
@@ -118,7 +86,7 @@ func TestCreateProcess(t *testing.T) {
 	sb, err := e2b.NewSandbox(
 		ctx,
 		getapiKey(t),
-		e2b.WithLogger(defaultLogger),
+		e2b.WithLogger(test.DefaultLogger),
 	)
 	a.NoError(err, "NewSandbox error")
 	proc, err := sb.NewProcess("echo 'Hello World!'",
@@ -156,7 +124,7 @@ func TestFilesystemSubscribe(t *testing.T) {
 	sb, err := e2b.NewSandbox(
 		ctx,
 		getapiKey(t),
-		e2b.WithLogger(defaultLogger),
+		e2b.WithLogger(test.DefaultLogger),
 		e2b.WithCwd("/tmp"),
 	)
 	a.NoError(err, "NewSandbox error")
@@ -191,7 +159,7 @@ func TestKeepAlive(t *testing.T) {
 	sb, err := e2b.NewSandbox(
 		ctx,
 		getapiKey(t),
-		e2b.WithLogger(defaultLogger),
+		e2b.WithLogger(test.DefaultLogger),
 	)
 	a.NoError(err, "NewSandbox error")
 	err = sb.KeepAlive(ctx, time.Minute*2)

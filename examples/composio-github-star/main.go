@@ -8,6 +8,7 @@ import (
 
 	"github.com/conneroisu/groq-go"
 	"github.com/conneroisu/groq-go/extensions/composio"
+	"github.com/conneroisu/groq-go/pkg/test"
 )
 
 func main() {
@@ -20,8 +21,15 @@ func main() {
 func run(
 	ctx context.Context,
 ) error {
-	key := os.Getenv("COMPOSIO_API_KEY")
+	key, err := test.GetAPIKey("GROQ_KEY")
+	if err != nil {
+		return err
+	}
 	client, err := groq.NewClient(key)
+	if err != nil {
+		return err
+	}
+	key, err = test.GetAPIKey("COMPOSIO_API_KEY")
 	if err != nil {
 		return err
 	}
@@ -33,7 +41,9 @@ func run(
 		return err
 	}
 	tools, err := comp.GetTools(
-		composio.WithApp(composio.AppGithub),
+		ctx,
+		composio.WithApp("GITHUB"),
+		composio.WithUseCase("star-repo"),
 	)
 	if err != nil {
 		return err
@@ -56,6 +66,10 @@ Star a repo conneroisu/groq-go on GitHub
 	if err != nil {
 		return err
 	}
-	comp.Run(ctx, chat)
+	resp, err := comp.Run(ctx, chat)
+	if err != nil {
+		return err
+	}
+	fmt.Println(resp)
 	return nil
 }

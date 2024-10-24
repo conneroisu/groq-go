@@ -8,8 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TestGetTools tests the ability of the composio client to get tools.
-func TestGetTools(t *testing.T) {
+func TestAuth(t *testing.T) {
 	if !test.IsUnitTest() {
 		t.Skip()
 	}
@@ -22,7 +21,7 @@ func TestGetTools(t *testing.T) {
 		WithLogger(test.DefaultLogger),
 	)
 	a.NoError(err)
-	ts, err := client.GetTools(ctx, WithApp("GITHUB"))
+	ts, err := client.GetConnectedAccounts(ctx)
 	a.NoError(err)
 	a.NotEmpty(ts)
 }

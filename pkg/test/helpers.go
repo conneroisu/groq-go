@@ -68,7 +68,7 @@ func IsUnitTest() bool {
 func GetAPIKey(key string) (string, error) {
 	apiKey := os.Getenv(key)
 	if apiKey == "" {
-		return "", fmt.Errorf("api key is required")
+		return "", fmt.Errorf("api key: %s is required", key)
 	}
 	return apiKey, nil
 }
