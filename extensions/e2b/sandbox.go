@@ -644,6 +644,7 @@ func (s *Sandbox) identify(ctx context.Context) {
 	}
 }
 func (s *Sandbox) read(ctx context.Context) (err error) {
+	var key any
 	defer func() {
 		err = s.ws.Close()
 	}()
@@ -658,30 +659,24 @@ func (s *Sandbox) read(ctx context.Context) (err error) {
 			}
 			s.logger.Debug("read",
 				"id", decResp.ID,
-				"body", string(body),
+				"body", body,
 				"sandbox", s.ID,
 			)
 			if decResp.Params.Subscription != "" {
-				toR, ok := s.Map.Load(decResp.Params.Subscription)
-				if !ok {
-					s.logger.Debug("subscription not found", "id", decResp.Params.Subscription)
-				}
-				toRCh, ok := toR.(chan []byte)
-				if !ok {
-					s.logger.Debug("subscription not found", "id", decResp.Params.Subscription)
-				}
-				toRCh <- body
-				continue
+				key = decResp.Params.Subscription
 			}
 			if decResp.ID != 0 {
+				key = decResp.ID
+			}
+			if key != nil {
 				// response has an id
-				toR, ok := s.Map.Load(decResp.ID)
+				toR, ok := s.Map.Load(key)
 				if !ok {
-					s.logger.Debug("response not found", "id", decResp.ID)
+					continue
 				}
 				toRCh, ok := toR.(chan []byte)
 				if !ok {
-					s.logger.Debug("responsech not found", "id", decResp.ID)
+					continue
 				}
 				toRCh <- body
 				continue
