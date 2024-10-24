@@ -647,20 +647,10 @@ func (s *Sandbox) read(ctx context.Context) (err error) {
 	defer func() {
 		err = s.ws.Close()
 	}()
-	retryCh := make(chan chan []byte, 3)
+	msgCh := make(chan []byte, 10)
 	for {
 		select {
-		case retryCh <- make(chan []byte):
-			continue
-		case body := <-<-retryCh:
-			var decResp decResp
-		case <-ctx.Done():
-			return ctx.Err()
-		default:
-			_, body, err := s.ws.ReadMessage()
-			if err != nil {
-				return err
-			}
+		case body := <-msgCh:
 			var decResp decResp
 			err = json.Unmarshal(body, &decResp)
 			if err != nil {
@@ -694,8 +684,17 @@ func (s *Sandbox) read(ctx context.Context) (err error) {
 					s.logger.Debug("responsech not found", "id", decResp.ID)
 				}
 				toRCh <- body
+				continue
 			}
-			retryCh <- make(chan []byte)
+			msgCh <- body
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+			_, body, err := s.ws.ReadMessage()
+			if err != nil {
+				return err
+			}
+			msgCh <- body
 		}
 	}
 }
