@@ -8,7 +8,6 @@ import (
 	"net/http"
 
 	"github.com/conneroisu/groq-go/pkg/builders"
-	"github.com/conneroisu/groq-go/pkg/tools"
 )
 
 const (
@@ -16,6 +15,12 @@ const (
 )
 
 type (
+	// Composer is an interface for composio client.
+	Composer interface {
+		Tooler
+		Runner
+		Auther
+	}
 	// Composio is a composio client.
 	Composio struct {
 		apiKey  string
@@ -23,11 +28,6 @@ type (
 		logger  *slog.Logger
 		header  builders.Header
 		baseURL string
-	}
-	// Composer is an interface for composio.
-	Composer interface {
-		GetTools(opts ...ToolsOption) ([]tools.Tool, error)
-		ListIntegrations() []Integration
 	}
 	// Integration represents a composio integration.
 	Integration struct {
@@ -37,7 +37,7 @@ type (
 )
 
 // NewComposer creates a new composio client.
-func NewComposer(apiKey string, opts ...Option) (*Composio, error) {
+func NewComposer(apiKey string, opts ...Option) (Composer, error) {
 	c := &Composio{
 		apiKey: apiKey,
 		header: builders.Header{SetCommonHeaders: func(r *http.Request) {
