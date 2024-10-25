@@ -27,6 +27,11 @@ func WithLogger(logger *slog.Logger) Option {
 	return func(c *Composio) { c.logger = logger }
 }
 
+// WithBaseURL sets the base URL for the composio client.
+func WithBaseURL(baseURL string) Option {
+	return func(c *Composio) { c.baseURL = baseURL }
+}
+
 // Get Tool Options
 
 // WithTags sets the tags for the tools request.
