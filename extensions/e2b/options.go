@@ -5,6 +5,8 @@ import (
 	"net/http"
 )
 
+// E2B Options
+
 // WithBaseURL sets the base URL for the e2b sandbox.
 func WithBaseURL(baseURL string) Option {
 	return func(s *Sandbox) { s.baseURL = baseURL }
@@ -39,3 +41,5 @@ func WithCwd(cwd string) Option {
 func WithWsURL(wsURL func(s *Sandbox) string) Option {
 	return func(s *Sandbox) { s.wsURL = wsURL }
 }
+
+// Process Options
