@@ -1,14 +1,16 @@
-package composio
+package composio_test
 
 import (
 	"context"
 	"testing"
 
+	"github.com/conneroisu/groq-go/extensions/composio"
 	"github.com/conneroisu/groq-go/pkg/test"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAuth(t *testing.T) {
+// TestUnitGetConnectedAccounts is an Unit test using a real composio server and api key.
+func TestUnitGetConnectedAccounts(t *testing.T) {
 	if !test.IsUnitTest() {
 		t.Skip()
 	}
@@ -16,9 +18,9 @@ func TestAuth(t *testing.T) {
 	ctx := context.Background()
 	key, err := test.GetAPIKey("COMPOSIO_API_KEY")
 	a.NoError(err)
-	client, err := NewComposer(
+	client, err := composio.NewComposer(
 		key,
-		WithLogger(test.DefaultLogger),
+		composio.WithLogger(test.DefaultLogger),
 	)
 	a.NoError(err)
 	ts, err := client.GetConnectedAccounts(ctx)
