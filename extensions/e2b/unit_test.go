@@ -102,8 +102,6 @@ func TestCreateProcess(t *testing.T) {
 	a.NoError(err, "could not create process")
 	err = proc.Start(ctx)
 	a.NoError(err)
-	ctx, cancel := context.WithTimeout(ctx, time.Second*6)
-	defer cancel()
 	stdOutEvents := make(chan e2b.Event)
 	err = proc.SubscribeStdout(stdOutEvents)
 	a.NoError(err)
