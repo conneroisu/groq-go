@@ -10,14 +10,21 @@ import (
 	"github.com/conneroisu/groq-go/pkg/builders"
 )
 
-type request struct {
-	ConnectedAccountID string         `json:"connectedAccountId"`
-	EntityID           string         `json:"entityId"`
-	AppName            string         `json:"appName"`
-	Input              map[string]any `json:"input"`
-	Text               string         `json:"text,omitempty"`
-	AuthConfig         map[string]any `json:"authConfig,omitempty"`
-}
+type (
+	// Runner is an interface for composio run.
+	Runner interface {
+		Run(ctx context.Context, response groq.ChatCompletionResponse) (
+			[]groq.ChatCompletionMessage, error)
+	}
+	request struct {
+		ConnectedAccountID string         `json:"connectedAccountId"`
+		EntityID           string         `json:"entityId"`
+		AppName            string         `json:"appName"`
+		Input              map[string]any `json:"input"`
+		Text               string         `json:"text,omitempty"`
+		AuthConfig         map[string]any `json:"authConfig,omitempty"`
+	}
+)
 
 // Run runs the composio client on a chat completion response.
 func (c *Composio) Run(
@@ -35,8 +42,6 @@ func (c *Composio) Run(
 	}
 	c.logger.Debug("connected accounts", "accounts", connectedAccount)
 	for _, toolCall := range response.Choices[0].Message.ToolCalls {
-		callURL := fmt.Sprintf("%s/v2/actions/%s/execute", c.baseURL, toolCall.Function.Name)
-		c.logger.Debug("calling tool", "url", callURL, "input", toolCall.Function.Arguments)
 		var args map[string]any
 		if json.Valid([]byte(toolCall.Function.Arguments)) {
 			err = json.Unmarshal([]byte(toolCall.Function.Arguments), &args)
@@ -49,9 +54,9 @@ func (c *Composio) Run(
 			ctx,
 			c.header,
 			http.MethodPost,
-			callURL,
+			fmt.Sprintf("%s/v2/actions/%s/execute", c.baseURL, toolCall.Function.Name),
 			builders.WithBody(&request{
-				ConnectedAccountID: connectedAccount.Items[0].ID,
+				ConnectedAccountID: connectedAccount[0].ID,
 				EntityID:           "default",
 				AppName:            toolCall.Function.Name,
 				Input:              args,
