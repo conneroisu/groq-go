@@ -8,26 +8,26 @@ import (
 )
 
 type (
-	// ComposerOption is an option for the composio client.
+	// Option is an option for the composio client.
 	//
 	// WithLogger sets the logger for the composio client.
-	ComposerOption func(*Composio)
+	Option func(*Composio)
 
 	// ToolsOption is an option for the tools request.
 	ToolsOption func(*url.Values)
 
 	// AuthOption is an option for the auth request.
-	AuthOption func(*url.URL)
+	AuthOption func(*url.Values)
 )
 
 // Composer Options
 
 // WithLogger sets the logger for the composio client.
-func WithLogger(logger *slog.Logger) ComposerOption {
+func WithLogger(logger *slog.Logger) Option {
 	return func(c *Composio) { c.logger = logger }
 }
 
-// Tool Options
+// Get Tool Options
 
 // WithTags sets the tags for the tools request.
 func WithTags(tags ...string) ToolsOption {
@@ -53,18 +53,14 @@ func WithUseCase(useCase string) ToolsOption {
 
 // WithShowActiveOnly sets the show active only for the auth request.
 func WithShowActiveOnly(showActiveOnly bool) AuthOption {
-	return func(u *url.URL) {
-		ps := u.Query()
-		ps.Add("showActiveOnly", fmt.Sprintf("%t", showActiveOnly))
-		u.RawQuery = ps.Encode()
+	return func(u *url.Values) {
+		u.Set("showActiveOnly", fmt.Sprintf("%t", showActiveOnly))
 	}
 }
 
 // WithUserUUID sets the user uuid for the auth request.
 func WithUserUUID(userUUID string) AuthOption {
-	return func(u *url.URL) {
-		ps := u.Query()
-		ps.Add("user_uuid", userUUID)
-		u.RawQuery = ps.Encode()
+	return func(u *url.Values) {
+		u.Set("user_uuid", userUUID)
 	}
 }

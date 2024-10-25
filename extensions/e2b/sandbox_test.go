@@ -16,6 +16,8 @@ import (
 
 var upgrader = websocket.Upgrader{}
 
+const subID = "test-sub-id"
+
 func echo(a *assert.Assertions) func(w http.ResponseWriter, r *http.Request) {
 	mu := sync.Mutex{}
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -29,7 +31,7 @@ func echo(a *assert.Assertions) func(w http.ResponseWriter, r *http.Request) {
 		for {
 			mt, message, err := c.ReadMessage()
 			a.NoError(err)
-			defaultLogger.Debug("server read message", "msg", message)
+			test.DefaultLogger.Debug("server read message", "msg", message)
 			req := decode(message)
 			switch req.Method {
 			case filesystemList:
@@ -69,16 +71,12 @@ func echo(a *assert.Assertions) func(w http.ResponseWriter, r *http.Request) {
 				err = c.WriteMessage(mt, encode(Response[string, APIError]{
 					ID:     req.ID,
 					Error:  APIError{},
-					Result: "test-proc-id",
+					Result: subID,
 				}))
 				a.NoError(err)
-				err = c.WriteMessage(mt, encode(Response[
-					EventParams, APIError,
-				]{
-					ID:    req.ID,
-					Error: APIError{},
-					Result: EventParams{
-						Subscription: "test-proc-id",
+				err = c.WriteMessage(mt, encode(Event{
+					Params: EventParams{
+						Subscription: subID,
 						Result: EventResult{
 							Type:        "Stdout",
 							Line:        "hello",
@@ -95,8 +93,6 @@ func echo(a *assert.Assertions) func(w http.ResponseWriter, r *http.Request) {
 					Error:  APIError{},
 					Result: "",
 				}))
-			default:
-				err = c.WriteMessage(mt, message)
 				a.NoError(err)
 			}
 		}
@@ -139,7 +135,7 @@ func TestNewSandbox(t *testing.T) {
 	sb, err := NewSandbox(
 		ctx,
 		test.GetTestToken(),
-		WithLogger(defaultLogger),
+		WithLogger(test.DefaultLogger),
 		WithBaseURL(ts.URL),
 		WithWsURL(func(_ *Sandbox) string {
 			return u + "/ws"
@@ -148,30 +144,30 @@ func TestNewSandbox(t *testing.T) {
 	a.NoError(err, "NewSandbox error")
 	a.NotNil(sb, "NewSandbox returned nil")
 	a.Equal(sb.ID, id)
-	// Call ls on the sandbox.
+
 	lsRes, err := sb.Ls(ctx, ".")
 	a.NoError(err)
 	a.NotEmpty(lsRes)
-	// Call mkdir on the sandbox.
+
 	err = sb.Mkdir(ctx, "hello")
 	a.NoError(err)
-	// Call write on the sandbox.
+
 	err = sb.Write(ctx, "hello.txt", []byte("hello"))
 	a.NoError(err)
-	// Call read on the sandbox.
+
 	readRes, err := sb.Read(ctx, "hello.txt")
 	a.NoError(err)
 	a.Equal("hello", readRes)
-	// create a process
+
 	proc, err := sb.NewProcess("sleep 5 && echo 'hello world!'", Process{})
 	a.NoError(err)
-	// start the process
+
 	err = proc.Start(ctx)
 	a.NoError(err)
-	// subscribe to the process's stdout
-	events, err := proc.SubscribeStdout()
+	e := make(chan Event)
+	err = proc.SubscribeStdout(e)
 	a.NoError(err)
-	event := <-events
+	event := <-e
 	jsnBytes, err := json.MarshalIndent(&event, "", "  ")
 	a.NoError(err)
 	t.Logf("test got event: %s", string(jsnBytes))

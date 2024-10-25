@@ -25,7 +25,6 @@ func TestRun(t *testing.T) {
 	a.NoError(err)
 	ts, err := client.GetTools(
 		ctx, WithApp("GITHUB"), WithUseCase("StarRepo"))
-	t.Logf("%+v\n", len(ts))
 	a.NoError(err)
 	a.NotEmpty(ts)
 	groqClient, err := groq.NewClient(

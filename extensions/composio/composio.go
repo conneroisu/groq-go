@@ -37,7 +37,7 @@ type (
 )
 
 // NewComposer creates a new composio client.
-func NewComposer(apiKey string, opts ...ComposerOption) (*Composio, error) {
+func NewComposer(apiKey string, opts ...Option) (*Composio, error) {
 	c := &Composio{
 		apiKey: apiKey,
 		header: builders.Header{SetCommonHeaders: func(r *http.Request) {

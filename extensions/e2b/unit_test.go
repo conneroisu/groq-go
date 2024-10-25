@@ -104,9 +104,10 @@ func TestCreateProcess(t *testing.T) {
 	a.NoError(err)
 	ctx, cancel := context.WithTimeout(ctx, time.Second*6)
 	defer cancel()
-	stdoutEvents, err := proc.SubscribeStdout()
+	stdOutEvents := make(chan e2b.Event)
+	err = proc.SubscribeStdout(stdOutEvents)
 	a.NoError(err)
-	event := <-stdoutEvents
+	event := <-stdOutEvents
 	jsonBytes, err := json.MarshalIndent(&event, "", "  ")
 	if err != nil {
 		a.Error(err)

@@ -14,7 +14,8 @@ type (
 		Read(ctx context.Context) error
 		io.Closer
 	}
-	// Identifier is an interface for a constantly running process to identify new request ids.
+	// Identifier is an interface for a constantly running process to
+	// identify new request ids.
 	Identifier interface {
 		Identify(ctx context.Context)
 	}
@@ -50,11 +51,8 @@ type (
 			cmd string,
 			timeout time.Duration,
 		)
-		Subscribe(
-			ctx context.Context,
-			event ProcessEvents,
-			eCh chan<- Event,
-		)
+		SubscribeStdout() (events chan Event, err error)
+		SubscribeStderr() (events chan Event, err error)
 	}
 	// Watcher is an interface for a instance that can watch a filesystem.
 	Watcher interface {

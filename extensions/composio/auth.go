@@ -1,7 +1,5 @@
 package composio
 
-// https://backend.composio.dev/api/v1/connectedAccounts?user_uuid=default&showActiveOnly=true
-
 import (
 	"context"
 	"fmt"
@@ -18,6 +16,8 @@ type (
 		GetConnectedAccounts(ctx context.Context, opts ...AuthOption) (ConnectedAccounts, error)
 	}
 	// ConnectedAccounts represents a composio connected account.
+	//
+	// Gotten from similar url to: https://backend.composio.dev/api/v1/connectedAccounts?user_uuid=default&showActiveOnly=true
 	ConnectedAccounts struct {
 		Items []struct {
 			IntegrationID    string `json:"integrationId"`
@@ -72,13 +72,13 @@ func (c *Composio) GetConnectedAccounts(ctx context.Context, opts ...AuthOption)
 	if err != nil {
 		return ca, err
 	}
-	ps := url.Values{}
-	ps.Add("user_uuid", "default")
-	ps.Add("showActiveOnly", "true")
+	urlValues := u.Query()
+	urlValues.Add("user_uuid", "default")
+	urlValues.Add("showActiveOnly", "true")
 	for _, opt := range opts {
-		opt(u)
+		opt(&urlValues)
 	}
-	u.RawQuery = ps.Encode()
+	u.RawQuery = urlValues.Encode()
 	uri = u.String()
 	c.logger.Debug("auth", "url", uri)
 	req, err := builders.NewRequest(

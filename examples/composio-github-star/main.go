@@ -54,9 +54,8 @@ func run(
 			{
 				Role: groq.ChatMessageRoleUser,
 				Content: `
-You are a github star bot.
-You will be given a repo name and you will star it. 
-Star a repo conneroisu/groq-go on GitHub
+You are a github star bot. You will be given a repo name and you will star it. 
+Star the repo conneroisu/groq-go on GitHub.
 `,
 			},
 		},

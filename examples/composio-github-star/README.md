@@ -1,13 +1,21 @@
 # composio-github-star
 
-```bash
+Adapted from the [quickstart](https://docs.composio.dev/introduction/intro/quickstart) guide.
 
-pip install composio-langchain
-pip install langchain-groq
+Install the `composio` CLI and login to your account (also add github to your account if you haven't already)
+
+```bash
+pip install -U composio_core composio_openai
+
+composio login
 
 #Connect your Github so agents can use it
 composio add github
-
-#Check all different apps which you can connect with
-composio apps
 ```
+
+Congratulations! You’ve just:
+
+    🔐 Authenticated your GitHub account with Composio
+    🛠 Fetched GitHub tools for the llm
+    ⭐ Instructed the AI to star the conneroisu/groq-go repository
+    ✅ Successfully executed the action on GitHub
