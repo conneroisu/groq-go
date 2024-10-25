@@ -50,7 +50,7 @@ func (t *ToolingWrapper) GetToolFn(name string) (SbFn, error) {
 			return fn, nil
 		}
 	}
-	return nil, fmt.Errorf("tool %s not found", name)
+	return nil, fmt.Errorf("Error running tool (does not exist) %s", name)
 }
 
 var (
@@ -58,7 +58,11 @@ var (
 		ToolMap: toolMap,
 	}
 	toolMap = map[*tools.Tool]SbFn{
-		&mkdirTool: func(ctx context.Context, s *Sandbox, params *Params) (groq.ChatCompletionMessage, error) {
+		&mkdirTool: func(
+			ctx context.Context,
+			s *Sandbox,
+			params *Params,
+		) (groq.ChatCompletionMessage, error) {
 			err := s.Mkdir(ctx, params.Path)
 			if err != nil {
 				return groq.ChatCompletionMessage{}, err
@@ -69,7 +73,11 @@ var (
 				Name:    "mkdir",
 			}, nil
 		},
-		&lsTool: func(ctx context.Context, s *Sandbox, params *Params) (groq.ChatCompletionMessage, error) {
+		&lsTool: func(
+			ctx context.Context,
+			s *Sandbox,
+			params *Params,
+		) (groq.ChatCompletionMessage, error) {
 			res, err := s.Ls(ctx, params.Path)
 			if err != nil {
 				return groq.ChatCompletionMessage{}, err
@@ -84,7 +92,11 @@ var (
 				Name:    "ls",
 			}, nil
 		},
-		&readTool: func(ctx context.Context, s *Sandbox, params *Params) (groq.ChatCompletionMessage, error) {
+		&readTool: func(
+			ctx context.Context,
+			s *Sandbox,
+			params *Params,
+		) (groq.ChatCompletionMessage, error) {
 			content, err := s.Read(ctx, params.Path)
 			if err != nil {
 				return groq.ChatCompletionMessage{}, err
@@ -95,7 +107,11 @@ var (
 				Name:    "read",
 			}, nil
 		},
-		&writeTool: func(ctx context.Context, s *Sandbox, params *Params) (groq.ChatCompletionMessage, error) {
+		&writeTool: func(
+			ctx context.Context,
+			s *Sandbox,
+			params *Params,
+		) (groq.ChatCompletionMessage, error) {
 			err := s.Write(ctx, params.Path, []byte(params.Data))
 			if err != nil {
 				return groq.ChatCompletionMessage{}, err
@@ -106,7 +122,11 @@ var (
 				Name:    "write",
 			}, nil
 		},
-		&startProcessTool: func(ctx context.Context, s *Sandbox, params *Params) (groq.ChatCompletionMessage, error) {
+		&startProcessTool: func(
+			ctx context.Context,
+			s *Sandbox,
+			params *Params,
+		) (groq.ChatCompletionMessage, error) {
 			proc, err := s.NewProcess(params.Cmd, Process{})
 			if err != nil {
 				return groq.ChatCompletionMessage{}, err
@@ -283,7 +303,7 @@ func (s *Sandbox) runTool(
 	fn, err := s.toolW.GetToolFn(tool.Function.Name)
 	if err != nil {
 		return groq.ChatCompletionMessage{
-			Content: fmt.Sprintf("Error running tool (does not exist) %s: %s", tool.Function.Name, err.Error()),
+			Content: err.Error(),
 			Role:    groq.ChatMessageRoleFunction,
 			Name:    tool.Function.Name,
 		}, err
