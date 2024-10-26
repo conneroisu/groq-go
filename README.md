@@ -38,10 +38,11 @@ For introductory examples, see the [examples](https://github.com/conneroisu/groq
 - [audio](/examples/audio-lex-fridman)
 - [json](/examples/json-chat)
 - [moderation](/examples/moderation)
-- [vision](/examples/llava-blind)
-- [terminal-chat](/examples/terminal-chat)
-- [documentor-float](/examples/vhdl-documentor-json)
-- [toolhouse-python-code-interpreter](/examples/toolhouse-python-code-interpreter)
+- [Use llava-v1.5-7b-4096-preview to talks about images](/examples/llava-blind)
+- [Chat with a terminal using groq-go](/examples/terminal-chat)
+- [Document VHDL files using groq-go](/examples/vhdl-documentor-json)
+- [Execute generated python code using Toolhouse and groq-go](/examples/toolhouse-python-code-interpreter)
+- [Star a Github Repository using Composio and groq-go](/examples/composio-github-star)
 
 External Repositories using groq-go:
 - [Automatic Git Commit Message Generator](https://github.com/conneroisu/gita)
