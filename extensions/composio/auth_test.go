@@ -6,10 +6,8 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/conneroisu/groq-go"
 	"github.com/conneroisu/groq-go/extensions/composio"
 	"github.com/conneroisu/groq-go/pkg/test"
-	"github.com/conneroisu/groq-go/pkg/tools"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -38,12 +36,6 @@ func TestAuth(t *testing.T) {
 		_, err = w.Write(jsonBytes)
 		a.NoError(err)
 	})
-	ts.RegisterHandler("/v2/actions/TOOL/execute", func(w http.ResponseWriter, _ *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		_, err := w.Write([]byte(`response1`))
-		a.NoError(err)
-	})
 	testS := ts.ComposioTestServer()
 	testS.Start()
 	client, err := composio.NewComposer(
@@ -52,20 +44,9 @@ func TestAuth(t *testing.T) {
 		composio.WithBaseURL(testS.URL),
 	)
 	a.NoError(err)
-	resp, err := client.Run(ctx, groq.ChatCompletionResponse{
-		Choices: []groq.ChatCompletionChoice{{
-			Message: groq.ChatCompletionMessage{
-				Role:    groq.ChatMessageRoleUser,
-				Content: "Hello!",
-				ToolCalls: []tools.ToolCall{{
-					Function: tools.FunctionCall{
-						Name:      "TOOL",
-						Arguments: `{ "foo": "bar", }`,
-					}}}},
-			FinishReason: groq.FinishReasonFunctionCall,
-		}}})
+	ca, err := client.GetConnectedAccounts(ctx)
 	a.NoError(err)
-	assert.Equal(t, "response1", resp[0].Content)
+	assert.NotEmpty(t, ca)
 }
 
 // TestUnitGetConnectedAccounts is an Unit test using a real composio server and api key.
