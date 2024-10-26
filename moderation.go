@@ -10,7 +10,8 @@ import (
 
 // ModerationRequest represents a request structure for moderation API.
 type (
-	// HarmfulCategory is a category of harmful content.
+	// HarmfulCategory is a category of harmful content that can be used to
+	// categorize a chat history using Llama Guard 3.
 	//
 	// [Llama Guard 3](https://llama.meta.com/docs/model-cards-and-prompt-formats/llama-guard-3/)
 	//
