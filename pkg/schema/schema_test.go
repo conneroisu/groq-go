@@ -451,7 +451,7 @@ func TestReflectFromType(t *testing.T) {
 	s := r.ReflectFromType(typ)
 	assert.EqualValues(
 		t,
-		"https://github.com/conneroisu/groq-go/test-user",
+		"https://github.com/conneroisu/groq-go/pkg/schema/test-user",
 		s.ID,
 	)
 

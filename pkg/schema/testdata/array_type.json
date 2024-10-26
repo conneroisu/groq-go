@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/conneroisu/groq-go/pkg/schema/array-type",
+  "$ref": "#/$defs/ArrayType",
+  "$defs": {
+    "ArrayType": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/conneroisu/groq-go/pkg/schema/outer",
+  "properties": {
+    "TextNamed": {
+      "type": "string"
+    },
+    "Text": {
+      "type": "string"
+    },
+    "Foo": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "type": "object",
+  "required": [
+    "TextNamed",
+    "Foo"
+  ]
+}
