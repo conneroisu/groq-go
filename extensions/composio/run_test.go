@@ -22,16 +22,14 @@ func TestRun(t *testing.T) {
 			Items []ConnectedAccount `json:"items"`
 		}
 		items.Items = append(items.Items, ConnectedAccount{
-			IntegrationID:         "INTEGRATION_ID",
-			IsDisabled:            false,
-			ID:                    "ID",
-			MemberID:              "MEMBER_ID",
-			ClientUniqueUserID:    "CLIENT_UNIQUE_USER_ID",
-			Status:                "STATUS",
-			AppUniqueID:           "APP_UNIQUE_ID",
-			AppName:               "APP_NAME",
-			IntegrationIsDisabled: false,
-			InvocationCount:       "INVOCATION_COUNT",
+			IntegrationID:      "INTEGRATION_ID",
+			ID:                 "ID",
+			MemberID:           "MEMBER_ID",
+			ClientUniqueUserID: "CLIENT_UNIQUE_USER_ID",
+			Status:             "STATUS",
+			AppUniqueID:        "APP_UNIQUE_ID",
+			AppName:            "APP_NAME",
+			InvocationCount:    "INVOCATION_COUNT",
 		})
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
@@ -55,26 +53,17 @@ func TestRun(t *testing.T) {
 	)
 	a.NoError(err)
 	resp, err := client.Run(ctx, groq.ChatCompletionResponse{
-		Choices: []groq.ChatCompletionChoice{
-			{
-				Message: groq.ChatCompletionMessage{
-					Role:    groq.ChatMessageRoleUser,
-					Content: "Hello!",
-					ToolCalls: []tools.ToolCall{
-						{
-							Function: tools.FunctionCall{
-								Name: "TOOL",
-								Arguments: `{ 
-									"foo": "bar",
-								}`,
-							},
-						},
-					},
-				},
-				FinishReason: groq.FinishReasonFunctionCall,
-			},
-		},
-	})
+		Choices: []groq.ChatCompletionChoice{{
+			Message: groq.ChatCompletionMessage{
+				Role:    groq.ChatMessageRoleUser,
+				Content: "Hello!",
+				ToolCalls: []tools.ToolCall{{
+					Function: tools.FunctionCall{
+						Name:      "TOOL",
+						Arguments: `{ "foo": "bar", }`,
+					}}}},
+			FinishReason: groq.FinishReasonFunctionCall,
+		}}})
 	a.NoError(err)
 	assert.Equal(t, "response1", resp[0].Content)
 }
