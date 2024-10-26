@@ -12,11 +12,11 @@ import (
 )
 
 const (
-	AudioResponseFormatJSON        AudioResponseFormat = "json"         // AudioResponseFormatJSON is the JSON format of some audio.
-	AudioResponseFormatText        AudioResponseFormat = "text"         // AudioResponseFormatText is the text format of some audio.
-	AudioResponseFormatSRT         AudioResponseFormat = "srt"          // AudioResponseFormatSRT is the SRT format of some audio.
-	AudioResponseFormatVerboseJSON AudioResponseFormat = "verbose_json" // AudioResponseFormatVerboseJSON is the verbose JSON format of some audio.
-	AudioResponseFormatVTT         AudioResponseFormat = "vtt"          // AudioResponseFormatVTT is the VTT format of some audio.
+	AudioResponseFormatJSON        AudioResponseFormat = "json"         // AudioResponseFormatJSON is the JSON response format of some audio.
+	AudioResponseFormatText        AudioResponseFormat = "text"         // AudioResponseFormatText is the text response format of some audio.
+	AudioResponseFormatSRT         AudioResponseFormat = "srt"          // AudioResponseFormatSRT is the SRT response format of some audio.
+	AudioResponseFormatVerboseJSON AudioResponseFormat = "verbose_json" // AudioResponseFormatVerboseJSON is the verbose JSON response format of some audio.
+	AudioResponseFormatVTT         AudioResponseFormat = "vtt"          // AudioResponseFormatVTT is the VTT response format of some audio.
 
 	TranscriptionTimestampGranularityWord    TranscriptionTimestampGranularity = "word"    // TranscriptionTimestampGranularityWord is the word timestamp granularity.
 	TranscriptionTimestampGranularitySegment TranscriptionTimestampGranularity = "segment" // TranscriptionTimestampGranularitySegment is the segment timestamp granularity.
