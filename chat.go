@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/conneroisu/groq-go/pkg/builders"
+	"github.com/conneroisu/groq-go/pkg/schema"
 	"github.com/conneroisu/groq-go/pkg/tools"
 )
 
@@ -102,7 +103,7 @@ type (
 		Description string `json:"description,omitempty"`
 		// description of the chat completion response format json schema.
 		// Schema is the schema of the chat completion response format json schema.
-		Schema Schema `json:"schema"`
+		Schema schema.Schema `json:"schema"`
 		// Strict determines whether to enforce the schema upon the generated
 		// content.
 		Strict bool `json:"strict"`
@@ -380,8 +381,10 @@ func (c *Client) CreateChatCompletionJSON(
 	request ChatCompletionRequest,
 	output any,
 ) (err error) {
-	r := &reflector{}
-	schema := r.ReflectFromType(reflect.TypeOf(output))
+	schema, err := schema.ReflectSchema(reflect.TypeOf(output))
+	if err != nil {
+		return err
+	}
 	request.ResponseFormat = &ChatCompletionResponseFormat{}
 	request.ResponseFormat.JSONSchema = &ChatCompletionResponseFormatJSONSchema{
 		Name:        schema.Title,

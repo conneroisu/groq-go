@@ -1,4 +1,4 @@
-package groq
+package schema
 
 import (
 	"encoding/json"
@@ -471,8 +471,16 @@ func TestSchemaGeneration(t *testing.T) {
 		reflector *reflector
 		fixture   string
 	}{
-		{&TestUser{}, &reflector{}, "testdata/test_user.json"},
-		{&UserWithAnchor{}, &reflector{}, "testdata/user_with_anchor.json"},
+		{
+			&TestUser{},
+			&reflector{},
+			"testdata/test_user.json",
+		},
+		{
+			&UserWithAnchor{},
+			&reflector{},
+			"testdata/user_with_anchor.json",
+		},
 		{
 			&TestUser{},
 			&reflector{AssignAnchor: true},
