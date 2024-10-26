@@ -1,6 +1,7 @@
 package test
 
 import (
+	"log/slog"
 	"net/http"
 	"strings"
 )
@@ -16,21 +17,23 @@ func GetTestToken() string {
 
 // ServerTest is a test server for the groq api.
 type ServerTest struct {
-	handlers map[string]handler
+	handlers map[string]Handler
+	logger   *slog.Logger
 }
 
-// handler is a function that handles a request.
-type handler func(w http.ResponseWriter, r *http.Request)
+// Handler is a function that handles a request.
+type Handler func(w http.ResponseWriter, r *http.Request)
 
 // NewTestServer creates a new test server.
 func NewTestServer() *ServerTest {
 	return &ServerTest{
-		handlers: make(map[string]handler),
+		handlers: make(map[string]Handler),
+		logger:   DefaultLogger,
 	}
 }
 
 // RegisterHandler registers a handler for a path.
-func (ts *ServerTest) RegisterHandler(path string, handler handler) {
+func (ts *ServerTest) RegisterHandler(path string, handler Handler) {
 	// to make the registered paths friendlier to a regex match in the route handler
 	// in GroqTestServer
 	path = strings.ReplaceAll(path, "*", ".*")
