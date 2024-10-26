@@ -194,7 +194,7 @@ var (
 	}
 )
 
-// Moderate — perform a moderation api call over a string.
+// Moderate performs a moderation api call over a string.
 // Input can be an array or slice but a string will reduce the complexity.
 func (c *Client) Moderate(
 	ctx context.Context,

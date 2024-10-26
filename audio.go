@@ -83,21 +83,14 @@ type (
 )
 
 // SetHeader sets the header of the response.
-func (r *AudioResponse) SetHeader(header http.Header) {
-	r.Header = header
-}
+func (r *AudioResponse) SetHeader(header http.Header) { r.Header = header }
 
 // SetHeader sets the header of the audio text response.
-func (r *audioTextResponse) SetHeader(header http.Header) {
-	r.header = header
-}
+func (r *audioTextResponse) SetHeader(header http.Header) { r.header = header }
 
 // toAudioResponse converts the audio text response to an audio response.
 func (r *audioTextResponse) toAudioResponse() AudioResponse {
-	return AudioResponse{
-		Text:   r.Text,
-		Header: r.header,
-	}
+	return AudioResponse{Text: r.Text, Header: r.header}
 }
 
 // CreateTranscription calls the transcriptions endpoint with the given request.
@@ -130,7 +123,7 @@ func (c *Client) callAudioAPI(
 ) (response AudioResponse, err error) {
 	var formBody bytes.Buffer
 	c.requestFormBuilder = c.createFormBuilder(&formBody)
-	err = audioMultipartForm(request, c.requestFormBuilder)
+	err = AudioMultipartForm(request, c.requestFormBuilder)
 	if err != nil {
 		return AudioResponse{}, err
 	}
@@ -164,10 +157,10 @@ func (r AudioRequest) hasJSONResponse() bool {
 		r.Format == AudioResponseFormatVerboseJSON
 }
 
-// audioMultipartForm creates a form with audio file contents and the name of
+// AudioMultipartForm creates a form with audio file contents and the name of
 // the model to use for audio processing.
-func audioMultipartForm(request AudioRequest, b builders.FormBuilder) error {
-	err := createFileField(request, b)
+func AudioMultipartForm(request AudioRequest, b builders.FormBuilder) error {
+	err := CreateFileField(request, b)
 	if err != nil {
 		return err
 	}
@@ -209,9 +202,9 @@ func audioMultipartForm(request AudioRequest, b builders.FormBuilder) error {
 	return b.Close()
 }
 
-// createFileField creates the "file" form field from either an existing file
+// CreateFileField creates the "file" form field from either an existing file
 // or by using the reader.
-func createFileField(
+func CreateFileField(
 	request AudioRequest,
 	b builders.FormBuilder,
 ) (err error) {

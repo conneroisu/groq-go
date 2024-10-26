@@ -1,4 +1,4 @@
-package groq
+package groq_test
 
 import (
 	"bytes"
@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	groq "github.com/conneroisu/groq-go"
 	"github.com/conneroisu/groq-go/pkg/builders"
 	"github.com/conneroisu/groq-go/pkg/test"
 	"github.com/stretchr/testify/assert"
@@ -20,12 +21,12 @@ func TestAudioWithFailingFormBuilder(t *testing.T) {
 	path := filepath.Join(dir, "fake.mp3")
 	test.CreateTestFile(t, path)
 
-	req := AudioRequest{
+	req := groq.AudioRequest{
 		FilePath:    path,
 		Prompt:      "test",
 		Temperature: 0.5,
 		Language:    "en",
-		Format:      AudioResponseFormatSRT,
+		Format:      groq.AudioResponseFormatSRT,
 	}
 
 	mockFailedErr := fmt.Errorf("mock form builder fail")
@@ -34,7 +35,7 @@ func TestAudioWithFailingFormBuilder(t *testing.T) {
 	mockBuilder.mockCreateFormFile = func(string, *os.File) error {
 		return mockFailedErr
 	}
-	err := audioMultipartForm(req, mockBuilder)
+	err := groq.AudioMultipartForm(req, mockBuilder)
 	a.ErrorIs(
 		err,
 		mockFailedErr,
@@ -67,7 +68,7 @@ func TestAudioWithFailingFormBuilder(t *testing.T) {
 			failingField,
 		)
 
-		err = audioMultipartForm(req, mockBuilder)
+		err = groq.AudioMultipartForm(req, mockBuilder)
 		a.Error(
 			err,
 			mockFailedErr,
@@ -84,7 +85,7 @@ func TestCreateFileField(t *testing.T) {
 		defer cleanup()
 		path := filepath.Join(dir, "fake.mp3")
 		test.CreateTestFile(t, path)
-		req := AudioRequest{
+		req := groq.AudioRequest{
 			FilePath: path,
 		}
 		mockFailedErr := fmt.Errorf("mock form builder fail")
@@ -93,7 +94,7 @@ func TestCreateFileField(t *testing.T) {
 				return mockFailedErr
 			},
 		}
-		err := createFileField(req, mockBuilder)
+		err := groq.CreateFileField(req, mockBuilder)
 		a.ErrorIs(
 			err,
 			mockFailedErr,
@@ -103,7 +104,7 @@ func TestCreateFileField(t *testing.T) {
 
 	t.Run("createFileField failing reader", func(t *testing.T) {
 		t.Parallel()
-		req := AudioRequest{
+		req := groq.AudioRequest{
 			FilePath: "test.wav",
 			Reader:   bytes.NewBuffer([]byte(`wav test contents`)),
 		}
@@ -115,7 +116,7 @@ func TestCreateFileField(t *testing.T) {
 			},
 		}
 
-		err := createFileField(req, mockBuilder)
+		err := groq.CreateFileField(req, mockBuilder)
 		a.ErrorIs(
 			err,
 			mockFailedErr,
@@ -125,11 +126,11 @@ func TestCreateFileField(t *testing.T) {
 
 	t.Run("createFileField failing open", func(t *testing.T) {
 		t.Parallel()
-		req := AudioRequest{
+		req := groq.AudioRequest{
 			FilePath: "non_existing_file.wav",
 		}
 		mockBuilder := builders.NewFormBuilder(&test.FailingErrorBuffer{})
-		err := createFileField(req, mockBuilder)
+		err := groq.CreateFileField(req, mockBuilder)
 		a.Error(
 			err,
 			"createFileField using file should return error when open file fails",
