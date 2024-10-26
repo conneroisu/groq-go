@@ -40,7 +40,6 @@ func (c *Composio) Run(
 	if err != nil {
 		return nil, err
 	}
-	c.logger.Debug("connected accounts", "accounts", connectedAccount)
 	for _, toolCall := range response.Choices[0].Message.ToolCalls {
 		var args map[string]any
 		if json.Valid([]byte(toolCall.Function.Arguments)) {
