@@ -1,4 +1,4 @@
-package composio
+package composio_test
 
 import (
 	"context"
@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/conneroisu/groq-go"
+	"github.com/conneroisu/groq-go/extensions/composio"
 	"github.com/conneroisu/groq-go/pkg/test"
 	"github.com/conneroisu/groq-go/pkg/tools"
 	"github.com/stretchr/testify/assert"
@@ -19,9 +20,9 @@ func TestRun(t *testing.T) {
 	ts := test.NewTestServer()
 	ts.RegisterHandler("/v1/connectedAccounts", func(w http.ResponseWriter, _ *http.Request) {
 		var items struct {
-			Items []ConnectedAccount `json:"items"`
+			Items []composio.ConnectedAccount `json:"items"`
 		}
-		items.Items = append(items.Items, ConnectedAccount{
+		items.Items = append(items.Items, composio.ConnectedAccount{
 			IntegrationID:      "INTEGRATION_ID",
 			ID:                 "ID",
 			MemberID:           "MEMBER_ID",
@@ -46,10 +47,10 @@ func TestRun(t *testing.T) {
 	})
 	testS := ts.ComposioTestServer()
 	testS.Start()
-	client, err := NewComposer(
+	client, err := composio.NewComposer(
 		test.GetTestToken(),
-		WithLogger(test.DefaultLogger),
-		WithBaseURL(testS.URL),
+		composio.WithLogger(test.DefaultLogger),
+		composio.WithBaseURL(testS.URL),
 	)
 	a.NoError(err)
 	resp, err := client.Run(ctx, groq.ChatCompletionResponse{
@@ -76,13 +77,13 @@ func TestUnitRun(t *testing.T) {
 	ctx := context.Background()
 	key, err := test.GetAPIKey("COMPOSIO_API_KEY")
 	a.NoError(err)
-	client, err := NewComposer(
+	client, err := composio.NewComposer(
 		key,
-		WithLogger(test.DefaultLogger),
+		composio.WithLogger(test.DefaultLogger),
 	)
 	a.NoError(err)
 	ts, err := client.GetTools(
-		ctx, WithApp("GITHUB"), WithUseCase("StarRepo"))
+		ctx, composio.WithApp("GITHUB"), composio.WithUseCase("StarRepo"))
 	a.NoError(err)
 	a.NotEmpty(ts)
 	groqClient, err := groq.NewClient(
