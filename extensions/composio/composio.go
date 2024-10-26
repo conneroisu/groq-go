@@ -14,6 +14,8 @@ const (
 	composioBaseURL = "https://backend.composio.dev/api"
 )
 
+var _ Composer = &Composio{}
+
 type (
 	// Composer is an interface for composio client.
 	Composer interface {
@@ -37,7 +39,7 @@ type (
 )
 
 // NewComposer creates a new composio client.
-func NewComposer(apiKey string, opts ...Option) (Composer, error) {
+func NewComposer(apiKey string, opts ...Option) (*Composio, error) {
 	c := &Composio{
 		apiKey: apiKey,
 		header: builders.Header{SetCommonHeaders: func(r *http.Request) {
