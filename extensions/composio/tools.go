@@ -72,7 +72,6 @@ func (c *Composio) GetTools(
 	}
 	u.RawQuery = q.Encode()
 	uri = u.String()
-	c.logger.Debug("tools", "uri", uri)
 	req, err := builders.NewRequest(
 		ctx,
 		c.header,
@@ -90,7 +89,6 @@ func (c *Composio) GetTools(
 	if err != nil {
 		return nil, err
 	}
-	c.logger.Debug("tools", "toolslen", len(items.Tools))
 	return groqTools(items.Tools), nil
 }
 func groqTools(localTools []Tool) []tools.Tool {
