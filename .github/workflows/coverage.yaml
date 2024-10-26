@@ -18,11 +18,6 @@ jobs:
       run: |
         go test -race -tags=integration ./...
     - name: Run Unit tests
-      env:
-        GROQ_KEY: ${{ secrets.GROQ_KEY }}
-        TOOLHOUSE_API_KEY: ${{ secrets.TOOLHOUSE_API_KEY }}
-        E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
-        UNIT: true
       run: |
         go test -race -covermode atomic -coverprofile=covprofile ./...
     - name: Install goveralls
