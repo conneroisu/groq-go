@@ -9,7 +9,6 @@ import (
 	"log/slog"
 	"math/rand"
 	"net/http"
-	"net/url"
 	"sync"
 	"time"
 
@@ -33,29 +32,25 @@ type (
 		ClientID string            `json:"clientID"`   // ClientID of the sandbox.
 		Cwd      string            `json:"cwd"`        // Cwd is the sandbox's current working directory.
 
-		logger     *slog.Logger    `json:"-"` // logger is the sandbox's logger.
-		apiKey     string          `json:"-"` // apiKey is the sandbox's api key.
-		baseURL    string          `json:"-"` // baseAPIURL is the base api url of the sandbox.
-		httpScheme string          `json:"-"` // httpScheme is the sandbox's http scheme.
-		client     *http.Client    `json:"-"` // client is the sandbox's http client.
-		header     builders.Header `json:"-"` // header is the sandbox's request header builder.
-		ws         *websocket.Conn `json:"-"` // ws is the sandbox's websocket connection.
-		Map        sync.Map        `json:"-"` // Map is the map of the sandbox.
-		idCh       chan int        `json:"-"` // idCh is the channel to generate ids for requests.
-		toolW      ToolingWrapper  `json:"-"` // toolW is the tooling wrapper for the sandbox.
+		logger  *slog.Logger            `json:"-"` // logger is the sandbox's logger.
+		apiKey  string                  `json:"-"` // apiKey is the sandbox's api key.
+		baseURL string                  `json:"-"` // baseAPIURL is the base api url of the sandbox.
+		client  *http.Client            `json:"-"` // client is the sandbox's http client.
+		header  builders.Header         `json:"-"` // header is the sandbox's request header builder.
+		ws      *websocket.Conn         `json:"-"` // ws is the sandbox's websocket connection.
+		wsURL   func(s *Sandbox) string `json:"-"` // wsURL is the sandbox's websocket url.
+		Map     sync.Map                `json:"-"` // Map is the map of the sandbox.
+		idCh    chan int                `json:"-"` // idCh is the channel to generate ids for requests.
+		toolW   ToolingWrapper          `json:"-"` // toolW is the tooling wrapper for the sandbox.
 	}
 	// Process is a process in the sandbox.
 	Process struct {
 		sb  *Sandbox          // sb is the sandbox the process belongs to.
+		ctx context.Context   // ctx is the context for the process.
 		id  string            // ID is process id.
 		cmd string            // cmd is process's command.
 		Cwd string            // cwd is process's current working directory.
 		Env map[string]string // env is process's environment variables.
-	}
-	// SubscribeParams is the params for subscribing to a process event.
-	SubscribeParams struct {
-		Event ProcessEvents // Event is the event to subscribe to.
-		Ch    chan<- Event  // Ch is the channel to write the event to.
 	}
 	// Option is an option for the sandbox.
 	Option func(*Sandbox)
@@ -128,13 +123,12 @@ const (
 
 	rpc                = "2.0"
 	charset            = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	defaultBaseURL     = "api.e2b.dev"
+	defaultBaseURL     = "https://api.e2b.dev"
 	defaultWSScheme    = "wss"
 	wsRoute            = "/ws"
 	fileRoute          = "/file"
 	sandboxesRoute     = "/sandboxes"  // (GET/POST /sandboxes)
 	deleteSandboxRoute = "/sandboxes/" // (DELETE /sandboxes/:id)
-	defaultHTTPScheme  = "https"
 
 	filesystemWrite      Method = "filesystem_write"
 	filesystemRead       Method = "filesystem_read"
@@ -162,11 +156,13 @@ func NewSandbox(
 		Metadata: map[string]string{
 			"sdk": "groq-go v1",
 		},
-		client:     http.DefaultClient,
-		logger:     slog.New(slog.NewJSONHandler(io.Discard, nil)),
-		httpScheme: defaultHTTPScheme,
-		idCh:       make(chan int),
-		toolW:      defaultToolWrapper,
+		client: http.DefaultClient,
+		logger: slog.New(slog.NewJSONHandler(io.Discard, nil)),
+		idCh:   make(chan int),
+		toolW:  defaultToolWrapper,
+		wsURL: func(s *Sandbox) string {
+			return fmt.Sprintf("wss://49982-%s-%s.e2b.dev/ws", s.ID, s.ClientID)
+		},
 	}
 	for _, opt := range opts {
 		opt(&sb)
@@ -178,7 +174,7 @@ func NewSandbox(
 	}
 	req, err := builders.NewRequest(
 		ctx, sb.header, http.MethodPost,
-		fmt.Sprintf("%s://%s%s", sb.httpScheme, sb.baseURL, sandboxesRoute),
+		fmt.Sprintf("%s%s", sb.baseURL, sandboxesRoute),
 		builders.WithBody(&sb),
 	)
 	if err != nil {
@@ -188,7 +184,7 @@ func NewSandbox(
 	if err != nil {
 		return &sb, err
 	}
-	sb.ws, _, err = websocket.DefaultDialer.Dial(sb.wsURL().String(), nil)
+	sb.ws, _, err = websocket.DefaultDialer.Dial(sb.wsURL(&sb), nil)
 	if err != nil {
 		return &sb, err
 	}
@@ -206,7 +202,7 @@ func NewSandbox(
 func (s *Sandbox) KeepAlive(ctx context.Context, timeout time.Duration) error {
 	req, err := builders.NewRequest(
 		ctx, s.header, http.MethodPost,
-		fmt.Sprintf("%s://%s/sandboxes/%s/refreshes", s.httpScheme, s.baseURL, s.ID),
+		fmt.Sprintf("%s/sandboxes/%s/refreshes", s.baseURL, s.ID),
 		builders.WithBody(struct {
 			Duration int `json:"duration"`
 		}{Duration: int(timeout.Seconds())}),
@@ -231,9 +227,8 @@ func (s *Sandbox) Reconnect(ctx context.Context) (err error) {
 	if err := s.ws.Close(); err != nil {
 		return err
 	}
-	u := s.wsURL()
-	s.logger.Debug("reconnecting to sandbox", "url", u.String())
-	s.ws, _, err = websocket.DefaultDialer.Dial(u.String(), nil)
+	urlu := fmt.Sprintf("wss://49982-%s-%s.e2b.dev/ws", s.ID, s.ClientID)
+	s.ws, _, err = websocket.DefaultDialer.Dial(urlu, nil)
 	if err != nil {
 		return err
 	}
@@ -250,7 +245,7 @@ func (s *Sandbox) Reconnect(ctx context.Context) (err error) {
 func (s *Sandbox) Stop(ctx context.Context) error {
 	req, err := builders.NewRequest(
 		ctx, s.header, http.MethodDelete,
-		fmt.Sprintf("%s://%s%s%s", s.httpScheme, s.baseURL, deleteSandboxRoute, s.ID),
+		fmt.Sprintf("%s%s%s", s.baseURL, deleteSandboxRoute, s.ID),
 		builders.WithBody(interface{}(nil)),
 	)
 	if err != nil {
@@ -449,9 +444,16 @@ func (p *Process) Start(ctx context.Context) (err error) {
 		p.Env = map[string]string{"PYTHONUNBUFFERED": "1"}
 	}
 	respCh := make(chan []byte)
-	if err = p.sb.writeRequest(ctx, processStart, []any{p.id, p.cmd, p.Env, p.Cwd}, respCh); err != nil {
+	err = p.sb.writeRequest(
+		ctx,
+		processStart,
+		[]any{p.id, p.cmd, p.Env, p.Cwd},
+		respCh,
+	)
+	if err != nil {
 		return err
 	}
+	p.ctx = ctx
 	select {
 	case body := <-respCh:
 		res, err := decodeResponse[string, APIError](body)
@@ -482,76 +484,78 @@ func (p *Process) Done() <-chan struct{} {
 	return rCh.(<-chan struct{})
 }
 
+// SubscribeStdout subscribes to the process's stdout.
+func (p *Process) SubscribeStdout(events chan Event) (err error) {
+	err = p.subscribe(p.ctx, OnStdout, events)
+	return
+}
+
+// SubscribeStderr subscribes to the process's stderr.
+func (p *Process) SubscribeStderr(events chan Event) (err error) {
+	err = p.subscribe(p.ctx, OnStderr, events)
+	return
+}
+
+// SubscribeExit subscribes to the process's exit.
+func (p *Process) SubscribeExit(events chan Event) (err error) {
+	err = p.subscribe(p.ctx, OnExit, events)
+	return
+}
+
 // Subscribe subscribes to a process event.
 //
-// It creates a go routine to read the process events.
-func (p *Process) Subscribe(
+// It creates a go routine to read the process events into the provided channel.
+func (p *Process) subscribe(
 	ctx context.Context,
 	event ProcessEvents,
 	eCh chan<- Event,
 ) error {
-	respCh := make(chan []byte)
-	err := p.sb.writeRequest(ctx, processSubscribe, []any{event, p.id}, respCh)
-	if err != nil {
-		return err
-	}
-	res, err := decodeResponse[string, APIError](<-respCh)
-	if err != nil {
-		return err
-	}
-	if res.Error.Code != 0 {
-		return fmt.Errorf("process subscribe failed(%d): %s", res.Error.Code, res.Error.Message)
-	}
-	eventByCh := make(chan []byte)
-	p.sb.Map.Store(res.Result, eventByCh)
-	for {
-		select {
-		case eventBd := <-eventByCh:
-			var event Event
-			err = json.Unmarshal(eventBd, &event)
-			if err != nil {
-				return err
-			}
-			if event.Error != "" {
-				return fmt.Errorf("failed to read event: %s", event.Error)
-			}
-			if event.Params.Subscription != res.Result {
-				return fmt.Errorf("subscription id mismatch")
-			}
-			eCh <- event
-		case <-ctx.Done():
-			close(eventByCh)
-			p.sb.Map.Delete(res.Result)
-			finishCtx, cancel := context.WithCancel(context.Background())
-			defer cancel()
-			p.sb.logger.Debug("unsubscribing from process", "event", event, "id", res.Result)
-			err = p.sb.writeRequest(finishCtx, processUnsubscribe, []any{res.Result}, respCh)
-			if err != nil {
-				return err
-			}
-			unsubRes, err := decodeResponse[bool, string](<-respCh)
-			if err != nil {
-				return err
-			}
-			if unsubRes.Error != "" || !unsubRes.Result {
-				return fmt.Errorf("failed to unsubscribe from process: %s", unsubRes.Error)
-			}
-			return nil
-		// TODO: make this a timeout that comes from a function param.
-		case <-p.Done():
-			return nil
+	errCh := make(chan error)
+	go func(errCh chan error) {
+		respCh := make(chan []byte)
+		defer close(respCh)
+		err := p.sb.writeRequest(ctx, processSubscribe, []any{event, p.id}, respCh)
+		if err != nil || respCh == nil {
+			errCh <- err
 		}
-	}
-}
-func (s *Sandbox) wsURL() *url.URL {
-	return &url.URL{
-		Scheme: defaultWSScheme,
-		Host: fmt.Sprintf("49982-%s-%s.e2b.dev",
-			s.ID,
-			s.ClientID,
-		),
-		Path: wsRoute,
-	}
+		res, err := decodeResponse[string, any](<-respCh)
+		errCh <- err
+		if err != nil {
+			return
+		}
+		p.sb.Map.Store(res.Result, respCh)
+		for {
+			select {
+			case eventBd := <-respCh:
+				p.sb.logger.Debug("eventByCh", "event", string(eventBd))
+				var event Event
+				_ = json.Unmarshal(eventBd, &event)
+				if event.Error != "" {
+					p.sb.logger.Debug("failed to read event", "error", event.Error)
+					continue
+				}
+				if event.Params.Subscription != res.Result {
+					p.sb.logger.Debug("subscription id mismatch", "expected", res.Result, "got", event.Params.Subscription)
+					continue
+				}
+				eCh <- event
+			case <-ctx.Done():
+				p.sb.Map.Delete(res.Result)
+				finishCtx, cancel := context.WithCancel(context.Background())
+				defer cancel()
+				p.sb.logger.Debug("unsubscribing from process", "event", event, "id", res.Result)
+				_ = p.sb.writeRequest(finishCtx, processUnsubscribe, []any{res.Result}, respCh)
+				unsubRes, _ := decodeResponse[bool, string](<-respCh)
+				if unsubRes.Error != "" || !unsubRes.Result {
+					p.sb.logger.Debug("failed to unsubscribe from process", "error", unsubRes.Error)
+				}
+				return
+			case <-p.Done():
+				return
+			}
+		}
+	}(errCh)
+	return <-errCh
 }
 func (s *Sandbox) sendRequest(req *http.Request, v interface{}) error {
 	req.Header.Set("Accept", "application/json")
@@ -583,37 +587,6 @@ func (s *Sandbox) sendRequest(req *http.Request, v interface{}) error {
 		return json.NewDecoder(res.Body).Decode(v)
 	}
 }
-
-// WithBaseURL sets the base URL for the e2b sandbox.
-func WithBaseURL(baseURL string) Option {
-	return func(s *Sandbox) { s.baseURL = baseURL }
-}
-
-// WithClient sets the client for the e2b sandbox.
-func WithClient(client *http.Client) Option {
-	return func(s *Sandbox) { s.client = client }
-}
-
-// WithLogger sets the logger for the e2b sandbox.
-func WithLogger(logger *slog.Logger) Option {
-	return func(s *Sandbox) { s.logger = logger }
-}
-
-// WithTemplate sets the template for the e2b sandbox.
-func WithTemplate(template SandboxTemplate) Option {
-	return func(s *Sandbox) { s.Template = template }
-}
-
-// WithMetaData sets the meta data for the e2b sandbox.
-func WithMetaData(metaData map[string]string) Option {
-	return func(s *Sandbox) { s.Metadata = metaData }
-}
-
-// WithCwd sets the current working directory.
-func WithCwd(cwd string) Option {
-	return func(s *Sandbox) { s.Cwd = cwd }
-}
-
 func decodeResponse[T any, Q any](body []byte) (*Response[T, Q], error) {
 	decResp := new(Response[T, Q])
 	err := json.Unmarshal(body, decResp)
@@ -635,11 +608,55 @@ func (s *Sandbox) identify(ctx context.Context) {
 	}
 }
 func (s *Sandbox) read(ctx context.Context) (err error) {
+	var body []byte
 	defer func() {
 		err = s.ws.Close()
 	}()
+	msgCh := make(chan []byte, 10)
 	for {
 		select {
+		case body = <-msgCh:
+			var decResp decResp
+			err = json.Unmarshal(body, &decResp)
+			if err != nil {
+				return err
+			}
+			if decResp.Params.Subscription != "" {
+				toR, ok := s.Map.Load(decResp.Params.Subscription)
+				if !ok {
+					msgCh <- body
+					continue
+				}
+				toRCh, ok := toR.(chan []byte)
+				if !ok {
+					msgCh <- body
+					continue
+				}
+				s.logger.Debug("read",
+					"subscription", decResp.Params.Subscription,
+					"body", body,
+					"sandbox", s.ID,
+				)
+				toRCh <- body
+			}
+			if decResp.ID != 0 {
+				toR, ok := s.Map.Load(decResp.ID)
+				if !ok {
+					msgCh <- body
+					continue
+				}
+				toRCh, ok := toR.(chan []byte)
+				if !ok {
+					msgCh <- body
+					continue
+				}
+				s.logger.Debug("read",
+					"id", decResp.ID,
+					"body", body,
+					"sandbox", s.ID,
+				)
+				toRCh <- body
+			}
 		case <-ctx.Done():
 			return ctx.Err()
 		default:
@@ -647,38 +664,7 @@ func (s *Sandbox) read(ctx context.Context) (err error) {
 			if err != nil {
 				return err
 			}
-			var decResp decResp
-			err = json.Unmarshal(body, &decResp)
-			if err != nil {
-				return err
-			}
-			s.logger.Debug("read",
-				"id", decResp.ID,
-				"body", string(body),
-				"sandbox", s.ID,
-			)
-			if decResp.Params.Subscription != "" {
-				toR, ok := s.Map.Load(decResp.Params.Subscription)
-				if !ok {
-					s.logger.Debug("subscription not found", "id", decResp.Params.Subscription)
-				}
-				toRCh, ok := toR.(chan []byte)
-				if !ok {
-					s.logger.Debug("subscription not found", "id", decResp.Params.Subscription)
-				}
-				toRCh <- body
-				continue
-			}
-			// response has an id
-			toR, ok := s.Map.Load(decResp.ID)
-			if !ok {
-				s.logger.Debug("response not found", "id", decResp.ID)
-			}
-			toRCh, ok := toR.(chan []byte)
-			if !ok {
-				s.logger.Debug("responsech not found", "id", decResp.ID)
-			}
-			toRCh <- body
+			msgCh <- body
 		}
 	}
 }

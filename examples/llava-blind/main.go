@@ -1,8 +1,6 @@
 // Package main demonstrates an example application of groq-go.
 package main
 
-// url: https://cdnimg.webstaurantstore.com/images/products/large/87539/251494.jpg
-
 import (
 	"context"
 	"fmt"

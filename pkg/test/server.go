@@ -1,10 +1,8 @@
 package test
 
 import (
-	"log"
+	"log/slog"
 	"net/http"
-	"net/http/httptest"
-	"regexp"
 	"strings"
 )
 
@@ -19,57 +17,25 @@ func GetTestToken() string {
 
 // ServerTest is a test server for the groq api.
 type ServerTest struct {
-	handlers map[string]handler
+	handlers map[string]Handler
+	logger   *slog.Logger
 }
 
-// handler is a function that handles a request.
-type handler func(w http.ResponseWriter, r *http.Request)
+// Handler is a function that handles a request.
+type Handler func(w http.ResponseWriter, r *http.Request)
 
 // NewTestServer creates a new test server.
 func NewTestServer() *ServerTest {
-	return &ServerTest{handlers: make(map[string]handler)}
+	return &ServerTest{
+		handlers: make(map[string]Handler),
+		logger:   DefaultLogger,
+	}
 }
 
 // RegisterHandler registers a handler for a path.
-func (ts *ServerTest) RegisterHandler(path string, handler handler) {
+func (ts *ServerTest) RegisterHandler(path string, handler Handler) {
 	// to make the registered paths friendlier to a regex match in the route handler
 	// in GroqTestServer
 	path = strings.ReplaceAll(path, "*", ".*")
 	ts.handlers[path] = handler
-}
-
-// GroqTestServer Creates a mocked Groq server which can pretend to handle requests during testing.
-func (ts *ServerTest) GroqTestServer() *httptest.Server {
-	return httptest.NewUnstartedServer(
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			log.Printf(
-				"received a %s request at path %q\n",
-				r.Method,
-				r.URL.Path,
-			)
-
-			// check auth
-			if r.Header.Get("Authorization") != "Bearer "+GetTestToken() &&
-				r.Header.Get("api-key") != GetTestToken() {
-				w.WriteHeader(http.StatusUnauthorized)
-				return
-			}
-
-			// Handle /path/* routes.
-			// Note: the * is converted to a .* in register handler for proper regex handling
-			for route, handler := range ts.handlers {
-				// Adding ^ and $ to make path matching deterministic since go map iteration isn't ordered
-				pattern, _ := regexp.Compile("^" + route + "$")
-				if pattern.MatchString(r.URL.Path) {
-					handler(w, r)
-					return
-				}
-			}
-			http.Error(
-				w,
-				"the resource path doesn't exist",
-				http.StatusNotFound,
-			)
-		}),
-	)
 }

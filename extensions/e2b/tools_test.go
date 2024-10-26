@@ -2,42 +2,12 @@ package e2b
 
 import (
 	"context"
-	"log/slog"
 	"os"
-	"strings"
 	"testing"
 
 	"github.com/conneroisu/groq-go"
 	"github.com/conneroisu/groq-go/pkg/test"
 	"github.com/stretchr/testify/assert"
-)
-
-var (
-	defaultLogger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
-		AddSource: true,
-		Level:     slog.LevelDebug,
-		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
-			if a.Key == "time" {
-				return slog.Attr{}
-			}
-			if a.Key == "level" {
-				return slog.Attr{}
-			}
-			if a.Key == "source" {
-				str := a.Value.String()
-				split := strings.Split(str, "/")
-				if len(split) > 2 {
-					a.Value = slog.StringValue(strings.Join(split[len(split)-2:], "/"))
-					a.Value = slog.StringValue(strings.Replace(a.Value.String(), "}", "", -1))
-				}
-			}
-			if a.Key == "body" {
-				a.Value = slog.StringValue(strings.Replace(a.Value.String(), "/", "", -1))
-				a.Value = slog.StringValue(strings.Replace(a.Value.String(), "\n", "", -1))
-				a.Value = slog.StringValue(strings.Replace(a.Value.String(), "\"", "", -1))
-			}
-			return a
-		}}))
 )
 
 func getapiKey(t *testing.T, val string) string {
@@ -57,7 +27,7 @@ func TestSandboxTooling(t *testing.T) {
 	sb, err := NewSandbox(
 		ctx,
 		getapiKey(t, "E2B_API_KEY"),
-		WithLogger(defaultLogger),
+		WithLogger(test.DefaultLogger),
 		WithCwd("/code"),
 	)
 	a.NoError(err, "NewSandbox error")

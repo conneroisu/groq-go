@@ -5,6 +5,13 @@
 [![Coverage Status](https://coveralls.io/repos/github/conneroisu/groq-go/badge.svg?branch=main)](https://coveralls.io/github/conneroisu/groq-go?branch=main)
 [![PhormAI](https://img.shields.io/badge/Phorm-Ask_AI-%23F2777A.svg?&logo=data:image/svg+xml)](https://www.phorm.ai/query?projectId=0634251d-5a98-4c37-ac2f-385b588ce3d3)
 
+<a href="https://groq.com" target="_blank" rel="noopener noreferrer" style="width: 10px; height: 30px;">
+  <img
+    src="https://groq.com/wp-content/uploads/2024/03/PBG-mark1-color.svg"
+    alt="Powered by Groq for fast inference."
+  />
+</a>
+
 ## Features
 
 - Supports all models from [Groq](https://wow.groq.com/) in a type-safe way.

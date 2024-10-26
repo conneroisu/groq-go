@@ -7,14 +7,15 @@ import (
 	"fmt"
 
 	"github.com/conneroisu/groq-go"
+	"github.com/conneroisu/groq-go/pkg/tools"
 )
 
 type (
 	// SbFn is a function that can be used to run a tool.
 	SbFn func(ctx context.Context, s *Sandbox, params *Params) (groq.ChatCompletionMessage, error)
-	// ToolingWrapper is a wrapper for groq.Tool that allows for custom functions working with a sandbox.
+	// ToolingWrapper is a wrapper for tools.Tool that allows for custom functions working with a sandbox.
 	ToolingWrapper struct {
-		ToolMap map[*groq.Tool]SbFn
+		ToolMap map[*tools.Tool]SbFn
 	}
 	// Params are the parameters for any function call.
 	Params struct {
@@ -28,8 +29,8 @@ type (
 )
 
 // getTools returns the tools wrapped by the ToolWrapper.
-func (t *ToolingWrapper) getTools() []groq.Tool {
-	tools := make([]groq.Tool, 0)
+func (t *ToolingWrapper) getTools() []tools.Tool {
+	tools := make([]tools.Tool, 0)
 	for tool := range t.ToolMap {
 		tools = append(tools, *tool)
 	}
@@ -37,7 +38,7 @@ func (t *ToolingWrapper) getTools() []groq.Tool {
 }
 
 // GetTools returns the tools wrapped by the ToolWrapper.
-func (s *Sandbox) GetTools() []groq.Tool {
+func (s *Sandbox) GetTools() []tools.Tool {
 	return s.toolW.getTools()
 }
 
@@ -49,15 +50,19 @@ func (t *ToolingWrapper) GetToolFn(name string) (SbFn, error) {
 			return fn, nil
 		}
 	}
-	return nil, fmt.Errorf("tool %s not found", name)
+	return nil, fmt.Errorf("Error running tool (does not exist) %s", name)
 }
 
 var (
 	defaultToolWrapper = ToolingWrapper{
 		ToolMap: toolMap,
 	}
-	toolMap = map[*groq.Tool]SbFn{
-		&mkdirTool: func(ctx context.Context, s *Sandbox, params *Params) (groq.ChatCompletionMessage, error) {
+	toolMap = map[*tools.Tool]SbFn{
+		&mkdirTool: func(
+			ctx context.Context,
+			s *Sandbox,
+			params *Params,
+		) (groq.ChatCompletionMessage, error) {
 			err := s.Mkdir(ctx, params.Path)
 			if err != nil {
 				return groq.ChatCompletionMessage{}, err
@@ -68,7 +73,11 @@ var (
 				Name:    "mkdir",
 			}, nil
 		},
-		&lsTool: func(ctx context.Context, s *Sandbox, params *Params) (groq.ChatCompletionMessage, error) {
+		&lsTool: func(
+			ctx context.Context,
+			s *Sandbox,
+			params *Params,
+		) (groq.ChatCompletionMessage, error) {
 			res, err := s.Ls(ctx, params.Path)
 			if err != nil {
 				return groq.ChatCompletionMessage{}, err
@@ -83,7 +92,11 @@ var (
 				Name:    "ls",
 			}, nil
 		},
-		&readTool: func(ctx context.Context, s *Sandbox, params *Params) (groq.ChatCompletionMessage, error) {
+		&readTool: func(
+			ctx context.Context,
+			s *Sandbox,
+			params *Params,
+		) (groq.ChatCompletionMessage, error) {
 			content, err := s.Read(ctx, params.Path)
 			if err != nil {
 				return groq.ChatCompletionMessage{}, err
@@ -94,7 +107,11 @@ var (
 				Name:    "read",
 			}, nil
 		},
-		&writeTool: func(ctx context.Context, s *Sandbox, params *Params) (groq.ChatCompletionMessage, error) {
+		&writeTool: func(
+			ctx context.Context,
+			s *Sandbox,
+			params *Params,
+		) (groq.ChatCompletionMessage, error) {
 			err := s.Write(ctx, params.Path, []byte(params.Data))
 			if err != nil {
 				return groq.ChatCompletionMessage{}, err
@@ -105,17 +122,21 @@ var (
 				Name:    "write",
 			}, nil
 		},
-		&startProcessTool: func(ctx context.Context, s *Sandbox, params *Params) (groq.ChatCompletionMessage, error) {
+		&startProcessTool: func(
+			ctx context.Context,
+			s *Sandbox,
+			params *Params,
+		) (groq.ChatCompletionMessage, error) {
 			proc, err := s.NewProcess(params.Cmd, Process{})
 			if err != nil {
 				return groq.ChatCompletionMessage{}, err
 			}
-			events := make(chan Event, 100)
-			err = proc.Subscribe(ctx, OnStdout, events)
+			e := make(chan Event, 10)
+			err = proc.SubscribeStdout(e)
 			if err != nil {
 				return groq.ChatCompletionMessage{}, err
 			}
-			err = proc.Subscribe(ctx, OnStderr, events)
+			err = proc.SubscribeStderr(e)
 			if err != nil {
 				return groq.ChatCompletionMessage{}, err
 			}
@@ -129,7 +150,7 @@ var (
 					select {
 					case <-ctx.Done():
 						return
-					case event := <-events:
+					case event := <-e:
 						buf.Write([]byte(event.Params.Result.Line))
 					case <-proc.Done():
 						break
@@ -144,14 +165,14 @@ var (
 			}, nil
 		},
 	}
-	mkdirTool = groq.Tool{
-		Type: groq.ToolTypeFunction,
-		Function: groq.FunctionDefinition{
+	mkdirTool = tools.Tool{
+		Type: tools.ToolTypeFunction,
+		Function: tools.FunctionDefinition{
 			Name:        "mkdir",
 			Description: "Make a directory in the sandbox file system at a given path",
-			Parameters: groq.ParameterDefinition{
+			Parameters: tools.FunctionParameters{
 				Type: "object",
-				Properties: map[string]groq.PropertyDefinition{
+				Properties: map[string]tools.PropertyDefinition{
 					"path": {
 						Type:        "string",
 						Description: "The path of the directory to create",
@@ -162,14 +183,14 @@ var (
 			},
 		},
 	}
-	lsTool = groq.Tool{
-		Type: groq.ToolTypeFunction,
-		Function: groq.FunctionDefinition{
+	lsTool = tools.Tool{
+		Type: tools.ToolTypeFunction,
+		Function: tools.FunctionDefinition{
 			Name:        "ls",
 			Description: "List the files and directories in the sandbox file system at a given path",
-			Parameters: groq.ParameterDefinition{
+			Parameters: tools.FunctionParameters{
 				Type: "object",
-				Properties: map[string]groq.PropertyDefinition{
+				Properties: map[string]tools.PropertyDefinition{
 					"path": {Type: "string",
 						Description: "The path of the directory to list",
 					},
@@ -179,14 +200,14 @@ var (
 			},
 		},
 	}
-	readTool = groq.Tool{
-		Type: groq.ToolTypeFunction,
-		Function: groq.FunctionDefinition{
+	readTool = tools.Tool{
+		Type: tools.ToolTypeFunction,
+		Function: tools.FunctionDefinition{
 			Name:        "read",
 			Description: "Read the contents of a file in the sandbox file system at a given path",
-			Parameters: groq.ParameterDefinition{
+			Parameters: tools.FunctionParameters{
 				Type: "object",
-				Properties: map[string]groq.PropertyDefinition{
+				Properties: map[string]tools.PropertyDefinition{
 					"path": {Type: "string",
 						Description: "The path of the file to read",
 					},
@@ -196,14 +217,14 @@ var (
 			},
 		},
 	}
-	writeTool = groq.Tool{
-		Type: groq.ToolTypeFunction,
-		Function: groq.FunctionDefinition{
+	writeTool = tools.Tool{
+		Type: tools.ToolTypeFunction,
+		Function: tools.FunctionDefinition{
 			Name:        "write",
 			Description: "Write to a file in the sandbox file system at a given path",
-			Parameters: groq.ParameterDefinition{
+			Parameters: tools.FunctionParameters{
 				Type: "object",
-				Properties: map[string]groq.PropertyDefinition{
+				Properties: map[string]tools.PropertyDefinition{
 					"path": {Type: "string",
 						Description: "The relative or absolute path of the file to write to",
 					},
@@ -216,14 +237,14 @@ var (
 			},
 		},
 	}
-	startProcessTool = groq.Tool{
-		Type: groq.ToolTypeFunction,
-		Function: groq.FunctionDefinition{
+	startProcessTool = tools.Tool{
+		Type: tools.ToolTypeFunction,
+		Function: tools.FunctionDefinition{
 			Name:        "start_process",
 			Description: "Start a process in the sandbox.",
-			Parameters: groq.ParameterDefinition{
+			Parameters: tools.FunctionParameters{
 				Type: "object",
-				Properties: map[string]groq.PropertyDefinition{
+				Properties: map[string]tools.PropertyDefinition{
 					"cmd": {Type: "string",
 						Description: "The command to run to start the process",
 					},
@@ -267,8 +288,8 @@ func (s *Sandbox) RunTooling(
 
 func (s *Sandbox) runTool(
 	ctx context.Context,
-	tool groq.Tool,
-	call groq.ToolCall,
+	tool tools.Tool,
+	call tools.ToolCall,
 ) (groq.ChatCompletionMessage, error) {
 	s.logger.Debug("running tool", "tool", tool.Function.Name, "call", call.Function.Name)
 	var params *Params
@@ -282,7 +303,7 @@ func (s *Sandbox) runTool(
 	fn, err := s.toolW.GetToolFn(tool.Function.Name)
 	if err != nil {
 		return groq.ChatCompletionMessage{
-			Content: fmt.Sprintf("Error running tool (does not exist) %s: %s", tool.Function.Name, err.Error()),
+			Content: err.Error(),
 			Role:    groq.ChatMessageRoleFunction,
 			Name:    tool.Function.Name,
 		}, err

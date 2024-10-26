@@ -1,6 +1,6 @@
 module github.com/conneroisu/groq-go
 
-go 1.23.1
+go 1.23.2
 
 require (
 	github.com/gorilla/websocket v1.5.3
