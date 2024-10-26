@@ -70,7 +70,7 @@ func (c *Composio) Run(
 		var body string
 		err = c.doRequest(req, &body)
 		if err != nil {
-			return nil, fmt.Errorf("failed to do request: %w", err)
+			return nil, err
 		}
 		respH = append(respH, groq.ChatCompletionMessage{
 			Content: string(body),
