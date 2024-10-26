@@ -60,7 +60,7 @@ func (e *Toolhouse) Run(
 		if err != nil {
 			return nil, err
 		}
-		e.logger.Debug("running tool", "tool", toolCall.Function.Name, "call", toolCall.Function.Arguments)
+		e.logger.Debug("toolhouse running tool", "tool", toolCall.Function.Name, "call", toolCall.Function.Arguments)
 		var runResp struct {
 			Provider string `json:"provider"`
 			Content  struct {
