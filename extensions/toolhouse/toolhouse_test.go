@@ -11,13 +11,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNewExtension(t *testing.T) {
-	a := assert.New(t)
-	ctx := context.Background()
+func TestUnitExtension(t *testing.T) {
 	if !test.IsUnitTest() {
 		t.Skip("Skipping Toolhouse extension test")
 	}
-
+	a := assert.New(t)
+	ctx := context.Background()
 	ext, err := toolhouse.NewExtension(os.Getenv("TOOLHOUSE_API_KEY"),
 		toolhouse.WithMetadata(map[string]any{
 			"id":       "conner",
@@ -44,7 +43,6 @@ func TestNewExtension(t *testing.T) {
 	})
 	a.NoError(err)
 	history = append(history, re.Choices[0].Message)
-	print(history[len(history)-1].ToolCalls[len(history[len(history)-1].ToolCalls)-1].Function.Arguments)
 	r, err := ext.Run(ctx, re)
 	a.NoError(err)
 	history = append(history, r...)
@@ -55,5 +53,5 @@ func TestNewExtension(t *testing.T) {
 	})
 	a.NoError(err)
 	history = append(history, finalr.Choices[0].Message)
-	print(history[len(history)-1].Content)
+	a.NotEmpty(history[len(history)-1].Content)
 }
