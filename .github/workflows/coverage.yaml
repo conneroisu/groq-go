@@ -14,10 +14,7 @@ jobs:
     - name: Install dependencies
       run: |
         go mod download
-    - name: Run Integration tests
-      run: |
-        go test -race -tags=integration ./...
-    - name: Run Unit tests
+    - name: Run Tests
       run: |
         go test -race -covermode atomic -coverprofile=covprofile ./...
     - name: Install goveralls
