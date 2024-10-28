@@ -11,8 +11,8 @@ import (
 )
 
 type (
-	// Auther is an interface for composio auth.
-	Auther interface {
+	// Authorizer is an interface for composio auth.
+	Authorizer interface {
 		GetConnectedAccounts(ctx context.Context, opts ...AuthOption) ([]ConnectedAccount, error)
 	}
 	// ConnectedAccount represents a composio connected account.

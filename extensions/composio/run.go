@@ -13,7 +13,9 @@ import (
 type (
 	// Runner is an interface for composio run.
 	Runner interface {
-		Run(ctx context.Context, response groq.ChatCompletionResponse) (
+		Run(ctx context.Context,
+			user ConnectedAccount,
+			response groq.ChatCompletionResponse) (
 			[]groq.ChatCompletionMessage, error)
 	}
 	request struct {

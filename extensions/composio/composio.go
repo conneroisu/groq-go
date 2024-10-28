@@ -21,7 +21,7 @@ type (
 	Composer interface {
 		Tooler
 		Runner
-		Auther
+		Authorizer
 	}
 	// Composio is a composio client.
 	Composio struct {
