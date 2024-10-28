@@ -26,6 +26,10 @@ type (
 	ErrContentFieldsMisused struct {
 		field string
 	}
+	// ErrToolNotFound is returned when a tool is not found.
+	ErrToolNotFound struct {
+		ToolName string
+	}
 	// ErrTooManyEmptyStreamMessages is returned when the stream has sent too many
 	// empty messages.
 	ErrTooManyEmptyStreamMessages struct{}
@@ -148,4 +152,9 @@ func (e *requestError) Error() string {
 // Unwrap unwraps the error.
 func (e *requestError) Unwrap() error {
 	return e.Err
+}
+
+// Error implements the error interface.
+func (e ErrToolNotFound) Error() string {
+	return fmt.Sprintf("tool %s not found", e.ToolName)
 }
