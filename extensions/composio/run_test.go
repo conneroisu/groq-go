@@ -53,7 +53,9 @@ func TestRun(t *testing.T) {
 		composio.WithBaseURL(testS.URL),
 	)
 	a.NoError(err)
-	resp, err := client.Run(ctx, groq.ChatCompletionResponse{
+	ca, err := client.GetConnectedAccounts(ctx, composio.WithShowActiveOnly(true))
+	a.NoError(err)
+	resp, err := client.Run(ctx, ca[0], groq.ChatCompletionResponse{
 		Choices: []groq.ChatCompletionChoice{{
 			Message: groq.ChatCompletionMessage{
 				Role:    groq.ChatMessageRoleUser,

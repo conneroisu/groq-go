@@ -29,6 +29,7 @@ type (
 // Run runs the composio client on a chat completion response.
 func (c *Composio) Run(
 	ctx context.Context,
+	user ConnectedAccount,
 	response groq.ChatCompletionResponse,
 ) ([]groq.ChatCompletionMessage, error) {
 	var respH []groq.ChatCompletionMessage
@@ -36,14 +37,10 @@ func (c *Composio) Run(
 		response.Choices[0].FinishReason != "tool_calls" {
 		return nil, fmt.Errorf("Not a function call")
 	}
-	connectedAccount, err := c.GetConnectedAccounts(ctx, WithShowActiveOnly(true))
-	if err != nil {
-		return nil, err
-	}
 	for _, toolCall := range response.Choices[0].Message.ToolCalls {
 		var args map[string]any
 		if json.Valid([]byte(toolCall.Function.Arguments)) {
-			err = json.Unmarshal([]byte(toolCall.Function.Arguments), &args)
+			err := json.Unmarshal([]byte(toolCall.Function.Arguments), &args)
 			if err != nil {
 				return nil, err
 			}
@@ -55,7 +52,7 @@ func (c *Composio) Run(
 			http.MethodPost,
 			fmt.Sprintf("%s/v2/actions/%s/execute", c.baseURL, toolCall.Function.Name),
 			builders.WithBody(&request{
-				ConnectedAccountID: connectedAccount[0].ID,
+				ConnectedAccountID: user.ID,
 				EntityID:           "default",
 				AppName:            toolCall.Function.Name,
 				Input:              args,
