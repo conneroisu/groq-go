@@ -50,7 +50,8 @@ type (
 		HTTPStatusCode int
 		Err            error
 	}
-	errorResponse struct {
+	// ErrorResponse is the response returned by the Groq API.
+	ErrorResponse struct {
 		Error *APIError `json:"error,omitempty"`
 	}
 )
