@@ -228,7 +228,7 @@ func withModel(model model) fullURLOption {
 }
 
 func (c *Client) handleErrorResp(resp *http.Response) error {
-	var errRes errorResponse
+	var errRes ErrorResponse
 	err := json.NewDecoder(resp.Body).Decode(&errRes)
 	if err != nil || errRes.Error == nil {
 		reqErr := &requestError{

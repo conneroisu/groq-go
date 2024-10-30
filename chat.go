@@ -495,7 +495,7 @@ func (stream *streamReader[T]) processLines() (T, error) {
 		return response, nil
 	}
 }
-func (stream *streamReader[T]) unmarshalError() (errResp *errorResponse) {
+func (stream *streamReader[T]) unmarshalError() (errResp *ErrorResponse) {
 	errBytes := stream.errAccumulator.Bytes()
 	if len(errBytes) == 0 {
 		return
