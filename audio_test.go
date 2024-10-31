@@ -94,7 +94,7 @@ func TestCreateFileField(t *testing.T) {
 				return mockFailedErr
 			},
 		}
-		err := groq.CreateFileField(req, mockBuilder)
+		err := groq.AudioMultipartForm(req, mockBuilder)
 		a.ErrorIs(
 			err,
 			mockFailedErr,
@@ -116,7 +116,7 @@ func TestCreateFileField(t *testing.T) {
 			},
 		}
 
-		err := groq.CreateFileField(req, mockBuilder)
+		err := groq.AudioMultipartForm(req, mockBuilder)
 		a.ErrorIs(
 			err,
 			mockFailedErr,
@@ -130,7 +130,7 @@ func TestCreateFileField(t *testing.T) {
 			FilePath: "non_existing_file.wav",
 		}
 		mockBuilder := builders.NewFormBuilder(&test.FailingErrorBuffer{})
-		err := groq.CreateFileField(req, mockBuilder)
+		err := groq.AudioMultipartForm(req, mockBuilder)
 		a.Error(
 			err,
 			"createFileField using file should return error when open file fails",

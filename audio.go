@@ -122,7 +122,7 @@ func (c *Client) callAudioAPI(
 	endpointSuffix Endpoint,
 ) (response AudioResponse, err error) {
 	var formBody bytes.Buffer
-	c.requestFormBuilder = c.createFormBuilder(&formBody)
+	c.requestFormBuilder = builders.NewFormBuilder(&formBody)
 	err = AudioMultipartForm(request, c.requestFormBuilder)
 	if err != nil {
 		return AudioResponse{}, err
@@ -160,9 +160,21 @@ func (r AudioRequest) hasJSONResponse() bool {
 // AudioMultipartForm creates a form with audio file contents and the name of
 // the model to use for audio processing.
 func AudioMultipartForm(request AudioRequest, b builders.FormBuilder) error {
-	err := CreateFileField(request, b)
+	if request.Reader != nil {
+		err := b.CreateFormFileReader("file", request.Reader, request.FilePath)
+		if err != nil {
+			return fmt.Errorf("creating form using reader: %w", err)
+		}
+		return nil
+	}
+	f, err := os.Open(request.FilePath)
 	if err != nil {
-		return err
+		return fmt.Errorf("opening audio file: %w", err)
+	}
+	defer f.Close()
+	err = b.CreateFormFile("file", f)
+	if err != nil {
+		return fmt.Errorf("creating form file: %w", err)
 	}
 	err = b.WriteField("model", string(request.Model))
 	if err != nil {
@@ -200,29 +212,4 @@ func AudioMultipartForm(request AudioRequest, b builders.FormBuilder) error {
 		}
 	}
 	return b.Close()
-}
-
-// CreateFileField creates the "file" form field from either an existing file
-// or by using the reader.
-func CreateFileField(
-	request AudioRequest,
-	b builders.FormBuilder,
-) (err error) {
-	if request.Reader != nil {
-		err := b.CreateFormFileReader("file", request.Reader, request.FilePath)
-		if err != nil {
-			return fmt.Errorf("creating form using reader: %w", err)
-		}
-		return nil
-	}
-	f, err := os.Open(request.FilePath)
-	if err != nil {
-		return fmt.Errorf("opening audio file: %w", err)
-	}
-	defer f.Close()
-	err = b.CreateFormFile("file", f)
-	if err != nil {
-		return fmt.Errorf("creating form file: %w", err)
-	}
-	return nil
 }

@@ -29,7 +29,6 @@ type (
 
 		header             builders.Header
 		requestFormBuilder builders.FormBuilder
-		createFormBuilder  func(body io.Writer) builders.FormBuilder
 
 		client *http.Client // Client is the HTTP client to use
 		logger *slog.Logger // Logger is the logger for the client.
@@ -85,9 +84,6 @@ func NewClient(groqAPIKey string, opts ...Opts) (*Client, error) {
 		logger:             slog.Default(),
 		baseURL:            groqAPIURLv1,
 		emptyMessagesLimit: 10,
-		createFormBuilder: func(body io.Writer) builders.FormBuilder {
-			return builders.NewFormBuilder(body)
-		},
 	}
 	for _, opt := range opts {
 		opt(c)
