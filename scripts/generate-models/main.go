@@ -14,11 +14,15 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"regexp"
 	"sort"
+	"strings"
 	"text/template"
 	"time"
+	"unicode"
 
-	"github.com/samber/lo"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 const (
@@ -102,7 +106,7 @@ func (r *Response) Categorize() (CategorizedModels, error) {
 	return models, nil
 }
 
-func isMultiModalModel(model ResponseModel) bool {
+func isMultiModalModel(_ ResponseModel) bool {
 	return false
 }
 
@@ -228,10 +232,55 @@ func fillModelsTemplate(w io.Writer, models CategorizedModels) (err error) {
 	return nil
 }
 
+var (
+	LowerCaseLettersCharset = []rune("abcdefghijklmnopqrstuvwxyz")
+	UpperCaseLettersCharset = []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+	LettersCharset          = append(LowerCaseLettersCharset, UpperCaseLettersCharset...)
+	NumbersCharset          = []rune("0123456789")
+	AlphanumericCharset     = append(LettersCharset, NumbersCharset...)
+	SpecialCharset          = []rune("!@#$%^&*()_+-=[]{}|;':\",./<>?")
+	AllCharset              = append(AlphanumericCharset, SpecialCharset...)
+
+	// bearer:disable go_lang_permissive_regex_validation
+	splitWordReg = regexp.MustCompile(`([a-z])([A-Z0-9])|([a-zA-Z])([0-9])|([0-9])([a-zA-Z])|([A-Z])([A-Z])([a-z])`)
+	// bearer:disable go_lang_permissive_regex_validation
+	splitNumberLetterReg = regexp.MustCompile(`([0-9])([a-zA-Z])`)
+)
+
+// Words splits string into an array of its words.
+func Words(str string) []string {
+	str = splitWordReg.ReplaceAllString(str, `$1$3$5$7 $2$4$6$8$9`)
+	// example: Int8Value => Int 8Value => Int 8 Value
+	str = splitNumberLetterReg.ReplaceAllString(str, "$1 $2")
+	var result strings.Builder
+	for _, r := range str {
+		if unicode.IsLetter(r) || unicode.IsDigit(r) {
+			result.WriteRune(r)
+		} else {
+			result.WriteRune(' ')
+		}
+	}
+	return strings.Fields(result.String())
+}
+
+// Capitalize converts the first character of string to upper case and the remaining to lower case.
+func Capitalize(str string) string {
+	return cases.Title(language.English).String(str)
+}
+
+// PascalCase converts string to pascal case.
+func PascalCase(str string) string {
+	items := Words(str)
+	for i := range items {
+		items[i] = Capitalize(items[i])
+	}
+	return strings.Join(items, "")
+}
+
 func nameModels(models []ResponseModel) {
 	for i := range models {
 		if (models)[i].Name == "" {
-			models[i].Name = lo.PascalCase(models[i].ID)
+			models[i].Name = PascalCase(models[i].ID)
 		}
 	}
 	// sort models by name alphabetically
