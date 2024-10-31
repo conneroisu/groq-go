@@ -18,25 +18,44 @@ import (
 )
 
 const (
-	ChatMessageRoleSystem                      Role                             = "system"         // ChatMessageRoleSystem is the system chat message role.
-	ChatMessageRoleUser                        Role                             = "user"           // ChatMessageRoleUser is the user chat message role.
-	ChatMessageRoleAssistant                   Role                             = "assistant"      // ChatMessageRoleAssistant is the assistant chat message role.
-	ChatMessageRoleFunction                    Role                             = "function"       // ChatMessageRoleFunction is the function chat message role.
-	ChatMessageRoleTool                        Role                             = "tool"           // ChatMessageRoleTool is the tool chat message role.
-	ImageURLDetailHigh                         ImageURLDetail                   = "high"           // ImageURLDetailHigh is the high image url detail.
-	ImageURLDetailLow                          ImageURLDetail                   = "low"            // ImageURLDetailLow is the low image url detail.
-	ImageURLDetailAuto                         ImageURLDetail                   = "auto"           // ImageURLDetailAuto is the auto image url detail.
-	ChatMessagePartTypeText                    ChatMessagePartType              = "text"           // ChatMessagePartTypeText is the text chat message part type.
-	ChatMessagePartTypeImageURL                ChatMessagePartType              = "image_url"      // ChatMessagePartTypeImageURL is the image url chat message part type.
-	ChatCompletionResponseFormatTypeJSONObject ChatCompletionResponseFormatType = "json_object"    // ChatCompletionResponseFormatTypeJSONObject is the json object chat completion response format type.
-	ChatCompletionResponseFormatTypeJSONSchema ChatCompletionResponseFormatType = "json_schema"    // ChatCompletionResponseFormatTypeJSONSchema is the json schema chat completion response format type.
-	ChatCompletionResponseFormatTypeText       ChatCompletionResponseFormatType = "text"           // ChatCompletionResponseFormatTypeText is the text chat completion response format type.
-	FinishReasonStop                           FinishReason                     = "stop"           // FinishReasonStop is the stop finish reason.
-	FinishReasonLength                         FinishReason                     = "length"         // FinishReasonLength is the length finish reason.
-	FinishReasonFunctionCall                   FinishReason                     = "function_call"  // FinishReasonFunctionCall is the function call finish reason.
-	FinishReasonToolCalls                      FinishReason                     = "tool_calls"     // FinishReasonToolCalls is the tool calls finish reason.
-	FinishReasonContentFilter                  FinishReason                     = "content_filter" // FinishReasonContentFilter is the content filter finish reason.
-	FinishReasonNull                           FinishReason                     = "null"           // FinishReasonNull is the null finish reason.
+	// ChatMessageRoleSystem is the system chat message role.
+	ChatMessageRoleSystem Role = "system"
+	// ChatMessageRoleUser is the user chat message role.
+	ChatMessageRoleUser Role = "user"
+	// ChatMessageRoleAssistant is the assistant chat message role.
+	ChatMessageRoleAssistant Role = "assistant"
+	// ChatMessageRoleFunction is the function chat message role.
+	ChatMessageRoleFunction Role = "function"
+	// ChatMessageRoleTool is the tool chat message role.
+	ChatMessageRoleTool Role = "tool"
+
+	// ImageURLDetailHigh is the high image url detail.
+	ImageURLDetailHigh ImageURLDetail = "high"
+	// ImageURLDetailLow is the low image url detail.
+	ImageURLDetailLow ImageURLDetail = "low"
+	// ImageURLDetailAuto is the auto image url detail.
+	ImageURLDetailAuto ImageURLDetail = "auto"
+
+	// ChatMessagePartTypeText is the text chat message part type.
+	ChatMessagePartTypeText ChatMessagePartType = "text"
+	// ChatMessagePartTypeImageURL is the image url chat message part type.
+	ChatMessagePartTypeImageURL ChatMessagePartType = "image_url"
+
+	// ReasonStop is the stop finish reason for a chat completion.
+	ReasonStop FinishReason = "stop"
+	// ReasonLength is the length finish reason for a chat completion.
+	ReasonLength FinishReason = "length"
+	// ReasonFunctionCall is the function call finish reason for a chat
+	// completion.
+	ReasonFunctionCall FinishReason = "function_call"
+	// ReasonToolCalls is the tool calls finish reason for a chat
+	// completion.
+	ReasonToolCalls FinishReason = "tool_calls"
+	// ReasonContentFilter is the content filter finish reason for a chat
+	// completion.
+	ReasonContentFilter FinishReason = "content_filter"
+	// ReasonNull is the null finish reason for a chat completion.
+	ReasonNull FinishReason = "null"
 )
 
 type (
@@ -78,14 +97,10 @@ type (
 		ToolCalls    []tools.ToolCall    `json:"tool_calls,omitempty"`    // ToolCalls setting for Role=assistant prompts this may be set to the tool calls generated by the model, such as function calls.
 		ToolCallID   string              `json:"tool_call_id,omitempty"`  // ToolCallID is setting for Role=tool prompts this should be set to the ID given in the assistant's prior request to call a tool.
 	}
-	// ChatCompletionResponseFormatType is the chat completion response format type.
-	//
-	// string
-	ChatCompletionResponseFormatType string
 	// ChatCompletionResponseFormat is the chat completion response format.
 	ChatCompletionResponseFormat struct {
 		// Type is the type of the chat completion response format.
-		Type ChatCompletionResponseFormatType `json:"type,omitempty"`
+		Type Format `json:"type,omitempty"`
 		// JSONSchema is the json schema of the chat completion response format.
 		JSONSchema *ChatCompletionResponseFormatJSONSchema `json:"json_schema,omitempty"`
 	}
@@ -294,7 +309,7 @@ func (m *ChatCompletionMessage) UnmarshalJSON(bs []byte) (err error) {
 
 // MarshalJSON implements the json.Marshaler interface.
 func (r FinishReason) MarshalJSON() ([]byte, error) {
-	if r == FinishReasonNull || r == "" {
+	if r == ReasonNull || r == "" {
 		return []byte("null"), nil
 	}
 	return []byte(

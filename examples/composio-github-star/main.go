@@ -1,3 +1,6 @@
+// Package main is an example of using the composio client.
+//
+// It shows how to use the composio client to star a github repository.
 package main
 
 import (
@@ -65,7 +68,11 @@ Star the repo conneroisu/groq-go on GitHub.
 	if err != nil {
 		return err
 	}
-	resp, err := comp.Run(ctx, chat)
+	user, err := comp.GetConnectedAccounts(ctx)
+	if err != nil {
+		return err
+	}
+	resp, err := comp.Run(ctx, user[0], chat)
 	if err != nil {
 		return err
 	}

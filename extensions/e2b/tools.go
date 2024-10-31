@@ -267,7 +267,7 @@ func (s *Sandbox) RunTooling(
 	ctx context.Context,
 	response groq.ChatCompletionResponse,
 ) ([]groq.ChatCompletionMessage, error) {
-	if response.Choices[0].FinishReason != groq.FinishReasonFunctionCall && response.Choices[0].FinishReason != "tool_calls" {
+	if response.Choices[0].FinishReason != groq.ReasonFunctionCall && response.Choices[0].FinishReason != "tool_calls" {
 		return nil, fmt.Errorf("not a function call")
 	}
 	respH := []groq.ChatCompletionMessage{}

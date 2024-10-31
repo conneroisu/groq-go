@@ -63,6 +63,7 @@ func WithLogger(logger *slog.Logger) Option {
 
 func (j *JigsawStack) sendRequest(req *http.Request, v any) error {
 	j.header.SetCommonHeaders(req)
+	j.logger.Debug("sending http request", "url", req.URL.String(), "body", req.Body)
 	resp, err := j.client.Do(req)
 	if err != nil {
 		return err
@@ -75,6 +76,7 @@ func (j *JigsawStack) sendRequest(req *http.Request, v any) error {
 	if v == nil {
 		return nil
 	}
+	j.logger.Debug("received http response", "status", resp.Status, "body", resp.Body)
 	switch o := v.(type) {
 	case *string:
 		b, err := io.ReadAll(resp.Body)

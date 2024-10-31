@@ -65,7 +65,7 @@ func TestRun(t *testing.T) {
 						Name:      "TOOL",
 						Arguments: `{ "foo": "bar", }`,
 					}}}},
-			FinishReason: groq.FinishReasonFunctionCall,
+			FinishReason: groq.ReasonFunctionCall,
 		}}})
 	a.NoError(err)
 	assert.Equal(t, "response1", resp[0].Content)

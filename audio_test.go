@@ -26,7 +26,7 @@ func TestAudioWithFailingFormBuilder(t *testing.T) {
 		Prompt:      "test",
 		Temperature: 0.5,
 		Language:    "en",
-		Format:      groq.AudioResponseFormatSRT,
+		Format:      groq.FormatSRT,
 	}
 
 	mockFailedErr := fmt.Errorf("mock form builder fail")

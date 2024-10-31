@@ -515,7 +515,7 @@ func (p *Process) subscribe(
 		respCh := make(chan []byte)
 		defer close(respCh)
 		err := p.sb.writeRequest(ctx, processSubscribe, []any{event, p.id}, respCh)
-		if err != nil || respCh == nil {
+		if err != nil {
 			errCh <- err
 		}
 		res, err := decodeResponse[string, any](<-respCh)

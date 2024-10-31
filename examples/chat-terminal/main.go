@@ -89,7 +89,7 @@ func input(ctx context.Context, r io.Reader, w io.Writer, client *groq.Client) e
 		if err != nil {
 			return err
 		}
-		if response.Choices[0].FinishReason == groq.FinishReasonStop {
+		if response.Choices[0].FinishReason == groq.ReasonStop {
 			break
 		}
 		fmt.Fprint(writer, response.Choices[0].Delta.Content)

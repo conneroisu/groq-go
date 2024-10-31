@@ -90,7 +90,7 @@ func newStreamReader[T streamer](data string) *streamReader[T] {
 // Test the `Recv` method with multiple empty messages triggering an error
 func TestStreamReader_TooManyEmptyMessages(t *testing.T) {
 	data := "\n\n\n\n\n\n"
-	stream := newStreamReader[ChatCompletionStreamResponse](data)
+	stream := newStreamReader(data)
 
 	_, err := stream.Recv()
 	assert.ErrorIs(t, err, ErrTooManyEmptyStreamMessages{})
@@ -98,7 +98,7 @@ func TestStreamReader_TooManyEmptyMessages(t *testing.T) {
 
 // Test the `Close` method
 func TestStreamReader_Close(t *testing.T) {
-	stream := newStreamReader[ChatCompletionStreamResponse]("")
+	stream := newStreamReader("")
 
 	err := stream.Close()
 	assert.NoError(t, err)

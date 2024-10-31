@@ -233,13 +233,20 @@ func fillModelsTemplate(w io.Writer, models CategorizedModels) (err error) {
 }
 
 var (
+	// LowerCaseLettersCharset is a set of lower case letters.
 	LowerCaseLettersCharset = []rune("abcdefghijklmnopqrstuvwxyz")
+	// UpperCaseLettersCharset is a set of upper case letters.
 	UpperCaseLettersCharset = []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
-	LettersCharset          = append(LowerCaseLettersCharset, UpperCaseLettersCharset...)
-	NumbersCharset          = []rune("0123456789")
-	AlphanumericCharset     = append(LettersCharset, NumbersCharset...)
-	SpecialCharset          = []rune("!@#$%^&*()_+-=[]{}|;':\",./<>?")
-	AllCharset              = append(AlphanumericCharset, SpecialCharset...)
+	// LettersCharset is a set of letters.
+	LettersCharset = append(LowerCaseLettersCharset, UpperCaseLettersCharset...)
+	// NumbersCharset is a set of numbers.
+	NumbersCharset = []rune("0123456789")
+	// AlphanumericCharset is a set of alphanumeric characters.
+	AlphanumericCharset = append(LettersCharset, NumbersCharset...)
+	// SpecialCharset is a set of special characters.
+	SpecialCharset = []rune("!@#$%^&*()_+-=[]{}|;':\",./<>?")
+	// AllCharset is a set of all characters.
+	AllCharset = append(AlphanumericCharset, SpecialCharset...)
 
 	// bearer:disable go_lang_permissive_regex_validation
 	splitWordReg = regexp.MustCompile(`([a-z])([A-Z0-9])|([a-zA-Z])([0-9])|([0-9])([a-zA-Z])|([A-Z])([A-Z])([a-z])`)

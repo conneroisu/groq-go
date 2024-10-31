@@ -68,6 +68,23 @@ const (
 	// FormatJSON is the JSON format. There is no support for streaming with
 	// JSON format selected.
 	FormatJSON Format = "json"
+	// FormatSRT is the SRT format. This is a text format that is only
+	// supported for the transcription API.
+	// SRT format selected.
+	FormatSRT Format = "srt"
+	// FormatVTT is the VTT format. This is a text format that is only
+	// supported for the transcription API.
+	FormatVTT Format = "vtt"
+	// FormatVerboseJSON is the verbose JSON format. This is a JSON format
+	// that is only supported for the transcription API.
+	FormatVerboseJSON Format = "verbose_json"
+
+	// FormatJSONObject is the json object chat
+	// completion response format type.
+	FormatJSONObject Format = "json_object"
+	// FormatJSONSchema is the json schema chat
+	// completion response format type.
+	FormatJSONSchema Format = "json_schema"
 
 	// groqAPIURLv1 is the base URL for the Groq API.
 	groqAPIURLv1 = "https://api.groq.com/openai/v1"

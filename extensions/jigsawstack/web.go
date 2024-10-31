@@ -1,5 +1,17 @@
 package jigsawstack
 
+// TODO: implement web render
+
+//TODO: implement ai scraper and scrape
+
+// https://docs.jigsawstack.com/api-reference/ai/scrape
+
+// https://api.jigsawstack.com/v1/ai/scrape
+
+// https://docs.jigsawstack.com/api-reference/web/scrape
+
+// https://api.jigsawstack.com/v1/web/scrape
+
 import (
 	"context"
 	"net/http"
@@ -15,10 +27,12 @@ const (
 )
 
 type (
+	// WebSearchSuggestions is the response for the web search suggestions api.
 	WebSearchSuggestions struct {
 		Success     bool     `json:"success"`
 		Suggestions []string `json:"suggestions"`
 	}
+	// WebSearchResponse is the response for the web search api.
 	WebSearchResponse struct {
 		Success    bool   `json:"success"`
 		Query      string `json:"query"`
@@ -48,7 +62,7 @@ type (
 	}
 )
 
-// WebSearch performs a web search api call over a string.
+// WebSearch performs a web search api call over a query string.
 func (j *JigsawStack) WebSearch(
 	ctx context.Context,
 	query string,
@@ -72,6 +86,7 @@ func (j *JigsawStack) WebSearch(
 	return resp, nil
 }
 
+// WebSearchSuggestions performs a web search suggestions api call over a query string.
 func (j *JigsawStack) WebSearchSuggestions(
 	ctx context.Context,
 	query string,

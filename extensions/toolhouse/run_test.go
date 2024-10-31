@@ -66,7 +66,7 @@ func TestRun(t *testing.T) {
 		Choices: []groq.ChatCompletionChoice{
 			{
 				Message:      history[0],
-				FinishReason: groq.FinishReasonFunctionCall,
+				FinishReason: groq.ReasonFunctionCall,
 			},
 		},
 	})

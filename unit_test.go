@@ -825,7 +825,7 @@ func TestAudioWithOptionalArgs(t *testing.T) {
 				Prompt:      "用简体中文",
 				Temperature: 0.5,
 				Language:    "zh",
-				Format:      groq.AudioResponseFormatSRT,
+				Format:      groq.FormatSRT,
 			}
 			_, err := tc.createFn(ctx, req)
 			a.NoError(err, "audio API error")
