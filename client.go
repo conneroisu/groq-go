@@ -22,25 +22,40 @@ type (
 	Format string
 	// Client is a Groq api client.
 	Client struct {
-		groqAPIKey         string // Groq API key
-		orgID              string // OrgID is the organization ID for the client.
-		baseURL            string // Base URL for the client.
-		emptyMessagesLimit uint   // EmptyMessagesLimit is the limit for the empty messages.
+		// Groq API key
+		groqAPIKey string
+		// OrgID is the organization ID for the client.
+		orgID string
+		// Base URL for the client.
+		baseURL string
+		// EmptyMessagesLimit is the limit for the empty messages.
+		emptyMessagesLimit uint
 
 		header             builders.Header
 		requestFormBuilder builders.FormBuilder
 
-		client *http.Client // Client is the HTTP client to use
-		logger *slog.Logger // Logger is the logger for the client.
+		// Client is the HTTP client to use
+		client *http.Client
+		// Logger is the logger for the client.
+		logger *slog.Logger
 	}
 	// RateLimitHeaders struct represents Groq rate limits headers.
 	RateLimitHeaders struct {
-		LimitRequests     int       `json:"x-ratelimit-limit-requests"`     // LimitRequests is the limit requests of the rate limit headers.
-		LimitTokens       int       `json:"x-ratelimit-limit-tokens"`       // LimitTokens is the limit tokens of the rate limit headers.
-		RemainingRequests int       `json:"x-ratelimit-remaining-requests"` // RemainingRequests is the remaining requests of the rate limit headers.
-		RemainingTokens   int       `json:"x-ratelimit-remaining-tokens"`   // RemainingTokens is the remaining tokens of the rate limit headers.
-		ResetRequests     ResetTime `json:"x-ratelimit-reset-requests"`     // ResetRequests is the reset requests of the rate limit headers.
-		ResetTokens       ResetTime `json:"x-ratelimit-reset-tokens"`       // ResetTokens is the reset tokens of the rate limit headers.
+		// LimitRequests is the limit requests of the rate limit
+		// headers.
+		LimitRequests int `json:"x-ratelimit-limit-requests"`
+		// LimitTokens is the limit tokens of the rate limit headers.
+		LimitTokens int `json:"x-ratelimit-limit-tokens"`
+		// RemainingRequests is the remaining requests of the rate
+		// limit headers.
+		RemainingRequests int `json:"x-ratelimit-remaining-requests"`
+		// RemainingTokens is the remaining tokens of the rate limit
+		// headers.
+		RemainingTokens int `json:"x-ratelimit-remaining-tokens"`
+		// ResetRequests is the reset requests of the rate limit headers.
+		ResetRequests ResetTime `json:"x-ratelimit-reset-requests"`
+		// ResetTokens is the reset tokens of the rate limit headers.
+		ResetTokens ResetTime `json:"x-ratelimit-reset-tokens"`
 	}
 	// ResetTime is a time.Time wrapper for the rate limit reset time.
 	// string
@@ -55,10 +70,9 @@ type (
 		TotalTokens      int `json:"total_tokens"`
 	}
 
-	fullURLOptions struct {
-		model string
-	}
-	fullURLOption func(*fullURLOptions)
+	fullURLOptions struct{ model string }
+	fullURLOption  func(*fullURLOptions)
+	response       interface{ SetHeader(http.Header) }
 )
 
 const (
@@ -126,28 +140,17 @@ func (c *Client) fullURL(suffix Endpoint, setters ...fullURLOption) string {
 
 // WithClient sets the client for the Groq client.
 func WithClient(client *http.Client) Opts {
-	return func(c *Client) {
-		c.client = client
-	}
+	return func(c *Client) { c.client = client }
 }
 
 // WithBaseURL sets the base URL for the Groq client.
 func WithBaseURL(baseURL string) Opts {
-	return func(c *Client) {
-		c.baseURL = baseURL
-	}
+	return func(c *Client) { c.baseURL = baseURL }
 }
 
 // WithLogger sets the logger for the Groq client.
 func WithLogger(logger *slog.Logger) Opts {
-	return func(c *Client) {
-		c.logger = logger
-	}
-}
-
-// response is an interface for a response.
-type response interface {
-	SetHeader(http.Header)
+	return func(c *Client) { c.logger = logger }
 }
 
 func (c *Client) sendRequest(req *http.Request, v response) error {
