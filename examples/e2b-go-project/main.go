@@ -1,3 +1,4 @@
+// Package main shows an example of using the e2b extension.
 package main
 
 import (
@@ -32,6 +33,13 @@ func run(
 	if err != nil {
 		return err
 	}
+	defer func() {
+		err := sb.Stop(ctx)
+		if err != nil {
+			fmt.Println(err)
+		}
+	}()
+
 	chat, err := client.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
 		Model: groq.ModelLlama3Groq70B8192ToolUsePreview,
 		Messages: []groq.ChatCompletionMessage{
@@ -48,7 +56,7 @@ utils.go
 
 The main function should call the "utils.run() error" function.
 
-The project should, when run, print the following:
+The project should, when run, print the following to stdout:
 
 <output>
 Hello, World!
@@ -63,5 +71,10 @@ Hello, World!
 		return err
 	}
 	fmt.Println(chat.Choices[0].Message.Content)
+	resp, err := sb.RunTooling(ctx, chat)
+	if err != nil {
+		return err
+	}
+	fmt.Println(resp[0].Content)
 	return nil
 }

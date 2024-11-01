@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	imageGenerationEndpoint = "v1/ai/image_generation"
+	imageGenerationEndpoint = "/v1/ai/image_generation"
 )
 
 // model
@@ -38,7 +38,7 @@ type (
 	}
 )
 
-// Default is sdxl
+// ImageGeneration generates an image from a prompt and parameters.
 func (j *JigsawStack) ImageGeneration(
 	ctx context.Context,
 	request ImageGenerationRequest,

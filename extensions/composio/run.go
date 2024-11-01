@@ -58,7 +58,6 @@ func (c *Composio) Run(
 				EntityID:           "default",
 				AppName:            toolCall.Function.Name,
 				Input:              args,
-				Text:               "",
 				AuthConfig:         map[string]any{},
 			}),
 		)

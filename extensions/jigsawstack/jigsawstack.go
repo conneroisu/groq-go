@@ -40,8 +40,6 @@ func NewJigsawStack(apiKey string, opts ...Option) (*JigsawStack, error) {
 	}
 	j.header.SetCommonHeaders = func(req *http.Request) {
 		req.Header.Set("x-api-key", apiKey)
-		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Accept", "application/json")
 	}
 	return j, nil
 }

@@ -1,17 +1,5 @@
 package jigsawstack
 
-// TODO: implement web render
-
-//TODO: implement ai scraper and scrape
-
-// https://docs.jigsawstack.com/api-reference/ai/scrape
-
-// https://api.jigsawstack.com/v1/ai/scrape
-
-// https://docs.jigsawstack.com/api-reference/web/scrape
-
-// https://api.jigsawstack.com/v1/web/scrape
-
 import (
 	"context"
 	"net/http"
@@ -20,14 +8,13 @@ import (
 	"github.com/conneroisu/groq-go/pkg/builders"
 )
 
-// https://api.jigsawstack.com/v1/web/search
-
 const (
 	webSearchEndpoint Endpoint = "v1/web/search"
 )
 
 type (
-	// WebSearchSuggestions is the response for the web search suggestions api.
+	// WebSearchSuggestions is the response for the web search suggestions
+	// api.
 	WebSearchSuggestions struct {
 		Success     bool     `json:"success"`
 		Suggestions []string `json:"suggestions"`
@@ -63,6 +50,10 @@ type (
 )
 
 // WebSearch performs a web search api call over a query string.
+//
+// POST https://api.jigsawstack.com/v1/web/search
+//
+// https://docs.jigsawstack.com/api-reference/web/search
 func (j *JigsawStack) WebSearch(
 	ctx context.Context,
 	query string,
@@ -86,7 +77,12 @@ func (j *JigsawStack) WebSearch(
 	return resp, nil
 }
 
-// WebSearchSuggestions performs a web search suggestions api call over a query string.
+// WebSearchSuggestions performs a web search suggestions api call over a query
+// string.
+//
+// POST https://api.jigsawstack.com/v1/web/search
+//
+// https://docs.jigsawstack.com/api-reference/web/search
 func (j *JigsawStack) WebSearchSuggestions(
 	ctx context.Context,
 	query string,

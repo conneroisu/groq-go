@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	summaryEndpoint = "v1/ai/summarize"
+	summaryEndpoint = "/v1/ai/summarize"
 )
 
 type (
@@ -23,7 +23,7 @@ type (
 	}
 )
 
-// Summarize summarizes the text.
+// Summarize summarizes the give text.
 //
 // Max text character is 5000.
 func (j *JigsawStack) Summarize(

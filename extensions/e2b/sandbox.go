@@ -22,6 +22,13 @@ type (
 	ProcessEvents string
 	// SandboxTemplate is a sandbox template.
 	SandboxTemplate string
+	// Client          struct {
+	//         apiKey  string
+	//         baseURL string
+	//         client  *http.Client
+	//         logger  *slog.Logger
+	//         header  builders.Header
+	// }
 	// Sandbox is a code sandbox.
 	//
 	// The sandbox is like an isolated, but interactive system.

@@ -8,15 +8,17 @@ import (
 )
 
 const (
-	textToSqlEndpoint = "v1/ai/sql"
+	textToSQLEndpoint = "/v1/ai/sql"
 )
 
 type (
-	TextToSqlRequest struct {
+	// TextToSQLRequest represents a request structure for text to SQL API.
+	TextToSQLRequest struct {
 		Prompt    string `json:"prompt"`
 		SQLSchema string `json:"sql_schema"`
 	}
-	TextToSqlResponse struct {
+	// TextToSQLResponse represents a response structure for text to SQL API.
+	TextToSQLResponse struct {
 		Success bool   `json:"success"`
 		SQL     string `json:"sql"`
 	}
@@ -27,19 +29,19 @@ type (
 // Max text character is 5000.
 func (j *JigsawStack) TextToSQL(
 	ctx context.Context,
-	request TextToSqlRequest,
-) (response TextToSqlResponse, err error) {
+	request TextToSQLRequest,
+) (response TextToSQLResponse, err error) {
 	req, err := builders.NewRequest(
 		ctx,
 		j.header,
 		http.MethodPost,
-		j.baseURL+textToSqlEndpoint,
+		j.baseURL+textToSQLEndpoint,
 		builders.WithBody(request),
 	)
 	if err != nil {
 		return
 	}
-	var resp TextToSqlResponse
+	var resp TextToSQLResponse
 	err = j.sendRequest(req, &resp)
 	if err != nil {
 		return
