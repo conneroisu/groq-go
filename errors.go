@@ -15,11 +15,16 @@ type (
 	}
 	// APIError provides error information returned by the Groq API.
 	APIError struct {
-		Code           any     `json:"code,omitempty"`  // Code is the code of the error.
-		Message        string  `json:"message"`         // Message is the message of the error.
-		Param          *string `json:"param,omitempty"` // Param is the param of the error.
-		Type           string  `json:"type"`            // Type is the type of the error.
-		HTTPStatusCode int     `json:"-"`               // HTTPStatusCode is the status code of the error.
+		// Code is the code of the error.
+		Code any `json:"code,omitempty"`
+		// Message is the message of the error.
+		Message string `json:"message"`
+		// Param is the param of the error.
+		Param *string `json:"param,omitempty"`
+		// Type is the type of the error.
+		Type string `json:"type"`
+		// HTTPStatusCode is the status code of the error.
+		HTTPStatusCode int `json:"-"`
 	}
 	// ErrContentFieldsMisused is an error that occurs when both Content and
 	// MultiContent properties are set.
@@ -30,26 +35,9 @@ type (
 	ErrToolNotFound struct {
 		ToolName string
 	}
-	// ErrTooManyEmptyStreamMessages is returned when the stream has sent too many
-	// empty messages.
+	// ErrTooManyEmptyStreamMessages is returned when the stream has sent
+	// too many empty messages.
 	ErrTooManyEmptyStreamMessages struct{}
-	errorAccumulator              interface {
-		// Write method writes bytes to the error accumulator
-		//
-		// It implements the io.Writer interface.
-		Write(p []byte) error
-		// Bytes method returns the bytes of the error accumulator.
-		Bytes() []byte
-	}
-	errorBuffer interface {
-		io.Writer
-		Len() int
-		Bytes() []byte
-	}
-	requestError struct {
-		HTTPStatusCode int
-		Err            error
-	}
 	// ErrorResponse is the response returned by the Groq API.
 	ErrorResponse struct {
 		Error *APIError `json:"error,omitempty"`
@@ -65,13 +53,6 @@ func (e ErrContentFieldsMisused) Error() string {
 // Error returns the error message.
 func (e ErrTooManyEmptyStreamMessages) Error() string {
 	return "stream has sent too many empty messages"
-}
-
-// newErrorAccumulator creates a new error accumulator
-func newErrorAccumulator() errorAccumulator {
-	return &DefaultErrorAccumulator{
-		Buffer: &bytes.Buffer{},
-	}
 }
 
 // Write method writes bytes to the error accumulator.
@@ -139,6 +120,33 @@ func (e *APIError) UnmarshalJSON(data []byte) (err error) {
 		return nil
 	}
 	return json.Unmarshal(rawMap["code"], &e.Code)
+}
+
+type (
+	errorAccumulator interface {
+		// Write method writes bytes to the error accumulator
+		//
+		// It implements the io.Writer interface.
+		Write(p []byte) error
+		// Bytes method returns the bytes of the error accumulator.
+		Bytes() []byte
+	}
+	errorBuffer interface {
+		io.Writer
+		Len() int
+		Bytes() []byte
+	}
+	requestError struct {
+		HTTPStatusCode int
+		Err            error
+	}
+)
+
+// newErrorAccumulator creates a new error accumulator
+func newErrorAccumulator() errorAccumulator {
+	return &DefaultErrorAccumulator{
+		Buffer: &bytes.Buffer{},
+	}
 }
 
 // Error implements the error interface.
