@@ -19,12 +19,15 @@ import (
 	"testing"
 
 	"github.com/conneroisu/groq-go"
+	"github.com/conneroisu/groq-go/pkg/groqerr"
+	"github.com/conneroisu/groq-go/pkg/models"
+	"github.com/conneroisu/groq-go/pkg/moderation"
 	"github.com/conneroisu/groq-go/pkg/test"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestTestServer(t *testing.T) {
-	if !test.IsUnitTest() {
+	if !test.IsIntegrationTest() {
 		t.Skip()
 	}
 	num := rand.Intn(100)
@@ -35,7 +38,7 @@ func TestTestServer(t *testing.T) {
 	strm, err := client.CreateChatCompletionStream(
 		ctx,
 		groq.ChatCompletionRequest{
-			Model: groq.ModelLlama38B8192,
+			Model: models.ModelLlama38B8192,
 			Messages: []groq.ChatCompletionMessage{
 				{
 					Role: groq.ChatMessageRoleUser,
@@ -55,7 +58,6 @@ You have a six-sided die that you roll once. Let $R{i}$ denote the event that th
 		},
 	)
 	a.NoError(err, "CreateCompletionStream error")
-
 	i := 0
 	for {
 		i++
@@ -75,21 +77,21 @@ func TestModerate(t *testing.T) {
 		"/v1/chat/completions",
 		handleModerationEndpoint,
 	)
-	mod, err := client.Moderate(context.Background(), groq.ModerationRequest{
-		Model: groq.ModelLlamaGuard38B,
-		Messages: []groq.ChatCompletionMessage{
+	mod, err := client.Moderate(context.Background(),
+		[]groq.ChatCompletionMessage{
 			{
 				Role:    groq.ChatMessageRoleUser,
 				Content: "I want to kill them.",
 			},
 		},
-	})
+		models.ModelLlamaGuard38B,
+	)
 	a := assert.New(t)
 	a.NoError(err, "Moderation error")
 	a.Equal(true, mod.Flagged)
 	a.Contains(
 		mod.Categories,
-		groq.CategoryViolentCrimes,
+		moderation.CategoryViolentCrimes,
 	)
 }
 
@@ -99,7 +101,7 @@ func handleModerationEndpoint(w http.ResponseWriter, r *http.Request) {
 		ID:      "chatcmpl-123",
 		Object:  "chat.completion",
 		Created: 1693721698,
-		Model:   groq.ChatModel(groq.ModelLlamaGuard38B),
+		Model:   models.ChatModel(models.ModelLlamaGuard38B),
 		Choices: []groq.ChatCompletionChoice{
 			{
 				Message: groq.ChatCompletionMessage{
@@ -130,7 +132,6 @@ func handleModerationEndpoint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
-
 func setupGroqTestServer() (
 	client *groq.Client,
 	server *test.ServerTest,
@@ -149,7 +150,6 @@ func setupGroqTestServer() (
 	}
 	return
 }
-
 func TestEmptyKeyClientCreation(t *testing.T) {
 	client, err := groq.NewClient("")
 	a := assert.New(t)
@@ -166,30 +166,25 @@ func TestCreateChatCompletionStream(t *testing.T) {
 		"/v1/chat/completions",
 		func(w http.ResponseWriter, _ *http.Request) {
 			w.Header().Set("Content-Type", "text/event-stream")
-
 			// Send test responses
 			dataBytes := []byte{}
 			dataBytes = append(dataBytes, []byte("event: message\n")...)
 			data := `{"id":"1","object":"completion","created":1598069254,"model":"llama3-groq-70b-8192-tool-use-preview","system_fingerprint": "fp_d9767fc5b9","choices":[{"index":0,"delta":{"content":"response1"},"finish_reason":"max_tokens"}]}`
 			dataBytes = append(dataBytes, []byte("data: "+data+"\n\n")...)
-
 			dataBytes = append(dataBytes, []byte("event: message\n")...)
 			data = `{"id":"2","object":"completion","created":1598069255,"model":"llama3-groq-70b-8192-tool-use-preview","system_fingerprint": "fp_d9767fc5b9","choices":[{"index":0,"delta":{"content":"response2"},"finish_reason":"max_tokens"}]}`
 			dataBytes = append(dataBytes, []byte("data: "+data+"\n\n")...)
-
 			dataBytes = append(dataBytes, []byte("event: done\n")...)
 			dataBytes = append(dataBytes, []byte("data: [DONE]\n\n")...)
-
 			_, err := w.Write(dataBytes)
 			a.NoError(err, "Write error")
 		},
 	)
-
 	stream, err := client.CreateChatCompletionStream(
 		context.Background(),
 		groq.ChatCompletionRequest{
 			MaxTokens: 5,
-			Model:     groq.ModelLlama38B8192,
+			Model:     models.ModelLlama38B8192,
 			Messages: []groq.ChatCompletionMessage{
 				{
 					Role:    groq.ChatMessageRoleUser,
@@ -201,13 +196,12 @@ func TestCreateChatCompletionStream(t *testing.T) {
 	)
 	a.NoError(err, "CreateCompletionStream returned error")
 	defer stream.Close()
-
 	expectedResponses := []groq.ChatCompletionStreamResponse{
 		{
 			ID:                "1",
 			Object:            "completion",
 			Created:           1598069254,
-			Model:             groq.ModelLlama38B8192,
+			Model:             models.ModelLlama38B8192,
 			SystemFingerprint: "fp_d9767fc5b9",
 			Choices: []groq.ChatCompletionStreamChoice{
 				{
@@ -222,7 +216,7 @@ func TestCreateChatCompletionStream(t *testing.T) {
 			ID:                "2",
 			Object:            "completion",
 			Created:           1598069255,
-			Model:             groq.ModelLlama38B8192,
+			Model:             models.ModelLlama38B8192,
 			SystemFingerprint: "fp_d9767fc5b9",
 			Choices: []groq.ChatCompletionStreamChoice{
 				{
@@ -234,14 +228,12 @@ func TestCreateChatCompletionStream(t *testing.T) {
 			},
 		},
 	}
-
 	for ix, expectedResponse := range expectedResponses {
 		b, _ := json.Marshal(expectedResponse)
 		t.Logf("%d: %s", ix, string(b))
-
 		receivedResponse, streamErr := stream.Recv()
 		a.NoError(streamErr, "stream.Recv() failed")
-		if !compareChatResponses(t, expectedResponse, receivedResponse) {
+		if !compareChatResponses(t, expectedResponse, *receivedResponse) {
 			t.Errorf(
 				"Stream response %v is %v, expected %v",
 				ix,
@@ -250,19 +242,15 @@ func TestCreateChatCompletionStream(t *testing.T) {
 			)
 		}
 	}
-
 	_, streamErr := stream.Recv()
 	if !errors.Is(streamErr, io.EOF) {
 		t.Errorf("stream.Recv() did not return EOF in the end: %v", streamErr)
 	}
-
 	_, streamErr = stream.Recv()
 	if !errors.Is(streamErr, io.EOF) {
 		t.Errorf("stream.Recv() did not return EOF in the end: %v", streamErr)
 	}
-
 	_, streamErr = stream.Recv()
-
 	a.ErrorIs(
 		streamErr,
 		io.EOF,
@@ -286,7 +274,6 @@ func TestCreateChatCompletionStreamError(t *testing.T) {
 		"/v1/chat/completions",
 		func(w http.ResponseWriter, _ *http.Request) {
 			w.Header().Set("Content-Type", "text/event-stream")
-
 			// Send test responses
 			dataBytes := []byte{}
 			dataStr := []string{
@@ -302,17 +289,15 @@ func TestCreateChatCompletionStreamError(t *testing.T) {
 			for _, str := range dataStr {
 				dataBytes = append(dataBytes, []byte(str+"\n")...)
 			}
-
 			_, err := w.Write(dataBytes)
 			a.NoError(err, "Write error")
 		},
 	)
-
 	stream, err := client.CreateChatCompletionStream(
 		context.Background(),
 		groq.ChatCompletionRequest{
 			MaxTokens: 5,
-			Model:     groq.ModelLlama38B8192,
+			Model:     models.ModelLlama38B8192,
 			Messages: []groq.ChatCompletionMessage{
 				{
 					Role:    groq.ChatMessageRoleUser,
@@ -324,17 +309,14 @@ func TestCreateChatCompletionStreamError(t *testing.T) {
 	)
 	a.NoError(err, "CreateCompletionStream returned error")
 	defer stream.Close()
-
 	_, streamErr := stream.Recv()
 	a.Error(streamErr, "stream.Recv() did not return error")
-
-	var apiErr *groq.APIError
+	var apiErr *groqerr.APIError
 	if !errors.As(streamErr, &apiErr) {
 		t.Errorf("stream.Recv() did not return APIError")
 	}
 	t.Logf("%+v\n", apiErr)
 }
-
 func TestCreateChatCompletionStreamWithHeaders(t *testing.T) {
 	a := assert.New(t)
 	client, server, teardown := setupGroqTestServer()
@@ -346,23 +328,20 @@ func TestCreateChatCompletionStreamWithHeaders(t *testing.T) {
 		func(w http.ResponseWriter, _ *http.Request) {
 			w.Header().Set("Content-Type", "text/event-stream")
 			w.Header().Set(xCustomHeader, xCustomHeaderValue)
-
 			// Send test responses
 			dataBytes := []byte(
 				`data: {"error":{"message":"The server had an error while processing your request. Sorry about that!", "type":"server_ error", "param":null,"code":null}}`,
 			)
 			dataBytes = append(dataBytes, []byte("\n\ndata: [DONE]\n\n")...)
-
 			_, err := w.Write(dataBytes)
 			a.NoError(err, "Write error")
 		},
 	)
-
 	stream, err := client.CreateChatCompletionStream(
 		context.Background(),
 		groq.ChatCompletionRequest{
 			MaxTokens: 5,
-			Model:     groq.ModelLlama38B8192,
+			Model:     models.ModelLlama38B8192,
 			Messages: []groq.ChatCompletionMessage{
 				{
 					Role:    groq.ChatMessageRoleUser,
@@ -374,13 +353,11 @@ func TestCreateChatCompletionStreamWithHeaders(t *testing.T) {
 	)
 	a.NoError(err, "CreateCompletionStream returned error")
 	defer stream.Close()
-
 	value := stream.Header.Get(xCustomHeader)
 	if value != xCustomHeaderValue {
 		t.Errorf("expected %s to be %s", xCustomHeaderValue, value)
 	}
 }
-
 func TestCreateChatCompletionStreamWithRatelimitHeaders(t *testing.T) {
 	client, server, teardown := setupGroqTestServer()
 	a := assert.New(t)
@@ -405,23 +382,20 @@ func TestCreateChatCompletionStreamWithRatelimitHeaders(t *testing.T) {
 					w.Header().Set(k, fmt.Sprintf("%s", v))
 				}
 			}
-
 			// Send test responses
 			dataBytes := []byte(
 				`data: {"error":{"message":"The server had an error while processing your request. Sorry about that!", "type":"server_ error", "param":null,"code":null}}`,
 			)
 			dataBytes = append(dataBytes, []byte("\n\ndata: [DONE]\n\n")...)
-
 			_, err := w.Write(dataBytes)
 			a.NoError(err, "Write error")
 		},
 	)
-
 	stream, err := client.CreateChatCompletionStream(
 		context.Background(),
 		groq.ChatCompletionRequest{
 			MaxTokens: 5,
-			Model:     groq.ModelLlama38B8192,
+			Model:     models.ModelLlama38B8192,
 			Messages: []groq.ChatCompletionMessage{
 				{
 					Role:    groq.ChatMessageRoleUser,
@@ -433,7 +407,6 @@ func TestCreateChatCompletionStreamWithRatelimitHeaders(t *testing.T) {
 	)
 	a.NoError(err, "CreateCompletionStream returned error")
 	defer stream.Close()
-
 	headers := newRateLimitHeaders(stream.Header)
 	bs1, _ := json.Marshal(headers)
 	bs2, _ := json.Marshal(rateLimitHeaders)
@@ -457,7 +430,6 @@ func newRateLimitHeaders(h http.Header) groq.RateLimitHeaders {
 		ResetTokens:       groq.ResetTime(h.Get("x-ratelimit-reset-tokens")),
 	}
 }
-
 func TestCreateChatCompletionStreamErrorWithDataPrefix(t *testing.T) {
 	a := assert.New(t)
 	client, server, teardown := setupGroqTestServer()
@@ -466,23 +438,20 @@ func TestCreateChatCompletionStreamErrorWithDataPrefix(t *testing.T) {
 		"/v1/chat/completions",
 		func(w http.ResponseWriter, _ *http.Request) {
 			w.Header().Set("Content-Type", "text/event-stream")
-
 			// Send test responses
 			dataBytes := []byte(
 				`data: {"error":{"message":"The server had an error while processing your request. Sorry about that!", "type":"server_ error", "param":null,"code":null}}`,
 			)
 			dataBytes = append(dataBytes, []byte("\n\ndata: [DONE]\n\n")...)
-
 			_, err := w.Write(dataBytes)
 			a.NoError(err, "Write error")
 		},
 	)
-
 	stream, err := client.CreateChatCompletionStream(
 		context.Background(),
 		groq.ChatCompletionRequest{
 			MaxTokens: 5,
-			Model:     groq.ModelLlama38B8192,
+			Model:     models.ModelLlama38B8192,
 			Messages: []groq.ChatCompletionMessage{
 				{
 					Role:    groq.ChatMessageRoleUser,
@@ -494,17 +463,14 @@ func TestCreateChatCompletionStreamErrorWithDataPrefix(t *testing.T) {
 	)
 	a.NoError(err, "CreateCompletionStream returned error")
 	defer stream.Close()
-
 	_, streamErr := stream.Recv()
 	a.Error(streamErr, "stream.Recv() did not return error")
-
-	var apiErr *groq.APIError
+	var apiErr *groqerr.APIError
 	if !errors.As(streamErr, &apiErr) {
 		t.Errorf("stream.Recv() did not return APIError")
 	}
 	t.Logf("%+v\n", apiErr)
 }
-
 func TestCreateChatCompletionStreamRateLimitError(t *testing.T) {
 	a := assert.New(t)
 	client, server, teardown := setupGroqTestServer()
@@ -514,14 +480,12 @@ func TestCreateChatCompletionStreamRateLimitError(t *testing.T) {
 		func(w http.ResponseWriter, _ *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(429)
-
 			// Send test responses
 			dataBytes := []byte(`{"error":{` +
 				`"message": "You are sending requests too quickly.",` +
 				`"type":"rate_limit_reached",` +
 				`"param":null,` +
 				`"code":"rate_limit_reached"}}`)
-
 			_, err := w.Write(dataBytes)
 			a.NoError(err, "Write error")
 		},
@@ -530,7 +494,7 @@ func TestCreateChatCompletionStreamRateLimitError(t *testing.T) {
 		context.Background(),
 		groq.ChatCompletionRequest{
 			MaxTokens: 5,
-			Model:     groq.ModelLlama38B8192,
+			Model:     models.ModelLlama38B8192,
 			Messages: []groq.ChatCompletionMessage{
 				{
 					Role:    groq.ChatMessageRoleUser,
@@ -540,7 +504,7 @@ func TestCreateChatCompletionStreamRateLimitError(t *testing.T) {
 			Stream: true,
 		},
 	)
-	var apiErr *groq.APIError
+	var apiErr *groqerr.APIError
 	if !errors.As(err, &apiErr) {
 		t.Errorf(
 			"TestCreateChatCompletionStreamRateLimitError did not return APIError",
@@ -548,40 +512,32 @@ func TestCreateChatCompletionStreamRateLimitError(t *testing.T) {
 	}
 	t.Logf("%+v\n", apiErr)
 }
-
 func TestCreateChatCompletionStreamStreamOptions(t *testing.T) {
 	a := assert.New(t)
 	client, server, teardown := setupGroqTestServer()
 	defer teardown()
-
 	server.RegisterHandler(
 		"/v1/chat/completions",
 		func(w http.ResponseWriter, _ *http.Request) {
 			w.Header().Set("Content-Type", "text/event-stream")
-
 			// Send test responses
 			var dataBytes []byte
 			data := `{"id":"1","object":"completion","created":1598069254,"model":"llama3-groq-70b-8192-tool-use-preview","system_fingerprint": "fp_d9767fc5b9","choices":[{"index":0,"delta":{"content":"response1"},"finish_reason":"max_tokens"}],"usage":null}`
 			dataBytes = append(dataBytes, []byte("data: "+data+"\n\n")...)
-
 			data = `{"id":"2","object":"completion","created":1598069255,"model":"llama3-groq-70b-8192-tool-use-preview","system_fingerprint": "fp_d9767fc5b9","choices":[{"index":0,"delta":{"content":"response2"},"finish_reason":"max_tokens"}],"usage":null}`
 			dataBytes = append(dataBytes, []byte("data: "+data+"\n\n")...)
-
 			data = `{"id":"3","object":"completion","created":1598069256,"model":"llama3-groq-70b-8192-tool-use-preview","system_fingerprint": "fp_d9767fc5b9","choices":[],"usage":{"prompt_tokens":1,"completion_tokens":1,"total_tokens":2}}`
 			dataBytes = append(dataBytes, []byte("data: "+data+"\n\n")...)
-
 			dataBytes = append(dataBytes, []byte("data: [DONE]\n\n")...)
-
 			_, err := w.Write(dataBytes)
 			a.NoError(err, "Write error")
 		},
 	)
-
 	stream, err := client.CreateChatCompletionStream(
 		context.Background(),
 		groq.ChatCompletionRequest{
 			MaxTokens: 5,
-			Model:     groq.ModelLlama38B8192,
+			Model:     models.ModelLlama38B8192,
 			Messages: []groq.ChatCompletionMessage{
 				{
 					Role:    groq.ChatMessageRoleUser,
@@ -601,7 +557,7 @@ func TestCreateChatCompletionStreamStreamOptions(t *testing.T) {
 			ID:                "1",
 			Object:            "completion",
 			Created:           1598069254,
-			Model:             groq.ModelLlama38B8192,
+			Model:             models.ModelLlama38B8192,
 			SystemFingerprint: "fp_d9767fc5b9",
 			Choices: []groq.ChatCompletionStreamChoice{
 				{
@@ -616,7 +572,7 @@ func TestCreateChatCompletionStreamStreamOptions(t *testing.T) {
 			ID:                "2",
 			Object:            "completion",
 			Created:           1598069255,
-			Model:             groq.ModelLlama38B8192,
+			Model:             models.ModelLlama38B8192,
 			SystemFingerprint: "fp_d9767fc5b9",
 			Choices: []groq.ChatCompletionStreamChoice{
 				{
@@ -631,7 +587,7 @@ func TestCreateChatCompletionStreamStreamOptions(t *testing.T) {
 			ID:                "3",
 			Object:            "completion",
 			Created:           1598069256,
-			Model:             groq.ModelLlama38B8192,
+			Model:             models.ModelLlama38B8192,
 			SystemFingerprint: "fp_d9767fc5b9",
 			Choices:           []groq.ChatCompletionStreamChoice{},
 			Usage: &groq.Usage{
@@ -641,17 +597,15 @@ func TestCreateChatCompletionStreamStreamOptions(t *testing.T) {
 			},
 		},
 	}
-
 	for ix, expectedResponse := range expectedResponses {
 		ix++
 		b, _ := json.Marshal(expectedResponse)
 		t.Logf("%d: %s", ix, string(b))
-
 		receivedResponse, streamErr := stream.Recv()
 		if !errors.Is(streamErr, io.EOF) {
 			a.NoError(streamErr, "stream.Recv() failed")
 		}
-		if !compareChatResponses(t, expectedResponse, receivedResponse) {
+		if !compareChatResponses(t, expectedResponse, *receivedResponse) {
 			t.Errorf(
 				"Stream response %v: %v,BUT expected %v",
 				ix,
@@ -660,14 +614,11 @@ func TestCreateChatCompletionStreamStreamOptions(t *testing.T) {
 			)
 		}
 	}
-
 	_, streamErr := stream.Recv()
 	if !errors.Is(streamErr, io.EOF) {
 		t.Errorf("stream.Recv() did not return EOF in the end: %v", streamErr)
 	}
-
 	_, streamErr = stream.Recv()
-
 	a.ErrorIs(
 		streamErr,
 		io.EOF,
@@ -720,7 +671,6 @@ func compareChatResponses(
 	}
 	return true
 }
-
 func compareChatStreamResponseChoices(
 	c1, c2 groq.ChatCompletionStreamChoice,
 ) bool {
@@ -742,7 +692,6 @@ func TestAudio(t *testing.T) {
 	defer teardown()
 	server.RegisterHandler("/v1/audio/transcriptions", handleAudioEndpoint)
 	server.RegisterHandler("/v1/audio/translations", handleAudioEndpoint)
-
 	testcases := []struct {
 		name     string
 		createFn func(context.Context, groq.AudioRequest) (groq.AudioResponse, error)
@@ -756,44 +705,37 @@ func TestAudio(t *testing.T) {
 			client.CreateTranslation,
 		},
 	}
-
 	ctx := context.Background()
-
 	dir, cleanup := test.CreateTestDirectory(t)
 	defer cleanup()
-
 	a := assert.New(t)
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
 			path := filepath.Join(dir, "fake.mp3")
 			test.CreateTestFile(t, path)
-
 			req := groq.AudioRequest{
 				FilePath: path,
-				Model:    groq.ModelWhisperLargeV3,
+				Model:    models.ModelWhisperLargeV3,
 			}
 			_, err := tc.createFn(ctx, req)
 			a.NoError(err, "audio API error")
 		})
-
 		t.Run(tc.name+" (with reader)", func(t *testing.T) {
 			req := groq.AudioRequest{
 				FilePath: "fake.webm",
 				Reader:   bytes.NewBuffer([]byte(`some webm binary data`)),
-				Model:    groq.ModelWhisperLargeV3,
+				Model:    models.ModelWhisperLargeV3,
 			}
 			_, err := tc.createFn(ctx, req)
 			a.NoError(err, "audio API error")
 		})
 	}
 }
-
 func TestAudioWithOptionalArgs(t *testing.T) {
 	client, server, teardown := setupGroqTestServer()
 	defer teardown()
 	server.RegisterHandler("/v1/audio/transcriptions", handleAudioEndpoint)
 	server.RegisterHandler("/v1/audio/translations", handleAudioEndpoint)
-
 	testcases := []struct {
 		name     string
 		createFn func(context.Context, groq.AudioRequest) (groq.AudioResponse, error)
@@ -807,25 +749,21 @@ func TestAudioWithOptionalArgs(t *testing.T) {
 			client.CreateTranslation,
 		},
 	}
-
 	ctx := context.Background()
-
 	dir, cleanup := test.CreateTestDirectory(t)
 	defer cleanup()
-
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
 			a := assert.New(t)
 			path := filepath.Join(dir, "fake.mp3")
 			test.CreateTestFile(t, path)
-
 			req := groq.AudioRequest{
 				FilePath:    path,
-				Model:       groq.ModelWhisperLargeV3,
+				Model:       models.ModelWhisperLargeV3,
 				Prompt:      "用简体中文",
 				Temperature: 0.5,
 				Language:    "zh",
-				Format:      groq.AudioResponseFormatSRT,
+				Format:      groq.FormatSRT,
 			}
 			_, err := tc.createFn(ctx, req)
 			a.NoError(err, "audio API error")
@@ -836,28 +774,23 @@ func TestAudioWithOptionalArgs(t *testing.T) {
 // handleAudioEndpoint Handles the completion endpoint by the test server.
 func handleAudioEndpoint(w http.ResponseWriter, r *http.Request) {
 	var err error
-
 	// audio endpoints only accept POST requests
 	if r.Method != "POST" {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 	}
-
 	mediaType, params, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
 	if err != nil {
 		http.Error(w, "failed to parse media type", http.StatusBadRequest)
 		return
 	}
-
 	if !strings.HasPrefix(mediaType, "multipart") {
 		http.Error(w, "request is not multipart", http.StatusBadRequest)
 	}
-
 	boundary, ok := params["boundary"]
 	if !ok {
 		http.Error(w, "no boundary in params", http.StatusBadRequest)
 		return
 	}
-
 	fileData := &bytes.Buffer{}
 	mr := multipart.NewReader(r.Body, boundary)
 	part, err := mr.NextPart()
@@ -869,13 +802,11 @@ func handleAudioEndpoint(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "failed to copy file", http.StatusInternalServerError)
 		return
 	}
-
 	if len(fileData.Bytes()) == 0 {
 		w.WriteHeader(http.StatusInternalServerError)
 		http.Error(w, "received empty file data", http.StatusBadRequest)
 		return
 	}
-
 	if _, err = w.Write([]byte(`{"body": "hello"}`)); err != nil {
 		http.Error(w, "failed to write body", http.StatusInternalServerError)
 		return

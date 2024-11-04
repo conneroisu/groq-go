@@ -1,3 +1,5 @@
+// Package main is an example of using the groq-go library to create a
+// transcription/translation using the whisper-large-v3 model.
 package main
 
 import (
@@ -6,6 +8,7 @@ import (
 	"os"
 
 	"github.com/conneroisu/groq-go"
+	"github.com/conneroisu/groq-go/pkg/models"
 )
 
 func main() {
@@ -23,7 +26,7 @@ func run(
 		return err
 	}
 	response, err := client.CreateTranslation(ctx, groq.AudioRequest{
-		Model:    groq.ModelWhisperLargeV3,
+		Model:    models.ModelWhisperLargeV3,
 		FilePath: "./house-speaks-mandarin.mp3",
 		Prompt:   "english and mandarin",
 	})

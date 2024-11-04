@@ -131,12 +131,11 @@ var (
 			if err != nil {
 				return groq.ChatCompletionMessage{}, err
 			}
-			e := make(chan Event, 10)
-			err = proc.SubscribeStdout(e)
+			e, errCh := proc.SubscribeStdout()
 			if err != nil {
 				return groq.ChatCompletionMessage{}, err
 			}
-			err = proc.SubscribeStderr(e)
+			e2, errCh := proc.SubscribeStderr()
 			if err != nil {
 				return groq.ChatCompletionMessage{}, err
 			}
@@ -152,8 +151,14 @@ var (
 						return
 					case event := <-e:
 						buf.Write([]byte(event.Params.Result.Line))
+						continue
+					case event := <-e2:
+						buf.Write([]byte(event.Params.Result.Line))
+						continue
+					case <-errCh:
+						return
 					case <-proc.Done():
-						break
+						return
 					}
 				}
 			}()
@@ -267,8 +272,8 @@ func (s *Sandbox) RunTooling(
 	ctx context.Context,
 	response groq.ChatCompletionResponse,
 ) ([]groq.ChatCompletionMessage, error) {
-	if response.Choices[0].FinishReason != groq.FinishReasonFunctionCall && response.Choices[0].FinishReason != "tool_calls" {
-		return nil, fmt.Errorf("not a function call")
+	if response.Choices[0].FinishReason != groq.ReasonFunctionCall && response.Choices[0].FinishReason != "tool_calls" {
+		return nil, fmt.Errorf("not a function call: %v", response.Choices[0].FinishReason)
 	}
 	respH := []groq.ChatCompletionMessage{}
 	for _, tool := range response.Choices[0].Message.ToolCalls {

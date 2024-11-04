@@ -51,7 +51,7 @@ func TestAuth(t *testing.T) {
 
 // TestUnitGetConnectedAccounts is an Unit test using a real composio server and api key.
 func TestUnitGetConnectedAccounts(t *testing.T) {
-	if !test.IsUnitTest() {
+	if !test.IsIntegrationTest() {
 		t.Skip()
 	}
 	a := assert.New(t)

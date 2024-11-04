@@ -9,6 +9,7 @@ import (
 
 	"github.com/conneroisu/groq-go"
 	"github.com/conneroisu/groq-go/extensions/composio"
+	"github.com/conneroisu/groq-go/pkg/models"
 	"github.com/conneroisu/groq-go/pkg/test"
 	"github.com/conneroisu/groq-go/pkg/tools"
 	"github.com/stretchr/testify/assert"
@@ -53,7 +54,9 @@ func TestRun(t *testing.T) {
 		composio.WithBaseURL(testS.URL),
 	)
 	a.NoError(err)
-	resp, err := client.Run(ctx, groq.ChatCompletionResponse{
+	ca, err := client.GetConnectedAccounts(ctx, composio.WithShowActiveOnly(true))
+	a.NoError(err)
+	resp, err := client.Run(ctx, ca[0], groq.ChatCompletionResponse{
 		Choices: []groq.ChatCompletionChoice{{
 			Message: groq.ChatCompletionMessage{
 				Role:    groq.ChatMessageRoleUser,
@@ -63,14 +66,14 @@ func TestRun(t *testing.T) {
 						Name:      "TOOL",
 						Arguments: `{ "foo": "bar", }`,
 					}}}},
-			FinishReason: groq.FinishReasonFunctionCall,
+			FinishReason: groq.ReasonFunctionCall,
 		}}})
 	a.NoError(err)
 	assert.Equal(t, "response1", resp[0].Content)
 }
 
 func TestUnitRun(t *testing.T) {
-	if !test.IsUnitTest() {
+	if !test.IsIntegrationTest() {
 		t.Skip()
 	}
 	a := assert.New(t)
@@ -91,7 +94,7 @@ func TestUnitRun(t *testing.T) {
 	)
 	a.NoError(err, "NewClient error")
 	response, err := groqClient.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
-		Model: groq.ModelLlama3Groq8B8192ToolUsePreview,
+		Model: models.ModelLlama3Groq8B8192ToolUsePreview,
 		Messages: []groq.ChatCompletionMessage{
 			{
 				Role:    groq.ChatMessageRoleUser,
@@ -103,7 +106,9 @@ func TestUnitRun(t *testing.T) {
 	})
 	a.NoError(err)
 	a.NotEmpty(response.Choices[0].Message.ToolCalls)
-	resp2, err := client.Run(ctx, response)
+	users, err := client.GetConnectedAccounts(ctx)
+	a.NoError(err)
+	resp2, err := client.Run(ctx, users[0], response)
 	a.NoError(err)
 	a.NotEmpty(resp2)
 	t.Logf("%+v\n", resp2)

@@ -14,16 +14,20 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"regexp"
 	"sort"
+	"strings"
 	"text/template"
 	"time"
+	"unicode"
 
-	"github.com/samber/lo"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 const (
-	modelFileName     = "models.go"
-	modelTestFileName = "models_test.go"
+	modelFileName     = "./pkg/models/models.go"
+	modelTestFileName = "./pkg/models/models_test.go"
 )
 
 var (
@@ -50,86 +54,11 @@ func main() {
 	}
 }
 
-// Response is a response from the models endpoint.
-type Response struct {
-	Object string          `json:"object"`
-	Data   []ResponseModel `json:"data"`
-}
-
-// ResponseModel is a response from the models endpoint.
-type ResponseModel struct {
-	ID            string `json:"id"`
-	Name          string `json:"name,omitempty"`
-	Object        string `json:"object"`
-	Created       int    `json:"created"`
-	OwnedBy       string `json:"owned_by"`
-	Active        bool   `json:"active"`
-	ContextWindow int    `json:"context_window"`
-	PublicApps    any    `json:"public_apps"`
-}
-
-// CategorizedModels is a struct that contains all the models.
-type CategorizedModels struct {
-	ChatModels          []ResponseModel `json:"text"`
-	TranscriptionModels []ResponseModel `json:"transcription"`
-	TranslationModels   []ResponseModel `json:"translation"`
-	ModerationModels    []ResponseModel `json:"moderation"`
-	MultiModalModels    []ResponseModel `json:"multi_modal"`
-}
-
-// Categorize returns a Categorize struct with all the models.
-func (r *Response) Categorize() (CategorizedModels, error) {
-	var models CategorizedModels
-
-	nameModels(r.Data)
-	for _, model := range r.Data {
-		if isTextModel(model) {
-			models.ChatModels = append(models.ChatModels, model)
-		}
-		if isTranscriptionModel(model) {
-			models.TranscriptionModels = append(models.TranscriptionModels, model)
-		}
-		if isTranslationModel(model) {
-			models.TranslationModels = append(models.TranslationModels, model)
-		}
-		if isModerationModel(model) {
-			models.ModerationModels = append(models.ModerationModels, model)
-		}
-		if isMultiModalModel(model) {
-			models.MultiModalModels = append(models.MultiModalModels, model)
-		}
-	}
-	return models, nil
-}
-
-func isMultiModalModel(model ResponseModel) bool {
-	return false
-}
-
-func isTextModel(model ResponseModel) bool {
-	if model.ID != "llama-guard-3-8b" {
-		return model.ContextWindow > 1024
-	}
-	return false
-}
-
-func isModerationModel(model ResponseModel) bool {
-	// if the id of the model is llama-guard-3-8b
-	return model.ID == "llama-guard-3-8b"
-}
-
-func isTranslationModel(model ResponseModel) bool {
-	return model.ID == "whisper-large-v3"
-}
-
-func isTranscriptionModel(model ResponseModel) bool {
-	return model.ID == "whisper-large-v3"
-}
-
 // run runs the main function.
-func run(_ context.Context) error {
+func run(ctx context.Context) error {
 	client := &http.Client{}
-	req, err := http.NewRequest(
+	req, err := http.NewRequestWithContext(
+		ctx,
 		"GET",
 		"https://api.groq.com/openai/v1/models",
 		nil,
@@ -200,6 +129,82 @@ func run(_ context.Context) error {
 	return nil
 }
 
+// Response is a response from the models endpoint.
+type Response struct {
+	Object string          `json:"object"`
+	Data   []ResponseModel `json:"data"`
+}
+
+// ResponseModel is a response from the models endpoint.
+type ResponseModel struct {
+	ID            string `json:"id"`
+	Name          string `json:"name,omitempty"`
+	Object        string `json:"object"`
+	Created       int    `json:"created"`
+	OwnedBy       string `json:"owned_by"`
+	Active        bool   `json:"active"`
+	ContextWindow int    `json:"context_window"`
+	PublicApps    any    `json:"public_apps"`
+}
+
+// CategorizedModels is a struct that contains all the models.
+type CategorizedModels struct {
+	ChatModels          []ResponseModel `json:"text"`
+	TranscriptionModels []ResponseModel `json:"transcription"`
+	TranslationModels   []ResponseModel `json:"translation"`
+	ModerationModels    []ResponseModel `json:"moderation"`
+	MultiModalModels    []ResponseModel `json:"multi_modal"`
+}
+
+// Categorize returns a Categorize struct with all the models.
+func (r *Response) Categorize() (CategorizedModels, error) {
+	var models CategorizedModels
+
+	nameModels(r.Data)
+	for _, model := range r.Data {
+		if isTextModel(model) {
+			models.ChatModels = append(models.ChatModels, model)
+		}
+		if isTranscriptionModel(model) {
+			models.TranscriptionModels = append(models.TranscriptionModels, model)
+		}
+		if isTranslationModel(model) {
+			models.TranslationModels = append(models.TranslationModels, model)
+		}
+		if isModerationModel(model) {
+			models.ModerationModels = append(models.ModerationModels, model)
+		}
+		if isMultiModalModel(model) {
+			models.MultiModalModels = append(models.MultiModalModels, model)
+		}
+	}
+	return models, nil
+}
+
+func isMultiModalModel(_ ResponseModel) bool {
+	return false
+}
+
+func isTextModel(model ResponseModel) bool {
+	if model.ID != "llama-guard-3-8b" {
+		return model.ContextWindow > 1024
+	}
+	return false
+}
+
+func isModerationModel(model ResponseModel) bool {
+	// if the id of the model is llama-guard-3-8b
+	return model.ID == "llama-guard-3-8b"
+}
+
+func isTranslationModel(model ResponseModel) bool {
+	return model.ID == "whisper-large-v3"
+}
+
+func isTranscriptionModel(model ResponseModel) bool {
+	return strings.Contains(model.ID, "whisper")
+}
+
 func cleanFile(r io.Reader) ([]byte, error) {
 	b, err := io.ReadAll(r)
 	if err != nil {
@@ -216,6 +221,70 @@ func cleanFile(r io.Reader) ([]byte, error) {
 	return formatted, nil
 }
 
+var (
+	// LowerCaseLettersCharset is a set of lower case letters.
+	LowerCaseLettersCharset = []rune("abcdefghijklmnopqrstuvwxyz")
+	// UpperCaseLettersCharset is a set of upper case letters.
+	UpperCaseLettersCharset = []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+	// LettersCharset is a set of letters.
+	LettersCharset = append(LowerCaseLettersCharset, UpperCaseLettersCharset...)
+	// NumbersCharset is a set of numbers.
+	NumbersCharset = []rune("0123456789")
+	// AlphanumericCharset is a set of alphanumeric characters.
+	AlphanumericCharset = append(LettersCharset, NumbersCharset...)
+	// SpecialCharset is a set of special characters.
+	SpecialCharset = []rune("!@#$%^&*()_+-=[]{}|;':\",./<>?")
+	// AllCharset is a set of all characters.
+	AllCharset = append(AlphanumericCharset, SpecialCharset...)
+
+	// bearer:disable go_lang_permissive_regex_validation
+	splitWordReg = regexp.MustCompile(`([a-z])([A-Z0-9])|([a-zA-Z])([0-9])|([0-9])([a-zA-Z])|([A-Z])([A-Z])([a-z])`)
+	// bearer:disable go_lang_permissive_regex_validation
+	splitNumberLetterReg = regexp.MustCompile(`([0-9])([a-zA-Z])`)
+)
+
+// Words splits string into an array of its words.
+func Words(str string) []string {
+	str = splitWordReg.ReplaceAllString(str, `$1$3$5$7 $2$4$6$8$9`)
+	// example: Int8Value => Int 8Value => Int 8 Value
+	str = splitNumberLetterReg.ReplaceAllString(str, "$1 $2")
+	var result strings.Builder
+	for _, r := range str {
+		if unicode.IsLetter(r) || unicode.IsDigit(r) {
+			result.WriteRune(r)
+		} else {
+			result.WriteRune(' ')
+		}
+	}
+	return strings.Fields(result.String())
+}
+
+// Capitalize converts the first character of string to upper case and the remaining to lower case.
+func Capitalize(str string) string {
+	return cases.Title(language.English).String(str)
+}
+
+// PascalCase converts string to pascal case.
+func PascalCase(str string) string {
+	items := Words(str)
+	for i := range items {
+		items[i] = Capitalize(items[i])
+	}
+	return strings.Join(items, "")
+}
+
+func nameModels(models []ResponseModel) {
+	for i := range models {
+		if (models)[i].Name == "" {
+			models[i].Name = PascalCase(models[i].ID)
+		}
+	}
+	// sort models by name alphabetically
+	sort.Slice(models, func(i, j int) bool {
+		return models[i].Name < models[j].Name
+	})
+}
+
 func fillModelsTemplate(w io.Writer, models CategorizedModels) (err error) {
 	modelTemplate, err = modelTemplate.Parse(modelFileTemplate)
 	if err != nil {
@@ -227,19 +296,6 @@ func fillModelsTemplate(w io.Writer, models CategorizedModels) (err error) {
 	}
 	return nil
 }
-
-func nameModels(models []ResponseModel) {
-	for i := range models {
-		if (models)[i].Name == "" {
-			models[i].Name = lo.PascalCase(models[i].ID)
-		}
-	}
-	// sort models by name alphabetically
-	sort.Slice(models, func(i, j int) bool {
-		return models[i].Name < models[j].Name
-	})
-}
-
 func fillTestTemplate(w io.Writer, models CategorizedModels) (err error) {
 	testTemplate, err = testTemplate.Parse(testFileTemplate)
 	if err != nil {

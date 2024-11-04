@@ -102,14 +102,7 @@ type (
 		Message string `json:"message"`        // Message is the message of the error.
 	}
 	// Method is a JSON-RPC method.
-	Method  string
-	decResp struct {
-		Method string `json:"method"`
-		ID     int    `json:"id"`
-		Params struct {
-			Subscription string `json:"subscription"`
-		}
-	}
+	Method string
 )
 
 const (
@@ -485,21 +478,18 @@ func (p *Process) Done() <-chan struct{} {
 }
 
 // SubscribeStdout subscribes to the process's stdout.
-func (p *Process) SubscribeStdout(events chan Event) (err error) {
-	err = p.subscribe(p.ctx, OnStdout, events)
-	return
+func (p *Process) SubscribeStdout() (chan Event, chan error) {
+	return p.subscribe(p.ctx, OnStdout)
 }
 
 // SubscribeStderr subscribes to the process's stderr.
-func (p *Process) SubscribeStderr(events chan Event) (err error) {
-	err = p.subscribe(p.ctx, OnStderr, events)
-	return
+func (p *Process) SubscribeStderr() (chan Event, chan error) {
+	return p.subscribe(p.ctx, OnStderr)
 }
 
 // SubscribeExit subscribes to the process's exit.
-func (p *Process) SubscribeExit(events chan Event) (err error) {
-	err = p.subscribe(p.ctx, OnExit, events)
-	return
+func (p *Process) SubscribeExit() (chan Event, chan error) {
+	return p.subscribe(p.ctx, OnExit)
 }
 
 // Subscribe subscribes to a process event.
@@ -508,20 +498,19 @@ func (p *Process) SubscribeExit(events chan Event) (err error) {
 func (p *Process) subscribe(
 	ctx context.Context,
 	event ProcessEvents,
-	eCh chan<- Event,
-) error {
-	errCh := make(chan error)
+) (chan Event, chan error) {
+	events := make(chan Event)
+	errs := make(chan error)
 	go func(errCh chan error) {
 		respCh := make(chan []byte)
 		defer close(respCh)
 		err := p.sb.writeRequest(ctx, processSubscribe, []any{event, p.id}, respCh)
-		if err != nil || respCh == nil {
+		if err != nil {
 			errCh <- err
 		}
 		res, err := decodeResponse[string, any](<-respCh)
-		errCh <- err
 		if err != nil {
-			return
+			errCh <- err
 		}
 		p.sb.Map.Store(res.Result, respCh)
 		for {
@@ -538,7 +527,7 @@ func (p *Process) subscribe(
 					p.sb.logger.Debug("subscription id mismatch", "expected", res.Result, "got", event.Params.Subscription)
 					continue
 				}
-				eCh <- event
+				events <- event
 			case <-ctx.Done():
 				p.sb.Map.Delete(res.Result)
 				finishCtx, cancel := context.WithCancel(context.Background())
@@ -554,8 +543,8 @@ func (p *Process) subscribe(
 				return
 			}
 		}
-	}(errCh)
-	return <-errCh
+	}(errs)
+	return events, errs
 }
 func (s *Sandbox) sendRequest(req *http.Request, v interface{}) error {
 	req.Header.Set("Accept", "application/json")
@@ -608,6 +597,13 @@ func (s *Sandbox) identify(ctx context.Context) {
 	}
 }
 func (s *Sandbox) read(ctx context.Context) (err error) {
+	type decResp struct {
+		Method string `json:"method"`
+		ID     int    `json:"id"`
+		Params struct {
+			Subscription string `json:"subscription"`
+		}
+	}
 	var body []byte
 	defer func() {
 		err = s.ws.Close()

@@ -7,12 +7,13 @@ import (
 
 	"github.com/conneroisu/groq-go"
 	"github.com/conneroisu/groq-go/extensions/toolhouse"
+	"github.com/conneroisu/groq-go/pkg/models"
 	"github.com/conneroisu/groq-go/pkg/test"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestUnitExtension(t *testing.T) {
-	if !test.IsUnitTest() {
+	if !test.IsIntegrationTest() {
 		t.Skip("Skipping Toolhouse extension test")
 	}
 	a := assert.New(t)
@@ -36,7 +37,7 @@ func TestUnitExtension(t *testing.T) {
 	tooling, err := ext.GetTools(ctx)
 	a.NoError(err)
 	re, err := client.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
-		Model:      groq.ModelLlama3Groq70B8192ToolUsePreview,
+		Model:      models.ModelLlama3Groq70B8192ToolUsePreview,
 		Messages:   history,
 		Tools:      tooling,
 		ToolChoice: "required",
@@ -47,7 +48,7 @@ func TestUnitExtension(t *testing.T) {
 	a.NoError(err)
 	history = append(history, r...)
 	finalr, err := client.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
-		Model:     groq.ModelLlama3Groq70B8192ToolUsePreview,
+		Model:     models.ModelLlama3Groq70B8192ToolUsePreview,
 		Messages:  history,
 		MaxTokens: 2000,
 	})

@@ -9,76 +9,103 @@ import (
 	"os"
 
 	"github.com/conneroisu/groq-go/pkg/builders"
+	"github.com/conneroisu/groq-go/pkg/models"
 )
 
 const (
-	AudioResponseFormatJSON        AudioResponseFormat = "json"         // AudioResponseFormatJSON is the JSON response format of some audio.
-	AudioResponseFormatText        AudioResponseFormat = "text"         // AudioResponseFormatText is the text response format of some audio.
-	AudioResponseFormatSRT         AudioResponseFormat = "srt"          // AudioResponseFormatSRT is the SRT response format of some audio.
-	AudioResponseFormatVerboseJSON AudioResponseFormat = "verbose_json" // AudioResponseFormatVerboseJSON is the verbose JSON response format of some audio.
-	AudioResponseFormatVTT         AudioResponseFormat = "vtt"          // AudioResponseFormatVTT is the VTT response format of some audio.
-
-	TranscriptionTimestampGranularityWord    TranscriptionTimestampGranularity = "word"    // TranscriptionTimestampGranularityWord is the word timestamp granularity.
-	TranscriptionTimestampGranularitySegment TranscriptionTimestampGranularity = "segment" // TranscriptionTimestampGranularitySegment is the segment timestamp granularity.
+	// TranscriptionTimestampGranularityWord is the word timestamp
+	// granularity.
+	TranscriptionTimestampGranularityWord TranscriptionTimestampGranularity = "word"
+	// TranscriptionTimestampGranularitySegment is the segment timestamp
+	// granularity.
+	TranscriptionTimestampGranularitySegment TranscriptionTimestampGranularity = "segment"
 )
 
 type (
-	// AudioResponseFormat is the response format for the audio API.
-	//
-	// Response formatted using AudioResponseFormatJSON by default.
-	//
-	// string
-	AudioResponseFormat string
-	// TranscriptionTimestampGranularity is the timestamp granularity for the transcription.
+	// TranscriptionTimestampGranularity is the timestamp granularity for
+	// the transcription.
 	//
 	// string
 	TranscriptionTimestampGranularity string
 	// AudioRequest represents a request structure for audio API.
 	AudioRequest struct {
-		Model       AudioModel          // Model is the model to use for the transcription.
-		FilePath    string              // FilePath is either an existing file in your filesystem or a filename representing the contents of Reader.
-		Reader      io.Reader           // Reader is an optional io.Reader when you do not want to use an existing file.
-		Prompt      string              // Prompt is the prompt for the transcription.
-		Temperature float32             // Temperature is the temperature for the transcription.
-		Language    string              // Language is the language for the transcription. Only for transcription.
-		Format      AudioResponseFormat // Format is the format for the response.
+		// Model is the model to use for the transcription.
+		Model models.AudioModel
+		// FilePath is either an existing file in your filesystem or a
+		// filename representing the contents of Reader.
+		FilePath string
+		// Reader is an optional io.Reader when you do not want to use
+		// an existing file.
+		Reader io.Reader
+		// Prompt is the prompt for the transcription.
+		Prompt string
+		// Temperature is the temperature for the transcription.
+		Temperature float32
+		// Language is the language for the transcription. Only for
+		// transcription.
+		Language string
+		// Format is the format for the response.
+		Format Format
 	}
 	// AudioResponse represents a response structure for audio API.
 	AudioResponse struct {
-		Task     string   `json:"task"`     // Task is the task of the response.
-		Language string   `json:"language"` // Language is the language of the response.
-		Duration float64  `json:"duration"` // Duration is the duration of the response.
-		Segments Segments `json:"segments"` // Segments is the segments of the response.
-		Words    Words    `json:"words"`    // Words is the words of the response.
-		Text     string   `json:"text"`     // Text is the text of the response.
+		// Task is the task of the response.
+		Task string `json:"task"`
+		// Language is the language of the response.
+		Language string `json:"language"`
+		// Duration is the duration of the response.
+		Duration float64 `json:"duration"`
+		// Segments is the segments of the response.
+		Segments Segments `json:"segments"`
+		// Words is the words of the response.
+		Words Words `json:"words"`
+		// Text is the text of the response.
+		Text string `json:"text"`
 
 		Header http.Header // Header is the header of the response.
 	}
-	// Words is the words of the response.
+	// Words is the words of the audio response.
 	Words []struct {
-		Word  string  `json:"word"`  // Word is the word of the words.
-		Start float64 `json:"start"` // Start is the start of the words.
-		End   float64 `json:"end"`   // End is the end of the words.
+		// Word is the textual representation of a word in the audio
+		// response.
+		Word string `json:"word"`
+		// Start is the start of the words in seconds.
+		Start float64 `json:"start"`
+		// End is the end of the words in seconds.
+		End float64 `json:"end"`
 	}
 	// Segments is the segments of the response.
 	Segments []struct {
-		ID               int     `json:"id"`                // ID is the ID of the segment.
-		Seek             int     `json:"seek"`              // Seek is the seek of the segment.
-		Start            float64 `json:"start"`             // Start is the start of the segment.
-		End              float64 `json:"end"`               // End is the end of the segment.
-		Text             string  `json:"text"`              // Text is the text of the segment.
-		Tokens           []int   `json:"tokens"`            // Tokens is the tokens of the segment.
-		Temperature      float64 `json:"temperature"`       // Temperature is the temperature of the segment.
-		AvgLogprob       float64 `json:"avg_logprob"`       // AvgLogprob is the avg log prob of the segment.
-		CompressionRatio float64 `json:"compression_ratio"` // CompressionRatio is the compression ratio of the segment.
-		NoSpeechProb     float64 `json:"no_speech_prob"`    // NoSpeechProb is the no speech prob of the segment.
-		Transient        bool    `json:"transient"`         // Transient is the transient of the segment.
+		// ID is the ID of the segment.
+		ID int `json:"id"`
+		// Seek is the seek of the segment.
+		Seek int `json:"seek"`
+		// Start is the start of the segment.
+		Start float64 `json:"start"`
+		// End is the end of the segment.
+		End float64 `json:"end"`
+		// Text is the text of the segment.
+		Text string `json:"text"`
+		// Tokens is the tokens of the segment.
+		Tokens []int `json:"tokens"`
+		// Temperature is the temperature of the segment.
+		Temperature float64 `json:"temperature"`
+		// AvgLogprob is the avg log prob of the segment.
+		AvgLogprob float64 `json:"avg_logprob"`
+		// CompressionRatio is the compression ratio of the segment.
+		CompressionRatio float64 `json:"compression_ratio"`
+		// NoSpeechProb is the no speech prob of the segment.
+		NoSpeechProb float64 `json:"no_speech_prob"`
+		// Transient is the transient of the segment.
+		Transient bool `json:"transient"`
 	}
 	// audioTextResponse is the response structure for the audio API when the
 	// response format is text.
 	audioTextResponse struct {
-		Text   string      `json:"text"` // Text is the text of the response.
-		header http.Header `json:"-"`    // Header is the response header.
+		// Text is the text of the response.
+		Text string `json:"text"`
+		// Header is the response header.
+		header http.Header `json:"-"`
 	}
 )
 
@@ -122,7 +149,7 @@ func (c *Client) callAudioAPI(
 	endpointSuffix Endpoint,
 ) (response AudioResponse, err error) {
 	var formBody bytes.Buffer
-	c.requestFormBuilder = c.createFormBuilder(&formBody)
+	c.requestFormBuilder = builders.NewFormBuilder(&formBody)
 	err = AudioMultipartForm(request, c.requestFormBuilder)
 	if err != nil {
 		return AudioResponse{}, err
@@ -131,7 +158,7 @@ func (c *Client) callAudioAPI(
 		ctx,
 		c.header,
 		http.MethodPost,
-		c.fullURL(endpointSuffix, withModel(model(request.Model))),
+		c.fullURL(endpointSuffix, withModel(request.Model)),
 		builders.WithBody(&formBody),
 		builders.WithContentType(c.requestFormBuilder.FormDataContentType()),
 	)
@@ -153,14 +180,14 @@ func (c *Client) callAudioAPI(
 }
 
 func (r AudioRequest) hasJSONResponse() bool {
-	return r.Format == "" || r.Format == AudioResponseFormatJSON ||
-		r.Format == AudioResponseFormatVerboseJSON
+	return r.Format == "" || r.Format == FormatJSON ||
+		r.Format == FormatVerboseJSON
 }
 
 // AudioMultipartForm creates a form with audio file contents and the name of
 // the model to use for audio processing.
 func AudioMultipartForm(request AudioRequest, b builders.FormBuilder) error {
-	err := CreateFileField(request, b)
+	err := createFileField(request, b)
 	if err != nil {
 		return err
 	}
@@ -202,9 +229,7 @@ func AudioMultipartForm(request AudioRequest, b builders.FormBuilder) error {
 	return b.Close()
 }
 
-// CreateFileField creates the "file" form field from either an existing file
-// or by using the reader.
-func CreateFileField(
+func createFileField(
 	request AudioRequest,
 	b builders.FormBuilder,
 ) (err error) {

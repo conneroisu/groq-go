@@ -26,8 +26,9 @@ type (
 	}
 	defaultRequestBuilder struct{}
 	requestOptions        struct {
-		body   any
-		header http.Header
+		body    any
+		header  http.Header
+		querier Querier
 	}
 	// RequestOption is an option for a request.
 	RequestOption func(*requestOptions)
@@ -74,20 +75,6 @@ func (b *defaultRequestBuilder) Build(
 	return
 }
 
-// WithBody sets the body for a request.
-func WithBody(body any) RequestOption {
-	return func(args *requestOptions) {
-		args.body = body
-	}
-}
-
-// WithContentType sets the content type for a request.
-func WithContentType(contentType string) RequestOption {
-	return func(args *requestOptions) {
-		args.header.Set("Content-Type", contentType)
-	}
-}
-
 // NewRequest creates a new request.
 func NewRequest(
 	ctx context.Context,
@@ -113,5 +100,8 @@ func NewRequest(
 		return nil, err
 	}
 	c.SetCommonHeaders(req)
+	if args.querier != nil {
+		args.querier.URLQuery(req.URL)
+	}
 	return req, nil
 }

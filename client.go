@@ -1,7 +1,6 @@
 package groq
 
 import (
-	"bufio"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -11,55 +10,91 @@ import (
 	"time"
 
 	"github.com/conneroisu/groq-go/pkg/builders"
+	"github.com/conneroisu/groq-go/pkg/groqerr"
+	"github.com/conneroisu/groq-go/pkg/models"
+	"github.com/conneroisu/groq-go/pkg/streams"
 )
 
 //go:generate go run ./scripts/generate-models/
-//go:generate gomarkdoc -o README.md -e .
+//go:generate go run github.com/princjef/gomarkdoc/cmd/gomarkdoc@v1.1.0 -o README.md -e .
+
+type (
+	// Client is a Groq api client.
+	Client struct {
+		// Groq API key
+		groqAPIKey string
+		// OrgID is the organization ID for the client.
+		orgID string
+		// Base URL for the client.
+		baseURL string
+		// EmptyMessagesLimit is the limit for the empty messages.
+		emptyMessagesLimit uint
+
+		header             builders.Header
+		requestFormBuilder builders.FormBuilder
+
+		// Client is the HTTP client to use
+		client *http.Client
+		// Logger is the logger for the client.
+		logger *slog.Logger
+	}
+	// Opts is a function that sets options for a Groq client.
+	Opts func(*Client)
+)
+
+// WithClient sets the client for the Groq client.
+func WithClient(client *http.Client) Opts {
+	return func(c *Client) { c.client = client }
+}
+
+// WithBaseURL sets the base URL for the Groq client.
+func WithBaseURL(baseURL string) Opts {
+	return func(c *Client) { c.baseURL = baseURL }
+}
+
+// WithLogger sets the logger for the Groq client.
+func WithLogger(logger *slog.Logger) Opts {
+	return func(c *Client) { c.logger = logger }
+}
 
 type (
 	// Format is the format of a response.
 	// string
 	Format string
-	// Client is a Groq api client.
-	Client struct {
-		groqAPIKey         string // Groq API key
-		orgID              string // OrgID is the organization ID for the client.
-		baseURL            string // Base URL for the client.
-		emptyMessagesLimit uint   // EmptyMessagesLimit is the limit for the empty messages.
-
-		header             builders.Header
-		requestFormBuilder builders.FormBuilder
-		createFormBuilder  func(body io.Writer) builders.FormBuilder
-
-		client *http.Client // Client is the HTTP client to use
-		logger *slog.Logger // Logger is the logger for the client.
-	}
 	// RateLimitHeaders struct represents Groq rate limits headers.
 	RateLimitHeaders struct {
-		LimitRequests     int       `json:"x-ratelimit-limit-requests"`     // LimitRequests is the limit requests of the rate limit headers.
-		LimitTokens       int       `json:"x-ratelimit-limit-tokens"`       // LimitTokens is the limit tokens of the rate limit headers.
-		RemainingRequests int       `json:"x-ratelimit-remaining-requests"` // RemainingRequests is the remaining requests of the rate limit headers.
-		RemainingTokens   int       `json:"x-ratelimit-remaining-tokens"`   // RemainingTokens is the remaining tokens of the rate limit headers.
-		ResetRequests     ResetTime `json:"x-ratelimit-reset-requests"`     // ResetRequests is the reset requests of the rate limit headers.
-		ResetTokens       ResetTime `json:"x-ratelimit-reset-tokens"`       // ResetTokens is the reset tokens of the rate limit headers.
+		// LimitRequests is the limit requests of the rate limit
+		// headers.
+		LimitRequests int `json:"x-ratelimit-limit-requests"`
+		// LimitTokens is the limit tokens of the rate limit headers.
+		LimitTokens int `json:"x-ratelimit-limit-tokens"`
+		// RemainingRequests is the remaining requests of the rate
+		// limit headers.
+		RemainingRequests int `json:"x-ratelimit-remaining-requests"`
+		// RemainingTokens is the remaining tokens of the rate limit
+		// headers.
+		RemainingTokens int `json:"x-ratelimit-remaining-tokens"`
+		// ResetRequests is the reset requests of the rate limit
+		// headers.
+		ResetRequests ResetTime `json:"x-ratelimit-reset-requests"`
+		// ResetTokens is the reset tokens of the rate limit headers.
+		ResetTokens ResetTime `json:"x-ratelimit-reset-tokens"`
 	}
 	// ResetTime is a time.Time wrapper for the rate limit reset time.
 	// string
 	ResetTime string
-
-	// Opts is a function that sets options for a Groq client.
-	Opts func(*Client)
 	// Usage Represents the total token usage per request to Groq.
 	Usage struct {
 		PromptTokens     int `json:"prompt_tokens"`
 		CompletionTokens int `json:"completion_tokens"`
 		TotalTokens      int `json:"total_tokens"`
 	}
+	// Endpoint is an endpoint for the groq api.
+	Endpoint string
 
-	fullURLOptions struct {
-		model string
-	}
-	fullURLOption func(*fullURLOptions)
+	fullURLOptions struct{ model string }
+	fullURLOption  func(*fullURLOptions)
+	response       interface{ SetHeader(http.Header) }
 )
 
 const (
@@ -69,9 +104,31 @@ const (
 	// FormatJSON is the JSON format. There is no support for streaming with
 	// JSON format selected.
 	FormatJSON Format = "json"
+	// FormatSRT is the SRT format. This is a text format that is only
+	// supported for the transcription API.
+	// SRT format selected.
+	FormatSRT Format = "srt"
+	// FormatVTT is the VTT format. This is a text format that is only
+	// supported for the transcription API.
+	FormatVTT Format = "vtt"
+	// FormatVerboseJSON is the verbose JSON format. This is a JSON format
+	// that is only supported for the transcription API.
+	FormatVerboseJSON Format = "verbose_json"
+	// FormatJSONObject is the json object chat
+	// completion response format type.
+	FormatJSONObject Format = "json_object"
+	// FormatJSONSchema is the json schema chat
+	// completion response format type.
+	FormatJSONSchema Format = "json_schema"
 
 	// groqAPIURLv1 is the base URL for the Groq API.
 	groqAPIURLv1 = "https://api.groq.com/openai/v1"
+
+	chatCompletionsSuffix Endpoint = "/chat/completions"
+	transcriptionsSuffix  Endpoint = "/audio/transcriptions"
+	translationsSuffix    Endpoint = "/audio/translations"
+	embeddingsSuffix      Endpoint = "/embeddings"
+	moderationsSuffix     Endpoint = "/moderations"
 )
 
 // NewClient creates a new Groq client.
@@ -85,9 +142,6 @@ func NewClient(groqAPIKey string, opts ...Opts) (*Client, error) {
 		logger:             slog.Default(),
 		baseURL:            groqAPIURLv1,
 		emptyMessagesLimit: 10,
-		createFormBuilder: func(body io.Writer) builders.FormBuilder {
-			return builders.NewFormBuilder(body)
-		},
 	}
 	for _, opt := range opts {
 		opt(c)
@@ -109,32 +163,6 @@ func (c *Client) fullURL(suffix Endpoint, setters ...fullURLOption) string {
 		setter(&args)
 	}
 	return fmt.Sprintf("%s%s", baseURL, suffix)
-}
-
-// WithClient sets the client for the Groq client.
-func WithClient(client *http.Client) Opts {
-	return func(c *Client) {
-		c.client = client
-	}
-}
-
-// WithBaseURL sets the base URL for the Groq client.
-func WithBaseURL(baseURL string) Opts {
-	return func(c *Client) {
-		c.baseURL = baseURL
-	}
-}
-
-// WithLogger sets the logger for the Groq client.
-func WithLogger(logger *slog.Logger) Opts {
-	return func(c *Client) {
-		c.logger = logger
-	}
-}
-
-// response is an interface for a response.
-type response interface {
-	SetHeader(http.Header)
 }
 
 func (c *Client) sendRequest(req *http.Request, v response) error {
@@ -165,10 +193,10 @@ func (c *Client) sendRequest(req *http.Request, v response) error {
 	return decodeResponse(res.Body, v)
 }
 
-func sendRequestStream[T streamer](
+func sendRequestStream[T streams.Streamer[ChatCompletionStreamResponse]](
 	client *Client,
 	req *http.Request,
-) (*streamReader[T], error) {
+) (*streams.StreamReader[*ChatCompletionStreamResponse], error) {
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "text/event-stream")
 	req.Header.Set("Cache-Control", "no-cache")
@@ -178,18 +206,16 @@ func sendRequestStream[T streamer](
 		req,
 	) //nolint:bodyclose // body is closed in stream.Close()
 	if err != nil {
-		return new(streamReader[T]), err
+		return new(streams.StreamReader[*ChatCompletionStreamResponse]), err
 	}
 	if isFailureStatusCode(resp) {
-		return new(streamReader[T]), client.handleErrorResp(resp)
+		return new(streams.StreamReader[*ChatCompletionStreamResponse]), client.handleErrorResp(resp)
 	}
-	return &streamReader[T]{
-		emptyMessagesLimit: client.emptyMessagesLimit,
-		reader:             bufio.NewReader(resp.Body),
-		response:           resp,
-		errAccumulator:     newErrorAccumulator(),
-		Header:             resp.Header,
-	}, nil
+	return streams.NewStreamReader[ChatCompletionStreamResponse](
+		resp.Body,
+		resp.Header,
+		client.emptyMessagesLimit,
+	), nil
 }
 
 func isFailureStatusCode(resp *http.Response) bool {
@@ -221,17 +247,19 @@ func decodeString(body io.Reader, output *string) error {
 	return nil
 }
 
-func withModel(model model) fullURLOption {
+func withModel[
+	T models.ChatModel | models.AudioModel | models.ModerationModel,
+](model T) fullURLOption {
 	return func(args *fullURLOptions) {
 		args.model = string(model)
 	}
 }
 
 func (c *Client) handleErrorResp(resp *http.Response) error {
-	var errRes errorResponse
+	var errRes groqerr.ErrorResponse
 	err := json.NewDecoder(resp.Body).Decode(&errRes)
 	if err != nil || errRes.Error == nil {
-		reqErr := &requestError{
+		reqErr := &groqerr.ErrRequest{
 			HTTPStatusCode: resp.StatusCode,
 			Err:            err,
 		}

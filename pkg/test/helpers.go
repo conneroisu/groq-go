@@ -59,8 +59,8 @@ func (t *TokenRoundTripper) RoundTrip(
 	return t.Fallback.RoundTrip(req)
 }
 
-// IsUnitTest returns true if the unit test environment variable is set.
-func IsUnitTest() bool {
+// IsIntegrationTest returns true if the unit test environment variable is set.
+func IsIntegrationTest() bool {
 	return os.Getenv("UNIT") != ""
 }
 
@@ -77,7 +77,7 @@ func GetAPIKey(key string) (string, error) {
 var DefaultLogger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
 	AddSource: true,
 	Level:     slog.LevelDebug,
-	ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
+	ReplaceAttr: func(_ []string, a slog.Attr) slog.Attr {
 		if a.Key == "time" {
 			return slog.Attr{}
 		}

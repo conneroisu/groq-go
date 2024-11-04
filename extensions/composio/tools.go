@@ -11,32 +11,61 @@ import (
 )
 
 type (
-	// Tooler is an interface for retreiving composio tools.
-	Tooler interface {
-		GetTools(ctx context.Context, opts ...ToolsOption) (
-			[]tools.Tool, error)
-	}
 	// Tool represents a composio tool as returned by the api.
 	Tool struct {
-		Name        string                   `json:"name"`
-		Enum        string                   `json:"enum"`
-		Tags        []string                 `json:"tags"`
-		Logo        string                   `json:"logo"`
-		AppID       string                   `json:"appId"`
-		AppName     string                   `json:"appName"`
-		DisplayName string                   `json:"displayName"`
-		Description string                   `json:"description"`
-		Parameters  tools.FunctionParameters `json:"parameters"`
-		Response    struct {
+		// Name is the name of the tool returned by the composio api.
+		Name string `json:"name"`
+		// Enum is the enum of the tool returned by the composio api.
+		Enum string `json:"enum"`
+		// Tags are the tags of the tool returned by the composio api.
+		Tags []string `json:"tags"`
+		// Logo is the logo of the tool returned by the composio api.
+		Logo string `json:"logo"`
+		// AppID is the app id of the tool returned by the composio api.
+		AppID string `json:"appId"`
+		// AppName is the app name of the tool returned by the composio
+		// api.
+		AppName string `json:"appName"`
+		// DisplayName is the display name of the tool returned by the
+		// composio api.
+		DisplayName string `json:"displayName"`
+		// Description is the description of the tool returned by the
+		// composio api.
+		Description string `json:"description"`
+		// Parameters are the parameters of the tool returned by the
+		// composio api.
+		Parameters tools.FunctionParameters `json:"parameters"`
+		// Response is the response of the tool returned by the
+		// composio api.
+		Response struct {
+			// Properties are the properties of the response
+			// returned by the composio api.
 			Properties struct {
+				// Data is the data of the response returned by
+				// the composio api.
 				Data struct {
+					// Title is the title of the data in the
+					// response returned by the composio
+					// api.
 					Title string `json:"title"`
-					Type  string `json:"type"`
+					// Type is the type of the data in the
+					// response returned by the composio
+					// api.
+					Type string `json:"type"`
 				} `json:"data"`
+				// Successful is the successful response of the
+				// composio api.
 				Successful struct {
+					// Description is the description of the
+					// successful response of the composio
+					// api.
 					Description string `json:"description"`
-					Title       string `json:"title"`
-					Type        string `json:"type"`
+					// Title is the title of the successful
+					// response of the composio api.
+					Title string `json:"title"`
+					// Type is the type of the successful
+					// response of the composio api.
+					Type string `json:"type"`
 				} `json:"successful"`
 				Error struct {
 					AnyOf []struct {

@@ -3,6 +3,7 @@ package e2b_test
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -21,7 +22,7 @@ func getapiKey(t *testing.T) string {
 }
 
 func TestPostSandbox(t *testing.T) {
-	if !test.IsUnitTest() {
+	if !test.IsIntegrationTest() {
 		t.Skip()
 	}
 	a := assert.New(t)
@@ -52,7 +53,7 @@ func TestPostSandbox(t *testing.T) {
 
 // TestWriteRead tests the Write and Read methods of the Sandbox.
 func TestWriteRead(t *testing.T) {
-	if !test.IsUnitTest() {
+	if !test.IsIntegrationTest() {
 		t.Skip()
 	}
 	filePath := "test.txt"
@@ -78,7 +79,7 @@ func TestWriteRead(t *testing.T) {
 }
 
 func TestCreateProcess(t *testing.T) {
-	if !test.IsUnitTest() {
+	if !test.IsIntegrationTest() {
 		t.Skip()
 	}
 	a := assert.New(t)
@@ -102,20 +103,24 @@ func TestCreateProcess(t *testing.T) {
 	a.NoError(err, "could not create process")
 	err = proc.Start(ctx)
 	a.NoError(err)
-	stdOutEvents := make(chan e2b.Event)
-	err = proc.SubscribeStdout(stdOutEvents)
+	stdOutEvents, errCh := proc.SubscribeStdout()
 	a.NoError(err)
-	event := <-stdOutEvents
-	jsonBytes, err := json.MarshalIndent(&event, "", "  ")
-	if err != nil {
-		a.Error(err)
-		return
+	select {
+	case <-errCh:
+		t.Fatal(fmt.Errorf("failed to subscribe to stdout: %w", err))
+	case event := <-stdOutEvents:
+		jsonBytes, err := json.MarshalIndent(&event, "", "  ")
+		if err != nil {
+			a.Error(err)
+			return
+		}
+		t.Logf("test got event: %s", string(jsonBytes))
+		break
 	}
-	t.Logf("test got event: %s", string(jsonBytes))
 }
 
 func TestFilesystemSubscribe(t *testing.T) {
-	if !test.IsUnitTest() {
+	if !test.IsIntegrationTest() {
 		t.Skip()
 	}
 	a := assert.New(t)
@@ -150,7 +155,7 @@ func TestFilesystemSubscribe(t *testing.T) {
 }
 
 func TestKeepAlive(t *testing.T) {
-	if !test.IsUnitTest() {
+	if !test.IsIntegrationTest() {
 		t.Skip()
 	}
 	a := assert.New(t)

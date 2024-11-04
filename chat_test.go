@@ -1,105 +1,65 @@
-package groq
+package groq_test
 
 import (
-	"bufio"
-	"bytes"
-	"io"
+	"context"
+	"encoding/json"
 	"net/http"
 	"testing"
 
+	"github.com/conneroisu/groq-go"
+	"github.com/conneroisu/groq-go/pkg/models"
 	"github.com/conneroisu/groq-go/pkg/test"
+	"github.com/conneroisu/groq-go/pkg/tools"
 	"github.com/stretchr/testify/assert"
 )
 
-// TestStreamReaderReturnsUnmarshalerErrors tests the stream reader returns an unmarshaler error.
-func TestStreamReaderReturnsUnmarshalerErrors(t *testing.T) {
-	stream := &streamReader[ChatCompletionStreamResponse]{
-		errAccumulator: newErrorAccumulator(),
-	}
-
-	respErr := stream.unmarshalError()
-	if respErr != nil {
-		t.Fatalf("Did not return nil with empty buffer: %v", respErr)
-	}
-
-	err := stream.errAccumulator.Write([]byte("{"))
-	if err != nil {
-		t.Fatalf("%+v", err)
-	}
-
-	respErr = stream.unmarshalError()
-	if respErr != nil {
-		t.Fatalf("Did not return nil when unmarshaler failed: %v", respErr)
-	}
-}
-
-// TestStreamReaderReturnsErrTooManyEmptyStreamMessages tests the stream reader returns an error when the stream has too many empty messages.
-func TestStreamReaderReturnsErrTooManyEmptyStreamMessages(t *testing.T) {
+func TestChat(t *testing.T) {
+	ctx := context.Background()
 	a := assert.New(t)
-	stream := &streamReader[ChatCompletionStreamResponse]{
-		emptyMessagesLimit: 3,
-		reader: bufio.NewReader(
-			bytes.NewReader([]byte("\n\n\n\n")),
-		),
-		errAccumulator: newErrorAccumulator(),
-	}
-	_, err := stream.Recv()
-	a.ErrorIs(
-		err,
-		ErrTooManyEmptyStreamMessages{},
-		"Did not return error when recv failed",
-		err.Error(),
-	)
-}
-
-// TestStreamReaderReturnsErrTestErrorAccumulatorWriteFailed tests the stream reader returns an error when the error accumulator fails to write.
-func TestStreamReaderReturnsErrTestErrorAccumulatorWriteFailed(t *testing.T) {
-	a := assert.New(t)
-	stream := &streamReader[ChatCompletionStreamResponse]{
-		reader: bufio.NewReader(bytes.NewReader([]byte("\n"))),
-		errAccumulator: &DefaultErrorAccumulator{
-			Buffer: &test.FailingErrorBuffer{},
+	ts := test.NewTestServer()
+	returnObj := groq.ChatCompletionResponse{
+		ID:      "chatcmpl-123",
+		Object:  "chat.completion.chunk",
+		Created: 1693721698,
+		Model:   "llama3-groq-70b-8192-tool-use-preview",
+		Choices: []groq.ChatCompletionChoice{
+			{
+				Index: 0,
+				Message: groq.ChatCompletionMessage{
+					Role:    groq.ChatMessageRoleAssistant,
+					Content: "Hello!",
+				},
+			},
 		},
 	}
-	_, err := stream.Recv()
-	a.ErrorIs(
-		err,
-		test.ErrTestErrorAccumulatorWriteFailed{},
-		"Did not return error when write failed",
-		err.Error(),
+	ts.RegisterHandler("/v1/chat/completions", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		jsval, err := json.Marshal(returnObj)
+		a.NoError(err)
+		_, err = w.Write(jsval)
+		if err != nil {
+			t.Fatal(err)
+		}
+	})
+	testS := ts.GroqTestServer()
+	testS.Start()
+	client, err := groq.NewClient(
+		test.GetTestToken(),
+		groq.WithBaseURL(testS.URL+"/v1"),
 	)
-}
-
-// Helper function to create a new `streamReader` for testing
-func newStreamReader[T streamer](data string) *streamReader[T] {
-	resp := &http.Response{
-		Body: io.NopCloser(bytes.NewBufferString(data)),
-	}
-	reader := bufio.NewReader(resp.Body)
-
-	return &streamReader[T]{
-		emptyMessagesLimit: 5,
-		isFinished:         false,
-		reader:             reader,
-		response:           resp,
-		errAccumulator:     newErrorAccumulator(),
-		Header:             resp.Header,
-	}
-}
-
-// Test the `Recv` method with multiple empty messages triggering an error
-func TestStreamReader_TooManyEmptyMessages(t *testing.T) {
-	data := "\n\n\n\n\n\n"
-	stream := newStreamReader[ChatCompletionStreamResponse](data)
-
-	_, err := stream.Recv()
-	assert.ErrorIs(t, err, ErrTooManyEmptyStreamMessages{})
-}
-
-// Test the `Close` method
-func TestStreamReader_Close(t *testing.T) {
-	stream := newStreamReader[ChatCompletionStreamResponse]("")
-
-	err := stream.Close()
-	assert.NoError(t, err)
+	a.NoError(err)
+	resp, err := client.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
+		Model: models.ModelLlama3Groq70B8192ToolUsePreview,
+		Messages: []groq.ChatCompletionMessage{
+			{
+				Role:    groq.ChatMessageRoleUser,
+				Content: "Hello!",
+			},
+		},
+		MaxTokens: 2000,
+		Tools:     []tools.Tool{},
+	})
+	a.NoError(err)
+	a.NotEmpty(resp.Choices[0].Message.Content)
 }

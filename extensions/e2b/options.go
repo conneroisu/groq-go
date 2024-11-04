@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-// E2B Options
+// E2B Sandbox Options
 
 // WithBaseURL sets the base URL for the e2b sandbox.
 func WithBaseURL(baseURL string) Option {
@@ -37,7 +37,7 @@ func WithCwd(cwd string) Option {
 	return func(s *Sandbox) { s.Cwd = cwd }
 }
 
-// WithWsURL sets the websocket url for the e2b sandbox.
+// WithWsURL sets the websocket url resolving function for the e2b sandbox.
 func WithWsURL(wsURL func(s *Sandbox) string) Option {
 	return func(s *Sandbox) { s.wsURL = wsURL }
 }
