@@ -1,7 +1,6 @@
 package streams_test
 
 import (
-	"bufio"
 	"bytes"
 	"errors"
 	"io"
@@ -21,17 +20,17 @@ func TestStreamReaderReturnsUnmarshalerErrors(t *testing.T) {
 		ErrAccumulator: streams.NewErrorAccumulator(),
 	}
 
-	respErr := stream.unmarshalError()
+	respErr := stream.UnmarshalError()
 	if respErr != nil {
 		t.Fatalf("Did not return nil with empty buffer: %v", respErr)
 	}
 
-	err := stream.errAccumulator.Write([]byte("{"))
+	err := stream.ErrAccumulator.Write([]byte("{"))
 	if err != nil {
 		t.Fatalf("%+v", err)
 	}
 
-	respErr = stream.unmarshalError()
+	respErr = stream.UnmarshalError()
 	if respErr != nil {
 		t.Fatalf("Did not return nil when unmarshaler failed: %v", respErr)
 	}
@@ -40,17 +39,20 @@ func TestStreamReaderReturnsUnmarshalerErrors(t *testing.T) {
 // TestStreamReaderReturnsErrTooManyEmptyStreamMessages tests the stream reader returns an error when the stream has too many empty messages.
 func TestStreamReaderReturnsErrTooManyEmptyStreamMessages(t *testing.T) {
 	a := assert.New(t)
-	stream := &streams.StreamReader[ChatCompletionStreamResponse]{
-		emptyMessagesLimit: 3,
-		reader: bufio.NewReader(
-			bytes.NewReader([]byte("\n\n\n\n")),
-		),
-		errAccumulator: newErrorAccumulator(),
+	reader := &http.Response{
+		Body: io.NopCloser(bytes.NewReader([]byte("\n\n\n\n"))),
 	}
+	stream := streams.NewStreamReader[groq.ChatCompletionStreamResponse](
+		reader.Body,
+		map[string][]string{
+			"Content-Type": {"text/event-stream"},
+		},
+		3,
+	)
 	_, err := stream.Recv()
 	a.ErrorIs(
 		err,
-		ErrTooManyEmptyStreamMessages{},
+		groqerr.ErrTooManyEmptyStreamMessages{},
 		"Did not return error when recv failed",
 		err.Error(),
 	)
@@ -59,36 +61,38 @@ func TestStreamReaderReturnsErrTooManyEmptyStreamMessages(t *testing.T) {
 // TestStreamReaderReturnsErrTestErrorAccumulatorWriteFailed tests the stream reader returns an error when the error accumulator fails to write.
 func TestStreamReaderReturnsErrTestErrorAccumulatorWriteFailed(t *testing.T) {
 	a := assert.New(t)
-	stream := &streams.StreamReader[groq.ChatCompletionStreamResponse]{
-		Reader: bufio.NewReader(bytes.NewReader([]byte("\n"))),
-		errAccumulator: &streams.DefaultErrorAccumulator{
-			Buffer: &test.FailingErrorBuffer{},
-		},
+	reader := &http.Response{
+		Body: io.NopCloser(bytes.NewReader([]byte("\n"))),
 	}
+	stream := streams.NewStreamReader[groq.ChatCompletionStreamResponse](
+		reader.Body,
+		map[string][]string{
+			"Content-Type": {"text/event-stream"},
+		},
+		0,
+	)
 	_, err := stream.Recv()
 	a.ErrorIs(
 		err,
-		test.ErrTestErrorAccumulatorWriteFailed{},
+		groqerr.ErrTooManyEmptyStreamMessages{},
 		"Did not return error when write failed",
 		err.Error(),
-	)
-}
-
-// Helper function to create a new `streamReader` for testing
-func newStreamReader[T streams.Streamer[T]](data string) *streams.StreamReader[groq.ChatCompletionStreamResponse] {
-	resp := &http.Response{
-		Body: io.NopCloser(bytes.NewBufferString(data)),
-	}
-	return streams.NewStreamReader[groq.ChatCompletionStreamResponse](
-		resp,
-		5,
 	)
 }
 
 // Test the `Recv` method with multiple empty messages triggering an error
 func TestStreamReader_TooManyEmptyMessages(t *testing.T) {
 	data := "\n\n\n\n\n\n"
-	stream := streams.newStreamReader(data)
+	resp := &http.Response{
+		Body: io.NopCloser(bytes.NewBufferString(data)),
+	}
+	stream := streams.NewStreamReader[*groq.ChatCompletionStreamResponse](
+		resp.Body,
+		map[string][]string{
+			"Content-Type": {"text/event-stream"},
+		},
+		5,
+	)
 
 	_, err := stream.Recv()
 	assert.ErrorIs(t, err, groqerr.ErrTooManyEmptyStreamMessages{})
@@ -96,7 +100,16 @@ func TestStreamReader_TooManyEmptyMessages(t *testing.T) {
 
 // Test the `Close` method
 func TestStreamReader_Close(t *testing.T) {
-	stream := newStreamReader[groq.ChatCompletionStreamResponse]("")
+	resp := &http.Response{
+		Body: io.NopCloser(bytes.NewBufferString("")),
+	}
+	stream := streams.NewStreamReader[groq.ChatCompletionStreamResponse](
+		resp.Body,
+		map[string][]string{
+			"Content-Type": {"text/event-stream"},
+		},
+		5,
+	)
 
 	err := stream.Close()
 	assert.NoError(t, err)

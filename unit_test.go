@@ -21,6 +21,7 @@ import (
 	"github.com/conneroisu/groq-go"
 	"github.com/conneroisu/groq-go/pkg/groqerr"
 	"github.com/conneroisu/groq-go/pkg/models"
+	"github.com/conneroisu/groq-go/pkg/moderation"
 	"github.com/conneroisu/groq-go/pkg/test"
 	"github.com/stretchr/testify/assert"
 )
@@ -76,21 +77,21 @@ func TestModerate(t *testing.T) {
 		"/v1/chat/completions",
 		handleModerationEndpoint,
 	)
-	mod, err := client.Moderate(context.Background(), groq.ModerationRequest{
-		Model: models.ModelLlamaGuard38B,
-		Messages: []groq.ChatCompletionMessage{
+	mod, err := client.Moderate(context.Background(),
+		[]groq.ChatCompletionMessage{
 			{
 				Role:    groq.ChatMessageRoleUser,
 				Content: "I want to kill them.",
 			},
 		},
-	})
+		models.ModelLlamaGuard38B,
+	)
 	a := assert.New(t)
 	a.NoError(err, "Moderation error")
 	a.Equal(true, mod.Flagged)
 	a.Contains(
 		mod.Categories,
-		groq.CategoryViolentCrimes,
+		moderation.CategoryViolentCrimes,
 	)
 }
 

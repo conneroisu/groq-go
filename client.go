@@ -97,7 +97,6 @@ const (
 	// FormatVerboseJSON is the verbose JSON format. This is a JSON format
 	// that is only supported for the transcription API.
 	FormatVerboseJSON Format = "verbose_json"
-
 	// FormatJSONObject is the json object chat
 	// completion response format type.
 	FormatJSONObject Format = "json_object"
@@ -211,7 +210,8 @@ func sendRequestStream[T streams.Streamer[ChatCompletionStreamResponse]](
 		return new(streams.StreamReader[*ChatCompletionStreamResponse]), client.handleErrorResp(resp)
 	}
 	return streams.NewStreamReader[ChatCompletionStreamResponse](
-		resp,
+		resp.Body,
+		resp.Header,
 		client.emptyMessagesLimit,
 	), nil
 }

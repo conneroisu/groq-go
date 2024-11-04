@@ -25,7 +25,7 @@ type (
 		emptyMessagesLimit uint
 		isFinished         bool
 		Reader             *bufio.Reader
-		response           *http.Response
+		readCloser         io.ReadCloser
 		ErrAccumulator     ErrorAccumulator
 		Header             http.Header // Header is the header of the response.
 	}
@@ -60,7 +60,7 @@ func (stream *StreamReader[T]) processLines() (T, error) {
 	for {
 		rawLine, err := stream.Reader.ReadBytes('\n')
 		if err != nil || hasErrorPrefix {
-			respErr := stream.unmarshalError()
+			respErr := stream.UnmarshalError()
 			if respErr != nil {
 				return *new(T),
 					fmt.Errorf("error, %w", respErr.Error)
@@ -98,7 +98,9 @@ func (stream *StreamReader[T]) processLines() (T, error) {
 		return response, nil
 	}
 }
-func (stream *StreamReader[T]) unmarshalError() (errResp *groqerr.ErrorResponse) {
+
+// UnmarshalError unmarshals the error response.
+func (stream *StreamReader[T]) UnmarshalError() (errResp *groqerr.ErrorResponse) {
 	errBytes := stream.ErrAccumulator.Bytes()
 	if len(errBytes) == 0 {
 		return
@@ -112,7 +114,7 @@ func (stream *StreamReader[T]) unmarshalError() (errResp *groqerr.ErrorResponse)
 
 // Close closes the stream.
 func (stream *StreamReader[T]) Close() error {
-	return stream.response.Body.Close()
+	return stream.readCloser.Close()
 }
 
 // NewErrorAccumulator creates a new error accumulator
@@ -142,17 +144,17 @@ func (e *DefaultErrorAccumulator) Bytes() (errBytes []byte) {
 
 // NewStreamReader creates a new stream reader.
 func NewStreamReader[Q any, T Streamer[Q]](
-	response *http.Response,
+	readCloser io.ReadCloser,
+	header map[string][]string,
 	emptyMessagesLimit uint,
 ) *StreamReader[T] {
 	stream := &StreamReader[T]{
 		emptyMessagesLimit: emptyMessagesLimit,
 		isFinished:         false,
-		Header:             response.Header,
-		Reader:             bufio.NewReader(response.Body),
-		response:           response,
+		Header:             header,
+		Reader:             bufio.NewReader(readCloser),
+		readCloser:         readCloser,
 		ErrAccumulator:     NewErrorAccumulator(),
 	}
-	stream.Header = response.Header
 	return stream
 }

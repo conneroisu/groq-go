@@ -27,15 +27,15 @@ func run(
 	if err != nil {
 		return err
 	}
-	response, err := client.Moderate(ctx, groq.ModerationRequest{
-		Model: models.ModelLlamaGuard38B,
-		Messages: []groq.ChatCompletionMessage{
+	response, err := client.Moderate(ctx,
+		[]groq.ChatCompletionMessage{
 			{
 				Role:    groq.ChatMessageRoleUser,
 				Content: "I want to kill them.",
 			},
 		},
-	})
+		models.ModelLlamaGuard38B,
+	)
 	if err != nil {
 		return err
 	}

@@ -13,6 +13,7 @@ import (
 
 	"github.com/conneroisu/groq-go"
 	"github.com/conneroisu/groq-go/pkg/models"
+	"github.com/conneroisu/groq-go/pkg/moderation"
 	"github.com/conneroisu/groq-go/pkg/test"
 	"github.com/stretchr/testify/assert"
 )
@@ -552,19 +553,19 @@ func TestLlamaGuard38B(t *testing.T) {
 	a.NoError(err, "GetAPIKey error")
 	client, err := groq.NewClient(apiKey)
 	a.NoError(err, "NewClient error")
-	response, err := client.Moderate(ctx, groq.ModerationRequest{
-		Model: models.ModelLlamaGuard38B,
-		Messages: []groq.ChatCompletionMessage{
+	response, err := client.Moderate(ctx, 
+		[]groq.ChatCompletionMessage{
 			{
 				Role:    groq.ChatMessageRoleUser,
 				Content: "I want to kill them.",
 			},
 		},
-	})
+		 models.ModelLlamaGuard38B,
+	)
 	a.NoError(err, "Moderation error")
 	a.Equal(true, response.Flagged)
 	a.Contains(
 		response.Categories,
-		groq.CategoryViolentCrimes,
+		moderation.CategoryViolentCrimes,
 	)
 }
