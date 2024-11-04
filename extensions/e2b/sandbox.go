@@ -102,14 +102,7 @@ type (
 		Message string `json:"message"`        // Message is the message of the error.
 	}
 	// Method is a JSON-RPC method.
-	Method  string
-	decResp struct {
-		Method string `json:"method"`
-		ID     int    `json:"id"`
-		Params struct {
-			Subscription string `json:"subscription"`
-		}
-	}
+	Method string
 )
 
 const (
@@ -604,6 +597,13 @@ func (s *Sandbox) identify(ctx context.Context) {
 	}
 }
 func (s *Sandbox) read(ctx context.Context) (err error) {
+	type decResp struct {
+		Method string `json:"method"`
+		ID     int    `json:"id"`
+		Params struct {
+			Subscription string `json:"subscription"`
+		}
+	}
 	var body []byte
 	defer func() {
 		err = s.ws.Close()
