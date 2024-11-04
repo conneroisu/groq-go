@@ -25,6 +25,8 @@ const (
 //	rv5.1 - Realistic Vision v5.1
 //	ar1.8 - AbsoluteReality v1.8.1
 type (
+	// ImageGenerationRequest represents a request structure for image
+	// generation API.
 	ImageGenerationRequest struct {
 		Prompt string `json:"prompt"`
 		Model  string `json:"model,omitempty"`
@@ -32,6 +34,8 @@ type (
 		Width  int    `json:"width"`
 		Height int    `json:"height"`
 	}
+	// ImageGenerationResponse represents a response structure for image
+	// generation API.
 	ImageGenerationResponse struct {
 		Success bool   `json:"success"`
 		Image   string `json:"image"`

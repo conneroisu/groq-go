@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/conneroisu/groq-go"
+	"github.com/conneroisu/groq-go/pkg/models"
 )
 
 var (
@@ -74,7 +75,7 @@ func input(ctx context.Context, r io.Reader, w io.Writer, client *groq.Client) e
 	output, err := client.CreateChatCompletionStream(
 		ctx,
 		groq.ChatCompletionRequest{
-			Model:     groq.ModelGemma29BIt,
+			Model:     models.ModelGemma29BIt,
 			Messages:  history,
 			MaxTokens: 2000,
 		},

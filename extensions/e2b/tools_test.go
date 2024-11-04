@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/conneroisu/groq-go"
+	"github.com/conneroisu/groq-go/pkg/models"
 	"github.com/conneroisu/groq-go/pkg/test"
 	"github.com/stretchr/testify/assert"
 )
@@ -35,8 +36,8 @@ func TestSandboxTooling(t *testing.T) {
 	a.NoError(err, "NewClient error")
 	tools := sb.GetTools()
 	// ask the ai to create a file with the data "Hello World!" in file "hello.txt"
-	response := client.MustCreateChatCompletion(ctx, groq.ChatCompletionRequest{
-		Model: groq.ModelLlama3Groq70B8192ToolUsePreview,
+	response, err := client.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
+		Model: models.ModelLlama3Groq70B8192ToolUsePreview,
 		Messages: []groq.ChatCompletionMessage{
 			{
 				Role: groq.ChatMessageRoleUser,
@@ -52,6 +53,7 @@ NOTE: You are in the correct cwd. Just call the write tool with a name of hello.
 		MaxTokens: 2000,
 		Tools:     tools,
 	})
+	a.NoError(err)
 	sb.logger.Debug("response from model", "response", response)
 	resps, err := sb.RunTooling(ctx, response)
 	a.NoError(err)

@@ -9,6 +9,7 @@ import (
 
 	"github.com/conneroisu/groq-go"
 	"github.com/conneroisu/groq-go/extensions/composio"
+	"github.com/conneroisu/groq-go/pkg/models"
 	"github.com/conneroisu/groq-go/pkg/test"
 	"github.com/conneroisu/groq-go/pkg/tools"
 	"github.com/stretchr/testify/assert"
@@ -93,7 +94,7 @@ func TestUnitRun(t *testing.T) {
 	)
 	a.NoError(err, "NewClient error")
 	response, err := groqClient.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
-		Model: groq.ModelLlama3Groq8B8192ToolUsePreview,
+		Model: models.ModelLlama3Groq8B8192ToolUsePreview,
 		Messages: []groq.ChatCompletionMessage{
 			{
 				Role:    groq.ChatMessageRoleUser,

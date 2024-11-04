@@ -164,11 +164,13 @@ func TestNewSandbox(t *testing.T) {
 
 	err = proc.Start(ctx)
 	a.NoError(err)
-	e := make(chan Event)
-	err = proc.SubscribeStdout(e)
-	a.NoError(err)
-	event := <-e
-	jsnBytes, err := json.MarshalIndent(&event, "", "  ")
-	a.NoError(err)
-	t.Logf("test got event: %s", string(jsnBytes))
+	e, errCh := proc.SubscribeStdout()
+	select {
+	case <-errCh:
+		t.Fatal("got error from SubscribeStdout")
+	case event := <-e:
+		jsnBytes, err := json.MarshalIndent(&event, "", "  ")
+		a.NoError(err)
+		t.Logf("test got event: %s", string(jsnBytes))
+	}
 }

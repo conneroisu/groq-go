@@ -1,18 +1,12 @@
 package groq
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"strings"
 )
 
 type (
-	// DefaultErrorAccumulator is a default implementation of ErrorAccumulator
-	DefaultErrorAccumulator struct {
-		Buffer errorBuffer
-	}
 	// APIError provides error information returned by the Groq API.
 	APIError struct {
 		// Code is the code of the error.
@@ -53,24 +47,6 @@ func (e ErrContentFieldsMisused) Error() string {
 // Error returns the error message.
 func (e ErrTooManyEmptyStreamMessages) Error() string {
 	return "stream has sent too many empty messages"
-}
-
-// Write method writes bytes to the error accumulator.
-func (e *DefaultErrorAccumulator) Write(p []byte) error {
-	_, err := e.Buffer.Write(p)
-	if err != nil {
-		return fmt.Errorf("error accumulator write error, %w", err)
-	}
-	return nil
-}
-
-// Bytes method returns the bytes of the error accumulator.
-func (e *DefaultErrorAccumulator) Bytes() (errBytes []byte) {
-	if e.Buffer.Len() == 0 {
-		return
-	}
-	errBytes = e.Buffer.Bytes()
-	return
 }
 
 // Error method implements the error interface on APIError.
@@ -123,34 +99,15 @@ func (e *APIError) UnmarshalJSON(data []byte) (err error) {
 }
 
 type (
-	errorAccumulator interface {
-		// Write method writes bytes to the error accumulator
-		//
-		// It implements the io.Writer interface.
-		Write(p []byte) error
-		// Bytes method returns the bytes of the error accumulator.
-		Bytes() []byte
-	}
-	errorBuffer interface {
-		io.Writer
-		Len() int
-		Bytes() []byte
-	}
-	requestError struct {
+	// ErrRequest is a request error.
+	ErrRequest struct {
 		HTTPStatusCode int
 		Err            error
 	}
 )
 
-// newErrorAccumulator creates a new error accumulator
-func newErrorAccumulator() errorAccumulator {
-	return &DefaultErrorAccumulator{
-		Buffer: &bytes.Buffer{},
-	}
-}
-
 // Error implements the error interface.
-func (e *requestError) Error() string {
+func (e *ErrRequest) Error() string {
 	return fmt.Sprintf(
 		"error, status code: %d, message: %s",
 		e.HTTPStatusCode,
@@ -159,7 +116,7 @@ func (e *requestError) Error() string {
 }
 
 // Unwrap unwraps the error.
-func (e *requestError) Unwrap() error {
+func (e *ErrRequest) Unwrap() error {
 	return e.Err
 }
 

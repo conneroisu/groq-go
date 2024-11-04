@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	groq "github.com/conneroisu/groq-go"
+	"github.com/conneroisu/groq-go/pkg/models"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -14,7 +15,7 @@ func TestModeration(t *testing.T) {
 	defer teardown()
 	server.RegisterHandler("/v1/chat/completions", handleModerationEndpoint)
 	mod, err := client.Moderate(context.Background(), groq.ModerationRequest{
-		Model: groq.ModelLlamaGuard38B,
+		Model: models.ModelLlamaGuard38B,
 		Messages: []groq.ChatCompletionMessage{
 			{
 				Role:    groq.ChatMessageRoleUser,

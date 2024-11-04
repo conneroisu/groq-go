@@ -9,9 +9,14 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"regexp"
+	"strings"
+	"unicode"
 
 	"github.com/conneroisu/groq-go/pkg/builders"
 	"github.com/conneroisu/groq-go/pkg/test"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 const (
@@ -33,6 +38,7 @@ type (
 		Success bool   `json:"success"`
 		Message string `json:"message"`
 		Accents []struct {
+			GoName     string `json:"go_name"`
 			Accent     string `json:"accent"`
 			LocaleName string `json:"locale_name"`
 			Gender     string `json:"gender"`
@@ -62,6 +68,13 @@ func (c *Client) AudioGetSpeakerVoiceAccents(
 	err = c.sendRequest(req, &resp)
 	if err != nil {
 		return
+	}
+	if !resp.Success {
+		return resp, fmt.Errorf("failed to get accents: %v", resp.Message)
+	}
+	for i := range resp.Accents {
+		accent := &resp.Accents[i]
+		accent.GoName = PascalCase(strings.ReplaceAll(accent.Accent, "-", ""))
 	}
 	return resp, nil
 }
@@ -97,13 +110,8 @@ func run(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	println(len(accents.Accents))
-	if !accents.Success {
-		return fmt.Errorf("failed to get accents: %v", accents.Message)
-	}
-	for _, accent := range accents.Accents {
-		println(accent.Accent)
-	}
+	output := FillAccents(accents)
+	println(output)
 	return nil
 }
 
@@ -145,4 +153,56 @@ func (c *Client) sendRequest(req *http.Request, v any) error {
 		}
 		return nil
 	}
+}
+
+var (
+	// LowerCaseLettersCharset is a set of lower case letters.
+	LowerCaseLettersCharset = []rune("abcdefghijklmnopqrstuvwxyz")
+	// UpperCaseLettersCharset is a set of upper case letters.
+	UpperCaseLettersCharset = []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+	// LettersCharset is a set of letters.
+	LettersCharset = append(LowerCaseLettersCharset, UpperCaseLettersCharset...)
+	// NumbersCharset is a set of numbers.
+	NumbersCharset = []rune("0123456789")
+	// AlphanumericCharset is a set of alphanumeric characters.
+	AlphanumericCharset = append(LettersCharset, NumbersCharset...)
+	// SpecialCharset is a set of special characters.
+	SpecialCharset = []rune("!@#$%^&*()_+-=[]{}|;':\",./<>?")
+	// AllCharset is a set of all characters.
+	AllCharset = append(AlphanumericCharset, SpecialCharset...)
+
+	// bearer:disable go_lang_permissive_regex_validation
+	splitWordReg = regexp.MustCompile(`([a-z])([A-Z0-9])|([a-zA-Z])([0-9])|([0-9])([a-zA-Z])|([A-Z])([A-Z])([a-z])`)
+	// bearer:disable go_lang_permissive_regex_validation
+	splitNumberLetterReg = regexp.MustCompile(`([0-9])([a-zA-Z])`)
+)
+
+// Words splits string into an array of its words.
+func Words(str string) []string {
+	str = splitWordReg.ReplaceAllString(str, `$1$3$5$7 $2$4$6$8$9`)
+	// example: Int8Value => Int 8Value => Int 8 Value
+	str = splitNumberLetterReg.ReplaceAllString(str, "$1 $2")
+	var result strings.Builder
+	for _, r := range str {
+		if unicode.IsLetter(r) || unicode.IsDigit(r) {
+			result.WriteRune(r)
+		} else {
+			result.WriteRune(' ')
+		}
+	}
+	return strings.Fields(result.String())
+}
+
+// Capitalize converts the first character of string to upper case and the remaining to lower case.
+func Capitalize(str string) string {
+	return cases.Title(language.English).String(str)
+}
+
+// PascalCase converts string to pascal case.
+func PascalCase(str string) string {
+	items := Words(str)
+	for i := range items {
+		items[i] = Capitalize(items[i])
+	}
+	return strings.Join(items, "")
 }

@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/conneroisu/groq-go"
+	"github.com/conneroisu/groq-go/pkg/models"
 )
 
 func main() {
@@ -25,7 +26,7 @@ func run(
 		return err
 	}
 	response, err := client.CreateTranscription(ctx, groq.AudioRequest{
-		Model:    groq.ModelWhisperLargeV3,
+		Model:    models.ModelWhisperLargeV3,
 		FilePath: "./The Roman Emperors who went insane Gregory Aldrete and Lex Fridman.mp3",
 	})
 	if err != nil {

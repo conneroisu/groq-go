@@ -26,8 +26,8 @@ import (
 )
 
 const (
-	modelFileName     = "models.go"
-	modelTestFileName = "models_test.go"
+	modelFileName     = "./pkg/models/models.go"
+	modelTestFileName = "./pkg/models/models_test.go"
 )
 
 var (

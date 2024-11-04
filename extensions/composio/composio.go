@@ -14,15 +14,7 @@ const (
 	composioBaseURL = "https://backend.composio.dev/api"
 )
 
-var _ Composer = &Composio{}
-
 type (
-	// Composer is an interface for composio client.
-	Composer interface {
-		Tooler
-		Runner
-		Authorizer
-	}
 	// Composio is a composio client.
 	Composio struct {
 		apiKey  string

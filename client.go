@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/conneroisu/groq-go/pkg/builders"
+	"github.com/conneroisu/groq-go/pkg/models"
 )
 
 //go:generate go run ./scripts/generate-models/
@@ -52,7 +53,8 @@ type (
 		// RemainingTokens is the remaining tokens of the rate limit
 		// headers.
 		RemainingTokens int `json:"x-ratelimit-remaining-tokens"`
-		// ResetRequests is the reset requests of the rate limit headers.
+		// ResetRequests is the reset requests of the rate limit
+		// headers.
 		ResetRequests ResetTime `json:"x-ratelimit-reset-requests"`
 		// ResetTokens is the reset tokens of the rate limit headers.
 		ResetTokens ResetTime `json:"x-ratelimit-reset-tokens"`
@@ -69,6 +71,8 @@ type (
 		CompletionTokens int `json:"completion_tokens"`
 		TotalTokens      int `json:"total_tokens"`
 	}
+	// Endpoint is an endpoint for the groq api.
+	Endpoint string
 
 	fullURLOptions struct{ model string }
 	fullURLOption  func(*fullURLOptions)
@@ -102,6 +106,12 @@ const (
 
 	// groqAPIURLv1 is the base URL for the Groq API.
 	groqAPIURLv1 = "https://api.groq.com/openai/v1"
+
+	chatCompletionsSuffix Endpoint = "/chat/completions"
+	transcriptionsSuffix  Endpoint = "/audio/transcriptions"
+	translationsSuffix    Endpoint = "/audio/translations"
+	embeddingsSuffix      Endpoint = "/embeddings"
+	moderationsSuffix     Endpoint = "/moderations"
 )
 
 // NewClient creates a new Groq client.
@@ -181,6 +191,11 @@ func (c *Client) sendRequest(req *http.Request, v response) error {
 	return decodeResponse(res.Body, v)
 }
 
+// streamer is an interface for a streamer.
+type streamer interface {
+	ChatCompletionStreamResponse
+}
+
 func sendRequestStream[T streamer](
 	client *Client,
 	req *http.Request,
@@ -237,7 +252,9 @@ func decodeString(body io.Reader, output *string) error {
 	return nil
 }
 
-func withModel(model model) fullURLOption {
+func withModel[
+	T models.ChatModel | models.AudioModel | models.ModerationModel,
+](model T) fullURLOption {
 	return func(args *fullURLOptions) {
 		args.model = string(model)
 	}
@@ -247,7 +264,7 @@ func (c *Client) handleErrorResp(resp *http.Response) error {
 	var errRes ErrorResponse
 	err := json.NewDecoder(resp.Body).Decode(&errRes)
 	if err != nil || errRes.Error == nil {
-		reqErr := &requestError{
+		reqErr := &ErrRequest{
 			HTTPStatusCode: resp.StatusCode,
 			Err:            err,
 		}

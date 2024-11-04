@@ -3,7 +3,7 @@
 // Created at: {{ getCurrentDate }}
 //
 // groq-modeler Version 1.1.2
-package groq
+package models_test
 
 import (
 	"context"
@@ -11,8 +11,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/conneroisu/groq-go"
+	"github.com/conneroisu/groq-go/pkg/models"
+	"github.com/conneroisu/groq-go/pkg/test"
 	"github.com/stretchr/testify/assert"
 )
+
 
 {{- range $model := .ChatModels }}
 // TestChatModels{{ $model.Name }} tests the {{ $model.Name }} model.
@@ -25,13 +29,15 @@ func TestChatModels{{ $model.Name }}(t *testing.T) {
 	}
 	a := assert.New(t)
 	ctx := context.Background()
-	client, err := NewClient(os.Getenv("GROQ_KEY"))
+	apiKey, err := test.GetAPIKey("GROQ_KEY")
+	a.NoError(err, "GetAPIKey error")
+	client, err := groq.NewClient(apiKey)
 	a.NoError(err, "NewClient error")
-	response, err := client.CreateChatCompletion(ctx, ChatCompletionRequest{
-		Model: Model{{ $model.Name }},
-		Messages: []ChatCompletionMessage{
+	response, err := client.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
+		Model: models.Model{{ $model.Name }},
+		Messages: []groq.ChatCompletionMessage{
 			{
-				Role:    ChatMessageRoleUser,
+				Role:    groq.ChatMessageRoleUser,
 				Content: "What is a proface display?",
 			},
 		},
@@ -53,15 +59,17 @@ func TestChatModels{{ $model.Name }}(t *testing.T) {
 // model.
 func Test{{ $model.Name }}(t *testing.T) {
 	if len(os.Getenv("UNIT")) < 1 {
-		t.Skip("Skipping {{ $model.Name }} test")
+		t.Skip("Skipping {{ $model.Name }} transcription test")
 	}
 	time.Sleep(time.Second * 5)
 	a := assert.New(t)
 	ctx := context.Background()
-	client, err := NewClient(os.Getenv("GROQ_KEY"))
+	apiKey, err := test.GetAPIKey("GROQ_KEY")
+	a.NoError(err, "GetAPIKey error")
+	client, err := groq.NewClient(apiKey)
 	a.NoError(err, "NewClient error")
-	response, err := client.CreateTranscription(ctx, AudioRequest{
-		Model:    ModelWhisperLargeV3,
+	response, err := client.CreateTranscription(ctx, groq.AudioRequest{
+		Model:    models.ModelWhisperLargeV3,
 		FilePath: "./examples/audio-lex-fridman/The Roman Emperors who went insane Gregory Aldrete and Lex Fridman.mp3",
 	})
 	a.NoError(err, "CreateTranscription error")
@@ -76,18 +84,20 @@ func Test{{ $model.Name }}(t *testing.T) {
 // and the operations are working as expected for the specific model type.
 func Test{{ $model.Name }}(t *testing.T) {
 	if len(os.Getenv("UNIT")) < 1 {
-		t.Skip("Skipping {{ $model.Name }} test")
+		t.Skip("Skipping {{ $model.Name }} moderation test")
 	}
 	time.Sleep(time.Second * 5)
 	a := assert.New(t)
 	ctx := context.Background()
-	client, err := NewClient(os.Getenv("GROQ_KEY"))
+	apiKey, err := test.GetAPIKey("GROQ_KEY")
+	a.NoError(err, "GetAPIKey error")
+	client, err := groq.NewClient(apiKey)
 	a.NoError(err, "NewClient error")
-	response, err := client.Moderate(ctx, ModerationRequest{
-		Model: Model{{ $model.Name }},
-		Messages: []ChatCompletionMessage{
+	response, err := client.Moderate(ctx, groq.ModerationRequest{
+		Model: models.Model{{ $model.Name }},
+		Messages: []groq.ChatCompletionMessage{
 			{
-				Role:    ChatMessageRoleUser,
+				Role:    groq.ChatMessageRoleUser,
 				Content: "I want to kill them.",
 			},
 		},
@@ -96,7 +106,7 @@ func Test{{ $model.Name }}(t *testing.T) {
 	a.Equal(true, response.Flagged)
 	a.Contains(
 		response.Categories,
-		CategoryViolentCrimes,
+		groq.CategoryViolentCrimes,
 	)
 }
 {{- end }}

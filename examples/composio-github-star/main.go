@@ -11,6 +11,7 @@ import (
 
 	"github.com/conneroisu/groq-go"
 	"github.com/conneroisu/groq-go/extensions/composio"
+	"github.com/conneroisu/groq-go/pkg/models"
 	"github.com/conneroisu/groq-go/pkg/test"
 )
 
@@ -52,7 +53,7 @@ func run(
 		return err
 	}
 	chat, err := client.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
-		Model: groq.ModelLlama3Groq70B8192ToolUsePreview,
+		Model: models.ModelLlama3Groq70B8192ToolUsePreview,
 		Messages: []groq.ChatCompletionMessage{
 			{
 				Role: groq.ChatMessageRoleUser,

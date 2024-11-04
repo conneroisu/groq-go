@@ -12,6 +12,8 @@ import (
 
 	"github.com/conneroisu/groq-go"
 	"github.com/conneroisu/groq-go/extensions/toolhouse"
+	"github.com/conneroisu/groq-go/pkg/models"
+	"github.com/conneroisu/groq-go/pkg/test"
 )
 
 func main() {
@@ -23,7 +25,11 @@ func main() {
 }
 
 func run(ctx context.Context) error {
-	ext, err := toolhouse.NewExtension(os.Getenv("TOOLHOUSE_API_KEY"),
+	toolhouseKey, err := test.GetAPIKey("TOOLHOUSE_API_KEY")
+	if err != nil {
+		return err
+	}
+	ext, err := toolhouse.NewExtension(toolhouseKey,
 		toolhouse.WithMetadata(map[string]any{
 			"id":       "conner",
 			"timezone": 5,
@@ -31,7 +37,11 @@ func run(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	client, err := groq.NewClient(os.Getenv("GROQ_KEY"))
+	groqKey, err := test.GetAPIKey("GROQ_KEY")
+	if err != nil {
+		return err
+	}
+	client, err := groq.NewClient(groqKey)
 	if err != nil {
 		return err
 	}
@@ -41,25 +51,27 @@ func run(ctx context.Context) error {
 			Content: "Write a python function to print the first 10 prime numbers containing the number 3 then respond with the answer. DO NOT GUESS WHAT THE OUTPUT SHOULD BE. MAKE SURE TO CALL THE TOOL GIVEN.",
 		},
 	}
-	print(history[len(history)-1].Content)
+	tools, err := ext.GetTools(ctx)
+	if err != nil {
+		return err
+	}
 	re, err := client.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
-		Model:      groq.ModelLlama3Groq70B8192ToolUsePreview,
+		Model:      models.ModelLlama3Groq70B8192ToolUsePreview,
 		Messages:   history,
-		Tools:      ext.MustGetTools(ctx),
+		Tools:      tools,
 		ToolChoice: "required",
 	})
 	if err != nil {
 		return fmt.Errorf("failed to create 1 chat completion: %w", err)
 	}
 	history = append(history, re.Choices[0].Message)
-	print(history[len(history)-1].ToolCalls[len(history[len(history)-1].ToolCalls)-1].Function.Arguments)
 	r, err := ext.Run(ctx, re)
 	if err != nil {
 		return fmt.Errorf("failed to run tool: %w", err)
 	}
 	history = append(history, r...)
 	finalr, err := client.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
-		Model:     groq.ModelLlama3Groq70B8192ToolUsePreview,
+		Model:     models.ModelLlama3Groq70B8192ToolUsePreview,
 		Messages:  history,
 		MaxTokens: 2000,
 	})
@@ -67,7 +79,6 @@ func run(ctx context.Context) error {
 		return fmt.Errorf("failed to create 2 chat completion: %w", err)
 	}
 	history = append(history, finalr.Choices[0].Message)
-	print(history[len(history)-1].Content)
 	jsnHistory, err := json.MarshalIndent(history, "", "  ")
 	if err != nil {
 		return fmt.Errorf("failed to marshal history: %w", err)
