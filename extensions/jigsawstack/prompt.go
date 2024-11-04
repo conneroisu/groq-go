@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	promptCreateEndpoint Endpoint = "v1/prompt_engine"
+	promptCreateEndpoint Endpoint = "/v1/prompt_engine"
 )
 
 type (

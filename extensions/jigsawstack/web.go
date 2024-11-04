@@ -9,7 +9,8 @@ import (
 )
 
 const (
-	webSearchEndpoint Endpoint = "v1/web/search"
+	webSearchEndpoint  Endpoint = "/v1/web/search"
+	webSuggestEndpoint Endpoint = "/v1/web/search/suggest"
 )
 
 type (
@@ -51,19 +52,18 @@ type (
 
 // WebSearch performs a web search api call over a query string.
 //
-// POST https://api.jigsawstack.com/v1/web/search
+// GET https://api.jigsawstack.com/v1/web/search
 //
 // https://docs.jigsawstack.com/api-reference/web/search
 func (j *JigsawStack) WebSearch(
 	ctx context.Context,
 	query string,
 ) (response WebSearchResponse, err error) {
-	// TODO: may need to santize the query
 	uri := j.baseURL + string(webSearchEndpoint) + "?query=" + query
 	req, err := builders.NewRequest(
 		ctx,
 		j.header,
-		http.MethodPost,
+		http.MethodGet,
 		uri,
 	)
 	if err != nil {
@@ -80,19 +80,18 @@ func (j *JigsawStack) WebSearch(
 // WebSearchSuggestions performs a web search suggestions api call over a query
 // string.
 //
-// POST https://api.jigsawstack.com/v1/web/search
+// GET https://api.jigsawstack.com/v1/web/search/suggest
 //
 // https://docs.jigsawstack.com/api-reference/web/search
 func (j *JigsawStack) WebSearchSuggestions(
 	ctx context.Context,
 	query string,
 ) (response WebSearchSuggestions, err error) {
-	// TODO: may need to santize the query
-	uri := j.baseURL + string(webSearchEndpoint) + "?query=" + query
+	uri := j.baseURL + string(webSuggestEndpoint) + "?query=" + query
 	req, err := builders.NewRequest(
 		ctx,
 		j.header,
-		http.MethodPost,
+		http.MethodGet,
 		uri,
 	)
 	if err != nil {

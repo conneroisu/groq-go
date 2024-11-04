@@ -21,6 +21,7 @@ type (
 	ToolGetter interface {
 		Get(
 			ctx context.Context,
+			params ToolGetParams,
 		) ([]tools.Tool, error)
 	}
 	// ToolRunner is an interface for a tool runner.
@@ -30,8 +31,17 @@ type (
 			response ChatCompletionResponse,
 		) ([]ChatCompletionMessage, error)
 	}
-	// GetToolsParams is the parameters for getting tools.
-	getToolsParams struct {
+	// ToolGetParams are the parameters for getting tools.
+	ToolGetParams struct {
+	}
+	// Router is an agent router.
+	//
+	// It is used to route messages to the appropriate model.
+	Router struct {
+		// Agents is the agents of the router.
+		Agents []Agent
+		// Logger is the logger of the router.
+		Logger *slog.Logger
 	}
 )
 

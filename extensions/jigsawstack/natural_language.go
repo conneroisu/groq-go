@@ -59,7 +59,6 @@ const (
 )
 
 type (
-
 	// Language is a language.
 	Language string
 	// TranslateRequest represents a request structure for translate API.

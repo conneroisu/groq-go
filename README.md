@@ -25,6 +25,7 @@
 - Supports [Toolhouse](https://app.toolhouse.ai/) function calling. [Extention](https://github.com/conneroisu/groq-go/tree/main/extensions/toolhouse)
 - Supports [E2b](https://e2b.dev/) function calling. [Extention](https://github.com/conneroisu/groq-go/tree/main/extensions/e2b)
 - Supports [Composio](https://composio.dev/) function calling. [Extention](https://github.com/conneroisu/groq-go/tree/main/extensions/composio)
+- Supports [Jigsaw Stack](https://jigsawstack.com/) function calling. [Extention](https://github.com/conneroisu/groq-go/tree/main/extensions/jigsawstack)
 
 ## Installation
 
