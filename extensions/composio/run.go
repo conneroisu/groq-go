@@ -37,7 +37,7 @@ func (c *Composio) Run(
 	var respH []groq.ChatCompletionMessage
 	if response.Choices[0].FinishReason != groq.ReasonFunctionCall &&
 		response.Choices[0].FinishReason != "tool_calls" {
-		return nil, fmt.Errorf("Not a function call")
+		return nil, fmt.Errorf("not a function call")
 	}
 	for _, toolCall := range response.Choices[0].Message.ToolCalls {
 		var args map[string]any

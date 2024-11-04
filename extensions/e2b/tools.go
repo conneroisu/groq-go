@@ -151,12 +151,14 @@ var (
 						return
 					case event := <-e:
 						buf.Write([]byte(event.Params.Result.Line))
+						continue
 					case event := <-e2:
 						buf.Write([]byte(event.Params.Result.Line))
+						continue
 					case <-errCh:
 						return
 					case <-proc.Done():
-						break
+						return
 					}
 				}
 			}()
