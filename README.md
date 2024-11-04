@@ -635,7 +635,7 @@ type Client struct {
 ```
 
 <a name="NewClient"></a>
-### func [NewClient](<https://github.com/conneroisu/groq-go/blob/main/client.go#L119>)
+### func [NewClient](<https://github.com/conneroisu/groq-go/blob/main/client.go#L118>)
 
 ```go
 func NewClient(groqAPIKey string, opts ...Opts) (*Client, error)
@@ -794,7 +794,6 @@ const (
     // FormatVerboseJSON is the verbose JSON format. This is a JSON format
     // that is only supported for the transcription API.
     FormatVerboseJSON Format = "verbose_json"
-
     // FormatJSONObject is the json object chat
     // completion response format type.
     FormatJSONObject Format = "json_object"
@@ -864,7 +863,7 @@ type Opts func(*Client)
 ```
 
 <a name="WithBaseURL"></a>
-### func [WithBaseURL](<https://github.com/conneroisu/groq-go/blob/main/client.go#L158>)
+### func [WithBaseURL](<https://github.com/conneroisu/groq-go/blob/main/client.go#L157>)
 
 ```go
 func WithBaseURL(baseURL string) Opts
@@ -873,7 +872,7 @@ func WithBaseURL(baseURL string) Opts
 WithBaseURL sets the base URL for the Groq client.
 
 <a name="WithClient"></a>
-### func [WithClient](<https://github.com/conneroisu/groq-go/blob/main/client.go#L153>)
+### func [WithClient](<https://github.com/conneroisu/groq-go/blob/main/client.go#L152>)
 
 ```go
 func WithClient(client *http.Client) Opts
@@ -882,7 +881,7 @@ func WithClient(client *http.Client) Opts
 WithClient sets the client for the Groq client.
 
 <a name="WithLogger"></a>
-### func [WithLogger](<https://github.com/conneroisu/groq-go/blob/main/client.go#L163>)
+### func [WithLogger](<https://github.com/conneroisu/groq-go/blob/main/client.go#L162>)
 
 ```go
 func WithLogger(logger *slog.Logger) Opts

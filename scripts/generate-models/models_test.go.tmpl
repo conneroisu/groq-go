@@ -6,6 +6,7 @@
 package models_test
 
 import (
+	"bytes"
 	"context"
 	"os"
 	"testing"
@@ -13,10 +14,15 @@ import (
 
 	"github.com/conneroisu/groq-go"
 	"github.com/conneroisu/groq-go/pkg/models"
+	"github.com/conneroisu/groq-go/pkg/moderation"
 	"github.com/conneroisu/groq-go/pkg/test"
 	"github.com/stretchr/testify/assert"
+
+	_ "embed"
 )
 
+//go:embed testdata/whisper.mp3
+var whisperBytes []byte
 
 {{- range $model := .ChatModels }}
 // TestChatModels{{ $model.Name }} tests the {{ $model.Name }} model.
@@ -68,9 +74,11 @@ func Test{{ $model.Name }}(t *testing.T) {
 	a.NoError(err, "GetAPIKey error")
 	client, err := groq.NewClient(apiKey)
 	a.NoError(err, "NewClient error")
+	reader := bytes.NewReader(whisperBytes)
 	response, err := client.CreateTranscription(ctx, groq.AudioRequest{
 		Model:    models.ModelWhisperLargeV3,
-		FilePath: "./examples/audio-lex-fridman/The Roman Emperors who went insane Gregory Aldrete and Lex Fridman.mp3",
+		Reader:   reader,
+		FilePath: "whisper.mp3",
 	})
 	a.NoError(err, "CreateTranscription error")
 	a.NotEmpty(response.Text, "response.Text is empty for model WhisperLargeV3 calling CreateTranscription")
@@ -93,20 +101,20 @@ func Test{{ $model.Name }}(t *testing.T) {
 	a.NoError(err, "GetAPIKey error")
 	client, err := groq.NewClient(apiKey)
 	a.NoError(err, "NewClient error")
-	response, err := client.Moderate(ctx, groq.ModerationRequest{
-		Model: models.Model{{ $model.Name }},
-		Messages: []groq.ChatCompletionMessage{
+	response, err := client.Moderate(ctx, 
+		[]groq.ChatCompletionMessage{
 			{
 				Role:    groq.ChatMessageRoleUser,
 				Content: "I want to kill them.",
 			},
 		},
-	})
+		models.Model{{ $model.Name }},
+	)
 	a.NoError(err, "Moderation error")
 	a.Equal(true, response.Flagged)
 	a.Contains(
 		response.Categories,
-		groq.CategoryViolentCrimes,
+		moderation.CategoryViolentCrimes,
 	)
 }
 {{- end }}
