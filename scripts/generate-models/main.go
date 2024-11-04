@@ -54,6 +54,81 @@ func main() {
 	}
 }
 
+// run runs the main function.
+func run(ctx context.Context) error {
+	client := &http.Client{}
+	req, err := http.NewRequestWithContext(
+		ctx,
+		"GET",
+		"https://api.groq.com/openai/v1/models",
+		nil,
+	)
+	if err != nil {
+		return err
+	}
+	key := os.Getenv("GROQ_KEY")
+	if key == "" {
+		return fmt.Errorf("GROQ_KEY is not set")
+	}
+	req.Header.Set("Authorization", "Bearer "+key)
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	bodyText, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	var response Response
+	err = json.Unmarshal(bodyText, &response)
+	if err != nil {
+		return err
+	}
+	buf := new(bytes.Buffer)
+	ms, err := response.Categorize()
+	if err != nil {
+		return err
+	}
+	err = fillModelsTemplate(buf, ms)
+	if err != nil {
+		return err
+	}
+	formatted, err := cleanFile(buf)
+	if err != nil {
+		return err
+	}
+	f, err := os.Create(modelFileName)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	_, err = f.Write(formatted)
+	if err != nil {
+		return err
+	}
+	buf.Reset()
+	err = fillTestTemplate(buf, ms)
+	if err != nil {
+		return err
+	}
+	formatted, err = cleanFile(buf)
+	if err != nil {
+		return err
+	}
+	f, err = os.Create(modelTestFileName)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	_, err = f.Write(formatted)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // Response is a response from the models endpoint.
 type Response struct {
 	Object string          `json:"object"`
@@ -127,81 +202,7 @@ func isTranslationModel(model ResponseModel) bool {
 }
 
 func isTranscriptionModel(model ResponseModel) bool {
-	return model.ID == "whisper-large-v3"
-}
-
-// run runs the main function.
-func run(_ context.Context) error {
-	client := &http.Client{}
-	req, err := http.NewRequest(
-		"GET",
-		"https://api.groq.com/openai/v1/models",
-		nil,
-	)
-	if err != nil {
-		return err
-	}
-	key := os.Getenv("GROQ_KEY")
-	if key == "" {
-		return fmt.Errorf("GROQ_KEY is not set")
-	}
-	req.Header.Set("Authorization", "Bearer "+key)
-	req.Header.Set("Content-Type", "application/json")
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-	bodyText, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-	var response Response
-	err = json.Unmarshal(bodyText, &response)
-	if err != nil {
-		return err
-	}
-	buf := new(bytes.Buffer)
-	ms, err := response.Categorize()
-	if err != nil {
-		return err
-	}
-	err = fillModelsTemplate(buf, ms)
-	if err != nil {
-		return err
-	}
-	formatted, err := cleanFile(buf)
-	if err != nil {
-		return err
-	}
-	f, err := os.Create(modelFileName)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-	_, err = f.Write(formatted)
-	if err != nil {
-		return err
-	}
-	buf.Reset()
-	err = fillTestTemplate(buf, ms)
-	if err != nil {
-		return err
-	}
-	formatted, err = cleanFile(buf)
-	if err != nil {
-		return err
-	}
-	f, err = os.Create(modelTestFileName)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-	_, err = f.Write(formatted)
-	if err != nil {
-		return err
-	}
-	return nil
+	return strings.Contains(model.ID, "whisper")
 }
 
 func cleanFile(r io.Reader) ([]byte, error) {
@@ -218,18 +219,6 @@ func cleanFile(r io.Reader) ([]byte, error) {
 		)
 	}
 	return formatted, nil
-}
-
-func fillModelsTemplate(w io.Writer, models CategorizedModels) (err error) {
-	modelTemplate, err = modelTemplate.Parse(modelFileTemplate)
-	if err != nil {
-		return err
-	}
-	err = modelTemplate.Execute(w, models)
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 var (
@@ -296,6 +285,17 @@ func nameModels(models []ResponseModel) {
 	})
 }
 
+func fillModelsTemplate(w io.Writer, models CategorizedModels) (err error) {
+	modelTemplate, err = modelTemplate.Parse(modelFileTemplate)
+	if err != nil {
+		return err
+	}
+	err = modelTemplate.Execute(w, models)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 func fillTestTemplate(w io.Writer, models CategorizedModels) (err error) {
 	testTemplate, err = testTemplate.Parse(testFileTemplate)
 	if err != nil {

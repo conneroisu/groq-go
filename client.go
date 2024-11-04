@@ -19,9 +19,6 @@ import (
 //go:generate go run github.com/princjef/gomarkdoc/cmd/gomarkdoc@v1.1.0 -o README.md -e .
 
 type (
-	// Format is the format of a response.
-	// string
-	Format string
 	// Client is a Groq api client.
 	Client struct {
 		// Groq API key
@@ -41,6 +38,29 @@ type (
 		// Logger is the logger for the client.
 		logger *slog.Logger
 	}
+	// Opts is a function that sets options for a Groq client.
+	Opts func(*Client)
+)
+
+// WithClient sets the client for the Groq client.
+func WithClient(client *http.Client) Opts {
+	return func(c *Client) { c.client = client }
+}
+
+// WithBaseURL sets the base URL for the Groq client.
+func WithBaseURL(baseURL string) Opts {
+	return func(c *Client) { c.baseURL = baseURL }
+}
+
+// WithLogger sets the logger for the Groq client.
+func WithLogger(logger *slog.Logger) Opts {
+	return func(c *Client) { c.logger = logger }
+}
+
+type (
+	// Format is the format of a response.
+	// string
+	Format string
 	// RateLimitHeaders struct represents Groq rate limits headers.
 	RateLimitHeaders struct {
 		// LimitRequests is the limit requests of the rate limit
@@ -63,9 +83,6 @@ type (
 	// ResetTime is a time.Time wrapper for the rate limit reset time.
 	// string
 	ResetTime string
-
-	// Opts is a function that sets options for a Groq client.
-	Opts func(*Client)
 	// Usage Represents the total token usage per request to Groq.
 	Usage struct {
 		PromptTokens     int `json:"prompt_tokens"`
@@ -146,21 +163,6 @@ func (c *Client) fullURL(suffix Endpoint, setters ...fullURLOption) string {
 		setter(&args)
 	}
 	return fmt.Sprintf("%s%s", baseURL, suffix)
-}
-
-// WithClient sets the client for the Groq client.
-func WithClient(client *http.Client) Opts {
-	return func(c *Client) { c.client = client }
-}
-
-// WithBaseURL sets the base URL for the Groq client.
-func WithBaseURL(baseURL string) Opts {
-	return func(c *Client) { c.baseURL = baseURL }
-}
-
-// WithLogger sets the logger for the Groq client.
-func WithLogger(logger *slog.Logger) Opts {
-	return func(c *Client) { c.logger = logger }
 }
 
 func (c *Client) sendRequest(req *http.Request, v response) error {

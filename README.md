@@ -623,7 +623,7 @@ type ChatMessagePartType string
 ```
 
 <a name="Client"></a>
-## type [Client](<https://github.com/conneroisu/groq-go/blob/main/client.go#L26-L43>)
+## type [Client](<https://github.com/conneroisu/groq-go/blob/main/client.go#L23-L40>)
 
 Client is a Groq api client.
 
@@ -634,7 +634,7 @@ type Client struct {
 ```
 
 <a name="NewClient"></a>
-### func [NewClient](<https://github.com/conneroisu/groq-go/blob/main/client.go#L118>)
+### func [NewClient](<https://github.com/conneroisu/groq-go/blob/main/client.go#L135>)
 
 ```go
 func NewClient(groqAPIKey string, opts ...Opts) (*Client, error)
@@ -643,7 +643,7 @@ func NewClient(groqAPIKey string, opts ...Opts) (*Client, error)
 NewClient creates a new Groq client.
 
 <a name="Client.CreateChatCompletion"></a>
-### func \(\*Client\) [CreateChatCompletion](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L431-L434>)
+### func \(\*Client\) [CreateChatCompletion](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L429-L432>)
 
 ```go
 func (c *Client) CreateChatCompletion(ctx context.Context, request ChatCompletionRequest) (response ChatCompletionResponse, err error)
@@ -652,7 +652,7 @@ func (c *Client) CreateChatCompletion(ctx context.Context, request ChatCompletio
 CreateChatCompletion method is an API call to create a chat completion.
 
 <a name="Client.CreateChatCompletionJSON"></a>
-### func \(\*Client\) [CreateChatCompletionJSON](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L488-L492>)
+### func \(\*Client\) [CreateChatCompletionJSON](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L486-L490>)
 
 ```go
 func (c *Client) CreateChatCompletionJSON(ctx context.Context, request ChatCompletionRequest, output any) (err error)
@@ -661,7 +661,7 @@ func (c *Client) CreateChatCompletionJSON(ctx context.Context, request ChatCompl
 CreateChatCompletionJSON method is an API call to create a chat completion w/ object output.
 
 <a name="Client.CreateChatCompletionStream"></a>
-### func \(\*Client\) [CreateChatCompletionStream](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L460-L463>)
+### func \(\*Client\) [CreateChatCompletionStream](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L458-L461>)
 
 ```go
 func (c *Client) CreateChatCompletionStream(ctx context.Context, request ChatCompletionRequest) (stream *ChatCompletionStream, err error)
@@ -703,7 +703,7 @@ func (c *Client) Moderate(ctx context.Context, messages []ChatCompletionMessage,
 Moderate performs a moderation api call over a string. Input can be an array or slice but a string will reduce the complexity.
 
 <a name="Endpoint"></a>
-## type [Endpoint](<https://github.com/conneroisu/groq-go/blob/main/client.go#L76>)
+## type [Endpoint](<https://github.com/conneroisu/groq-go/blob/main/client.go#L93>)
 
 Endpoint is an endpoint for the groq api.
 
@@ -754,7 +754,7 @@ func (r FinishReason) MarshalJSON() ([]byte, error)
 MarshalJSON implements the json.Marshaler interface.
 
 <a name="Format"></a>
-## type [Format](<https://github.com/conneroisu/groq-go/blob/main/client.go#L24>)
+## type [Format](<https://github.com/conneroisu/groq-go/blob/main/client.go#L63>)
 
 Format is the format of a response. string
 
@@ -794,7 +794,7 @@ const (
 <a name="ImageURLDetail"></a>
 ## type [ImageURLDetail](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L74>)
 
-ImageURLDetail is the image url detail.
+ImageURLDetail is the detail of the image at the URL.
 
 string
 
@@ -842,7 +842,7 @@ type Moderation struct {
 ```
 
 <a name="Opts"></a>
-## type [Opts](<https://github.com/conneroisu/groq-go/blob/main/client.go#L68>)
+## type [Opts](<https://github.com/conneroisu/groq-go/blob/main/client.go#L42>)
 
 Opts is a function that sets options for a Groq client.
 
@@ -851,7 +851,7 @@ type Opts func(*Client)
 ```
 
 <a name="WithBaseURL"></a>
-### func [WithBaseURL](<https://github.com/conneroisu/groq-go/blob/main/client.go#L157>)
+### func [WithBaseURL](<https://github.com/conneroisu/groq-go/blob/main/client.go#L51>)
 
 ```go
 func WithBaseURL(baseURL string) Opts
@@ -860,7 +860,7 @@ func WithBaseURL(baseURL string) Opts
 WithBaseURL sets the base URL for the Groq client.
 
 <a name="WithClient"></a>
-### func [WithClient](<https://github.com/conneroisu/groq-go/blob/main/client.go#L152>)
+### func [WithClient](<https://github.com/conneroisu/groq-go/blob/main/client.go#L46>)
 
 ```go
 func WithClient(client *http.Client) Opts
@@ -869,7 +869,7 @@ func WithClient(client *http.Client) Opts
 WithClient sets the client for the Groq client.
 
 <a name="WithLogger"></a>
-### func [WithLogger](<https://github.com/conneroisu/groq-go/blob/main/client.go#L162>)
+### func [WithLogger](<https://github.com/conneroisu/groq-go/blob/main/client.go#L56>)
 
 ```go
 func WithLogger(logger *slog.Logger) Opts
@@ -889,7 +889,7 @@ type PromptAnnotation struct {
 ```
 
 <a name="RateLimitHeaders"></a>
-## type [RateLimitHeaders](<https://github.com/conneroisu/groq-go/blob/main/client.go#L45-L62>)
+## type [RateLimitHeaders](<https://github.com/conneroisu/groq-go/blob/main/client.go#L65-L82>)
 
 RateLimitHeaders struct represents Groq rate limits headers.
 
@@ -915,7 +915,7 @@ type RateLimitHeaders struct {
 ```
 
 <a name="ResetTime"></a>
-## type [ResetTime](<https://github.com/conneroisu/groq-go/blob/main/client.go#L65>)
+## type [ResetTime](<https://github.com/conneroisu/groq-go/blob/main/client.go#L85>)
 
 ResetTime is a time.Time wrapper for the rate limit reset time. string
 
@@ -924,7 +924,7 @@ type ResetTime string
 ```
 
 <a name="ResetTime.String"></a>
-### func \(ResetTime\) [String](<https://github.com/conneroisu/groq-go/blob/main/client.go#L275>)
+### func \(ResetTime\) [String](<https://github.com/conneroisu/groq-go/blob/main/client.go#L277>)
 
 ```go
 func (r ResetTime) String() string
@@ -933,7 +933,7 @@ func (r ResetTime) String() string
 String returns the string representation of the ResetTime.
 
 <a name="ResetTime.Time"></a>
-### func \(ResetTime\) [Time](<https://github.com/conneroisu/groq-go/blob/main/client.go#L280>)
+### func \(ResetTime\) [Time](<https://github.com/conneroisu/groq-go/blob/main/client.go#L282>)
 
 ```go
 func (r ResetTime) Time() time.Time
@@ -1086,7 +1086,7 @@ const (
 ```
 
 <a name="Usage"></a>
-## type [Usage](<https://github.com/conneroisu/groq-go/blob/main/client.go#L70-L74>)
+## type [Usage](<https://github.com/conneroisu/groq-go/blob/main/client.go#L87-L91>)
 
 Usage Represents the total token usage per request to Groq.
 

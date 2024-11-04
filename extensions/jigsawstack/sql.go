@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	textToSQLEndpoint = "/v1/ai/sql"
+	textToSQLEndpoint Endpoint = "/v1/ai/sql"
 )
 
 type (
@@ -35,7 +35,7 @@ func (j *JigsawStack) TextToSQL(
 		ctx,
 		j.header,
 		http.MethodPost,
-		j.baseURL+textToSQLEndpoint,
+		j.baseURL+string(textToSQLEndpoint),
 		builders.WithBody(request),
 	)
 	if err != nil {

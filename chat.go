@@ -68,7 +68,7 @@ const (
 )
 
 type (
-	// ImageURLDetail is the image url detail.
+	// ImageURLDetail is the detail of the image at the URL.
 	//
 	// string
 	ImageURLDetail string

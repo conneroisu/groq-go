@@ -94,7 +94,6 @@ func (j *JigsawStack) PromptList(
 	page int,
 	limit int,
 ) (response PromptListResponse, err error) {
-	// TODO: may need to santize the query params (page, limit)
 	uri := j.baseURL + string(promptCreateEndpoint) + "?page=" + strconv.Itoa(page) + "&limit=" + strconv.Itoa(limit)
 	req, err := builders.NewRequest(
 		ctx,
@@ -149,6 +148,7 @@ func (j *JigsawStack) PromptDelete(
 	ctx context.Context,
 	id string,
 ) (response PromptResponse, err error) {
+	// TODO: may need to sanitize the id
 	uri := j.baseURL + string(promptCreateEndpoint) + "/" + id
 	req, err := builders.NewRequest(
 		ctx,
@@ -177,6 +177,7 @@ func (j *JigsawStack) PromptRun(
 	id string,
 	inputs map[string]any,
 ) (response PromptRunResponse, err error) {
+	// TODO: may need to sanitize the id
 	uri := j.baseURL + string(promptCreateEndpoint) + "/" + id
 	req, err := builders.NewRequest(
 		ctx,

@@ -3,7 +3,7 @@ package jigsawstack
 import (
 	"context"
 	"fmt"
-	"io"
+	"mime"
 	"net/http"
 
 	"github.com/conneroisu/groq-go/pkg/builders"
@@ -36,11 +36,14 @@ type (
 func (j *JigsawStack) FileAdd(
 	ctx context.Context,
 	key string,
-	contentType string,
-	body io.Reader,
+	body string,
 ) (string, error) {
 	// TODO: may need to santize the key
 	url := j.baseURL + string(uploadEndpoint) + "?key=" + key
+	contentType, _, err := mime.ParseMediaType(body)
+	if err != nil {
+		return "", err
+	}
 	req, err := builders.NewRequest(
 		ctx,
 		j.header,

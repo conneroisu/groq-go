@@ -67,7 +67,7 @@ func (j *JigsawStack) sendRequest(req *http.Request, v any) error {
 	if err != nil {
 		return err
 	}
-	j.logger.Debug("received http response from jigsawstack", "status", resp.Status, "headers", resp.Header, "url", req.URL)
+	j.logger.Debug("received http response from jigsawstack", "status", resp.Status, "url", req.URL)
 	defer resp.Body.Close()
 	if resp.StatusCode < http.StatusOK ||
 		resp.StatusCode >= http.StatusBadRequest {
