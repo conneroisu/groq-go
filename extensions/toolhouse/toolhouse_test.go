@@ -13,7 +13,7 @@ import (
 )
 
 func TestUnitExtension(t *testing.T) {
-	if !test.IsUnitTest() {
+	if !test.IsIntegrationTest() {
 		t.Skip("Skipping Toolhouse extension test")
 	}
 	a := assert.New(t)

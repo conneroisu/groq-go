@@ -20,7 +20,7 @@ func getapiKey(t *testing.T, val string) string {
 }
 
 func TestSandboxTooling(t *testing.T) {
-	if !test.IsUnitTest() {
+	if !test.IsIntegrationTest() {
 		t.Skip()
 	}
 	a := assert.New(t)

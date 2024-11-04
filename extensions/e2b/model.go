@@ -7,7 +7,8 @@ import (
 )
 
 type (
-	// Receiver is an interface for a constantly receiving instance.
+	// Receiver is an interface for a constantly receiving instance that
+	// can closed.
 	//
 	// Implementations should be conccurent safe.
 	Receiver interface {
@@ -25,7 +26,10 @@ type (
 		//
 		// If the context is cancelled before requesting the timeout,
 		// the error will be ctx.Err().
-		KeepAlive(ctx context.Context, timeout time.Duration) error
+		KeepAlive(
+			ctx context.Context,
+			timeout time.Duration,
+		) error
 		// NewProcess creates a new process.
 		NewProcess(
 			cmd string,

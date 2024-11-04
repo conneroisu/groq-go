@@ -8,7 +8,9 @@ import (
 )
 
 const (
+	summaryEndpoint Endpoint = "/v1/ai/summarize"
 	sentimentSuffix Endpoint = "/v1/ai/sentiment"
+
 	// EmotionAnger is the anger emotion.
 	EmotionAnger Emotion = "anger"
 	// EmotionFear is the fear emotion.
@@ -58,10 +60,6 @@ const (
 type (
 	// Emotion is an emotion.
 	Emotion string
-	// SentimentRequest represents a request structure for sentiment API.
-	SentimentRequest struct {
-		Text string `json:"text"`
-	}
 	// SentimentResponse represents a response structure for sentiment API.
 	SentimentResponse struct {
 		Success   bool `json:"success"`
@@ -80,24 +78,64 @@ type (
 )
 
 // Sentiment performs a sentiment api call over a string.
-func (c *JigsawStack) Sentiment(
+func (j *JigsawStack) Sentiment(
 	ctx context.Context,
-	request SentimentRequest,
+	text string,
 ) (SentimentResponse, error) {
+	var request = struct {
+		Text string `json:"text"`
+	}{Text: text}
 	req, err := builders.NewRequest(
 		ctx,
-		c.header,
+		j.header,
 		http.MethodPost,
-		c.baseURL+string(sentimentSuffix),
+		j.baseURL+string(sentimentSuffix),
 		builders.WithBody(request),
 	)
 	if err != nil {
 		return SentimentResponse{}, err
 	}
 	var respH SentimentResponse
-	err = c.sendRequest(req, &respH)
+	err = j.sendRequest(req, &respH)
 	if err != nil {
 		return SentimentResponse{}, err
 	}
 	return respH, nil
+}
+
+type (
+	// SummaryRequest represents a request structure for summary API.
+	SummaryRequest struct {
+		Text string `json:"text"`
+	}
+	// SummaryResponse represents a response structure for summary API.
+	SummaryResponse struct {
+		Success bool   `json:"success"`
+		Summary string `json:"summary"`
+	}
+)
+
+// Summarize summarizes the give text.
+//
+// Max text character is 5000.
+func (j *JigsawStack) Summarize(
+	ctx context.Context,
+	request SummaryRequest,
+) (response SummaryResponse, err error) {
+	req, err := builders.NewRequest(
+		ctx,
+		j.header,
+		http.MethodPost,
+		j.baseURL+string(summaryEndpoint),
+		builders.WithBody(request),
+	)
+	if err != nil {
+		return
+	}
+	var resp SummaryResponse
+	err = j.sendRequest(req, &resp)
+	if err != nil {
+		return
+	}
+	return resp, nil
 }

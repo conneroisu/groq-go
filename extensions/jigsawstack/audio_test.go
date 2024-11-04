@@ -13,7 +13,7 @@ import (
 )
 
 func TestAudioTTS(t *testing.T) {
-	if !test.IsUnitTest() {
+	if !test.IsIntegrationTest() {
 		t.Skip()
 	}
 	a := assert.New(t)
@@ -24,21 +24,16 @@ func TestAudioTTS(t *testing.T) {
 		apiKey,
 		jigsawstack.WithLogger(test.DefaultLogger),
 	)
-	t.Log("ereatedc client")
 	a.NoError(err)
-	response, err := client.AudioTTS(ctx, jigsawstack.TTSRequest{
-		Text: "Hello, world!",
-	})
+	response, err := client.AudioTTS(ctx,
+		"Hello, world! Welcome to Groq!",
+		jigsawstack.WithAccent("zh-TW-female-19"),
+	)
 	a.NoError(err)
-	t.Logf("response: %s", response)
 	// write the io.reader to a file
 	f, err := os.Create("tts.mp3")
-	if err != nil {
-		t.Fatal(err)
-	}
+	a.NoError(err)
 	defer f.Close()
 	_, err = io.Copy(f, strings.NewReader(response))
-	if err != nil {
-		t.Fatal(err)
-	}
+	a.NoError(err)
 }

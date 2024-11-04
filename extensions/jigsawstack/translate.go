@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	translateEndpoint = "v1/ai/translate"
+	translateEndpoint = "/v1/ai/translate"
 )
 
 type (

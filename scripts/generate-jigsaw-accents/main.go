@@ -2,6 +2,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -11,7 +12,10 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"text/template"
 	"unicode"
+
+	_ "embed"
 
 	"github.com/conneroisu/groq-go/pkg/builders"
 	"github.com/conneroisu/groq-go/pkg/test"
@@ -205,4 +209,21 @@ func PascalCase(str string) string {
 		items[i] = Capitalize(items[i])
 	}
 	return strings.Join(items, "")
+}
+
+//go:embed accents.go.tmpl
+var accentsTemplate string
+
+var (
+	textTemplate = template.Must(template.New("accents").Parse(accentsTemplate))
+)
+
+// FillAccents fills the accents template with the given accents
+func FillAccents(accents SpeakerVoiceAccent) string {
+	var buf bytes.Buffer
+	err := textTemplate.Execute(&buf, accents)
+	if err != nil {
+		panic(err)
+	}
+	return buf.String()
 }

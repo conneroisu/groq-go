@@ -40,6 +40,8 @@ func NewJigsawStack(apiKey string, opts ...Option) (*JigsawStack, error) {
 	}
 	j.header.SetCommonHeaders = func(req *http.Request) {
 		req.Header.Set("x-api-key", apiKey)
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Accept", "application/json")
 	}
 	return j, nil
 }
@@ -61,20 +63,23 @@ func WithLogger(logger *slog.Logger) Option {
 
 func (j *JigsawStack) sendRequest(req *http.Request, v any) error {
 	j.header.SetCommonHeaders(req)
-	j.logger.Debug("sending http request", "url", req.URL.String(), "body", req.Body)
 	resp, err := j.client.Do(req)
 	if err != nil {
 		return err
 	}
+	j.logger.Debug("received http response from jigsawstack", "status", resp.Status, "headers", resp.Header, "url", req.URL)
 	defer resp.Body.Close()
 	if resp.StatusCode < http.StatusOK ||
 		resp.StatusCode >= http.StatusBadRequest {
-		return nil
+		read, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+		return fmt.Errorf("bad status code: %d\nbdy: %s\n headers: %v", resp.StatusCode, read, resp.Header)
 	}
 	if v == nil {
 		return nil
 	}
-	j.logger.Debug("received http response", "status", resp.Status, "body", resp.Body)
 	switch o := v.(type) {
 	case *string:
 		b, err := io.ReadAll(resp.Body)

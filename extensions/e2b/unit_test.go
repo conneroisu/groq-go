@@ -22,7 +22,7 @@ func getapiKey(t *testing.T) string {
 }
 
 func TestPostSandbox(t *testing.T) {
-	if !test.IsUnitTest() {
+	if !test.IsIntegrationTest() {
 		t.Skip()
 	}
 	a := assert.New(t)
@@ -53,7 +53,7 @@ func TestPostSandbox(t *testing.T) {
 
 // TestWriteRead tests the Write and Read methods of the Sandbox.
 func TestWriteRead(t *testing.T) {
-	if !test.IsUnitTest() {
+	if !test.IsIntegrationTest() {
 		t.Skip()
 	}
 	filePath := "test.txt"
@@ -79,7 +79,7 @@ func TestWriteRead(t *testing.T) {
 }
 
 func TestCreateProcess(t *testing.T) {
-	if !test.IsUnitTest() {
+	if !test.IsIntegrationTest() {
 		t.Skip()
 	}
 	a := assert.New(t)
@@ -120,7 +120,7 @@ func TestCreateProcess(t *testing.T) {
 }
 
 func TestFilesystemSubscribe(t *testing.T) {
-	if !test.IsUnitTest() {
+	if !test.IsIntegrationTest() {
 		t.Skip()
 	}
 	a := assert.New(t)
@@ -155,7 +155,7 @@ func TestFilesystemSubscribe(t *testing.T) {
 }
 
 func TestKeepAlive(t *testing.T) {
-	if !test.IsUnitTest() {
+	if !test.IsIntegrationTest() {
 		t.Skip()
 	}
 	a := assert.New(t)

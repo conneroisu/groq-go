@@ -27,7 +27,7 @@ import (
 )
 
 func TestTestServer(t *testing.T) {
-	if !test.IsUnitTest() {
+	if !test.IsIntegrationTest() {
 		t.Skip()
 	}
 	num := rand.Intn(100)

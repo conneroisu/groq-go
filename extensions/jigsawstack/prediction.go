@@ -18,10 +18,6 @@ type (
 		Date  time.Time `json:"date"`
 		Value float64   `json:"value"`
 	}
-	// PredictRequest represents a request structure for prediction API.
-	PredictRequest struct {
-		Dataset []DatasetEntry `json:"dataset"`
-	}
 	// PredictResponse represents a response structure for prediction API.
 	PredictResponse struct {
 		Success bool           `json:"success"`
@@ -29,19 +25,22 @@ type (
 	}
 )
 
-// Predict predicts the text.
+// Predict predicts the future values of a dataset.
 //
 // Max text character is 5000.
 func (j *JigsawStack) Predict(
 	ctx context.Context,
-	request PredictRequest,
+	dataset []DatasetEntry,
 ) (response PredictResponse, err error) {
+	var predictRequest = struct {
+		Dataset []DatasetEntry `json:"dataset"`
+	}{Dataset: dataset}
 	req, err := builders.NewRequest(
 		ctx,
 		j.header,
 		http.MethodPost,
 		j.baseURL+string(predictEndpoint),
-		builders.WithBody(request),
+		builders.WithBody(predictRequest),
 	)
 	if err != nil {
 		return

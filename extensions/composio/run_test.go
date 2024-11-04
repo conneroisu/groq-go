@@ -73,7 +73,7 @@ func TestRun(t *testing.T) {
 }
 
 func TestUnitRun(t *testing.T) {
-	if !test.IsUnitTest() {
+	if !test.IsIntegrationTest() {
 		t.Skip()
 	}
 	a := assert.New(t)

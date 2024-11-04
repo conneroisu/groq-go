@@ -48,7 +48,7 @@ func TestGetTools(t *testing.T) {
 
 // TestUnitGetTools tests the ability of the composio client to get tools.
 func TestUnitGetTools(t *testing.T) {
-	if !test.IsUnitTest() {
+	if !test.IsIntegrationTest() {
 		t.Skip()
 	}
 	a := assert.New(t)

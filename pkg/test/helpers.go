@@ -59,8 +59,8 @@ func (t *TokenRoundTripper) RoundTrip(
 	return t.Fallback.RoundTrip(req)
 }
 
-// IsUnitTest returns true if the unit test environment variable is set.
-func IsUnitTest() bool {
+// IsIntegrationTest returns true if the unit test environment variable is set.
+func IsIntegrationTest() bool {
 	return os.Getenv("UNIT") != ""
 }
 

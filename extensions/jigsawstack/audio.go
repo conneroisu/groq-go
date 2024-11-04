@@ -14,9 +14,11 @@ const (
 
 type (
 	// TTSOption is an option for the TTS request.
-	TTSOption func(*TTSRequest)
-	// TTSRequest represents a request structure for TTS API.
-	TTSRequest struct {
+	TTSOption func(*ttsRequest)
+	// ttsRequest represents a request structure for TTS API.
+	ttsRequest struct {
+		// Text is the text to convert to speech.
+		// Required.
 		Text string `json:"text"`
 		// Accent is the accent of the speaker voice to use.
 		//
@@ -31,40 +33,55 @@ type (
 		// Not required if the SpeakerURL is not provided.
 		FileKey string `json:"speaker_clone_file_store_key,omitempty"`
 	}
-	// SpeakerVoiceAccent represents a speaker voice accent.
-	SpeakerVoiceAccent struct {
-		Success bool `json:"success"`
-		Accents []struct {
-			Accent     string `json:"accent"`
-			LocaleName string `json:"locale_name"`
-			Gender     string `json:"gender"`
-		} `json:"accents"`
-	}
 )
 
+// WithAccent sets the accent of the speaker voice to use.
+func WithAccent(accent string) TTSOption {
+	return func(r *ttsRequest) { r.Accent = accent }
+}
+
+// WithSpeakerURL sets the url of the speaker voice to use.
+func WithSpeakerURL(url string) TTSOption {
+	return func(r *ttsRequest) { r.SpeakerURL = url }
+}
+
+// WithFileKey sets the file key of the speaker voice to use.
+func WithFileKey(key string) TTSOption {
+	return func(r *ttsRequest) { r.FileKey = key }
+}
+
 // AudioTTS creates a text to speech (TTS) audio file.
+//
+// It only support one option at a time, but does support no options.
 //
 // POST https://api.jigsawstack.com/v1/ai/tts
 //
 // https://docs.jigsawstack.com/api-reference/ai/text-to-speech
 func (j *JigsawStack) AudioTTS(
 	ctx context.Context,
-	request TTSRequest,
+	text string,
+	options ...TTSOption,
 ) (mp3 string, err error) {
+	body := ttsRequest{
+		Text: text,
+	}
+	for _, option := range options {
+		option(&body)
+	}
 	req, err := builders.NewRequest(
 		ctx,
 		j.header,
 		http.MethodPost,
 		j.baseURL+ttsEndpoint,
-		builders.WithBody(request),
+		builders.WithBody(body),
 	)
 	if err != nil {
-		return
+		return "", err
 	}
 	var resp string
 	err = j.sendRequest(req, &resp)
 	if err != nil {
-		return
+		return "", err
 	}
 	return resp, nil
 }
