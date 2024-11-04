@@ -126,7 +126,6 @@ API Documentation: https://console.groq.com/docs/quickstart
   - [func \(c \*Client\) CreateTranscription\(ctx context.Context, request AudioRequest\) \(AudioResponse, error\)](<#Client.CreateTranscription>)
   - [func \(c \*Client\) CreateTranslation\(ctx context.Context, request AudioRequest\) \(AudioResponse, error\)](<#Client.CreateTranslation>)
   - [func \(c \*Client\) Moderate\(ctx context.Context, messages \[\]ChatCompletionMessage, model models.ModerationModel\) \(response Moderation, err error\)](<#Client.Moderate>)
-  - [func \(c \*Client\) MustCreateChatCompletion\(ctx context.Context, request ChatCompletionRequest\) \(response ChatCompletionResponse\)](<#Client.MustCreateChatCompletion>)
 - [type Endpoint](<#Endpoint>)
 - [type FinishReason](<#FinishReason>)
   - [func \(r FinishReason\) MarshalJSON\(\) \(\[\]byte, error\)](<#FinishReason.MarshalJSON>)
@@ -644,7 +643,7 @@ func NewClient(groqAPIKey string, opts ...Opts) (*Client, error)
 NewClient creates a new Groq client.
 
 <a name="Client.CreateChatCompletion"></a>
-### func \(\*Client\) [CreateChatCompletion](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L445-L448>)
+### func \(\*Client\) [CreateChatCompletion](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L431-L434>)
 
 ```go
 func (c *Client) CreateChatCompletion(ctx context.Context, request ChatCompletionRequest) (response ChatCompletionResponse, err error)
@@ -653,7 +652,7 @@ func (c *Client) CreateChatCompletion(ctx context.Context, request ChatCompletio
 CreateChatCompletion method is an API call to create a chat completion.
 
 <a name="Client.CreateChatCompletionJSON"></a>
-### func \(\*Client\) [CreateChatCompletionJSON](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L502-L506>)
+### func \(\*Client\) [CreateChatCompletionJSON](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L488-L492>)
 
 ```go
 func (c *Client) CreateChatCompletionJSON(ctx context.Context, request ChatCompletionRequest, output any) (err error)
@@ -662,7 +661,7 @@ func (c *Client) CreateChatCompletionJSON(ctx context.Context, request ChatCompl
 CreateChatCompletionJSON method is an API call to create a chat completion w/ object output.
 
 <a name="Client.CreateChatCompletionStream"></a>
-### func \(\*Client\) [CreateChatCompletionStream](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L474-L477>)
+### func \(\*Client\) [CreateChatCompletionStream](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L460-L463>)
 
 ```go
 func (c *Client) CreateChatCompletionStream(ctx context.Context, request ChatCompletionRequest) (stream *ChatCompletionStream, err error)
@@ -702,17 +701,6 @@ func (c *Client) Moderate(ctx context.Context, messages []ChatCompletionMessage,
 ```
 
 Moderate performs a moderation api call over a string. Input can be an array or slice but a string will reduce the complexity.
-
-<a name="Client.MustCreateChatCompletion"></a>
-### func \(\*Client\) [MustCreateChatCompletion](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L433-L436>)
-
-```go
-func (c *Client) MustCreateChatCompletion(ctx context.Context, request ChatCompletionRequest) (response ChatCompletionResponse)
-```
-
-MustCreateChatCompletion method is an API call to create a chat completion.
-
-It panics if an error occurs.
 
 <a name="Endpoint"></a>
 ## type [Endpoint](<https://github.com/conneroisu/groq-go/blob/main/client.go#L76>)

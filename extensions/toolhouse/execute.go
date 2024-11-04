@@ -19,20 +19,6 @@ type (
 	}
 )
 
-// MustRun runs the extension on the given history.
-//
-// It panics if an error occurs.
-func (e *Toolhouse) MustRun(
-	ctx context.Context,
-	response groq.ChatCompletionResponse,
-) []groq.ChatCompletionMessage {
-	respH, err := e.Run(ctx, response)
-	if err != nil {
-		panic(err)
-	}
-	return respH
-}
-
 // Run runs the extension on the given history.
 func (e *Toolhouse) Run(
 	ctx context.Context,

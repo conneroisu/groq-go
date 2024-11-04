@@ -423,23 +423,7 @@ func (r FinishReason) MarshalJSON() ([]byte, error) {
 }
 
 // SetHeader sets the header of the response.
-func (r *ChatCompletionResponse) SetHeader(h http.Header) {
-	r.Header = h
-}
-
-// MustCreateChatCompletion method is an API call to create a chat completion.
-//
-// It panics if an error occurs.
-func (c *Client) MustCreateChatCompletion(
-	ctx context.Context,
-	request ChatCompletionRequest,
-) (response ChatCompletionResponse) {
-	response, err := c.CreateChatCompletion(ctx, request)
-	if err != nil {
-		panic(err)
-	}
-	return response
-}
+func (r *ChatCompletionResponse) SetHeader(h http.Header) { r.Header = h }
 
 // CreateChatCompletion method is an API call to create a chat completion.
 func (c *Client) CreateChatCompletion(
@@ -515,18 +499,7 @@ func (c *Client) CreateChatCompletionJSON(
 		Schema:      *schema,
 		Strict:      true,
 	}
-	req, err := builders.NewRequest(
-		ctx,
-		c.header,
-		http.MethodPost,
-		c.fullURL(chatCompletionsSuffix, withModel(request.Model)),
-		builders.WithBody(request),
-	)
-	if err != nil {
-		return
-	}
-	var response ChatCompletionResponse
-	err = c.sendRequest(req, &response)
+	response, err := c.CreateChatCompletion(ctx, request)
 	if err != nil {
 		reqErr, ok := err.(*groqerr.APIError)
 		if ok && (reqErr.HTTPStatusCode == http.StatusServiceUnavailable ||
