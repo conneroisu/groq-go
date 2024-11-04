@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	ttsEndpoint     = "/v1/ai/tts"
-	accentsEndpoint = "/v1/audio/speaker_voice_accents"
+	ttsEndpoint     Endpoint = "/v1/ai/tts"
+	accentsEndpoint Endpoint = "/v1/audio/speaker_voice_accents"
 )
 
 type (
@@ -72,7 +72,7 @@ func (j *JigsawStack) AudioTTS(
 		ctx,
 		j.header,
 		http.MethodPost,
-		j.baseURL+ttsEndpoint,
+		j.baseURL+string(ttsEndpoint),
 		builders.WithBody(body),
 	)
 	if err != nil {
