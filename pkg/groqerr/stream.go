@@ -1,12 +1,22 @@
-package groq
+package groqerr
 
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"strings"
 )
 
 type (
+	// ErrTooManyEmptyStreamMessages is returned when the stream has sent
+	// too many empty messages.
+	ErrTooManyEmptyStreamMessages struct{}
+
+	// ErrorResponse is the response returned by the Groq API.
+	ErrorResponse struct {
+		Error *APIError `json:"error,omitempty"`
+	}
+
 	// APIError provides error information returned by the Groq API.
 	APIError struct {
 		// Code is the code of the error.
@@ -20,34 +30,14 @@ type (
 		// HTTPStatusCode is the status code of the error.
 		HTTPStatusCode int `json:"-"`
 	}
-	// ErrContentFieldsMisused is an error that occurs when both Content and
-	// MultiContent properties are set.
-	ErrContentFieldsMisused struct {
-		field string
-	}
-	// ErrToolNotFound is returned when a tool is not found.
-	ErrToolNotFound struct {
-		ToolName string
-	}
-	// ErrTooManyEmptyStreamMessages is returned when the stream has sent
-	// too many empty messages.
-	ErrTooManyEmptyStreamMessages struct{}
-	// ErrorResponse is the response returned by the Groq API.
-	ErrorResponse struct {
-		Error *APIError `json:"error,omitempty"`
+
+	// ErrorBuffer is a buffer that allows for appending errors.
+	ErrorBuffer interface {
+		io.Writer
+		Len() int
+		Bytes() []byte
 	}
 )
-
-// Error implements the error interface.
-func (e ErrContentFieldsMisused) Error() string {
-	return fmt.Errorf("can't use both Content and MultiContent properties simultaneously").
-		Error()
-}
-
-// Error returns the error message.
-func (e ErrTooManyEmptyStreamMessages) Error() string {
-	return "stream has sent too many empty messages"
-}
 
 // Error method implements the error interface on APIError.
 func (e *APIError) Error() string {
@@ -98,29 +88,7 @@ func (e *APIError) UnmarshalJSON(data []byte) (err error) {
 	return json.Unmarshal(rawMap["code"], &e.Code)
 }
 
-type (
-	// ErrRequest is a request error.
-	ErrRequest struct {
-		HTTPStatusCode int
-		Err            error
-	}
-)
-
-// Error implements the error interface.
-func (e *ErrRequest) Error() string {
-	return fmt.Sprintf(
-		"error, status code: %d, message: %s",
-		e.HTTPStatusCode,
-		e.Err,
-	)
-}
-
-// Unwrap unwraps the error.
-func (e *ErrRequest) Unwrap() error {
-	return e.Err
-}
-
-// Error implements the error interface.
-func (e ErrToolNotFound) Error() string {
-	return fmt.Sprintf("tool %s not found", e.ToolName)
+// Error returns the error message.
+func (e ErrTooManyEmptyStreamMessages) Error() string {
+	return "stream has sent too many empty messages"
 }

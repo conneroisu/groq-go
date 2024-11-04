@@ -19,6 +19,7 @@ import (
 	"testing"
 
 	"github.com/conneroisu/groq-go"
+	"github.com/conneroisu/groq-go/pkg/groqerr"
 	"github.com/conneroisu/groq-go/pkg/models"
 	"github.com/conneroisu/groq-go/pkg/test"
 	"github.com/stretchr/testify/assert"
@@ -231,7 +232,7 @@ func TestCreateChatCompletionStream(t *testing.T) {
 		t.Logf("%d: %s", ix, string(b))
 		receivedResponse, streamErr := stream.Recv()
 		a.NoError(streamErr, "stream.Recv() failed")
-		if !compareChatResponses(t, expectedResponse, receivedResponse) {
+		if !compareChatResponses(t, expectedResponse, *receivedResponse) {
 			t.Errorf(
 				"Stream response %v is %v, expected %v",
 				ix,
@@ -309,7 +310,7 @@ func TestCreateChatCompletionStreamError(t *testing.T) {
 	defer stream.Close()
 	_, streamErr := stream.Recv()
 	a.Error(streamErr, "stream.Recv() did not return error")
-	var apiErr *groq.APIError
+	var apiErr *groqerr.APIError
 	if !errors.As(streamErr, &apiErr) {
 		t.Errorf("stream.Recv() did not return APIError")
 	}
@@ -463,7 +464,7 @@ func TestCreateChatCompletionStreamErrorWithDataPrefix(t *testing.T) {
 	defer stream.Close()
 	_, streamErr := stream.Recv()
 	a.Error(streamErr, "stream.Recv() did not return error")
-	var apiErr *groq.APIError
+	var apiErr *groqerr.APIError
 	if !errors.As(streamErr, &apiErr) {
 		t.Errorf("stream.Recv() did not return APIError")
 	}
@@ -502,7 +503,7 @@ func TestCreateChatCompletionStreamRateLimitError(t *testing.T) {
 			Stream: true,
 		},
 	)
-	var apiErr *groq.APIError
+	var apiErr *groqerr.APIError
 	if !errors.As(err, &apiErr) {
 		t.Errorf(
 			"TestCreateChatCompletionStreamRateLimitError did not return APIError",
@@ -603,7 +604,7 @@ func TestCreateChatCompletionStreamStreamOptions(t *testing.T) {
 		if !errors.Is(streamErr, io.EOF) {
 			a.NoError(streamErr, "stream.Recv() failed")
 		}
-		if !compareChatResponses(t, expectedResponse, receivedResponse) {
+		if !compareChatResponses(t, expectedResponse, *receivedResponse) {
 			t.Errorf(
 				"Stream response %v: %v,BUT expected %v",
 				ix,

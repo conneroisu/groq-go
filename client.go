@@ -1,7 +1,6 @@
 package groq
 
 import (
-	"bufio"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -11,7 +10,9 @@ import (
 	"time"
 
 	"github.com/conneroisu/groq-go/pkg/builders"
+	"github.com/conneroisu/groq-go/pkg/groqerr"
 	"github.com/conneroisu/groq-go/pkg/models"
+	"github.com/conneroisu/groq-go/pkg/streams"
 )
 
 //go:generate go run ./scripts/generate-models/
@@ -191,15 +192,10 @@ func (c *Client) sendRequest(req *http.Request, v response) error {
 	return decodeResponse(res.Body, v)
 }
 
-// streamer is an interface for a streamer.
-type streamer interface {
-	ChatCompletionStreamResponse
-}
-
-func sendRequestStream[T streamer](
+func sendRequestStream[T streams.Streamer[ChatCompletionStreamResponse]](
 	client *Client,
 	req *http.Request,
-) (*streamReader[T], error) {
+) (*streams.StreamReader[*ChatCompletionStreamResponse], error) {
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "text/event-stream")
 	req.Header.Set("Cache-Control", "no-cache")
@@ -209,18 +205,15 @@ func sendRequestStream[T streamer](
 		req,
 	) //nolint:bodyclose // body is closed in stream.Close()
 	if err != nil {
-		return new(streamReader[T]), err
+		return new(streams.StreamReader[*ChatCompletionStreamResponse]), err
 	}
 	if isFailureStatusCode(resp) {
-		return new(streamReader[T]), client.handleErrorResp(resp)
+		return new(streams.StreamReader[*ChatCompletionStreamResponse]), client.handleErrorResp(resp)
 	}
-	return &streamReader[T]{
-		emptyMessagesLimit: client.emptyMessagesLimit,
-		reader:             bufio.NewReader(resp.Body),
-		response:           resp,
-		errAccumulator:     newErrorAccumulator(),
-		Header:             resp.Header,
-	}, nil
+	return streams.NewStreamReader[ChatCompletionStreamResponse](
+		resp,
+		client.emptyMessagesLimit,
+	), nil
 }
 
 func isFailureStatusCode(resp *http.Response) bool {
@@ -261,10 +254,10 @@ func withModel[
 }
 
 func (c *Client) handleErrorResp(resp *http.Response) error {
-	var errRes ErrorResponse
+	var errRes groqerr.ErrorResponse
 	err := json.NewDecoder(resp.Body).Decode(&errRes)
 	if err != nil || errRes.Error == nil {
-		reqErr := &ErrRequest{
+		reqErr := &groqerr.ErrRequest{
 			HTTPStatusCode: resp.StatusCode,
 			Err:            err,
 		}
