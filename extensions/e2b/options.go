@@ -38,8 +38,20 @@ func WithCwd(cwd string) Option {
 }
 
 // WithWsURL sets the websocket url resolving function for the e2b sandbox.
+//
+// This is useful for testing.
 func WithWsURL(wsURL func(s *Sandbox) string) Option {
 	return func(s *Sandbox) { s.wsURL = wsURL }
 }
 
 // Process Options
+
+// ProcessWithEnv sets the environment variables for the process.
+func ProcessWithEnv(env map[string]string) ProcessOption {
+	return func(p *Process) { p.Env = env }
+}
+
+// ProcessWithCwd sets the current working directory for the process.
+func ProcessWithCwd(cwd string) ProcessOption {
+	return func(p *Process) { p.Cwd = cwd }
+}
