@@ -1,7 +1,5 @@
 package omap
 
-// Adapted from https://github.com/dvyukov/go-fuzz-corpus/blob/c42c1b2/json/json.go
-
 import (
 	"encoding/json"
 	"testing"
@@ -13,9 +11,8 @@ import (
 func FuzzRoundTripJSON(f *testing.F) {
 	f.Fuzz(func(t *testing.T, data []byte) {
 		for _, testCase := range []struct {
-			name        string
-			constructor func() any
-			// should be a function that asserts that 2 objects of the type returned by constructor are equal
+			name              string
+			constructor       func() any
 			equalityAssertion func(*testing.T, any, any) bool
 		}{
 			{
@@ -52,20 +49,18 @@ func FuzzRoundTripJSON(f *testing.F) {
 				require.NoError(t, json.Unmarshal(jsonData, v2))
 
 				if !assert.True(t, testCase.equalityAssertion(t, v1, v2), "failed with input data %q", string(data)) {
-					// look at that what the standard lib does with regular map, to help with debugging
-
 					var m1 map[string]any
 					require.NoError(t, json.Unmarshal(data, &m1))
 
-					mapJsonData, err := json.Marshal(m1)
+					mapJSONData, err := json.Marshal(m1)
 					require.NoError(t, err)
 
 					var m2 map[string]any
-					require.NoError(t, json.Unmarshal(mapJsonData, &m2))
+					require.NoError(t, json.Unmarshal(mapJSONData, &m2))
 
 					t.Logf("initial data = %s", string(data))
 					t.Logf("unmarshalled map = %v", m1)
-					t.Logf("re-marshalled from map = %s", string(mapJsonData))
+					t.Logf("re-marshalled from map = %s", string(mapJSONData))
 					t.Logf("re-marshalled from test obj = %s", string(jsonData))
 					t.Logf("re-unmarshalled map = %s", m2)
 				}
@@ -74,7 +69,6 @@ func FuzzRoundTripJSON(f *testing.F) {
 	})
 }
 
-// only works for fairly basic maps, that's why it's just in this file
 func assertOrderedMapsEqual[K comparable, V any](t *testing.T, v1, v2 any) bool {
 	om1, ok1 := v1.(*OrderedMap[K, V])
 	om2, ok2 := v2.(*OrderedMap[K, V])
@@ -101,11 +95,11 @@ type testFuzzStruct struct {
 }
 
 func assertTestFuzzStructEqual(t *testing.T, v1, v2 any) bool {
-	s1, ok := v1.(*testFuzzStruct)
-	s2, ok := v2.(*testFuzzStruct)
+	s1, ok1 := v1.(*testFuzzStruct)
+	s2, ok2 := v2.(*testFuzzStruct)
 
-	if !assert.True(t, ok, "v1 not an testFuzzStruct") ||
-		!assert.True(t, ok, "v2 not an testFuzzStruct") {
+	if !assert.True(t, ok1, "v1 not an testFuzzStruct") ||
+		!assert.True(t, ok2, "v2 not an testFuzzStruct") {
 		return false
 	}
 

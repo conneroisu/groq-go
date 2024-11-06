@@ -23,10 +23,10 @@ type (
 	Toolhouse struct {
 		apiKey   string
 		baseURL  string
-		client   *http.Client
 		provider string
-		metadata map[string]any
 		bundle   string
+		client   *http.Client
+		metadata map[string]any
 		logger   *slog.Logger
 		header   builders.Header
 	}
