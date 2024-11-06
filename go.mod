@@ -3,7 +3,6 @@ module github.com/conneroisu/groq-go
 go 1.23.2
 
 require (
-	github.com/bahlo/generic-list-go v0.2.0
 	github.com/buger/jsonparser v1.1.1
 	github.com/gorilla/websocket v1.5.3
 	github.com/stretchr/testify v1.9.0

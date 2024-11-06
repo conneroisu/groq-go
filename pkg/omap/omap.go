@@ -3,7 +3,7 @@ package omap
 import (
 	"fmt"
 
-	list "github.com/bahlo/generic-list-go"
+	"github.com/conneroisu/groq-go/pkg/list"
 )
 
 // Pair is a generic pair.
