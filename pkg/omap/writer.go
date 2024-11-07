@@ -11,8 +11,10 @@ import (
 type Flags int
 
 const (
-	NilMapAsEmpty   Flags = 1 << iota // Encode nil map as '{}' rather than 'null'.
-	NilSliceAsEmpty                   // Encode nil slice as '[]' rather than 'null'.
+	// NilMapAsEmpty encodes nil map as '{}' rather than 'null'.
+	NilMapAsEmpty Flags = 1 << iota
+	// NilSliceAsEmpty encodes nil slice as '[]' rather than 'null'.
+	NilSliceAsEmpty
 )
 
 // Writer is a JSON writer.

@@ -44,9 +44,6 @@ func putBuf(buf []byte) {
 	if size < config.PooledSize {
 		return
 	}
-	if c := buffers[size]; c != nil {
-		c.Put(buf[:0])
-	}
 }
 
 // getBuf gets a chunk from reuse pool or creates a new one if reuse failed.
@@ -76,11 +73,11 @@ type Buffer struct {
 // possibly creating a new chunk.
 func (b *Buffer) EnsureSpace(s int) {
 	if cap(b.Buf)-len(b.Buf) < s {
-		b.ensureSpaceSlow(s)
+		b.ensureSpaceSlow()
 	}
 }
 
-func (b *Buffer) ensureSpaceSlow(p int) {
+func (b *Buffer) ensureSpaceSlow() {
 	l := len(b.Buf)
 	if l > 0 {
 		if cap(b.toPool) != cap(b.Buf) {

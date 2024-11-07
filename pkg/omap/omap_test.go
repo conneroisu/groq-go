@@ -294,6 +294,7 @@ func TestGetAndMove(t *testing.T) {
 
 	value, err = om.GetAndMoveToBack(100)
 	assert.Equal(t, &KeyNotFoundError[int]{100}, err)
+	assert.Nil(t, value)
 }
 
 func TestAddPairs(t *testing.T) {
