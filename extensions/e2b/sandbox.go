@@ -104,9 +104,9 @@ type (
 )
 
 const (
-	OnStdout ProcessEvents = "onStdout" // OnStdout is the event for the stdout.
-	OnStderr ProcessEvents = "onStderr" // OnStderr is the event for the stderr.
-	OnExit   ProcessEvents = "onExit"   // OnExit is the event for the exit.
+	onStdout ProcessEvents = "onStdout" // OnStdout is the event for the stdout.
+	onStderr ProcessEvents = "onStderr" // OnStderr is the event for the stderr.
+	onExit   ProcessEvents = "onExit"   // OnExit is the event for the exit.
 
 	rpc                = "2.0"
 	charset            = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
@@ -481,17 +481,17 @@ func (p *Process) Done() <-chan struct{} {
 
 // SubscribeStdout subscribes to the process's stdout.
 func (p *Process) SubscribeStdout(ctx context.Context) (chan Event, chan error) {
-	return p.subscribe(ctx, OnStdout)
+	return p.subscribe(ctx, onStdout)
 }
 
 // SubscribeStderr subscribes to the process's stderr.
 func (p *Process) SubscribeStderr(ctx context.Context) (chan Event, chan error) {
-	return p.subscribe(ctx, OnStderr)
+	return p.subscribe(ctx, onStderr)
 }
 
 // SubscribeExit subscribes to the process's exit.
 func (p *Process) SubscribeExit(ctx context.Context) (chan Event, chan error) {
-	return p.subscribe(ctx, OnExit)
+	return p.subscribe(ctx, onExit)
 }
 
 // Subscribe subscribes to a process event.
