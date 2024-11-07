@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	orderedmap "github.com/wk8/go-ordered-map/v2"
+	"github.com/conneroisu/groq-go/pkg/omap"
 )
 
 const (
@@ -328,7 +328,7 @@ type (
 		//
 		// Omitting this field has the same assertion behavior as an empty
 		// object.
-		Properties *orderedmap.OrderedMap[string, *Schema] `json:"properties,omitempty"`
+		Properties *omap.OrderedMap[string, *Schema] `json:"properties,omitempty"`
 		// PatternProperties are the pattern properties of the schema as specified in section 10.3.2.2 of RFC
 		// draft-bhutton-json-schema-00.
 		//
@@ -1425,8 +1425,8 @@ func ToSnakeCase(str string) string {
 
 // newProperties is a helper method to instantiate a new properties ordered
 // map.
-func newProperties() *orderedmap.OrderedMap[string, *Schema] {
-	return orderedmap.New[string, *Schema]()
+func newProperties() *omap.OrderedMap[string, *Schema] {
+	return omap.New[string, *Schema]()
 }
 
 // Validate is used to check if the ID looks like a proper schema.

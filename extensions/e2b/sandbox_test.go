@@ -116,6 +116,9 @@ func decode(bod []byte) Request {
 }
 
 func TestNewSandbox(t *testing.T) {
+	if test.IsIntegrationTest() {
+		t.Skip()
+	}
 	a := assert.New(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -159,12 +162,12 @@ func TestNewSandbox(t *testing.T) {
 	a.NoError(err)
 	a.Equal("hello", readRes)
 
-	proc, err := sb.NewProcess("sleep 5 && echo 'hello world!'", Process{})
+	proc, err := sb.NewProcess("sleep 5 && echo 'hello world!'")
 	a.NoError(err)
 
 	err = proc.Start(ctx)
 	a.NoError(err)
-	e, errCh := proc.SubscribeStdout()
+	e, errCh := proc.SubscribeStdout(ctx)
 	select {
 	case <-errCh:
 		t.Fatal("got error from SubscribeStdout")

@@ -127,15 +127,15 @@ var (
 			s *Sandbox,
 			params *Params,
 		) (groq.ChatCompletionMessage, error) {
-			proc, err := s.NewProcess(params.Cmd, Process{})
+			proc, err := s.NewProcess(params.Cmd)
 			if err != nil {
 				return groq.ChatCompletionMessage{}, err
 			}
-			e, errCh := proc.SubscribeStdout()
+			e, errCh := proc.SubscribeStdout(ctx)
 			if err != nil {
 				return groq.ChatCompletionMessage{}, err
 			}
-			e2, errCh := proc.SubscribeStderr()
+			e2, errCh := proc.SubscribeStderr(ctx)
 			if err != nil {
 				return groq.ChatCompletionMessage{}, err
 			}

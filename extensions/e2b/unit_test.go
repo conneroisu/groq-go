@@ -90,20 +90,17 @@ func TestCreateProcess(t *testing.T) {
 		e2b.WithLogger(test.DefaultLogger),
 	)
 	a.NoError(err, "NewSandbox error")
-	proc, err := sb.NewProcess("echo 'Hello World!'",
-		e2b.Process{
-			Env: map[string]string{
-				"FOO": "bar",
-			},
-		})
+	proc, err := sb.NewProcess("echo 'Hello World!'", e2b.ProcessWithEnv(map[string]string{
+		"FOO": "bar",
+	}))
 	a.NoError(err, "could not create process")
 	err = proc.Start(ctx)
 	a.NoError(err)
-	proc, err = sb.NewProcess("sleep 2 && echo 'Hello World!'", e2b.Process{})
+	proc, err = sb.NewProcess("sleep 2 && echo 'Hello World!'")
 	a.NoError(err, "could not create process")
 	err = proc.Start(ctx)
 	a.NoError(err)
-	stdOutEvents, errCh := proc.SubscribeStdout()
+	stdOutEvents, errCh := proc.SubscribeStdout(ctx)
 	a.NoError(err)
 	select {
 	case <-errCh:
