@@ -532,11 +532,10 @@ func (p *Process) subscribe(
 				break loop
 			}
 		}
-
 		p.sb.Map.Delete(res.Result)
 		finishCtx, cancel := context.WithCancel(context.Background())
 		defer cancel()
-		p.sb.logger.Debug("unsubscribing from process", "event", event, "id", res.Result)
+		p.sb.logger.Debug("process unsubscribe", "proc", p.id, "event", event, "id", res.Result)
 		_ = p.sb.writeRequest(finishCtx, processUnsubscribe, []any{res.Result}, respCh)
 		unsubRes, _ := decodeResponse[bool, string](<-respCh)
 		if unsubRes.Error != "" || !unsubRes.Result {
@@ -579,31 +578,32 @@ func decodeResponse[T any, Q any](body []byte) (*Response[T, Q], error) {
 	return decResp, nil
 }
 func (s *Sandbox) read(ctx context.Context) error {
-	var body []byte
-	var err error
-	type decResp struct {
-		Method string `json:"method"`
-		ID     int    `json:"id"`
-		Params struct {
-			Subscription string `json:"subscription"`
+	var (
+		body    []byte
+		err     error
+		key     any
+		decResp struct {
+			Method string `json:"method"`
+			ID     int    `json:"id"`
+			Params struct {
+				Subscription string `json:"subscription"`
+			}
 		}
-	}
+	)
+	msgCh := make(chan []byte, 10)
 	defer func() {
 		err := s.ws.Close()
 		if err != nil {
 			s.logger.Error("failed to close sandbox", "error", err)
 		}
 	}()
-	msgCh := make(chan []byte, 10)
 	for {
 		select {
 		case body = <-msgCh:
-			var decResp decResp
 			err = json.Unmarshal(body, &decResp)
 			if err != nil {
 				return err
 			}
-			var key any
 			key = decResp.Params.Subscription
 			if decResp.ID != 0 {
 				key = decResp.ID
