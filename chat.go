@@ -43,31 +43,6 @@ const (
 )
 
 type (
-	// FinishReason is the finish reason.
-	//
-	// string
-	FinishReason string
-)
-
-const (
-	// ReasonStop is the stop finish reason for a chat completion.
-	ReasonStop FinishReason = "stop"
-	// ReasonLength is the length finish reason for a chat completion.
-	ReasonLength FinishReason = "length"
-	// ReasonFunctionCall is the function call finish reason for a chat
-	// completion.
-	ReasonFunctionCall FinishReason = "function_call"
-	// ReasonToolCalls is the tool calls finish reason for a chat
-	// completion.
-	ReasonToolCalls FinishReason = "tool_calls"
-	// ReasonContentFilter is the content filter finish reason for a chat
-	// completion.
-	ReasonContentFilter FinishReason = "content_filter"
-	// ReasonNull is the null finish reason for a chat completion.
-	ReasonNull FinishReason = "null"
-)
-
-type (
 	// ImageURLDetail is the detail of the image at the URL.
 	//
 	// string
@@ -348,6 +323,28 @@ type (
 	ChatCompletionStream struct {
 		*streams.StreamReader[*ChatCompletionStreamResponse]
 	}
+	// FinishReason is the finish reason.
+	//
+	// string
+	FinishReason string
+)
+
+const (
+	// ReasonStop is the stop finish reason for a chat completion.
+	ReasonStop FinishReason = "stop"
+	// ReasonLength is the length finish reason for a chat completion.
+	ReasonLength FinishReason = "length"
+	// ReasonFunctionCall is the function call finish reason for a chat
+	// completion.
+	ReasonFunctionCall FinishReason = "function_call"
+	// ReasonToolCalls is the tool calls finish reason for a chat
+	// completion.
+	ReasonToolCalls FinishReason = "tool_calls"
+	// ReasonContentFilter is the content filter finish reason for a chat
+	// completion.
+	ReasonContentFilter FinishReason = "content_filter"
+	// ReasonNull is the null finish reason for a chat completion.
+	ReasonNull FinishReason = "null"
 )
 
 // MarshalJSON method implements the json.Marshaler interface.

@@ -44,17 +44,6 @@ type (
 	}
 	// Option is an option for the sandbox.
 	Option func(*Sandbox)
-	// Process is a process in the sandbox.
-	Process struct {
-		id  string            // ID is process id.
-		cmd string            // cmd is process's command.
-		Cwd string            // cwd is process's current working directory.
-		ctx context.Context   // ctx is the context for the process.
-		sb  *Sandbox          // sb is the sandbox the process belongs to.
-		Env map[string]string // env is process's environment variables.
-	}
-	// ProcessOption is an option for the process.
-	ProcessOption func(*Process)
 	// Event is a file system event.
 	Event struct {
 		Path      string      `json:"path"`      // Path is the path of the event.
@@ -108,14 +97,13 @@ const (
 	onStderr ProcessEvents = "onStderr" // OnStderr is the event for the stderr.
 	onExit   ProcessEvents = "onExit"   // OnExit is the event for the exit.
 
-	rpc                = "2.0"
-	charset            = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	defaultBaseURL     = "https://api.e2b.dev"
-	defaultWSScheme    = "wss"
-	wsRoute            = "/ws"
-	fileRoute          = "/file"
-	sandboxesRoute     = "/sandboxes"  // (GET/POST /sandboxes)
-	deleteSandboxRoute = "/sandboxes/" // (DELETE /sandboxes/:id)
+	rpc             = "2.0"
+	charset         = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	defaultBaseURL  = "https://api.e2b.dev"
+	defaultWSScheme = "wss"
+	wsRoute         = "/ws"
+	fileRoute       = "/file"
+	sandboxesRoute  = "/sandboxes" // (GET/POST /sandboxes)
 
 	filesystemWrite      Method = "filesystem_write"
 	filesystemRead       Method = "filesystem_read"
@@ -235,7 +223,7 @@ func (s *Sandbox) Reconnect(ctx context.Context) (err error) {
 func (s *Sandbox) Stop(ctx context.Context) error {
 	req, err := builders.NewRequest(
 		ctx, s.header, http.MethodDelete,
-		fmt.Sprintf("%s%s%s", s.baseURL, deleteSandboxRoute, s.ID),
+		fmt.Sprintf("%s%s/%s", s.baseURL, sandboxesRoute, s.ID),
 		builders.WithBody(interface{}(nil)),
 	)
 	if err != nil {
@@ -364,18 +352,19 @@ func (s *Sandbox) ReadBytes(ctx context.Context, path string) ([]byte, error) {
 	}
 }
 
-// Watch watches a directory in the sandbox file system.
-//
-// This is intended to be run in a goroutine as it will block until the
+// Watch watches a directory in the sandbox file system blocking until the
 // connection is closed, an error occurs, or the context is canceled.
 //
-// While blocking, filesystem events will be written to the provided channel.
+// Filesystem events will be written to the provided channel.
 func (s *Sandbox) Watch(
 	ctx context.Context,
 	path string,
 	eCh chan<- Event,
 ) error {
-	respCh := make(chan []byte)
+	var (
+		respCh = make(chan []byte)
+		event  Event
+	)
 	defer close(respCh)
 	err := s.writeRequest(ctx, filesystemSubscribe, []any{"watchDir", path}, respCh)
 	if err != nil {
@@ -386,29 +375,39 @@ func (s *Sandbox) Watch(
 		return err
 	}
 	s.Map.Store(res.Result, eCh)
-	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			default:
-				var event Event
-				err := json.Unmarshal(<-respCh, &event)
-				if err != nil {
-					return
-				}
-				if event.Error != "" {
-					return
-				}
-				if event.Params.Subscription != path {
-					continue
-				}
-				eCh <- event
+	for {
+		select {
+		case <-ctx.Done():
+			return nil
+		default:
+			err := json.Unmarshal(<-respCh, &event)
+			if err != nil {
+				return err
 			}
+			if event.Error != "" {
+				return fmt.Errorf("event error: %s", event.Error)
+			}
+			if event.Params.Subscription != path {
+				continue
+			}
+			eCh <- event
 		}
-	}()
-	return nil
+	}
 }
+
+type (
+	// Process is a process in the sandbox.
+	Process struct {
+		id  string            // id is process id.
+		cmd string            // cmd is process's command.
+		Cwd string            // cwd is process's current working directory.
+		ctx context.Context   // ctx is the context for the process.
+		sb  *Sandbox          // sb is the sandbox the process belongs to.
+		Env map[string]string // env is process's environment variables.
+	}
+	// ProcessOption is an option for the process.
+	ProcessOption func(*Process)
+)
 
 // NewProcess creates a new process startable in the sandbox.
 func (s *Sandbox) NewProcess(
@@ -493,10 +492,6 @@ func (p *Process) SubscribeStderr(ctx context.Context) (chan Event, chan error) 
 func (p *Process) SubscribeExit(ctx context.Context) (chan Event, chan error) {
 	return p.subscribe(ctx, onExit)
 }
-
-// Subscribe subscribes to a process event.
-//
-// It creates a go routine to read the process events into the provided channel.
 func (p *Process) subscribe(
 	ctx context.Context,
 	event ProcessEvents,
