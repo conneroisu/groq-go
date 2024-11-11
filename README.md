@@ -97,9 +97,6 @@ API Documentation: https://console.groq.com/docs/quickstart
 
 - [Constants](<#constants>)
 - [func AudioMultipartForm\(request AudioRequest, b builders.FormBuilder\) error](<#AudioMultipartForm>)
-- [type Agent](<#Agent>)
-  - [func NewAgent\(client \*Client, logger \*slog.Logger\) \*Agent](<#NewAgent>)
-- [type Agenter](<#Agenter>)
 - [type AudioRequest](<#AudioRequest>)
 - [type AudioResponse](<#AudioResponse>)
   - [func \(r \*AudioResponse\) SetHeader\(header http.Header\)](<#AudioResponse.SetHeader>)
@@ -146,9 +143,6 @@ API Documentation: https://console.groq.com/docs/quickstart
 - [type Role](<#Role>)
 - [type Segments](<#Segments>)
 - [type StreamOptions](<#StreamOptions>)
-- [type ToolGetter](<#ToolGetter>)
-- [type ToolManager](<#ToolManager>)
-- [type ToolRunner](<#ToolRunner>)
 - [type TopLogProbs](<#TopLogProbs>)
 - [type TranscriptionTimestampGranularity](<#TranscriptionTimestampGranularity>)
 - [type Usage](<#Usage>)
@@ -194,37 +188,6 @@ func AudioMultipartForm(request AudioRequest, b builders.FormBuilder) error
 ```
 
 AudioMultipartForm creates a form with audio file contents and the name of the model to use for audio processing.
-
-<a name="Agent"></a>
-## type [Agent](<https://github.com/conneroisu/groq-go/blob/main/agents.go#L39-L42>)
-
-Agent is an agent.
-
-```go
-type Agent struct {
-    // contains filtered or unexported fields
-}
-```
-
-<a name="NewAgent"></a>
-### func [NewAgent](<https://github.com/conneroisu/groq-go/blob/main/agents.go#L45-L48>)
-
-```go
-func NewAgent(client *Client, logger *slog.Logger) *Agent
-```
-
-NewAgent creates a new agent.
-
-<a name="Agenter"></a>
-## type [Agenter](<https://github.com/conneroisu/groq-go/blob/main/agents.go#L12-L14>)
-
-Agenter is an interface for an agent.
-
-```go
-type Agenter interface {
-    ToolManager
-}
-```
 
 <a name="AudioRequest"></a>
 ## type [AudioRequest](<https://github.com/conneroisu/groq-go/blob/main/audio.go#L31-L49>)
@@ -644,7 +607,7 @@ func NewClient(groqAPIKey string, opts ...Opts) (*Client, error)
 NewClient creates a new Groq client.
 
 <a name="Client.CreateChatCompletion"></a>
-### func \(\*Client\) [CreateChatCompletion](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L429-L432>)
+### func \(\*Client\) [CreateChatCompletion](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L470-L473>)
 
 ```go
 func (c *Client) CreateChatCompletion(ctx context.Context, request ChatCompletionRequest) (response ChatCompletionResponse, err error)
@@ -652,8 +615,51 @@ func (c *Client) CreateChatCompletion(ctx context.Context, request ChatCompletio
 
 CreateChatCompletion method is an API call to create a chat completion.
 
+Example:
+
+```
+func run(
+        ctx context.Context,
+) error {
+        key := os.Getenv("GROQ_KEY")
+        client, err := groq.NewClient(key)
+        if err != nil {
+                return err
+        }
+        response, err := client.CreateChatCompletion(
+                ctx,
+                groq.ChatCompletionRequest{
+                        Model: models.ModelLlavaV157B4096Preview,
+                        Messages: []groq.ChatCompletionMessage{
+                                {
+                                        Role: groq.ChatMessageRoleUser,
+                                        MultiContent: []groq.ChatMessagePart{
+                                                {
+                                                        Type: groq.ChatMessagePartTypeText,
+                                                        Text: "What is the contents of the image?",
+                                                },
+                                                {
+                                                        Type: groq.ChatMessagePartTypeImageURL,
+                                                        ImageURL: &groq.ChatMessageImageURL{
+                                                                URL:    "https://cdnimg.webstaurantstore.com/images/products/large/87539/251494.jpg",
+                                                                Detail: "auto",
+                                                        },
+                                                }},
+                                },
+                        },
+                        MaxTokens: 2000,
+                },
+        )
+        if err != nil {
+                return err
+        }
+        fmt.Println(response.Choices[0].Message.Content)
+        return nil
+}
+```
+
 <a name="Client.CreateChatCompletionJSON"></a>
-### func \(\*Client\) [CreateChatCompletionJSON](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L486-L490>)
+### func \(\*Client\) [CreateChatCompletionJSON](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L639-L643>)
 
 ```go
 func (c *Client) CreateChatCompletionJSON(ctx context.Context, request ChatCompletionRequest, output any) (err error)
@@ -661,8 +667,49 @@ func (c *Client) CreateChatCompletionJSON(ctx context.Context, request ChatCompl
 
 CreateChatCompletionJSON method is an API call to create a chat completion w/ object output.
 
+Example:
+
+```
+// Responses is a response from the models endpoint.
+type Responses []struct {
+        Title string `json:"title" jsonschema:"title=Poem Title,description=Title of the poem, minLength=1, maxLength=20"`
+        Text  string `json:"text" jsonschema:"title=Poem Text,description=Text of the poem, minLength=10, maxLength=200"`
+}
+
+func run(
+        ctx context.Context,
+) error {
+        client, err := groq.NewClient(os.Getenv("GROQ_KEY"))
+        if err != nil {
+                return err
+        }
+        resp := &Responses{}
+        err = client.CreateChatCompletionJSON(ctx, groq.ChatCompletionRequest{
+                Model: models.ModelLlama3Groq70B8192ToolUsePreview,
+                Messages: []groq.ChatCompletionMessage{
+                        {
+                                Role:    groq.ChatMessageRoleUser,
+                                Content: "Create 5 short poems in json format with title and text.",
+                        },
+                },
+                MaxTokens: 2000,
+        }, resp)
+        if err != nil {
+                return err
+        }
+
+        jsValue, err := json.MarshalIndent(resp, "", "  ")
+        if err != nil {
+                return err
+        }
+        fmt.Println(string(jsValue))
+
+        return nil
+}
+```
+
 <a name="Client.CreateChatCompletionStream"></a>
-### func \(\*Client\) [CreateChatCompletionStream](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L458-L461>)
+### func \(\*Client\) [CreateChatCompletionStream](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L572-L575>)
 
 ```go
 func (c *Client) CreateChatCompletionStream(ctx context.Context, request ChatCompletionRequest) (stream *ChatCompletionStream, err error)
@@ -671,6 +718,81 @@ func (c *Client) CreateChatCompletionStream(ctx context.Context, request ChatCom
 CreateChatCompletionStream method is an API call to create a chat completion w/ streaming support.
 
 If set, tokens will be sent as data\-only server\-sent events as they become available, with the stream terminated by a data: \[DONE\] message.
+
+Example:
+
+```
+func run(
+        ctx context.Context,
+        r io.Reader,
+        w io.Writer,
+) error {
+        key := os.Getenv("GROQ_KEY")
+        client, err := groq.NewClient(key)
+        if err != nil {
+                return err
+        }
+        for {
+                err = input(ctx, client, r, w)
+                if err != nil {
+                        return err
+                }
+        }
+}
+func input(
+        ctx context.Context,
+        client *groq.Client,
+        r io.Reader,
+        w io.Writer,
+) error {
+        fmt.Println("")
+        fmt.Print("->")
+        reader := bufio.NewReader(r)
+        writer := w
+        var lines []string
+        select {
+        case <-ctx.Done():
+                return ctx.Err()
+        default:
+                line, err := reader.ReadString('\n')
+                if err != nil {
+                        return err
+                }
+                if len(strings.TrimSpace(line)) == 0 {
+                        break
+                }
+                lines = append(lines, line)
+                break
+        }
+        history = append(history, groq.ChatCompletionMessage{
+                Role:    groq.ChatMessageRoleUser,
+                Content: strings.Join(lines, "\n"),
+        })
+        output, err := client.CreateChatCompletionStream(
+                ctx,
+                groq.ChatCompletionRequest{
+                        Model:     models.ModelGemma29BIt,
+                        Messages:  history,
+                        MaxTokens: 2000,
+                },
+        )
+        if err != nil {
+                return err
+        }
+        fmt.Fprintln(writer, "\nai: ")
+        for {
+                response, err := output.Recv()
+                if err != nil {
+                        return err
+                }
+                if response.Choices[0].FinishReason == groq.ReasonStop {
+                        break
+                }
+                fmt.Fprint(writer, response.Choices[0].Delta.Content)
+        }
+        return nil
+}
+```
 
 <a name="Client.CreateTranscription"></a>
 ### func \(\*Client\) [CreateTranscription](<https://github.com/conneroisu/groq-go/blob/main/audio.go#L126-L129>)
@@ -1004,45 +1126,6 @@ type StreamOptions struct {
     // All other chunks will also include a usage field, but with a
     // null value.
     IncludeUsage bool `json:"include_usage,omitempty"`
-}
-```
-
-<a name="ToolGetter"></a>
-## type [ToolGetter](<https://github.com/conneroisu/groq-go/blob/main/agents.go#L21-L25>)
-
-ToolGetter is an interface for a tool getter.
-
-```go
-type ToolGetter interface {
-    Get(
-        ctx context.Context,
-    ) ([]tools.Tool, error)
-}
-```
-
-<a name="ToolManager"></a>
-## type [ToolManager](<https://github.com/conneroisu/groq-go/blob/main/agents.go#L16-L19>)
-
-ToolManager is an interface for a tool manager.
-
-```go
-type ToolManager interface {
-    ToolGetter
-    ToolRunner
-}
-```
-
-<a name="ToolRunner"></a>
-## type [ToolRunner](<https://github.com/conneroisu/groq-go/blob/main/agents.go#L27-L32>)
-
-ToolRunner is an interface for a tool runner.
-
-```go
-type ToolRunner interface {
-    Run(
-        ctx context.Context,
-        response ChatCompletionResponse,
-    ) ([]ChatCompletionMessage, error)
 }
 ```
 
