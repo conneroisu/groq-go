@@ -426,6 +426,47 @@ func (r FinishReason) MarshalJSON() ([]byte, error) {
 func (r *ChatCompletionResponse) SetHeader(h http.Header) { r.Header = h }
 
 // CreateChatCompletion method is an API call to create a chat completion.
+//
+// Example:
+//
+//	func run(
+//	        ctx context.Context,
+//	) error {
+//	        key := os.Getenv("GROQ_KEY")
+//	        client, err := groq.NewClient(key)
+//	        if err != nil {
+//	                return err
+//	        }
+//	        response, err := client.CreateChatCompletion(
+//	                ctx,
+//	                groq.ChatCompletionRequest{
+//	                        Model: models.ModelLlavaV157B4096Preview,
+//	                        Messages: []groq.ChatCompletionMessage{
+//	                                {
+//	                                        Role: groq.ChatMessageRoleUser,
+//	                                        MultiContent: []groq.ChatMessagePart{
+//	                                                {
+//	                                                        Type: groq.ChatMessagePartTypeText,
+//	                                                        Text: "What is the contents of the image?",
+//	                                                },
+//	                                                {
+//	                                                        Type: groq.ChatMessagePartTypeImageURL,
+//	                                                        ImageURL: &groq.ChatMessageImageURL{
+//	                                                                URL:    "https://cdnimg.webstaurantstore.com/images/products/large/87539/251494.jpg",
+//	                                                                Detail: "auto",
+//	                                                        },
+//	                                                }},
+//	                                },
+//	                        },
+//	                        MaxTokens: 2000,
+//	                },
+//	        )
+//	        if err != nil {
+//	                return err
+//	        }
+//	        fmt.Println(response.Choices[0].Message.Content)
+//	        return nil
+//	}
 func (c *Client) CreateChatCompletion(
 	ctx context.Context,
 	request ChatCompletionRequest,
@@ -455,6 +496,79 @@ func (c *Client) CreateChatCompletion(
 //
 // If set, tokens will be sent as data-only server-sent events as they become
 // available, with the stream terminated by a data: [DONE] message.
+//
+// Example:
+//
+//	func run(
+//	        ctx context.Context,
+//	        r io.Reader,
+//	        w io.Writer,
+//	) error {
+//	        key := os.Getenv("GROQ_KEY")
+//	        client, err := groq.NewClient(key)
+//	        if err != nil {
+//	                return err
+//	        }
+//	        for {
+//	                err = input(ctx, client, r, w)
+//	                if err != nil {
+//	                        return err
+//	                }
+//	        }
+//	}
+//	func input(
+//	        ctx context.Context,
+//	        client *groq.Client,
+//	        r io.Reader,
+//	        w io.Writer,
+//	) error {
+//	        fmt.Println("")
+//	        fmt.Print("->")
+//	        reader := bufio.NewReader(r)
+//	        writer := w
+//	        var lines []string
+//	        select {
+//	        case <-ctx.Done():
+//	                return ctx.Err()
+//	        default:
+//	                line, err := reader.ReadString('\n')
+//	                if err != nil {
+//	                        return err
+//	                }
+//	                if len(strings.TrimSpace(line)) == 0 {
+//	                        break
+//	                }
+//	                lines = append(lines, line)
+//	                break
+//	        }
+//	        history = append(history, groq.ChatCompletionMessage{
+//	                Role:    groq.ChatMessageRoleUser,
+//	                Content: strings.Join(lines, "\n"),
+//	        })
+//	        output, err := client.CreateChatCompletionStream(
+//	                ctx,
+//	                groq.ChatCompletionRequest{
+//	                        Model:     models.ModelGemma29BIt,
+//	                        Messages:  history,
+//	                        MaxTokens: 2000,
+//	                },
+//	        )
+//	        if err != nil {
+//	                return err
+//	        }
+//	        fmt.Fprintln(writer, "\nai: ")
+//	        for {
+//	                response, err := output.Recv()
+//	                if err != nil {
+//	                        return err
+//	                }
+//	                if response.Choices[0].FinishReason == groq.ReasonStop {
+//	                        break
+//	                }
+//	                fmt.Fprint(writer, response.Choices[0].Delta.Content)
+//	        }
+//	        return nil
+//	}
 func (c *Client) CreateChatCompletionStream(
 	ctx context.Context,
 	request ChatCompletionRequest,
@@ -483,6 +597,45 @@ func (c *Client) CreateChatCompletionStream(
 
 // CreateChatCompletionJSON method is an API call to create a chat completion
 // w/ object output.
+//
+// Example:
+//
+//	// Responses is a response from the models endpoint.
+//	type Responses []struct {
+//	        Title string `json:"title" jsonschema:"title=Poem Title,description=Title of the poem, minLength=1, maxLength=20"`
+//	        Text  string `json:"text" jsonschema:"title=Poem Text,description=Text of the poem, minLength=10, maxLength=200"`
+//	}
+//
+//	func run(
+//	        ctx context.Context,
+//	) error {
+//	        client, err := groq.NewClient(os.Getenv("GROQ_KEY"))
+//	        if err != nil {
+//	                return err
+//	        }
+//	        resp := &Responses{}
+//	        err = client.CreateChatCompletionJSON(ctx, groq.ChatCompletionRequest{
+//	                Model: models.ModelLlama3Groq70B8192ToolUsePreview,
+//	                Messages: []groq.ChatCompletionMessage{
+//	                        {
+//	                                Role:    groq.ChatMessageRoleUser,
+//	                                Content: "Create 5 short poems in json format with title and text.",
+//	                        },
+//	                },
+//	                MaxTokens: 2000,
+//	        }, resp)
+//	        if err != nil {
+//	                return err
+//	        }
+//
+//	        jsValue, err := json.MarshalIndent(resp, "", "  ")
+//	        if err != nil {
+//	                return err
+//	        }
+//	        fmt.Println(string(jsValue))
+//
+//	        return nil
+//	}
 func (c *Client) CreateChatCompletionJSON(
 	ctx context.Context,
 	request ChatCompletionRequest,

@@ -26,7 +26,6 @@ func run(
 	if err != nil {
 		return err
 	}
-
 	response, err := client.CreateChatCompletion(
 		ctx,
 		groq.ChatCompletionRequest{
@@ -54,8 +53,6 @@ func run(
 	if err != nil {
 		return err
 	}
-
 	fmt.Println(response.Choices[0].Message.Content)
-
 	return nil
 }
