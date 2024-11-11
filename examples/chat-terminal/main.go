@@ -40,14 +40,19 @@ func run(
 		return err
 	}
 	for {
-		err = input(ctx, r, w, client)
+		err = input(ctx, client, r, w)
 		if err != nil {
 			return err
 		}
 	}
 }
 
-func input(ctx context.Context, r io.Reader, w io.Writer, client *groq.Client) error {
+func input(
+	ctx context.Context,
+	client *groq.Client,
+	r io.Reader,
+	w io.Writer,
+) error {
 	fmt.Println("")
 	fmt.Print("->")
 	reader := bufio.NewReader(r)
@@ -67,10 +72,9 @@ func input(ctx context.Context, r io.Reader, w io.Writer, client *groq.Client) e
 		lines = append(lines, line)
 		break
 	}
-	in := strings.Join(lines, "\n")
 	history = append(history, groq.ChatCompletionMessage{
 		Role:    groq.ChatMessageRoleUser,
-		Content: in,
+		Content: strings.Join(lines, "\n"),
 	})
 	output, err := client.CreateChatCompletionStream(
 		ctx,
@@ -83,8 +87,7 @@ func input(ctx context.Context, r io.Reader, w io.Writer, client *groq.Client) e
 	if err != nil {
 		return err
 	}
-	fmt.Fprintln(writer, "")
-	fmt.Fprint(writer, "ai: ")
+	fmt.Fprintln(writer, "\nai: ")
 	for {
 		response, err := output.Recv()
 		if err != nil {
