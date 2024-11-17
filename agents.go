@@ -9,44 +9,38 @@ import (
 )
 
 type (
-	ToolsIdx struct {
-		Start int
-		End   int
+	// Agency is a collection of agents.
+	Agency struct {
+		client *Client
+		agents []Agent
+		logger *slog.Logger
 	}
 	// Agent is an agent.
 	Agent struct {
-		client *Client
-		logger *slog.Logger
-		tools  []ToolProvider
-		hist   []ChatCompletionMessage
+		client    *Client
+		logger    *slog.Logger
+		providers []ToolProvider
+		history   []ChatCompletionMessage
+		inbox     chan ChatCompletionMessage
 	}
 	// ToolProvider is an interface for a tool provider.
 	ToolProvider interface {
-		ToolRunner
-		ToolGetter
-		ToolResolver
-	}
-	// ToolRunner is an interface for a tool manager.
-	ToolRunner interface {
+		// Run runs responded tool calls.
 		Run(
 			ctx context.Context,
 			response ChatCompletionResponse,
 		) ([]ChatCompletionMessage, error)
-	}
-	// ToolResolver is an interface for a tool resolver.
-	//
-	// Implementations must not return an error if the tool is not found.
-	ToolResolver interface {
-		Resolve(
-			ctx context.Context,
-			call tools.ToolCall,
-		) (ToolRunner, error)
-	}
-	// ToolGetter is an interface for a tool getter.
-	ToolGetter interface {
+		// Get gets the tools for the provider.
 		Get(
 			ctx context.Context,
 		) ([]tools.Tool, error)
+		// Resolve resolves a tool call.
+		//
+		// Implementations must not return an error if the tool is not found.
+		Resolve(
+			ctx context.Context,
+			call tools.ToolCall,
+		) (bool, error)
 	}
 )
 
@@ -57,37 +51,38 @@ func NewAgent(
 	tools ...ToolProvider,
 ) *Agent {
 	return &Agent{
-		client: client,
-		logger: logger,
+		client:    client,
+		logger:    logger,
+		providers: tools,
 	}
 }
 
-func (a *Agent) resolveTool(
+func (agent *Agent) resolveTool(
 	ctx context.Context,
 	call tools.ToolCall,
-) (ToolRunner, error) {
-	for _, provider := range a.tools {
-		runner, err := provider.Resolve(ctx, call)
+) (ToolProvider, error) {
+	for _, provider := range agent.providers {
+		ok, err := provider.Resolve(ctx, call)
 		if err != nil {
 			return nil, err
 		}
-		if runner != nil {
+		if !ok {
 			continue
 		}
-		return runner, nil
+		return provider, nil
 	}
 	return nil, fmt.Errorf("tool not found")
 }
 
-// Run runs the agent on a chat completion response.
+// run runs the agent on a chat completion response.
 //
 // More specifically, it runs the tool calls made by the model.
-func (a *Agent) Run(
+func (agent *Agent) run(
 	ctx context.Context,
 	response ChatCompletionResponse,
 ) (hist []ChatCompletionMessage, err error) {
 	for _, tool := range response.Choices[0].Message.ToolCalls {
-		runner, err := a.resolveTool(ctx, tool)
+		runner, err := agent.resolveTool(ctx, tool)
 		if err != nil {
 			return nil, err
 		}
@@ -105,9 +100,15 @@ func (a *Agent) Run(
 //
 // It basically resets the agent's history by having a new conversation with
 // the model prefixed with a summary of the previous conversation/history.
-func (a *Agent) refresh(
+func (agent *Agent) refresh(
 	ctx context.Context,
 ) error {
 	// TODO: refresh agent context
+	return nil
+}
+
+// Start starts the agency within the given context.
+func (agency *Agency) Start(ctx context.Context) error {
+	// TODO: start agents
 	return nil
 }

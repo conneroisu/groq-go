@@ -120,9 +120,9 @@ func (c *Composio) GetTools(
 	}
 	return groqTools(items.Tools), nil
 }
-func groqTools(localTools []Tool) []tools.Tool {
-	groqTools := make([]tools.Tool, 0, len(localTools))
-	for _, tool := range localTools {
+func groqTools(tooling []Tool) []tools.Tool {
+	groqTools := make([]tools.Tool, 0, len(tooling))
+	for _, tool := range tooling {
 		groqTools = append(groqTools, tools.Tool{
 			Function: tools.Defintion{
 				Name:        tool.Name,

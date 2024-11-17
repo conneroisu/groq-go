@@ -10,6 +10,7 @@ import (
 
 	"github.com/conneroisu/groq-go"
 	"github.com/conneroisu/groq-go/pkg/builders"
+	"github.com/conneroisu/groq-go/pkg/groqerr"
 )
 
 const (
@@ -86,8 +87,13 @@ func (c *Composio) doRequest(req *http.Request, v interface{}) error {
 	}
 }
 
-type (
-	request struct {
+// Run runs the composio client on a chat completion response.
+func (c *Composio) Run(
+	ctx context.Context,
+	user ConnectedAccount,
+	response groq.ChatCompletionResponse,
+) ([]groq.ChatCompletionMessage, error) {
+	type request struct {
 		ConnectedAccountID string         `json:"connectedAccountId"`
 		EntityID           string         `json:"entityId"`
 		AppName            string         `json:"appName"`
@@ -95,18 +101,10 @@ type (
 		Text               string         `json:"text,omitempty"`
 		AuthConfig         map[string]any `json:"authConfig,omitempty"`
 	}
-)
-
-// Run runs the composio client on a chat completion response.
-func (c *Composio) Run(
-	ctx context.Context,
-	user ConnectedAccount,
-	response groq.ChatCompletionResponse,
-) ([]groq.ChatCompletionMessage, error) {
 	var respH []groq.ChatCompletionMessage
 	if response.Choices[0].FinishReason != groq.ReasonFunctionCall &&
 		response.Choices[0].FinishReason != "tool_calls" {
-		return nil, fmt.Errorf("not a function call")
+		return nil, groqerr.ErrNonFunctionCall{}
 	}
 	for _, toolCall := range response.Choices[0].Message.ToolCalls {
 		var args map[string]any
@@ -115,7 +113,6 @@ func (c *Composio) Run(
 			if err != nil {
 				return nil, err
 			}
-			c.logger.Debug("arguments", "args", args)
 		}
 		req, err := builders.NewRequest(
 			ctx,
