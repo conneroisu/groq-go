@@ -69,7 +69,7 @@ var (
 			}
 			return groq.ChatCompletionMessage{
 				Content: fmt.Sprintf("Created directory %s.", params.Path),
-				Role:    groq.ChatMessageRoleFunction,
+				Role:    groq.RoleFunction,
 				Name:    "mkdir",
 			}, nil
 		},
@@ -88,7 +88,7 @@ var (
 			}
 			return groq.ChatCompletionMessage{
 				Content: string(jsonBytes),
-				Role:    groq.ChatMessageRoleFunction,
+				Role:    groq.RoleFunction,
 				Name:    "ls",
 			}, nil
 		},
@@ -103,7 +103,7 @@ var (
 			}
 			return groq.ChatCompletionMessage{
 				Content: string(content),
-				Role:    groq.ChatMessageRoleFunction,
+				Role:    groq.RoleFunction,
 				Name:    "read",
 			}, nil
 		},
@@ -118,7 +118,7 @@ var (
 			}
 			return groq.ChatCompletionMessage{
 				Content: fmt.Sprintf("Successfully wrote to file %s.", params.Path),
-				Role:    groq.ChatMessageRoleFunction,
+				Role:    groq.RoleFunction,
 				Name:    "write",
 			}, nil
 		},
@@ -165,17 +165,17 @@ var (
 			<-proc.Done()
 			return groq.ChatCompletionMessage{
 				Content: buf.String(),
-				Role:    groq.ChatMessageRoleFunction,
+				Role:    groq.RoleFunction,
 				Name:    "startProcess",
 			}, nil
 		},
 	}
 	mkdirTool = tools.Tool{
 		Type: tools.ToolTypeFunction,
-		Function: tools.FunctionDefinition{
+		Function: tools.Defintion{
 			Name:        "mkdir",
 			Description: "Make a directory in the sandbox file system at a given path",
-			Parameters: tools.FunctionParameters{
+			Parameters: tools.Parameters{
 				Type: "object",
 				Properties: map[string]tools.PropertyDefinition{
 					"path": {
@@ -190,10 +190,10 @@ var (
 	}
 	lsTool = tools.Tool{
 		Type: tools.ToolTypeFunction,
-		Function: tools.FunctionDefinition{
+		Function: tools.Defintion{
 			Name:        "ls",
 			Description: "List the files and directories in the sandbox file system at a given path",
-			Parameters: tools.FunctionParameters{
+			Parameters: tools.Parameters{
 				Type: "object",
 				Properties: map[string]tools.PropertyDefinition{
 					"path": {Type: "string",
@@ -207,10 +207,10 @@ var (
 	}
 	readTool = tools.Tool{
 		Type: tools.ToolTypeFunction,
-		Function: tools.FunctionDefinition{
+		Function: tools.Defintion{
 			Name:        "read",
 			Description: "Read the contents of a file in the sandbox file system at a given path",
-			Parameters: tools.FunctionParameters{
+			Parameters: tools.Parameters{
 				Type: "object",
 				Properties: map[string]tools.PropertyDefinition{
 					"path": {Type: "string",
@@ -224,10 +224,10 @@ var (
 	}
 	writeTool = tools.Tool{
 		Type: tools.ToolTypeFunction,
-		Function: tools.FunctionDefinition{
+		Function: tools.Defintion{
 			Name:        "write",
 			Description: "Write to a file in the sandbox file system at a given path",
-			Parameters: tools.FunctionParameters{
+			Parameters: tools.Parameters{
 				Type: "object",
 				Properties: map[string]tools.PropertyDefinition{
 					"path": {Type: "string",
@@ -244,10 +244,10 @@ var (
 	}
 	startProcessTool = tools.Tool{
 		Type: tools.ToolTypeFunction,
-		Function: tools.FunctionDefinition{
+		Function: tools.Defintion{
 			Name:        "start_process",
 			Description: "Start a process in the sandbox.",
-			Parameters: tools.FunctionParameters{
+			Parameters: tools.Parameters{
 				Type: "object",
 				Properties: map[string]tools.PropertyDefinition{
 					"cmd": {Type: "string",
@@ -309,7 +309,7 @@ func (s *Sandbox) runTool(
 	if err != nil {
 		return groq.ChatCompletionMessage{
 			Content: err.Error(),
-			Role:    groq.ChatMessageRoleFunction,
+			Role:    groq.RoleFunction,
 			Name:    tool.Function.Name,
 		}, err
 	}
@@ -317,7 +317,7 @@ func (s *Sandbox) runTool(
 	if err != nil {
 		return groq.ChatCompletionMessage{
 			Content: fmt.Sprintf("Error running tool %s: %s", tool.Function.Name, err.Error()),
-			Role:    groq.ChatMessageRoleFunction,
+			Role:    groq.RoleFunction,
 			Name:    tool.Function.Name,
 		}, err
 	}

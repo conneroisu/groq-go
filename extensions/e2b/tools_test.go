@@ -40,7 +40,7 @@ func TestSandboxTooling(t *testing.T) {
 		Model: models.ModelLlama3Groq70B8192ToolUsePreview,
 		Messages: []groq.ChatCompletionMessage{
 			{
-				Role: groq.ChatMessageRoleUser,
+				Role: groq.RoleUser,
 				Content: `
 Create a file called 'hello.txt' with the data:
 <file name="hello.txt">

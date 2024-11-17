@@ -15,7 +15,7 @@ import (
 var (
 	history = []groq.ChatCompletionMessage{
 		{
-			Role: groq.ChatMessageRoleUser,
+			Role: groq.RoleUser,
 			Content: `
 Given the callable tools provided, create a python project with the following files:
 
@@ -71,10 +71,10 @@ func run(
 	ts := sb.GetTools()
 	ts = append(ts, tools.Tool{
 		Type: tools.ToolTypeFunction,
-		Function: tools.FunctionDefinition{
+		Function: tools.Defintion{
 			Name:        "complete",
 			Description: "Signify that the assigned task is complete.",
-			Parameters: tools.FunctionParameters{
+			Parameters: tools.Parameters{
 				Type: "object",
 				Properties: map[string]tools.PropertyDefinition{
 					"task": {
@@ -100,7 +100,7 @@ func run(
 		if err != nil {
 			history = append(history,
 				groq.ChatCompletionMessage{
-					Role:    groq.ChatMessageRoleUser,
+					Role:    groq.RoleUser,
 					Content: err.Error(),
 				})
 			continue

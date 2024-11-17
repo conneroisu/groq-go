@@ -41,7 +41,7 @@ func TestTestServer(t *testing.T) {
 			Model: models.ModelLlama38B8192,
 			Messages: []groq.ChatCompletionMessage{
 				{
-					Role: groq.ChatMessageRoleUser,
+					Role: groq.RoleUser,
 					Content: fmt.Sprintf(`
 problem: %d
 You have a six-sided die that you roll once. Let $R{i}$ denote the event that the roll is $i$. Let $G{j}$ denote the event that the roll is greater than $j$. Let $E$ denote the event that the roll of the die is even-numbered.
@@ -80,7 +80,7 @@ func TestModerate(t *testing.T) {
 	mod, err := client.Moderate(context.Background(),
 		[]groq.ChatCompletionMessage{
 			{
-				Role:    groq.ChatMessageRoleUser,
+				Role:    groq.RoleUser,
 				Content: "I want to kill them.",
 			},
 		},
@@ -105,7 +105,7 @@ func handleModerationEndpoint(w http.ResponseWriter, r *http.Request) {
 		Choices: []groq.ChatCompletionChoice{
 			{
 				Message: groq.ChatCompletionMessage{
-					Role:    groq.ChatMessageRoleAssistant,
+					Role:    groq.RoleAssistant,
 					Content: "unsafe\nS1,S2",
 				},
 				FinishReason: "stop",
@@ -187,7 +187,7 @@ func TestCreateChatCompletionStream(t *testing.T) {
 			Model:     models.ModelLlama38B8192,
 			Messages: []groq.ChatCompletionMessage{
 				{
-					Role:    groq.ChatMessageRoleUser,
+					Role:    groq.RoleUser,
 					Content: "Hello!",
 				},
 			},
@@ -300,7 +300,7 @@ func TestCreateChatCompletionStreamError(t *testing.T) {
 			Model:     models.ModelLlama38B8192,
 			Messages: []groq.ChatCompletionMessage{
 				{
-					Role:    groq.ChatMessageRoleUser,
+					Role:    groq.RoleUser,
 					Content: "Hello!",
 				},
 			},
@@ -344,7 +344,7 @@ func TestCreateChatCompletionStreamWithHeaders(t *testing.T) {
 			Model:     models.ModelLlama38B8192,
 			Messages: []groq.ChatCompletionMessage{
 				{
-					Role:    groq.ChatMessageRoleUser,
+					Role:    groq.RoleUser,
 					Content: "Hello!",
 				},
 			},
@@ -398,7 +398,7 @@ func TestCreateChatCompletionStreamWithRatelimitHeaders(t *testing.T) {
 			Model:     models.ModelLlama38B8192,
 			Messages: []groq.ChatCompletionMessage{
 				{
-					Role:    groq.ChatMessageRoleUser,
+					Role:    groq.RoleUser,
 					Content: "Hello!",
 				},
 			},
@@ -454,7 +454,7 @@ func TestCreateChatCompletionStreamErrorWithDataPrefix(t *testing.T) {
 			Model:     models.ModelLlama38B8192,
 			Messages: []groq.ChatCompletionMessage{
 				{
-					Role:    groq.ChatMessageRoleUser,
+					Role:    groq.RoleUser,
 					Content: "Hello!",
 				},
 			},
@@ -497,7 +497,7 @@ func TestCreateChatCompletionStreamRateLimitError(t *testing.T) {
 			Model:     models.ModelLlama38B8192,
 			Messages: []groq.ChatCompletionMessage{
 				{
-					Role:    groq.ChatMessageRoleUser,
+					Role:    groq.RoleUser,
 					Content: "Hello!",
 				},
 			},
@@ -540,7 +540,7 @@ func TestCreateChatCompletionStreamStreamOptions(t *testing.T) {
 			Model:     models.ModelLlama38B8192,
 			Messages: []groq.ChatCompletionMessage{
 				{
-					Role:    groq.ChatMessageRoleUser,
+					Role:    groq.RoleUser,
 					Content: "Hello!",
 				},
 			},

@@ -11,7 +11,7 @@ type (
 		// Type is the type of the tool.
 		Type ToolType `json:"type"`
 		// Function is the tool's functional definition.
-		Function FunctionDefinition `json:"function,omitempty"`
+		Function Defintion `json:"function,omitempty"`
 	}
 	// ToolType is the tool type.
 	//
@@ -22,21 +22,21 @@ type (
 		// Type is the type of the tool choice.
 		Type ToolType `json:"type"`
 		// Function is the function of the tool choice.
-		Function ToolFunction `json:"function,omitempty"`
+		Function Function `json:"function,omitempty"`
 	}
-	// ToolFunction represents the tool function.
-	ToolFunction struct {
+	// Function represents the tool function.
+	Function struct {
 		// Name is the name of the tool function.
 		Name string `json:"name"`
 	}
-	// FunctionDefinition represents the function definition.
-	FunctionDefinition struct {
-		Name        string             `json:"name"`
-		Description string             `json:"description"`
-		Parameters  FunctionParameters `json:"parameters"`
+	// Defintion represents the function definition.
+	Defintion struct {
+		Name        string     `json:"name"`
+		Description string     `json:"description"`
+		Parameters  Parameters `json:"parameters"`
 	}
-	// FunctionParameters represents the function parameters of a tool.
-	FunctionParameters struct {
+	// Parameters represents the function parameters of a tool.
+	Parameters struct {
 		Type                 string                        `json:"type"`
 		Properties           map[string]PropertyDefinition `json:"properties"`
 		Required             []string                      `json:"required"`

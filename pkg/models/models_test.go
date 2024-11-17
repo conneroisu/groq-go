@@ -42,7 +42,7 @@ func TestChatModelsGemma29BIt(t *testing.T) {
 		Model: models.ModelGemma29BIt,
 		Messages: []groq.ChatCompletionMessage{
 			{
-				Role:    groq.ChatMessageRoleUser,
+				Role:    groq.RoleUser,
 				Content: "What is a proface display?",
 			},
 		},
@@ -73,7 +73,7 @@ func TestChatModelsGemma7BIt(t *testing.T) {
 		Model: models.ModelGemma7BIt,
 		Messages: []groq.ChatCompletionMessage{
 			{
-				Role:    groq.ChatMessageRoleUser,
+				Role:    groq.RoleUser,
 				Content: "What is a proface display?",
 			},
 		},
@@ -104,7 +104,7 @@ func TestChatModelsLlama3170BVersatile(t *testing.T) {
 		Model: models.ModelLlama3170BVersatile,
 		Messages: []groq.ChatCompletionMessage{
 			{
-				Role:    groq.ChatMessageRoleUser,
+				Role:    groq.RoleUser,
 				Content: "What is a proface display?",
 			},
 		},
@@ -135,7 +135,7 @@ func TestChatModelsLlama318BInstant(t *testing.T) {
 		Model: models.ModelLlama318BInstant,
 		Messages: []groq.ChatCompletionMessage{
 			{
-				Role:    groq.ChatMessageRoleUser,
+				Role:    groq.RoleUser,
 				Content: "What is a proface display?",
 			},
 		},
@@ -166,7 +166,7 @@ func TestChatModelsLlama3211BTextPreview(t *testing.T) {
 		Model: models.ModelLlama3211BTextPreview,
 		Messages: []groq.ChatCompletionMessage{
 			{
-				Role:    groq.ChatMessageRoleUser,
+				Role:    groq.RoleUser,
 				Content: "What is a proface display?",
 			},
 		},
@@ -197,7 +197,7 @@ func TestChatModelsLlama3211BVisionPreview(t *testing.T) {
 		Model: models.ModelLlama3211BVisionPreview,
 		Messages: []groq.ChatCompletionMessage{
 			{
-				Role:    groq.ChatMessageRoleUser,
+				Role:    groq.RoleUser,
 				Content: "What is a proface display?",
 			},
 		},
@@ -228,7 +228,7 @@ func TestChatModelsLlama321BPreview(t *testing.T) {
 		Model: models.ModelLlama321BPreview,
 		Messages: []groq.ChatCompletionMessage{
 			{
-				Role:    groq.ChatMessageRoleUser,
+				Role:    groq.RoleUser,
 				Content: "What is a proface display?",
 			},
 		},
@@ -259,7 +259,7 @@ func TestChatModelsLlama323BPreview(t *testing.T) {
 		Model: models.ModelLlama323BPreview,
 		Messages: []groq.ChatCompletionMessage{
 			{
-				Role:    groq.ChatMessageRoleUser,
+				Role:    groq.RoleUser,
 				Content: "What is a proface display?",
 			},
 		},
@@ -290,7 +290,7 @@ func TestChatModelsLlama3290BTextPreview(t *testing.T) {
 		Model: models.ModelLlama3290BTextPreview,
 		Messages: []groq.ChatCompletionMessage{
 			{
-				Role:    groq.ChatMessageRoleUser,
+				Role:    groq.RoleUser,
 				Content: "What is a proface display?",
 			},
 		},
@@ -321,7 +321,7 @@ func TestChatModelsLlama3290BVisionPreview(t *testing.T) {
 		Model: models.ModelLlama3290BVisionPreview,
 		Messages: []groq.ChatCompletionMessage{
 			{
-				Role:    groq.ChatMessageRoleUser,
+				Role:    groq.RoleUser,
 				Content: "What is a proface display?",
 			},
 		},
@@ -352,7 +352,7 @@ func TestChatModelsLlama370B8192(t *testing.T) {
 		Model: models.ModelLlama370B8192,
 		Messages: []groq.ChatCompletionMessage{
 			{
-				Role:    groq.ChatMessageRoleUser,
+				Role:    groq.RoleUser,
 				Content: "What is a proface display?",
 			},
 		},
@@ -383,7 +383,7 @@ func TestChatModelsLlama38B8192(t *testing.T) {
 		Model: models.ModelLlama38B8192,
 		Messages: []groq.ChatCompletionMessage{
 			{
-				Role:    groq.ChatMessageRoleUser,
+				Role:    groq.RoleUser,
 				Content: "What is a proface display?",
 			},
 		},
@@ -414,7 +414,7 @@ func TestChatModelsLlama3Groq70B8192ToolUsePreview(t *testing.T) {
 		Model: models.ModelLlama3Groq70B8192ToolUsePreview,
 		Messages: []groq.ChatCompletionMessage{
 			{
-				Role:    groq.ChatMessageRoleUser,
+				Role:    groq.RoleUser,
 				Content: "What is a proface display?",
 			},
 		},
@@ -445,7 +445,7 @@ func TestChatModelsLlama3Groq8B8192ToolUsePreview(t *testing.T) {
 		Model: models.ModelLlama3Groq8B8192ToolUsePreview,
 		Messages: []groq.ChatCompletionMessage{
 			{
-				Role:    groq.ChatMessageRoleUser,
+				Role:    groq.RoleUser,
 				Content: "What is a proface display?",
 			},
 		},
@@ -476,7 +476,7 @@ func TestChatModelsLlavaV157B4096Preview(t *testing.T) {
 		Model: models.ModelLlavaV157B4096Preview,
 		Messages: []groq.ChatCompletionMessage{
 			{
-				Role:    groq.ChatMessageRoleUser,
+				Role:    groq.RoleUser,
 				Content: "What is a proface display?",
 			},
 		},
@@ -507,7 +507,7 @@ func TestChatModelsMixtral8X7B32768(t *testing.T) {
 		Model: models.ModelMixtral8X7B32768,
 		Messages: []groq.ChatCompletionMessage{
 			{
-				Role:    groq.ChatMessageRoleUser,
+				Role:    groq.RoleUser,
 				Content: "What is a proface display?",
 			},
 		},
@@ -616,7 +616,7 @@ func TestLlamaGuard38B(t *testing.T) {
 	response, err := client.Moderate(ctx,
 		[]groq.ChatCompletionMessage{
 			{
-				Role:    groq.ChatMessageRoleUser,
+				Role:    groq.RoleUser,
 				Content: "I want to kill them.",
 			},
 		},

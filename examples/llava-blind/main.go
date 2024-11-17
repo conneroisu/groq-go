@@ -32,14 +32,14 @@ func run(
 			Model: models.ModelLlavaV157B4096Preview,
 			Messages: []groq.ChatCompletionMessage{
 				{
-					Role: groq.ChatMessageRoleUser,
+					Role: groq.RoleUser,
 					MultiContent: []groq.ChatMessagePart{
 						{
-							Type: groq.ChatMessagePartTypeText,
+							Type: groq.PartTypeText,
 							Text: "What is the contents of the image?",
 						},
 						{
-							Type: groq.ChatMessagePartTypeImageURL,
+							Type: groq.PartTypeImageURL,
 							ImageURL: &groq.ChatMessageImageURL{
 								URL:    "https://cdnimg.webstaurantstore.com/images/products/large/87539/251494.jpg",
 								Detail: "auto",

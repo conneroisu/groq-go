@@ -17,44 +17,51 @@ import (
 	"github.com/conneroisu/groq-go/pkg/tools"
 )
 
-const (
-	// ChatMessageRoleSystem is the system chat message role.
-	ChatMessageRoleSystem Role = "system"
-	// ChatMessageRoleUser is the user chat message role.
-	ChatMessageRoleUser Role = "user"
-	// ChatMessageRoleAssistant is the assistant chat message role.
-	ChatMessageRoleAssistant Role = "assistant"
-	// ChatMessageRoleFunction is the function chat message role.
-	ChatMessageRoleFunction Role = "function"
-	// ChatMessageRoleTool is the tool chat message role.
-	ChatMessageRoleTool Role = "tool"
+// Role is the role of the chat completion message.
+//
+// string
+type Role string
 
+const (
+	// RoleSystem is the system chat message role.
+	RoleSystem Role = "system"
+	// RoleUser is the user chat message role.
+	RoleUser Role = "user"
+	// RoleAssistant is the assistant chat message role.
+	RoleAssistant Role = "assistant"
+	// RoleFunction is the function chat message role.
+	RoleFunction Role = "function"
+	// RoleTool is the tool chat message role.
+	RoleTool Role = "tool"
+)
+
+// ImageURLDetail is the detail of the image at the URL.
+//
+// string
+type ImageURLDetail string
+
+const (
 	// ImageURLDetailHigh is the high image url detail.
 	ImageURLDetailHigh ImageURLDetail = "high"
 	// ImageURLDetailLow is the low image url detail.
 	ImageURLDetailLow ImageURLDetail = "low"
 	// ImageURLDetailAuto is the auto image url detail.
 	ImageURLDetailAuto ImageURLDetail = "auto"
+)
 
-	// ChatMessagePartTypeText is the text chat message part type.
-	ChatMessagePartTypeText ChatMessagePartType = "text"
-	// ChatMessagePartTypeImageURL is the image url chat message part type.
-	ChatMessagePartTypeImageURL ChatMessagePartType = "image_url"
+// ChatMessagePartType is the chat message part type.
+//
+// string
+type ChatMessagePartType string
+
+const (
+	// PartTypeText is the text chat message part type.
+	PartTypeText ChatMessagePartType = "text"
+	// PartTypeImageURL is the image url chat message part type.
+	PartTypeImageURL ChatMessagePartType = "image_url"
 )
 
 type (
-	// ImageURLDetail is the detail of the image at the URL.
-	//
-	// string
-	ImageURLDetail string
-	// ChatMessagePartType is the chat message part type.
-	//
-	// string
-	ChatMessagePartType string
-	// Role is the role of the chat completion message.
-	//
-	// string
-	Role string
 	// PromptAnnotation represents the prompt annotation.
 	PromptAnnotation struct {
 		PromptIndex int `json:"prompt_index,omitempty"`
@@ -597,15 +604,12 @@ func (c *Client) CreateChatCompletionStream(
 //
 // Example:
 //
-//	// Responses is a response from the models endpoint.
 //	type Responses []struct {
 //	        Title string `json:"title" jsonschema:"title=Poem Title,description=Title of the poem, minLength=1, maxLength=20"`
 //	        Text  string `json:"text" jsonschema:"title=Poem Text,description=Text of the poem, minLength=10, maxLength=200"`
 //	}
 //
-//	func run(
-//	        ctx context.Context,
-//	) error {
+//	func run(ctx context.Context) error {
 //	        client, err := groq.NewClient(os.Getenv("GROQ_KEY"))
 //	        if err != nil {
 //	                return err
@@ -624,7 +628,6 @@ func (c *Client) CreateChatCompletionStream(
 //	        if err != nil {
 //	                return err
 //	        }
-//
 //	        jsValue, err := json.MarshalIndent(resp, "", "  ")
 //	        if err != nil {
 //	                return err

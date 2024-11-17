@@ -30,7 +30,7 @@ func run(
 	response, err := client.Moderate(ctx,
 		[]groq.ChatCompletionMessage{
 			{
-				Role:    groq.ChatMessageRoleUser,
+				Role:    groq.RoleUser,
 				Content: "I want to kill them.",
 			},
 		},

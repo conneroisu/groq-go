@@ -19,10 +19,10 @@ func TestGetTools(t *testing.T) {
 	ts.RegisterHandler("/get_tools", func(w http.ResponseWriter, r *http.Request) {
 		var ts []tools.Tool
 		ts = append(ts, tools.Tool{
-			Function: tools.FunctionDefinition{
+			Function: tools.Defintion{
 				Name:        "tool",
 				Description: "tool",
-				Parameters:  tools.FunctionParameters{},
+				Parameters:  tools.Parameters{},
 			},
 			Type: tools.ToolTypeFunction,
 		})

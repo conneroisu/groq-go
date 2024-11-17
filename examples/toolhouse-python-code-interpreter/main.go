@@ -47,7 +47,7 @@ func run(ctx context.Context) error {
 	}
 	history := []groq.ChatCompletionMessage{
 		{
-			Role:    groq.ChatMessageRoleUser,
+			Role:    groq.RoleUser,
 			Content: "Write a python function to print the first 10 prime numbers containing the number 3 then respond with the answer. DO NOT GUESS WHAT THE OUTPUT SHOULD BE. MAKE SURE TO CALL THE TOOL GIVEN.",
 		},
 	}

@@ -56,7 +56,7 @@ func run(
 		Model: models.ModelLlama3Groq70B8192ToolUsePreview,
 		Messages: []groq.ChatCompletionMessage{
 			{
-				Role: groq.ChatMessageRoleUser,
+				Role: groq.RoleUser,
 				Content: `
 You are a github star bot. You will be given a repo name and you will star it. 
 Star the repo conneroisu/groq-go on GitHub.

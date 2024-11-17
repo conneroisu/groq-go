@@ -38,7 +38,7 @@ func run(
 		Model: models.ModelLlama3Groq70B8192ToolUsePreview,
 		Messages: []groq.ChatCompletionMessage{
 			{
-				Role:    groq.ChatMessageRoleUser,
+				Role:    groq.RoleUser,
 				Content: "Create 5 short poems in json format with title and text.",
 			},
 		},

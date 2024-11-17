@@ -26,7 +26,7 @@ func TestChat(t *testing.T) {
 			{
 				Index: 0,
 				Message: groq.ChatCompletionMessage{
-					Role:    groq.ChatMessageRoleAssistant,
+					Role:    groq.RoleAssistant,
 					Content: "Hello!",
 				},
 			},
@@ -53,7 +53,7 @@ func TestChat(t *testing.T) {
 		Model: models.ModelLlama3Groq70B8192ToolUsePreview,
 		Messages: []groq.ChatCompletionMessage{
 			{
-				Role:    groq.ChatMessageRoleUser,
+				Role:    groq.RoleUser,
 				Content: "Hello!",
 			},
 		},

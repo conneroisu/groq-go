@@ -71,7 +71,7 @@ func run(
 			groq.ChatCompletionRequest{
 				Model: models.ModelLlama3Groq70B8192ToolUsePreview,
 				Messages: []groq.ChatCompletionMessage{{
-					Role:    groq.ChatMessageRoleSystem,
+					Role:    groq.RoleSystem,
 					Content: prompt,
 				}},
 			},

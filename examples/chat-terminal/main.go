@@ -73,7 +73,7 @@ func input(
 		break
 	}
 	history = append(history, groq.ChatCompletionMessage{
-		Role:    groq.ChatMessageRoleUser,
+		Role:    groq.RoleUser,
 		Content: strings.Join(lines, "\n"),
 	})
 	output, err := client.CreateChatCompletionStream(

@@ -34,7 +34,7 @@ type (
 		Description string `json:"description"`
 		// Parameters are the parameters of the tool returned by the
 		// composio api.
-		Parameters tools.FunctionParameters `json:"parameters"`
+		Parameters tools.Parameters `json:"parameters"`
 		// Response is the response of the tool returned by the
 		// composio api.
 		Response struct {
@@ -124,7 +124,7 @@ func groqTools(localTools []Tool) []tools.Tool {
 	groqTools := make([]tools.Tool, 0, len(localTools))
 	for _, tool := range localTools {
 		groqTools = append(groqTools, tools.Tool{
-			Function: tools.FunctionDefinition{
+			Function: tools.Defintion{
 				Name:        tool.Name,
 				Description: tool.Description,
 				Parameters:  tool.Parameters,
