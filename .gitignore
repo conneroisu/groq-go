@@ -1,4 +1,5 @@
 *.exe
+*.parquet
 *.exe~
 *.dll
 *.so
