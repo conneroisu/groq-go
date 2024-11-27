@@ -44,7 +44,6 @@ jobs:
           git commit -m "Update Go modules, Go workspace, and docs" || echo "No changes to commit"
 
       # Step 8: Push changes back to the repository
-      - name: Push changes to repository
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}

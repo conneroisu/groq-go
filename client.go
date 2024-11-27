@@ -15,7 +15,7 @@ import (
 	"github.com/conneroisu/groq-go/pkg/streams"
 )
 
-//go:generate go run ./scripts/generate-models/
+//go:generate go run ./cmd/generate-models/
 //go:generate go run github.com/princjef/gomarkdoc/cmd/gomarkdoc@v1.1.0 -o README.md -e .
 
 type (
@@ -121,7 +121,7 @@ const (
 	// completion response format type.
 	FormatJSONSchema Format = "json_schema"
 
-	// groqAPIURLv1 is the base URL for the Groq API.
+	// groqAPIURLv1 = the base URL for the Groq API.
 	groqAPIURLv1 = "https://api.groq.com/openai/v1"
 
 	chatCompletionsSuffix Endpoint = "/chat/completions"
