@@ -44,4 +44,4 @@ fmt:
 
 .PHONY: docs
 docs:
-	@sh ./scripts/makefile/docs.sh
+	@sh ./cmd/generate-models/docs.sh
