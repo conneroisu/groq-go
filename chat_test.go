@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/conneroisu/groq-go"
-	"github.com/conneroisu/groq-go/pkg/models"
 	"github.com/conneroisu/groq-go/pkg/test"
 	"github.com/conneroisu/groq-go/pkg/tools"
 	"github.com/stretchr/testify/assert"
@@ -26,7 +25,7 @@ func TestChat(t *testing.T) {
 			{
 				Index: 0,
 				Message: groq.ChatCompletionMessage{
-					Role:    groq.ChatMessageRoleAssistant,
+					Role:    groq.RoleAssistant,
 					Content: "Hello!",
 				},
 			},
@@ -50,10 +49,10 @@ func TestChat(t *testing.T) {
 	)
 	a.NoError(err)
 	resp, err := client.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
-		Model: models.ModelLlama3Groq70B8192ToolUsePreview,
+		Model: groq.ModelLlama3Groq70B8192ToolUsePreview,
 		Messages: []groq.ChatCompletionMessage{
 			{
-				Role:    groq.ChatMessageRoleUser,
+				Role:    groq.RoleUser,
 				Content: "Hello!",
 			},
 		},

@@ -11,7 +11,6 @@ import (
 
 	"github.com/conneroisu/groq-go"
 	"github.com/conneroisu/groq-go/extensions/composio"
-	"github.com/conneroisu/groq-go/pkg/models"
 	"github.com/conneroisu/groq-go/pkg/test"
 )
 
@@ -53,10 +52,10 @@ func run(
 		return err
 	}
 	chat, err := client.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
-		Model: models.ModelLlama3Groq70B8192ToolUsePreview,
+		Model: groq.ModelLlama3Groq70B8192ToolUsePreview,
 		Messages: []groq.ChatCompletionMessage{
 			{
-				Role: groq.ChatMessageRoleUser,
+				Role: groq.RoleUser,
 				Content: `
 You are a github star bot. You will be given a repo name and you will star it. 
 Star the repo conneroisu/groq-go on GitHub.

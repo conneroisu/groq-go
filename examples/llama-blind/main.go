@@ -7,7 +7,6 @@ import (
 	"os"
 
 	"github.com/conneroisu/groq-go"
-	"github.com/conneroisu/groq-go/pkg/models"
 )
 
 func main() {
@@ -29,10 +28,10 @@ func run(
 	response, err := client.CreateChatCompletion(
 		ctx,
 		groq.ChatCompletionRequest{
-			Model: models.ModelLlavaV157B4096Preview,
+			Model: groq.ModelLlama3211BVisionPreview,
 			Messages: []groq.ChatCompletionMessage{
 				{
-					Role: groq.ChatMessageRoleUser,
+					Role: groq.RoleUser,
 					MultiContent: []groq.ChatMessagePart{
 						{
 							Type: groq.ChatMessagePartTypeText,

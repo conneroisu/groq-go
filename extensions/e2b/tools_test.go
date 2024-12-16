@@ -37,10 +37,10 @@ func TestSandboxTooling(t *testing.T) {
 	tools := sb.GetTools()
 	// ask the ai to create a file with the data "Hello World!" in file "hello.txt"
 	response, err := client.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
-		Model: models.ModelLlama3Groq70B8192ToolUsePreview,
+		Model: groq\.ModelLlama3Groq70B8192ToolUsePreview,
 		Messages: []groq.ChatCompletionMessage{
 			{
-				Role: groq.ChatMessageRoleUser,
+				Role: groq.RoleUser,
 				Content: `
 Create a file called 'hello.txt' with the data:
 <file name="hello.txt">

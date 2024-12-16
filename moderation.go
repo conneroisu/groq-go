@@ -6,18 +6,7 @@ import (
 	"strings"
 
 	"github.com/conneroisu/groq-go/pkg/builders"
-	"github.com/conneroisu/groq-go/pkg/models"
 	"github.com/conneroisu/groq-go/pkg/moderation"
-)
-
-type (
-	// Moderation represents the response of a moderation request.
-	Moderation struct {
-		// Categories is the categories of the result.
-		Categories []moderation.HarmfulCategory `json:"categories"`
-		// Flagged is the flagged status of the result.
-		Flagged bool `json:"flagged"`
-	}
 )
 
 // Moderate performs a moderation api call over a string.
@@ -25,7 +14,7 @@ type (
 func (c *Client) Moderate(
 	ctx context.Context,
 	messages []ChatCompletionMessage,
-	model models.ModerationModel,
+	model ModerationModel,
 ) (response Moderation, err error) {
 	req, err := builders.NewRequest(
 		ctx,
@@ -34,7 +23,7 @@ func (c *Client) Moderate(
 		c.fullURL(chatCompletionsSuffix, withModel(model)),
 		builders.WithBody(&struct {
 			Messages []ChatCompletionMessage `json:"messages"`
-			Model    models.ModerationModel  `json:"model,omitempty"`
+			Model    ModerationModel         `json:"model,omitempty"`
 		}{
 			Messages: messages,
 			Model:    model,

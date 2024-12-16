@@ -11,31 +11,25 @@ import (
 
 	"github.com/conneroisu/groq-go/pkg/builders"
 	"github.com/conneroisu/groq-go/pkg/groqerr"
-	"github.com/conneroisu/groq-go/pkg/models"
 	"github.com/conneroisu/groq-go/pkg/streams"
 )
 
-//go:generate go run ./scripts/generate-models/
+//go:generate go run ./cmd/generate-models
 //go:generate go run github.com/princjef/gomarkdoc/cmd/gomarkdoc@v1.1.0 -o README.md -e .
 
 type (
 	// Client is a Groq api client.
 	Client struct {
 		// Groq API key
-		groqAPIKey string
-		// OrgID is the organization ID for the client.
-		orgID string
-		// Base URL for the client.
-		baseURL string
-		// EmptyMessagesLimit is the limit for the empty messages.
+		groqAPIKey         string
+		orgID              string
+		baseURL            string
 		emptyMessagesLimit uint
 
 		header             builders.Header
 		requestFormBuilder builders.FormBuilder
 
-		// Client is the HTTP client to use
 		client *http.Client
-		// Logger is the logger for the client.
 		logger *slog.Logger
 	}
 	// Opts is a function that sets options for a Groq client.
@@ -89,9 +83,7 @@ type (
 		CompletionTokens int `json:"completion_tokens"`
 		TotalTokens      int `json:"total_tokens"`
 	}
-	// Endpoint is an endpoint for the groq api.
-	Endpoint string
-
+	endpoint       string
 	fullURLOptions struct{ model string }
 	fullURLOption  func(*fullURLOptions)
 	response       interface{ SetHeader(http.Header) }
@@ -124,11 +116,11 @@ const (
 	// groqAPIURLv1 is the base URL for the Groq API.
 	groqAPIURLv1 = "https://api.groq.com/openai/v1"
 
-	chatCompletionsSuffix Endpoint = "/chat/completions"
-	transcriptionsSuffix  Endpoint = "/audio/transcriptions"
-	translationsSuffix    Endpoint = "/audio/translations"
-	embeddingsSuffix      Endpoint = "/embeddings"
-	moderationsSuffix     Endpoint = "/moderations"
+	chatCompletionsSuffix endpoint = "/chat/completions"
+	transcriptionsSuffix  endpoint = "/audio/transcriptions"
+	translationsSuffix    endpoint = "/audio/translations"
+	embeddingsSuffix      endpoint = "/embeddings"
+	moderationsSuffix     endpoint = "/moderations"
 )
 
 // NewClient creates a new Groq client.
@@ -156,7 +148,7 @@ func NewClient(groqAPIKey string, opts ...Opts) (*Client, error) {
 }
 
 // fullURL returns full URL for request.
-func (c *Client) fullURL(suffix Endpoint, setters ...fullURLOption) string {
+func (c *Client) fullURL(suffix endpoint, setters ...fullURLOption) string {
 	baseURL := strings.TrimRight(c.baseURL, "/")
 	args := fullURLOptions{}
 	for _, setter := range setters {
@@ -167,29 +159,23 @@ func (c *Client) fullURL(suffix Endpoint, setters ...fullURLOption) string {
 
 func (c *Client) sendRequest(req *http.Request, v response) error {
 	req.Header.Set("Accept", "application/json")
-
 	// Check whether Content-Type is already set, Upload Files API requires
 	// Content-Type == multipart/form-data
 	contentType := req.Header.Get("Content-Type")
 	if contentType == "" {
 		req.Header.Set("Content-Type", "application/json")
 	}
-
 	res, err := c.client.Do(req)
 	if err != nil {
 		return err
 	}
-
 	defer res.Body.Close()
-
 	if v != nil {
 		v.SetHeader(res.Header)
 	}
-
 	if isFailureStatusCode(res) {
 		return c.handleErrorResp(res)
 	}
-
 	return decodeResponse(res.Body, v)
 }
 
@@ -201,7 +187,6 @@ func sendRequestStream[T streams.Streamer[ChatCompletionStreamResponse]](
 	req.Header.Set("Accept", "text/event-stream")
 	req.Header.Set("Cache-Control", "no-cache")
 	req.Header.Set("Connection", "keep-alive")
-
 	resp, err := client.client.Do(
 		req,
 	) //nolint:bodyclose // body is closed in stream.Close()
@@ -248,7 +233,7 @@ func decodeString(body io.Reader, output *string) error {
 }
 
 func withModel[
-	T models.ChatModel | models.AudioModel | models.ModerationModel,
+	T ChatModel | AudioModel | ModerationModel,
 ](model T) fullURLOption {
 	return func(args *fullURLOptions) {
 		args.model = string(model)

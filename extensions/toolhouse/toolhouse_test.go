@@ -30,14 +30,14 @@ func TestUnitExtension(t *testing.T) {
 	a.NoError(err)
 	history := []groq.ChatCompletionMessage{
 		{
-			Role:    groq.ChatMessageRoleUser,
+			Role:    groq.RoleUser,
 			Content: "Write a python function to print the first 10 prime numbers containing the number 3 then respond with the answer. DO NOT GUESS WHAT THE OUTPUT SHOULD BE. MAKE SURE TO CALL THE TOOL GIVEN.",
 		},
 	}
 	tooling, err := ext.GetTools(ctx)
 	a.NoError(err)
 	re, err := client.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
-		Model:      models.ModelLlama3Groq70B8192ToolUsePreview,
+		Model:      groq\.ModelLlama3Groq70B8192ToolUsePreview,
 		Messages:   history,
 		Tools:      tooling,
 		ToolChoice: "required",
@@ -48,7 +48,7 @@ func TestUnitExtension(t *testing.T) {
 	a.NoError(err)
 	history = append(history, r...)
 	finalr, err := client.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
-		Model:     models.ModelLlama3Groq70B8192ToolUsePreview,
+		Model:     groq\.ModelLlama3Groq70B8192ToolUsePreview,
 		Messages:  history,
 		MaxTokens: 2000,
 	})

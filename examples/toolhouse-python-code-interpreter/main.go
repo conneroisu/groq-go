@@ -12,7 +12,6 @@ import (
 
 	"github.com/conneroisu/groq-go"
 	"github.com/conneroisu/groq-go/extensions/toolhouse"
-	"github.com/conneroisu/groq-go/pkg/models"
 	"github.com/conneroisu/groq-go/pkg/test"
 )
 
@@ -47,7 +46,7 @@ func run(ctx context.Context) error {
 	}
 	history := []groq.ChatCompletionMessage{
 		{
-			Role:    groq.ChatMessageRoleUser,
+			Role:    groq.RoleUser,
 			Content: "Write a python function to print the first 10 prime numbers containing the number 3 then respond with the answer. DO NOT GUESS WHAT THE OUTPUT SHOULD BE. MAKE SURE TO CALL THE TOOL GIVEN.",
 		},
 	}
@@ -56,7 +55,7 @@ func run(ctx context.Context) error {
 		return err
 	}
 	re, err := client.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
-		Model:      models.ModelLlama3Groq70B8192ToolUsePreview,
+		Model:      groq.ModelLlama3Groq70B8192ToolUsePreview,
 		Messages:   history,
 		Tools:      tools,
 		ToolChoice: "required",
@@ -71,7 +70,7 @@ func run(ctx context.Context) error {
 	}
 	history = append(history, r...)
 	finalr, err := client.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
-		Model:     models.ModelLlama3Groq70B8192ToolUsePreview,
+		Model:     groq.ModelLlama3Groq70B8192ToolUsePreview,
 		Messages:  history,
 		MaxTokens: 2000,
 	})

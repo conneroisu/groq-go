@@ -9,7 +9,6 @@ import (
 	"os"
 
 	"github.com/conneroisu/groq-go/pkg/builders"
-	"github.com/conneroisu/groq-go/pkg/models"
 )
 
 const (
@@ -30,7 +29,7 @@ type (
 	// AudioRequest represents a request structure for audio API.
 	AudioRequest struct {
 		// Model is the model to use for the transcription.
-		Model models.AudioModel
+		Model AudioModel
 		// FilePath is either an existing file in your filesystem or a
 		// filename representing the contents of Reader.
 		FilePath string
@@ -146,7 +145,7 @@ func (c *Client) CreateTranslation(
 func (c *Client) callAudioAPI(
 	ctx context.Context,
 	request AudioRequest,
-	endpointSuffix Endpoint,
+	endpointSuffix endpoint,
 ) (response AudioResponse, err error) {
 	var formBody bytes.Buffer
 	c.requestFormBuilder = builders.NewFormBuilder(&formBody)

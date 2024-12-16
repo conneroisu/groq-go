@@ -1,6 +1,6 @@
-# llava-blind
+# llama-blind
 
-This is an example of using groq-go to create a chat completion using the llava-v1.5-7b-4096-preview model.
+This is an example of using groq-go to create a chat completion using the llama 3.2 11B multimodal vision preview model.
 
 ## Usage
 

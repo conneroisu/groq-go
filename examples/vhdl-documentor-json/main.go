@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"github.com/conneroisu/groq-go"
-	"github.com/conneroisu/groq-go/pkg/models"
 )
 
 var (
@@ -69,9 +68,9 @@ func run(
 		err = client.CreateChatCompletionJSON(
 			ctx,
 			groq.ChatCompletionRequest{
-				Model: models.ModelLlama3Groq70B8192ToolUsePreview,
+				Model: groq.ModelLlama3Groq70B8192ToolUsePreview,
 				Messages: []groq.ChatCompletionMessage{{
-					Role:    groq.ChatMessageRoleSystem,
+					Role:    groq.RoleSystem,
 					Content: prompt,
 				}},
 			},

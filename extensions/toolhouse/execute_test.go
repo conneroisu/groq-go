@@ -51,7 +51,7 @@ func TestRun(t *testing.T) {
 	a.NoError(err)
 	history := []groq.ChatCompletionMessage{
 		{
-			Role:    groq.ChatMessageRoleUser,
+			Role:    groq.RoleUser,
 			Content: "",
 			ToolCalls: []tools.ToolCall{
 				{

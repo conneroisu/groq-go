@@ -63,7 +63,7 @@ func (e *Toolhouse) Run(
 		respH = append(respH, groq.ChatCompletionMessage{
 			Content: runResp.Content.Content,
 			Name:    runResp.Content.Name,
-			Role:    groq.ChatMessageRoleFunction,
+			Role:    groq.RoleFunction,
 		})
 	}
 	return respH, nil

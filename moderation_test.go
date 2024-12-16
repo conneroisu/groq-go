@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	groq "github.com/conneroisu/groq-go"
-	"github.com/conneroisu/groq-go/pkg/models"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -18,11 +17,11 @@ func TestModeration(t *testing.T) {
 	mod, err := client.Moderate(ctx,
 		[]groq.ChatCompletionMessage{
 			{
-				Role:    groq.ChatMessageRoleUser,
+				Role:    groq.RoleUser,
 				Content: "I want to kill them.",
 			},
 		},
-		models.ModelLlamaGuard38B,
+		groq.ModelLlamaGuard38B,
 	)
 	a.NoError(err)
 	a.NotEmpty(mod.Categories)

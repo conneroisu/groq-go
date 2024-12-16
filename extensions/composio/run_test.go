@@ -59,7 +59,7 @@ func TestRun(t *testing.T) {
 	resp, err := client.Run(ctx, ca[0], groq.ChatCompletionResponse{
 		Choices: []groq.ChatCompletionChoice{{
 			Message: groq.ChatCompletionMessage{
-				Role:    groq.ChatMessageRoleUser,
+				Role:    groq.RoleUser,
 				Content: "Hello!",
 				ToolCalls: []tools.ToolCall{{
 					Function: tools.FunctionCall{
@@ -94,10 +94,10 @@ func TestUnitRun(t *testing.T) {
 	)
 	a.NoError(err, "NewClient error")
 	response, err := groqClient.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
-		Model: models.ModelLlama3Groq8B8192ToolUsePreview,
+		Model: groq\.ModelLlama3Groq8B8192ToolUsePreview,
 		Messages: []groq.ChatCompletionMessage{
 			{
-				Role:    groq.ChatMessageRoleUser,
+				Role:    groq.RoleUser,
 				Content: "Star the facebookresearch/spiritlm repository on GitHub",
 			},
 		},

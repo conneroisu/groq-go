@@ -20,7 +20,6 @@ import (
 
 	"github.com/conneroisu/groq-go"
 	"github.com/conneroisu/groq-go/pkg/groqerr"
-	"github.com/conneroisu/groq-go/pkg/models"
 	"github.com/conneroisu/groq-go/pkg/moderation"
 	"github.com/conneroisu/groq-go/pkg/test"
 	"github.com/stretchr/testify/assert"
@@ -38,10 +37,10 @@ func TestTestServer(t *testing.T) {
 	strm, err := client.CreateChatCompletionStream(
 		ctx,
 		groq.ChatCompletionRequest{
-			Model: models.ModelLlama38B8192,
+			Model: groq.ModelLlama38B8192,
 			Messages: []groq.ChatCompletionMessage{
 				{
-					Role: groq.ChatMessageRoleUser,
+					Role: groq.RoleUser,
 					Content: fmt.Sprintf(`
 problem: %d
 You have a six-sided die that you roll once. Let $R{i}$ denote the event that the roll is $i$. Let $G{j}$ denote the event that the roll is greater than $j$. Let $E$ denote the event that the roll of the die is even-numbered.
@@ -80,11 +79,11 @@ func TestModerate(t *testing.T) {
 	mod, err := client.Moderate(context.Background(),
 		[]groq.ChatCompletionMessage{
 			{
-				Role:    groq.ChatMessageRoleUser,
+				Role:    groq.RoleUser,
 				Content: "I want to kill them.",
 			},
 		},
-		models.ModelLlamaGuard38B,
+		groq.ModelLlamaGuard38B,
 	)
 	a := assert.New(t)
 	a.NoError(err, "Moderation error")
@@ -101,11 +100,11 @@ func handleModerationEndpoint(w http.ResponseWriter, r *http.Request) {
 		ID:      "chatcmpl-123",
 		Object:  "chat.completion",
 		Created: 1693721698,
-		Model:   models.ChatModel(models.ModelLlamaGuard38B),
+		Model:   groq.ChatModel(groq.ModelLlamaGuard38B),
 		Choices: []groq.ChatCompletionChoice{
 			{
 				Message: groq.ChatCompletionMessage{
-					Role:    groq.ChatMessageRoleAssistant,
+					Role:    groq.RoleAssistant,
 					Content: "unsafe\nS1,S2",
 				},
 				FinishReason: "stop",
@@ -184,10 +183,10 @@ func TestCreateChatCompletionStream(t *testing.T) {
 		context.Background(),
 		groq.ChatCompletionRequest{
 			MaxTokens: 5,
-			Model:     models.ModelLlama38B8192,
+			Model:     groq.ModelLlama38B8192,
 			Messages: []groq.ChatCompletionMessage{
 				{
-					Role:    groq.ChatMessageRoleUser,
+					Role:    groq.RoleUser,
 					Content: "Hello!",
 				},
 			},
@@ -201,7 +200,7 @@ func TestCreateChatCompletionStream(t *testing.T) {
 			ID:                "1",
 			Object:            "completion",
 			Created:           1598069254,
-			Model:             models.ModelLlama38B8192,
+			Model:             groq.ModelLlama38B8192,
 			SystemFingerprint: "fp_d9767fc5b9",
 			Choices: []groq.ChatCompletionStreamChoice{
 				{
@@ -216,7 +215,7 @@ func TestCreateChatCompletionStream(t *testing.T) {
 			ID:                "2",
 			Object:            "completion",
 			Created:           1598069255,
-			Model:             models.ModelLlama38B8192,
+			Model:             groq.ModelLlama38B8192,
 			SystemFingerprint: "fp_d9767fc5b9",
 			Choices: []groq.ChatCompletionStreamChoice{
 				{
@@ -297,10 +296,10 @@ func TestCreateChatCompletionStreamError(t *testing.T) {
 		context.Background(),
 		groq.ChatCompletionRequest{
 			MaxTokens: 5,
-			Model:     models.ModelLlama38B8192,
+			Model:     groq.ModelLlama38B8192,
 			Messages: []groq.ChatCompletionMessage{
 				{
-					Role:    groq.ChatMessageRoleUser,
+					Role:    groq.RoleUser,
 					Content: "Hello!",
 				},
 			},
@@ -341,10 +340,10 @@ func TestCreateChatCompletionStreamWithHeaders(t *testing.T) {
 		context.Background(),
 		groq.ChatCompletionRequest{
 			MaxTokens: 5,
-			Model:     models.ModelLlama38B8192,
+			Model:     groq.ModelLlama38B8192,
 			Messages: []groq.ChatCompletionMessage{
 				{
-					Role:    groq.ChatMessageRoleUser,
+					Role:    groq.RoleUser,
 					Content: "Hello!",
 				},
 			},
@@ -395,10 +394,10 @@ func TestCreateChatCompletionStreamWithRatelimitHeaders(t *testing.T) {
 		context.Background(),
 		groq.ChatCompletionRequest{
 			MaxTokens: 5,
-			Model:     models.ModelLlama38B8192,
+			Model:     groq.ModelLlama38B8192,
 			Messages: []groq.ChatCompletionMessage{
 				{
-					Role:    groq.ChatMessageRoleUser,
+					Role:    groq.RoleUser,
 					Content: "Hello!",
 				},
 			},
@@ -451,10 +450,10 @@ func TestCreateChatCompletionStreamErrorWithDataPrefix(t *testing.T) {
 		context.Background(),
 		groq.ChatCompletionRequest{
 			MaxTokens: 5,
-			Model:     models.ModelLlama38B8192,
+			Model:     groq.ModelLlama38B8192,
 			Messages: []groq.ChatCompletionMessage{
 				{
-					Role:    groq.ChatMessageRoleUser,
+					Role:    groq.RoleUser,
 					Content: "Hello!",
 				},
 			},
@@ -494,10 +493,10 @@ func TestCreateChatCompletionStreamRateLimitError(t *testing.T) {
 		context.Background(),
 		groq.ChatCompletionRequest{
 			MaxTokens: 5,
-			Model:     models.ModelLlama38B8192,
+			Model:     groq.ModelLlama38B8192,
 			Messages: []groq.ChatCompletionMessage{
 				{
-					Role:    groq.ChatMessageRoleUser,
+					Role:    groq.RoleUser,
 					Content: "Hello!",
 				},
 			},
@@ -537,10 +536,10 @@ func TestCreateChatCompletionStreamStreamOptions(t *testing.T) {
 		context.Background(),
 		groq.ChatCompletionRequest{
 			MaxTokens: 5,
-			Model:     models.ModelLlama38B8192,
+			Model:     groq.ModelLlama38B8192,
 			Messages: []groq.ChatCompletionMessage{
 				{
-					Role:    groq.ChatMessageRoleUser,
+					Role:    groq.RoleUser,
 					Content: "Hello!",
 				},
 			},
@@ -557,7 +556,7 @@ func TestCreateChatCompletionStreamStreamOptions(t *testing.T) {
 			ID:                "1",
 			Object:            "completion",
 			Created:           1598069254,
-			Model:             models.ModelLlama38B8192,
+			Model:             groq.ModelLlama38B8192,
 			SystemFingerprint: "fp_d9767fc5b9",
 			Choices: []groq.ChatCompletionStreamChoice{
 				{
@@ -572,7 +571,7 @@ func TestCreateChatCompletionStreamStreamOptions(t *testing.T) {
 			ID:                "2",
 			Object:            "completion",
 			Created:           1598069255,
-			Model:             models.ModelLlama38B8192,
+			Model:             groq.ModelLlama38B8192,
 			SystemFingerprint: "fp_d9767fc5b9",
 			Choices: []groq.ChatCompletionStreamChoice{
 				{
@@ -587,7 +586,7 @@ func TestCreateChatCompletionStreamStreamOptions(t *testing.T) {
 			ID:                "3",
 			Object:            "completion",
 			Created:           1598069256,
-			Model:             models.ModelLlama38B8192,
+			Model:             groq.ModelLlama38B8192,
 			SystemFingerprint: "fp_d9767fc5b9",
 			Choices:           []groq.ChatCompletionStreamChoice{},
 			Usage: &groq.Usage{
@@ -715,7 +714,7 @@ func TestAudio(t *testing.T) {
 			test.CreateTestFile(t, path)
 			req := groq.AudioRequest{
 				FilePath: path,
-				Model:    models.ModelWhisperLargeV3,
+				Model:    groq.ModelWhisperLargeV3,
 			}
 			_, err := tc.createFn(ctx, req)
 			a.NoError(err, "audio API error")
@@ -724,7 +723,7 @@ func TestAudio(t *testing.T) {
 			req := groq.AudioRequest{
 				FilePath: "fake.webm",
 				Reader:   bytes.NewBuffer([]byte(`some webm binary data`)),
-				Model:    models.ModelWhisperLargeV3,
+				Model:    groq.ModelWhisperLargeV3,
 			}
 			_, err := tc.createFn(ctx, req)
 			a.NoError(err, "audio API error")
@@ -759,7 +758,7 @@ func TestAudioWithOptionalArgs(t *testing.T) {
 			test.CreateTestFile(t, path)
 			req := groq.AudioRequest{
 				FilePath:    path,
-				Model:       models.ModelWhisperLargeV3,
+				Model:       groq.ModelWhisperLargeV3,
 				Prompt:      "用简体中文",
 				Temperature: 0.5,
 				Language:    "zh",
