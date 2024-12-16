@@ -45,12 +45,12 @@ External Repositories using groq-go:
 
 ## Development
 
-This project uses [devenv](https://devenv.sh) for development.
+This project uses [devenv](https://devenv.sh) for development. Make sure you have it installed.
 
 To start development:
 
 ```bash
-devenv allow
+direnv allow
 ```
 
 To run tests:
