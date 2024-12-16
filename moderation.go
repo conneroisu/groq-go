@@ -44,7 +44,7 @@ func (c *Client) Moderate(
 		for _, s := range split {
 			response = append(
 				response,
-				SectionMap[strings.TrimSpace(s)],
+				sectionMap[strings.TrimSpace(s)],
 			)
 		}
 	}
