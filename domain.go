@@ -431,28 +431,6 @@ type (
 	// Format is the format of a response.
 	// string
 	Format string
-	// RateLimitHeaders struct represents Groq rate limits headers.
-	RateLimitHeaders struct {
-		// LimitRequests is the limit requests of the rate limit
-		// headers.
-		LimitRequests int `json:"x-ratelimit-limit-requests"`
-		// LimitTokens is the limit tokens of the rate limit headers.
-		LimitTokens int `json:"x-ratelimit-limit-tokens"`
-		// RemainingRequests is the remaining requests of the rate
-		// limit headers.
-		RemainingRequests int `json:"x-ratelimit-remaining-requests"`
-		// RemainingTokens is the remaining tokens of the rate limit
-		// headers.
-		RemainingTokens int `json:"x-ratelimit-remaining-tokens"`
-		// ResetRequests is the reset requests of the rate limit
-		// headers.
-		ResetRequests ResetTime `json:"x-ratelimit-reset-requests"`
-		// ResetTokens is the reset tokens of the rate limit headers.
-		ResetTokens ResetTime `json:"x-ratelimit-reset-tokens"`
-	}
-	// ResetTime is a time.Time wrapper for the rate limit reset time.
-	// string
-	ResetTime string
 	// Usage Represents the total token usage per request to Groq.
 	Usage struct {
 		PromptTokens     int `json:"prompt_tokens"`

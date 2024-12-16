@@ -7,7 +7,6 @@ import (
 	"log/slog"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/conneroisu/groq-go/pkg/builders"
 	"github.com/conneroisu/groq-go/pkg/groqerr"
@@ -184,15 +183,4 @@ func (c *Client) handleErrorResp(resp *http.Response) error {
 
 	errRes.Error.HTTPStatusCode = resp.StatusCode
 	return errRes.Error
-}
-
-// String returns the string representation of the ResetTime.
-func (r ResetTime) String() string {
-	return string(r)
-}
-
-// Time returns the time.Time representation of the ResetTime.
-func (r ResetTime) Time() time.Time {
-	d, _ := time.ParseDuration(string(r))
-	return time.Now().Add(d)
 }
