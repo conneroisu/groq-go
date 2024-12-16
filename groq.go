@@ -106,6 +106,23 @@ func (c *Client) sendRequest(req *http.Request, v response) error {
 	return decodeResponse(res.Body, v)
 }
 
+func (c *Client) handleErrorResp(resp *http.Response) error {
+	var errRes groqerr.ErrorResponse
+	err := json.NewDecoder(resp.Body).Decode(&errRes)
+	if err != nil || errRes.Error == nil {
+		reqErr := &groqerr.ErrRequest{
+			HTTPStatusCode: resp.StatusCode,
+			Err:            err,
+		}
+		if errRes.Error != nil {
+			reqErr.Err = errRes.Error
+		}
+		return reqErr
+	}
+	errRes.Error.HTTPStatusCode = resp.StatusCode
+	return errRes.Error
+}
+
 func sendRequestStream[T streams.Streamer[ChatCompletionStreamResponse]](
 	client *Client,
 	req *http.Request,
@@ -165,22 +182,4 @@ func withModel[
 	return func(args *fullURLOptions) {
 		args.model = string(model)
 	}
-}
-
-func (c *Client) handleErrorResp(resp *http.Response) error {
-	var errRes groqerr.ErrorResponse
-	err := json.NewDecoder(resp.Body).Decode(&errRes)
-	if err != nil || errRes.Error == nil {
-		reqErr := &groqerr.ErrRequest{
-			HTTPStatusCode: resp.StatusCode,
-			Err:            err,
-		}
-		if errRes.Error != nil {
-			reqErr.Err = errRes.Error
-		}
-		return reqErr
-	}
-
-	errRes.Error.HTTPStatusCode = resp.StatusCode
-	return errRes.Error
 }
