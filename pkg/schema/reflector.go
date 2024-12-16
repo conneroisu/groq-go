@@ -246,7 +246,8 @@ func (r *reflector) reflectTypeToSchema(
 		panic("unsupported type " + t.String())
 	}
 	r.reflectSchemaExtend(definitions, t, st)
-	// Always try to reference the definition which may have just been created
+	// Always try to reference the definition which may have just been
+	// created
 	if def := r.refDefinition(definitions, t); def != nil {
 		return def
 	}
@@ -260,8 +261,7 @@ func (r *reflector) reflectCustomSchema(
 		return r.reflectCustomSchema(definitions, t.Elem())
 	}
 	if t.Implements(customType) {
-		v := reflect.New(t)
-		o := v.Interface().(customSchemaImpl)
+		o := reflect.New(t).Interface().(customSchemaImpl)
 		st := o.JSONSchema()
 		r.addDefinition(definitions, t, st)
 		if ref := r.refDefinition(definitions, t); ref != nil {
@@ -277,8 +277,7 @@ func (r *reflector) reflectSchemaExtend(
 	s *Schema,
 ) *Schema {
 	if t.Implements(extendType) {
-		v := reflect.New(t)
-		o := v.Interface().(extendSchemaImpl)
+		o := reflect.New(t).Interface().(extendSchemaImpl)
 		o.JSONSchemaExtend(s)
 		if ref := r.refDefinition(definitions, t); ref != nil {
 			return ref
