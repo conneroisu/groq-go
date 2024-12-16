@@ -25,7 +25,7 @@ func run(
 	if err != nil {
 		return err
 	}
-	response, err := client.CreateChatCompletion(
+	response, err := client.ChatCompletion(
 		ctx,
 		groq.ChatCompletionRequest{
 			Model: groq.ModelLlama3211BVisionPreview,

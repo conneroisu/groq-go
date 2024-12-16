@@ -34,7 +34,7 @@ func TestTestServer(t *testing.T) {
 	ctx := context.Background()
 	client, err := groq.NewClient(os.Getenv("GROQ_KEY"))
 	a.NoError(err, "NewClient error")
-	strm, err := client.CreateChatCompletionStream(
+	strm, err := client.ChatCompletionStream(
 		ctx,
 		groq.ChatCompletionRequest{
 			Model: groq.ModelLlama38B8192,
@@ -156,8 +156,8 @@ func TestEmptyKeyClientCreation(t *testing.T) {
 	a.Nil(client, "NewClient should return nil")
 }
 
-// TestCreateChatCompletionStream tests the CreateChatCompletionStream method.
-func TestCreateChatCompletionStream(t *testing.T) {
+// TestChatCompletionStream tests the ChatCompletionStream method.
+func TestChatCompletionStream(t *testing.T) {
 	a := assert.New(t)
 	client, server, teardown := setupGroqTestServer()
 	defer teardown()
@@ -179,7 +179,7 @@ func TestCreateChatCompletionStream(t *testing.T) {
 			a.NoError(err, "Write error")
 		},
 	)
-	stream, err := client.CreateChatCompletionStream(
+	stream, err := client.ChatCompletionStream(
 		context.Background(),
 		groq.ChatCompletionRequest{
 			MaxTokens: 5,
@@ -263,9 +263,9 @@ func TestCreateChatCompletionStream(t *testing.T) {
 	}
 }
 
-// TestCreateChatCompletionStreamError tests the CreateChatCompletionStream function with an error
+// TestChatCompletionStreamError tests the ChatCompletionStream function with an error
 // in the response.
-func TestCreateChatCompletionStreamError(t *testing.T) {
+func TestChatCompletionStreamError(t *testing.T) {
 	a := assert.New(t)
 	client, server, teardown := setupGroqTestServer()
 	defer teardown()
@@ -292,7 +292,7 @@ func TestCreateChatCompletionStreamError(t *testing.T) {
 			a.NoError(err, "Write error")
 		},
 	)
-	stream, err := client.CreateChatCompletionStream(
+	stream, err := client.ChatCompletionStream(
 		context.Background(),
 		groq.ChatCompletionRequest{
 			MaxTokens: 5,
@@ -316,7 +316,7 @@ func TestCreateChatCompletionStreamError(t *testing.T) {
 	}
 	t.Logf("%+v\n", apiErr)
 }
-func TestCreateChatCompletionStreamWithHeaders(t *testing.T) {
+func TestChatCompletionStreamWithHeaders(t *testing.T) {
 	a := assert.New(t)
 	client, server, teardown := setupGroqTestServer()
 	defer teardown()
@@ -336,7 +336,7 @@ func TestCreateChatCompletionStreamWithHeaders(t *testing.T) {
 			a.NoError(err, "Write error")
 		},
 	)
-	stream, err := client.CreateChatCompletionStream(
+	stream, err := client.ChatCompletionStream(
 		context.Background(),
 		groq.ChatCompletionRequest{
 			MaxTokens: 5,
@@ -357,7 +357,7 @@ func TestCreateChatCompletionStreamWithHeaders(t *testing.T) {
 		t.Errorf("expected %s to be %s", xCustomHeaderValue, value)
 	}
 }
-func TestCreateChatCompletionStreamWithRatelimitHeaders(t *testing.T) {
+func TestChatCompletionStreamWithRatelimitHeaders(t *testing.T) {
 	client, server, teardown := setupGroqTestServer()
 	a := assert.New(t)
 	rateLimitHeaders := map[string]interface{}{
@@ -390,7 +390,7 @@ func TestCreateChatCompletionStreamWithRatelimitHeaders(t *testing.T) {
 			a.NoError(err, "Write error")
 		},
 	)
-	stream, err := client.CreateChatCompletionStream(
+	stream, err := client.ChatCompletionStream(
 		context.Background(),
 		groq.ChatCompletionRequest{
 			MaxTokens: 5,
@@ -429,7 +429,7 @@ func newRateLimitHeaders(h http.Header) groq.RateLimitHeaders {
 		ResetTokens:       groq.ResetTime(h.Get("x-ratelimit-reset-tokens")),
 	}
 }
-func TestCreateChatCompletionStreamErrorWithDataPrefix(t *testing.T) {
+func TestChatCompletionStreamErrorWithDataPrefix(t *testing.T) {
 	a := assert.New(t)
 	client, server, teardown := setupGroqTestServer()
 	defer teardown()
@@ -446,7 +446,7 @@ func TestCreateChatCompletionStreamErrorWithDataPrefix(t *testing.T) {
 			a.NoError(err, "Write error")
 		},
 	)
-	stream, err := client.CreateChatCompletionStream(
+	stream, err := client.ChatCompletionStream(
 		context.Background(),
 		groq.ChatCompletionRequest{
 			MaxTokens: 5,
@@ -470,7 +470,7 @@ func TestCreateChatCompletionStreamErrorWithDataPrefix(t *testing.T) {
 	}
 	t.Logf("%+v\n", apiErr)
 }
-func TestCreateChatCompletionStreamRateLimitError(t *testing.T) {
+func TestChatCompletionStreamRateLimitError(t *testing.T) {
 	a := assert.New(t)
 	client, server, teardown := setupGroqTestServer()
 	defer teardown()
@@ -489,7 +489,7 @@ func TestCreateChatCompletionStreamRateLimitError(t *testing.T) {
 			a.NoError(err, "Write error")
 		},
 	)
-	_, err := client.CreateChatCompletionStream(
+	_, err := client.ChatCompletionStream(
 		context.Background(),
 		groq.ChatCompletionRequest{
 			MaxTokens: 5,
@@ -506,12 +506,12 @@ func TestCreateChatCompletionStreamRateLimitError(t *testing.T) {
 	var apiErr *groqerr.APIError
 	if !errors.As(err, &apiErr) {
 		t.Errorf(
-			"TestCreateChatCompletionStreamRateLimitError did not return APIError",
+			"TestChatCompletionStreamRateLimitError did not return APIError",
 		)
 	}
 	t.Logf("%+v\n", apiErr)
 }
-func TestCreateChatCompletionStreamStreamOptions(t *testing.T) {
+func TestChatCompletionStreamStreamOptions(t *testing.T) {
 	a := assert.New(t)
 	client, server, teardown := setupGroqTestServer()
 	defer teardown()
@@ -532,7 +532,7 @@ func TestCreateChatCompletionStreamStreamOptions(t *testing.T) {
 			a.NoError(err, "Write error")
 		},
 	)
-	stream, err := client.CreateChatCompletionStream(
+	stream, err := client.ChatCompletionStream(
 		context.Background(),
 		groq.ChatCompletionRequest{
 			MaxTokens: 5,

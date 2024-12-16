@@ -2,9 +2,13 @@ package groq
 
 import (
 	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
+	"os"
 	"time"
 
+	"github.com/conneroisu/groq-go/pkg/builders"
 	"github.com/conneroisu/groq-go/pkg/groqerr"
 	"github.com/conneroisu/groq-go/pkg/moderation"
 	"github.com/conneroisu/groq-go/pkg/schema"
@@ -430,3 +434,256 @@ func (r FinishReason) MarshalJSON() ([]byte, error) {
 
 // SetHeader sets the header of the response.
 func (r *ChatCompletionResponse) SetHeader(h http.Header) { r.Header = h }
+
+type (
+	// Format is the format of a response.
+	// string
+	Format string
+	// RateLimitHeaders struct represents Groq rate limits headers.
+	RateLimitHeaders struct {
+		// LimitRequests is the limit requests of the rate limit
+		// headers.
+		LimitRequests int `json:"x-ratelimit-limit-requests"`
+		// LimitTokens is the limit tokens of the rate limit headers.
+		LimitTokens int `json:"x-ratelimit-limit-tokens"`
+		// RemainingRequests is the remaining requests of the rate
+		// limit headers.
+		RemainingRequests int `json:"x-ratelimit-remaining-requests"`
+		// RemainingTokens is the remaining tokens of the rate limit
+		// headers.
+		RemainingTokens int `json:"x-ratelimit-remaining-tokens"`
+		// ResetRequests is the reset requests of the rate limit
+		// headers.
+		ResetRequests ResetTime `json:"x-ratelimit-reset-requests"`
+		// ResetTokens is the reset tokens of the rate limit headers.
+		ResetTokens ResetTime `json:"x-ratelimit-reset-tokens"`
+	}
+	// ResetTime is a time.Time wrapper for the rate limit reset time.
+	// string
+	ResetTime string
+	// Usage Represents the total token usage per request to Groq.
+	Usage struct {
+		PromptTokens     int `json:"prompt_tokens"`
+		CompletionTokens int `json:"completion_tokens"`
+		TotalTokens      int `json:"total_tokens"`
+	}
+	endpoint       string
+	fullURLOptions struct{ model string }
+	fullURLOption  func(*fullURLOptions)
+	response       interface{ SetHeader(http.Header) }
+)
+
+const (
+	// FormatText is the text format. It is the default format of a
+	// response.
+	FormatText Format = "text"
+	// FormatJSON is the JSON format. There is no support for streaming with
+	// JSON format selected.
+	FormatJSON Format = "json"
+	// FormatSRT is the SRT format. This is a text format that is only
+	// supported for the transcription API.
+	// SRT format selected.
+	FormatSRT Format = "srt"
+	// FormatVTT is the VTT format. This is a text format that is only
+	// supported for the transcription API.
+	FormatVTT Format = "vtt"
+	// FormatVerboseJSON is the verbose JSON format. This is a JSON format
+	// that is only supported for the transcription API.
+	FormatVerboseJSON Format = "verbose_json"
+	// FormatJSONObject is the json object chat
+	// completion response format type.
+	FormatJSONObject Format = "json_object"
+	// FormatJSONSchema is the json schema chat
+	// completion response format type.
+	FormatJSONSchema Format = "json_schema"
+
+	// groqAPIURLv1 is the base URL for the Groq API.
+	groqAPIURLv1 = "https://api.groq.com/openai/v1"
+
+	chatCompletionsSuffix endpoint = "/chat/completions"
+	transcriptionsSuffix  endpoint = "/audio/transcriptions"
+	translationsSuffix    endpoint = "/audio/translations"
+	embeddingsSuffix      endpoint = "/embeddings"
+	moderationsSuffix     endpoint = "/moderations"
+)
+
+const (
+	// TranscriptionTimestampGranularityWord is the word timestamp
+	// granularity.
+	TranscriptionTimestampGranularityWord TranscriptionTimestampGranularity = "word"
+	// TranscriptionTimestampGranularitySegment is the segment timestamp
+	// granularity.
+	TranscriptionTimestampGranularitySegment TranscriptionTimestampGranularity = "segment"
+)
+
+type (
+	// TranscriptionTimestampGranularity is the timestamp granularity for
+	// the transcription.
+	//
+	// string
+	TranscriptionTimestampGranularity string
+	// AudioRequest represents a request structure for audio API.
+	AudioRequest struct {
+		// Model is the model to use for the transcription.
+		Model AudioModel
+		// FilePath is either an existing file in your filesystem or a
+		// filename representing the contents of Reader.
+		FilePath string
+		// Reader is an optional io.Reader when you do not want to use
+		// an existing file.
+		Reader io.Reader
+		// Prompt is the prompt for the transcription.
+		Prompt string
+		// Temperature is the temperature for the transcription.
+		Temperature float32
+		// Language is the language for the transcription. Only for
+		// transcription.
+		Language string
+		// Format is the format for the response.
+		Format Format
+	}
+	// AudioResponse represents a response structure for audio API.
+	AudioResponse struct {
+		// Task is the task of the response.
+		Task string `json:"task"`
+		// Language is the language of the response.
+		Language string `json:"language"`
+		// Duration is the duration of the response.
+		Duration float64 `json:"duration"`
+		// Segments is the segments of the response.
+		Segments Segments `json:"segments"`
+		// Words is the words of the response.
+		Words Words `json:"words"`
+		// Text is the text of the response.
+		Text string `json:"text"`
+
+		Header http.Header // Header is the header of the response.
+	}
+	// Words is the words of the audio response.
+	Words []struct {
+		// Word is the textual representation of a word in the audio
+		// response.
+		Word string `json:"word"`
+		// Start is the start of the words in seconds.
+		Start float64 `json:"start"`
+		// End is the end of the words in seconds.
+		End float64 `json:"end"`
+	}
+	// Segments is the segments of the response.
+	Segments []struct {
+		// ID is the ID of the segment.
+		ID int `json:"id"`
+		// Seek is the seek of the segment.
+		Seek int `json:"seek"`
+		// Start is the start of the segment.
+		Start float64 `json:"start"`
+		// End is the end of the segment.
+		End float64 `json:"end"`
+		// Text is the text of the segment.
+		Text string `json:"text"`
+		// Tokens is the tokens of the segment.
+		Tokens []int `json:"tokens"`
+		// Temperature is the temperature of the segment.
+		Temperature float64 `json:"temperature"`
+		// AvgLogprob is the avg log prob of the segment.
+		AvgLogprob float64 `json:"avg_logprob"`
+		// CompressionRatio is the compression ratio of the segment.
+		CompressionRatio float64 `json:"compression_ratio"`
+		// NoSpeechProb is the no speech prob of the segment.
+		NoSpeechProb float64 `json:"no_speech_prob"`
+		// Transient is the transient of the segment.
+		Transient bool `json:"transient"`
+	}
+	// audioTextResponse is the response structure for the audio API when the
+	// response format is text.
+	audioTextResponse struct {
+		// Text is the text of the response.
+		Text string `json:"text"`
+		// Header is the response header.
+		header http.Header `json:"-"`
+	}
+)
+
+// SetHeader sets the header of the response.
+func (r *AudioResponse) SetHeader(header http.Header) { r.Header = header }
+
+// SetHeader sets the header of the audio text response.
+func (r *audioTextResponse) SetHeader(header http.Header) { r.header = header }
+
+// toAudioResponse converts the audio text response to an audio response.
+func (r *audioTextResponse) toAudioResponse() AudioResponse {
+	return AudioResponse{Text: r.Text, Header: r.header}
+}
+
+func (r AudioRequest) hasJSONResponse() bool {
+	return r.Format == "" || r.Format == FormatJSON ||
+		r.Format == FormatVerboseJSON
+}
+
+// AudioMultipartForm creates a form with audio file contents and the name of
+// the model to use for audio processing.
+func AudioMultipartForm(request AudioRequest, b builders.FormBuilder) error {
+	err := createFileField(request, b)
+	if err != nil {
+		return err
+	}
+	err = b.WriteField("model", string(request.Model))
+	if err != nil {
+		return fmt.Errorf("writing model name: %w", err)
+	}
+	// Create a form field for the prompt (if provided)
+	if request.Prompt != "" {
+		err = b.WriteField("prompt", request.Prompt)
+		if err != nil {
+			return fmt.Errorf("writing prompt: %w", err)
+		}
+	}
+	// Create a form field for the format (if provided)
+	if request.Format != "" {
+		err = b.WriteField("response_format", string(request.Format))
+		if err != nil {
+			return fmt.Errorf("writing format: %w", err)
+		}
+	}
+	// Create a form field for the temperature (if provided)
+	if request.Temperature != 0 {
+		err = b.WriteField(
+			"temperature",
+			fmt.Sprintf("%.2f", request.Temperature),
+		)
+		if err != nil {
+			return fmt.Errorf("writing temperature: %w", err)
+		}
+	}
+	// Create a form field for the language (if provided)
+	if request.Language != "" {
+		err = b.WriteField("language", request.Language)
+		if err != nil {
+			return fmt.Errorf("writing language: %w", err)
+		}
+	}
+	return b.Close()
+}
+
+func createFileField(
+	request AudioRequest,
+	b builders.FormBuilder,
+) (err error) {
+	if request.Reader != nil {
+		err := b.CreateFormFileReader("file", request.Reader, request.FilePath)
+		if err != nil {
+			return fmt.Errorf("creating form using reader: %w", err)
+		}
+		return nil
+	}
+	f, err := os.Open(request.FilePath)
+	if err != nil {
+		return fmt.Errorf("opening audio file: %w", err)
+	}
+	defer f.Close()
+	err = b.CreateFormFile("file", f)
+	if err != nil {
+		return fmt.Errorf("creating form file: %w", err)
+	}
+	return nil
+}

@@ -75,7 +75,7 @@ func input(
 		Role:    groq.RoleUser,
 		Content: strings.Join(lines, "\n"),
 	})
-	output, err := client.CreateChatCompletionStream(
+	output, err := client.ChatCompletionStream(
 		ctx,
 		groq.ChatCompletionRequest{
 			Model:     groq.ModelGemma29BIt,

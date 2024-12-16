@@ -81,7 +81,7 @@ func run(
 						Description: "The task that is complete.",
 					}}}}})
 	for {
-		chat, err := client.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
+		chat, err := client.ChatCompletion(ctx, groq.ChatCompletionRequest{
 			Model:     groq.ModelLlama3Groq8B8192ToolUsePreview,
 			Messages:  history,
 			MaxTokens: 3000,

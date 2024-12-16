@@ -93,7 +93,7 @@ func TestUnitRun(t *testing.T) {
 		os.Getenv("GROQ_KEY"),
 	)
 	a.NoError(err, "NewClient error")
-	response, err := groqClient.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
+	response, err := groqClient.ChatCompletion(ctx, groq.ChatCompletionRequest{
 		Model: groq\.ModelLlama3Groq8B8192ToolUsePreview,
 		Messages: []groq.ChatCompletionMessage{
 			{

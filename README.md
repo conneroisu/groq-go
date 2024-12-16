@@ -121,12 +121,12 @@ API Documentation: https://console.groq.com/docs/quickstart
 - [type ChatModel](<#ChatModel>)
 - [type Client](<#Client>)
   - [func NewClient\(groqAPIKey string, opts ...Opts\) \(\*Client, error\)](<#NewClient>)
-  - [func \(c \*Client\) CreateChatCompletion\(ctx context.Context, request ChatCompletionRequest\) \(response ChatCompletionResponse, err error\)](<#Client.CreateChatCompletion>)
-  - [func \(c \*Client\) CreateChatCompletionJSON\(ctx context.Context, request ChatCompletionRequest, output any\) \(err error\)](<#Client.CreateChatCompletionJSON>)
-  - [func \(c \*Client\) CreateChatCompletionStream\(ctx context.Context, request ChatCompletionRequest\) \(stream \*ChatCompletionStream, err error\)](<#Client.CreateChatCompletionStream>)
+  - [func \(c \*Client\) ChatCompletion\(ctx context.Context, request ChatCompletionRequest\) \(response ChatCompletionResponse, err error\)](<#Client.ChatCompletion>)
+  - [func \(c \*Client\) ChatCompletionJSON\(ctx context.Context, request ChatCompletionRequest, output any\) \(err error\)](<#Client.ChatCompletionJSON>)
+  - [func \(c \*Client\) ChatCompletionStream\(ctx context.Context, request ChatCompletionRequest\) \(stream \*ChatCompletionStream, err error\)](<#Client.ChatCompletionStream>)
   - [func \(c \*Client\) CreateTranscription\(ctx context.Context, request AudioRequest\) \(AudioResponse, error\)](<#Client.CreateTranscription>)
   - [func \(c \*Client\) CreateTranslation\(ctx context.Context, request AudioRequest\) \(AudioResponse, error\)](<#Client.CreateTranslation>)
-  - [func \(c \*Client\) Moderate\(ctx context.Context, messages \[\]ChatCompletionMessage, model models.ModerationModel\) \(response Moderation, err error\)](<#Client.Moderate>)
+  - [func \(c \*Client\) Moderate\(ctx context.Context, messages \[\]ChatCompletionMessage, model ModerationModel\) \(response Moderation, err error\)](<#Client.Moderate>)
 - [type FinishReason](<#FinishReason>)
   - [func \(r FinishReason\) MarshalJSON\(\) \(\[\]byte, error\)](<#FinishReason.MarshalJSON>)
 - [type Format](<#Format>)
@@ -197,9 +197,9 @@ var (
     // It has 8192 context window.
     //
     // It can be used with the following client methods:
-    //	- CreateChatCompletion
-    // 	- CreateChatCompletionStream
-    // 	- CreateChatCompletionJSON
+    //	- ChatCompletion
+    // 	- ChatCompletionStream
+    // 	- ChatCompletionJSON
     ModelGemma29BIt ChatModel = "gemma2-9b-it"
     // ModelGemma7BIt is an AI text chat model.
     //
@@ -208,9 +208,9 @@ var (
     // It has 8192 context window.
     //
     // It can be used with the following client methods:
-    //	- CreateChatCompletion
-    // 	- CreateChatCompletionStream
-    // 	- CreateChatCompletionJSON
+    //	- ChatCompletion
+    // 	- ChatCompletionStream
+    // 	- ChatCompletionJSON
     ModelGemma7BIt ChatModel = "gemma-7b-it"
     // ModelLlama3170BVersatile is an AI text chat model.
     //
@@ -219,9 +219,9 @@ var (
     // It has 32768 context window.
     //
     // It can be used with the following client methods:
-    //	- CreateChatCompletion
-    // 	- CreateChatCompletionStream
-    // 	- CreateChatCompletionJSON
+    //	- ChatCompletion
+    // 	- ChatCompletionStream
+    // 	- ChatCompletionJSON
     ModelLlama3170BVersatile ChatModel = "llama-3.1-70b-versatile"
     // ModelLlama318BInstant is an AI text chat model.
     //
@@ -230,9 +230,9 @@ var (
     // It has 131072 context window.
     //
     // It can be used with the following client methods:
-    //	- CreateChatCompletion
-    // 	- CreateChatCompletionStream
-    // 	- CreateChatCompletionJSON
+    //	- ChatCompletion
+    // 	- ChatCompletionStream
+    // 	- ChatCompletionJSON
     ModelLlama318BInstant ChatModel = "llama-3.1-8b-instant"
     // ModelLlama3211BVisionPreview is an AI text chat model.
     //
@@ -241,9 +241,9 @@ var (
     // It has 8192 context window.
     //
     // It can be used with the following client methods:
-    //	- CreateChatCompletion
-    // 	- CreateChatCompletionStream
-    // 	- CreateChatCompletionJSON
+    //	- ChatCompletion
+    // 	- ChatCompletionStream
+    // 	- ChatCompletionJSON
     ModelLlama3211BVisionPreview ChatModel = "llama-3.2-11b-vision-preview"
     // ModelLlama321BPreview is an AI text chat model.
     //
@@ -252,9 +252,9 @@ var (
     // It has 8192 context window.
     //
     // It can be used with the following client methods:
-    //	- CreateChatCompletion
-    // 	- CreateChatCompletionStream
-    // 	- CreateChatCompletionJSON
+    //	- ChatCompletion
+    // 	- ChatCompletionStream
+    // 	- ChatCompletionJSON
     ModelLlama321BPreview ChatModel = "llama-3.2-1b-preview"
     // ModelLlama323BPreview is an AI text chat model.
     //
@@ -263,9 +263,9 @@ var (
     // It has 8192 context window.
     //
     // It can be used with the following client methods:
-    //	- CreateChatCompletion
-    // 	- CreateChatCompletionStream
-    // 	- CreateChatCompletionJSON
+    //	- ChatCompletion
+    // 	- ChatCompletionStream
+    // 	- ChatCompletionJSON
     ModelLlama323BPreview ChatModel = "llama-3.2-3b-preview"
     // ModelLlama3290BVisionPreview is an AI text chat model.
     //
@@ -274,9 +274,9 @@ var (
     // It has 8192 context window.
     //
     // It can be used with the following client methods:
-    //	- CreateChatCompletion
-    // 	- CreateChatCompletionStream
-    // 	- CreateChatCompletionJSON
+    //	- ChatCompletion
+    // 	- ChatCompletionStream
+    // 	- ChatCompletionJSON
     ModelLlama3290BVisionPreview ChatModel = "llama-3.2-90b-vision-preview"
     // ModelLlama3370BSpecdec is an AI text chat model.
     //
@@ -285,9 +285,9 @@ var (
     // It has 8192 context window.
     //
     // It can be used with the following client methods:
-    //	- CreateChatCompletion
-    // 	- CreateChatCompletionStream
-    // 	- CreateChatCompletionJSON
+    //	- ChatCompletion
+    // 	- ChatCompletionStream
+    // 	- ChatCompletionJSON
     ModelLlama3370BSpecdec ChatModel = "llama-3.3-70b-specdec"
     // ModelLlama3370BVersatile is an AI text chat model.
     //
@@ -296,9 +296,9 @@ var (
     // It has 32768 context window.
     //
     // It can be used with the following client methods:
-    //	- CreateChatCompletion
-    // 	- CreateChatCompletionStream
-    // 	- CreateChatCompletionJSON
+    //	- ChatCompletion
+    // 	- ChatCompletionStream
+    // 	- ChatCompletionJSON
     ModelLlama3370BVersatile ChatModel = "llama-3.3-70b-versatile"
     // ModelLlama370B8192 is an AI text chat model.
     //
@@ -307,9 +307,9 @@ var (
     // It has 8192 context window.
     //
     // It can be used with the following client methods:
-    //	- CreateChatCompletion
-    // 	- CreateChatCompletionStream
-    // 	- CreateChatCompletionJSON
+    //	- ChatCompletion
+    // 	- ChatCompletionStream
+    // 	- ChatCompletionJSON
     ModelLlama370B8192 ChatModel = "llama3-70b-8192"
     // ModelLlama38B8192 is an AI text chat model.
     //
@@ -318,9 +318,9 @@ var (
     // It has 8192 context window.
     //
     // It can be used with the following client methods:
-    //	- CreateChatCompletion
-    // 	- CreateChatCompletionStream
-    // 	- CreateChatCompletionJSON
+    //	- ChatCompletion
+    // 	- ChatCompletionStream
+    // 	- ChatCompletionJSON
     ModelLlama38B8192 ChatModel = "llama3-8b-8192"
     // ModelLlama3Groq70B8192ToolUsePreview is an AI text chat model.
     //
@@ -329,9 +329,9 @@ var (
     // It has 8192 context window.
     //
     // It can be used with the following client methods:
-    //	- CreateChatCompletion
-    // 	- CreateChatCompletionStream
-    // 	- CreateChatCompletionJSON
+    //	- ChatCompletion
+    // 	- ChatCompletionStream
+    // 	- ChatCompletionJSON
     ModelLlama3Groq70B8192ToolUsePreview ChatModel = "llama3-groq-70b-8192-tool-use-preview"
     // ModelLlama3Groq8B8192ToolUsePreview is an AI text chat model.
     //
@@ -340,9 +340,9 @@ var (
     // It has 8192 context window.
     //
     // It can be used with the following client methods:
-    //	- CreateChatCompletion
-    // 	- CreateChatCompletionStream
-    // 	- CreateChatCompletionJSON
+    //	- ChatCompletion
+    // 	- ChatCompletionStream
+    // 	- ChatCompletionJSON
     ModelLlama3Groq8B8192ToolUsePreview ChatModel = "llama3-groq-8b-8192-tool-use-preview"
     // ModelMixtral8X7B32768 is an AI text chat model.
     //
@@ -351,9 +351,9 @@ var (
     // It has 32768 context window.
     //
     // It can be used with the following client methods:
-    //	- CreateChatCompletion
-    // 	- CreateChatCompletionStream
-    // 	- CreateChatCompletionJSON
+    //	- ChatCompletion
+    // 	- ChatCompletionStream
+    // 	- ChatCompletionJSON
     ModelMixtral8X7B32768 ChatModel = "mixtral-8x7b-32768"
     // ModelDistilWhisperLargeV3En is an AI audio transcription model.
     //
@@ -398,7 +398,7 @@ var (
 ```
 
 <a name="AudioMultipartForm"></a>
-## func [AudioMultipartForm](<https://github.com/conneroisu/groq-go/blob/main/audio.go#L189>)
+## func [AudioMultipartForm](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L625>)
 
 ```go
 func AudioMultipartForm(request AudioRequest, b builders.FormBuilder) error
@@ -416,14 +416,14 @@ type AudioModel Model
 ```
 
 <a name="AudioRequest"></a>
-## type [AudioRequest](<https://github.com/conneroisu/groq-go/blob/main/audio.go#L31-L49>)
+## type [AudioRequest](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L526-L544>)
 
 AudioRequest represents a request structure for audio API.
 
 ```go
 type AudioRequest struct {
     // Model is the model to use for the transcription.
-    Model models.AudioModel
+    Model AudioModel
     // FilePath is either an existing file in your filesystem or a
     // filename representing the contents of Reader.
     FilePath string
@@ -443,7 +443,7 @@ type AudioRequest struct {
 ```
 
 <a name="AudioResponse"></a>
-## type [AudioResponse](<https://github.com/conneroisu/groq-go/blob/main/audio.go#L51-L66>)
+## type [AudioResponse](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L546-L561>)
 
 AudioResponse represents a response structure for audio API.
 
@@ -467,7 +467,7 @@ type AudioResponse struct {
 ```
 
 <a name="AudioResponse.SetHeader"></a>
-### func \(\*AudioResponse\) [SetHeader](<https://github.com/conneroisu/groq-go/blob/main/audio.go#L113>)
+### func \(\*AudioResponse\) [SetHeader](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L608>)
 
 ```go
 func (r *AudioResponse) SetHeader(header http.Header)
@@ -476,7 +476,7 @@ func (r *AudioResponse) SetHeader(header http.Header)
 SetHeader sets the header of the response.
 
 <a name="ChatCompletionChoice"></a>
-## type [ChatCompletionChoice](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L187-L198>)
+## type [ChatCompletionChoice](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L191-L202>)
 
 ChatCompletionChoice represents the chat completion choice.
 
@@ -496,7 +496,7 @@ type ChatCompletionChoice struct {
 ```
 
 <a name="ChatCompletionMessage"></a>
-## type [ChatCompletionMessage](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L50-L71>)
+## type [ChatCompletionMessage](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L54-L75>)
 
 ChatCompletionMessage represents the chat completion message.
 
@@ -526,7 +526,7 @@ type ChatCompletionMessage struct {
 ```
 
 <a name="ChatCompletionMessage.MarshalJSON"></a>
-### func \(ChatCompletionMessage\) [MarshalJSON](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L351>)
+### func \(ChatCompletionMessage\) [MarshalJSON](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L362>)
 
 ```go
 func (m ChatCompletionMessage) MarshalJSON() ([]byte, error)
@@ -537,7 +537,7 @@ MarshalJSON method implements the json.Marshaler interface.
 It exists to allow for the use of the multi\-part content field.
 
 <a name="ChatCompletionMessage.UnmarshalJSON"></a>
-### func \(\*ChatCompletionMessage\) [UnmarshalJSON](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L382>)
+### func \(\*ChatCompletionMessage\) [UnmarshalJSON](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L393>)
 
 ```go
 func (m *ChatCompletionMessage) UnmarshalJSON(bs []byte) (err error)
@@ -548,14 +548,14 @@ UnmarshalJSON method implements the json.Unmarshaler interface.
 It exists to allow for the use of the multi\-part content field.
 
 <a name="ChatCompletionRequest"></a>
-## type [ChatCompletionRequest](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L100-L158>)
+## type [ChatCompletionRequest](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L104-L162>)
 
 ChatCompletionRequest represents a request structure for the chat completion API.
 
 ```go
 type ChatCompletionRequest struct {
     // Model is the model of the chat completion request.
-    Model models.ChatModel `json:"model"`
+    Model ChatModel `json:"model"`
     // Messages is the messages of the chat completion request.
     //
     // These act as the prompt for the model.
@@ -615,7 +615,7 @@ type ChatCompletionRequest struct {
 ```
 
 <a name="ChatCompletionResponse"></a>
-## type [ChatCompletionResponse](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L201-L218>)
+## type [ChatCompletionResponse](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L205-L222>)
 
 ChatCompletionResponse represents a response structure for chat completion API.
 
@@ -628,7 +628,7 @@ type ChatCompletionResponse struct {
     // Created is the created time of the response.
     Created int64 `json:"created"`
     // Model is the model of the response.
-    Model models.ChatModel `json:"model"`
+    Model ChatModel `json:"model"`
     // Choices is the choices of the response.
     Choices []ChatCompletionChoice `json:"choices"`
     // Usage is the usage of the response.
@@ -641,7 +641,7 @@ type ChatCompletionResponse struct {
 ```
 
 <a name="ChatCompletionResponse.SetHeader"></a>
-### func \(\*ChatCompletionResponse\) [SetHeader](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L425>)
+### func \(\*ChatCompletionResponse\) [SetHeader](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L436>)
 
 ```go
 func (r *ChatCompletionResponse) SetHeader(h http.Header)
@@ -650,7 +650,7 @@ func (r *ChatCompletionResponse) SetHeader(h http.Header)
 SetHeader sets the header of the response.
 
 <a name="ChatCompletionResponseFormat"></a>
-## type [ChatCompletionResponseFormat](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L73-L79>)
+## type [ChatCompletionResponseFormat](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L77-L83>)
 
 ChatCompletionResponseFormat is the chat completion response format.
 
@@ -665,7 +665,7 @@ type ChatCompletionResponseFormat struct {
 ```
 
 <a name="ChatCompletionResponseFormatJSONSchema"></a>
-## type [ChatCompletionResponseFormatJSONSchema](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L82-L97>)
+## type [ChatCompletionResponseFormatJSONSchema](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L86-L101>)
 
 ChatCompletionResponseFormatJSONSchema is the chat completion response format json schema.
 
@@ -689,7 +689,7 @@ type ChatCompletionResponseFormatJSONSchema struct {
 ```
 
 <a name="ChatCompletionStream"></a>
-## type [ChatCompletionStream](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L293-L295>)
+## type [ChatCompletionStream](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L297-L299>)
 
 ChatCompletionStream is a stream of ChatCompletionStreamResponse.
 
@@ -700,7 +700,7 @@ type ChatCompletionStream struct {
 ```
 
 <a name="ChatCompletionStreamChoice"></a>
-## type [ChatCompletionStreamChoice](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L233-L240>)
+## type [ChatCompletionStreamChoice](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L237-L244>)
 
 ChatCompletionStreamChoice represents a response structure for chat completion API.
 
@@ -716,7 +716,7 @@ type ChatCompletionStreamChoice struct {
 ```
 
 <a name="ChatCompletionStreamChoiceDelta"></a>
-## type [ChatCompletionStreamChoiceDelta](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L221-L230>)
+## type [ChatCompletionStreamChoiceDelta](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L225-L234>)
 
 ChatCompletionStreamChoiceDelta represents a response structure for chat completion API.
 
@@ -734,7 +734,7 @@ type ChatCompletionStreamChoiceDelta struct {
 ```
 
 <a name="ChatCompletionStreamResponse"></a>
-## type [ChatCompletionStreamResponse](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L258-L291>)
+## type [ChatCompletionStreamResponse](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L262-L295>)
 
 ChatCompletionStreamResponse represents a response structure for chat completion API.
 
@@ -750,7 +750,7 @@ type ChatCompletionStreamResponse struct {
     Created int64 `json:"created"`
     // Model is the model used for the chat completion stream
     // response.
-    Model models.ChatModel `json:"model"`
+    Model ChatModel `json:"model"`
     // Choices is the choices for the chat completion stream
     // response.
     Choices []ChatCompletionStreamChoice `json:"choices"`
@@ -776,7 +776,7 @@ type ChatCompletionStreamResponse struct {
 ```
 
 <a name="ChatMessageImageURL"></a>
-## type [ChatMessageImageURL](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L33-L38>)
+## type [ChatMessageImageURL](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L37-L42>)
 
 ChatMessageImageURL represents the chat message image url.
 
@@ -790,7 +790,7 @@ type ChatMessageImageURL struct {
 ```
 
 <a name="ChatMessagePart"></a>
-## type [ChatMessagePart](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L41-L48>)
+## type [ChatMessagePart](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L45-L52>)
 
 ChatMessagePart represents the chat message part of a chat completion message.
 
@@ -806,7 +806,7 @@ type ChatMessagePart struct {
 ```
 
 <a name="ChatMessagePartType"></a>
-## type [ChatMessagePartType](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L23>)
+## type [ChatMessagePartType](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L27>)
 
 ChatMessagePartType is the chat message part type.
 
@@ -826,7 +826,7 @@ type ChatModel Model
 ```
 
 <a name="Client"></a>
-## type [Client](<https://github.com/conneroisu/groq-go/blob/main/client.go#L23-L35>)
+## type [Client](<https://github.com/conneroisu/groq-go/blob/main/client.go#L22-L34>)
 
 Client is a Groq api client.
 
@@ -837,7 +837,7 @@ type Client struct {
 ```
 
 <a name="NewClient"></a>
-### func [NewClient](<https://github.com/conneroisu/groq-go/blob/main/client.go#L128>)
+### func [NewClient](<https://github.com/conneroisu/groq-go/blob/main/client.go#L55>)
 
 ```go
 func NewClient(groqAPIKey string, opts ...Opts) (*Client, error)
@@ -845,35 +845,35 @@ func NewClient(groqAPIKey string, opts ...Opts) (*Client, error)
 
 NewClient creates a new Groq client.
 
-<a name="Client.CreateChatCompletion"></a>
-### func \(\*Client\) [CreateChatCompletion](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L18-L21>)
+<a name="Client.ChatCompletion"></a>
+### func \(\*Client\) [ChatCompletion](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L18-L21>)
 
 ```go
-func (c *Client) CreateChatCompletion(ctx context.Context, request ChatCompletionRequest) (response ChatCompletionResponse, err error)
+func (c *Client) ChatCompletion(ctx context.Context, request ChatCompletionRequest) (response ChatCompletionResponse, err error)
 ```
 
-CreateChatCompletion method is an API call to create a chat completion.
+ChatCompletion method is an API call to create a chat completion.
 
-<a name="Client.CreateChatCompletionJSON"></a>
-### func \(\*Client\) [CreateChatCompletionJSON](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L72-L76>)
+<a name="Client.ChatCompletionJSON"></a>
+### func \(\*Client\) [ChatCompletionJSON](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L72-L76>)
 
 ```go
-func (c *Client) CreateChatCompletionJSON(ctx context.Context, request ChatCompletionRequest, output any) (err error)
+func (c *Client) ChatCompletionJSON(ctx context.Context, request ChatCompletionRequest, output any) (err error)
 ```
 
-CreateChatCompletionJSON method is an API call to create a chat completion w/ object output.
+ChatCompletionJSON method is an API call to create a chat completion w/ object output.
 
-<a name="Client.CreateChatCompletionStream"></a>
-### func \(\*Client\) [CreateChatCompletionStream](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L44-L47>)
+<a name="Client.ChatCompletionStream"></a>
+### func \(\*Client\) [ChatCompletionStream](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L44-L47>)
 
 ```go
-func (c *Client) CreateChatCompletionStream(ctx context.Context, request ChatCompletionRequest) (stream *ChatCompletionStream, err error)
+func (c *Client) ChatCompletionStream(ctx context.Context, request ChatCompletionRequest) (stream *ChatCompletionStream, err error)
 ```
 
-CreateChatCompletionStream method is an API call to create a chat completion w/ streaming support.
+ChatCompletionStream method is an API call to create a chat completion w/ streaming support.
 
 <a name="Client.CreateTranscription"></a>
-### func \(\*Client\) [CreateTranscription](<https://github.com/conneroisu/groq-go/blob/main/audio.go#L126-L129>)
+### func \(\*Client\) [CreateTranscription](<https://github.com/conneroisu/groq-go/blob/main/audio.go#L14-L17>)
 
 ```go
 func (c *Client) CreateTranscription(ctx context.Context, request AudioRequest) (AudioResponse, error)
@@ -884,7 +884,7 @@ CreateTranscription calls the transcriptions endpoint with the given request.
 Returns transcribed text in the response\_format specified in the request.
 
 <a name="Client.CreateTranslation"></a>
-### func \(\*Client\) [CreateTranslation](<https://github.com/conneroisu/groq-go/blob/main/audio.go#L136-L139>)
+### func \(\*Client\) [CreateTranslation](<https://github.com/conneroisu/groq-go/blob/main/audio.go#L24-L27>)
 
 ```go
 func (c *Client) CreateTranslation(ctx context.Context, request AudioRequest) (AudioResponse, error)
@@ -895,16 +895,16 @@ CreateTranslation calls the translations endpoint with the given request.
 Returns the translated text in the response\_format specified in the request.
 
 <a name="Client.Moderate"></a>
-### func \(\*Client\) [Moderate](<https://github.com/conneroisu/groq-go/blob/main/moderation.go#L25-L29>)
+### func \(\*Client\) [Moderate](<https://github.com/conneroisu/groq-go/blob/main/moderation.go#L14-L18>)
 
 ```go
-func (c *Client) Moderate(ctx context.Context, messages []ChatCompletionMessage, model models.ModerationModel) (response Moderation, err error)
+func (c *Client) Moderate(ctx context.Context, messages []ChatCompletionMessage, model ModerationModel) (response Moderation, err error)
 ```
 
 Moderate performs a moderation api call over a string. Input can be an array or slice but a string will reduce the complexity.
 
 <a name="FinishReason"></a>
-## type [FinishReason](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L302>)
+## type [FinishReason](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L313>)
 
 FinishReason is the finish reason.
 
@@ -937,7 +937,7 @@ const (
 ```
 
 <a name="FinishReason.MarshalJSON"></a>
-### func \(FinishReason\) [MarshalJSON](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L415>)
+### func \(FinishReason\) [MarshalJSON](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L426>)
 
 ```go
 func (r FinishReason) MarshalJSON() ([]byte, error)
@@ -946,7 +946,7 @@ func (r FinishReason) MarshalJSON() ([]byte, error)
 MarshalJSON implements the json.Marshaler interface.
 
 <a name="Format"></a>
-## type [Format](<https://github.com/conneroisu/groq-go/blob/main/client.go#L58>)
+## type [Format](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L441>)
 
 Format is the format of a response. string
 
@@ -984,7 +984,7 @@ const (
 ```
 
 <a name="ImageURLDetail"></a>
-## type [ImageURLDetail](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L19>)
+## type [ImageURLDetail](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L23>)
 
 ImageURLDetail is the detail of the image at the URL.
 
@@ -995,7 +995,7 @@ type ImageURLDetail string
 ```
 
 <a name="LogProbs"></a>
-## type [LogProbs](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L160-L176>)
+## type [LogProbs](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L164-L180>)
 
 LogProbs is the top\-level structure containing the log probability information.
 
@@ -1029,7 +1029,7 @@ type Model string
 ```
 
 <a name="Moderation"></a>
-## type [Moderation](<https://github.com/conneroisu/groq-go/blob/main/moderation.go#L15-L20>)
+## type [Moderation](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L301-L306>)
 
 Moderation represents the response of a moderation request.
 
@@ -1052,7 +1052,7 @@ type ModerationModel Model
 ```
 
 <a name="Opts"></a>
-## type [Opts](<https://github.com/conneroisu/groq-go/blob/main/client.go#L37>)
+## type [Opts](<https://github.com/conneroisu/groq-go/blob/main/client.go#L36>)
 
 Opts is a function that sets options for a Groq client.
 
@@ -1061,7 +1061,7 @@ type Opts func(*Client)
 ```
 
 <a name="WithBaseURL"></a>
-### func [WithBaseURL](<https://github.com/conneroisu/groq-go/blob/main/client.go#L46>)
+### func [WithBaseURL](<https://github.com/conneroisu/groq-go/blob/main/client.go#L45>)
 
 ```go
 func WithBaseURL(baseURL string) Opts
@@ -1070,7 +1070,7 @@ func WithBaseURL(baseURL string) Opts
 WithBaseURL sets the base URL for the Groq client.
 
 <a name="WithClient"></a>
-### func [WithClient](<https://github.com/conneroisu/groq-go/blob/main/client.go#L41>)
+### func [WithClient](<https://github.com/conneroisu/groq-go/blob/main/client.go#L40>)
 
 ```go
 func WithClient(client *http.Client) Opts
@@ -1079,7 +1079,7 @@ func WithClient(client *http.Client) Opts
 WithClient sets the client for the Groq client.
 
 <a name="WithLogger"></a>
-### func [WithLogger](<https://github.com/conneroisu/groq-go/blob/main/client.go#L51>)
+### func [WithLogger](<https://github.com/conneroisu/groq-go/blob/main/client.go#L50>)
 
 ```go
 func WithLogger(logger *slog.Logger) Opts
@@ -1088,7 +1088,7 @@ func WithLogger(logger *slog.Logger) Opts
 WithLogger sets the logger for the Groq client.
 
 <a name="PromptAnnotation"></a>
-## type [PromptAnnotation](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L29-L31>)
+## type [PromptAnnotation](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L33-L35>)
 
 PromptAnnotation represents the prompt annotation.
 
@@ -1099,7 +1099,7 @@ type PromptAnnotation struct {
 ```
 
 <a name="RateLimitHeaders"></a>
-## type [RateLimitHeaders](<https://github.com/conneroisu/groq-go/blob/main/client.go#L60-L77>)
+## type [RateLimitHeaders](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L443-L460>)
 
 RateLimitHeaders struct represents Groq rate limits headers.
 
@@ -1125,7 +1125,7 @@ type RateLimitHeaders struct {
 ```
 
 <a name="ResetTime"></a>
-## type [ResetTime](<https://github.com/conneroisu/groq-go/blob/main/client.go#L80>)
+## type [ResetTime](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L463>)
 
 ResetTime is a time.Time wrapper for the rate limit reset time. string
 
@@ -1134,7 +1134,7 @@ type ResetTime string
 ```
 
 <a name="ResetTime.String"></a>
-### func \(ResetTime\) [String](<https://github.com/conneroisu/groq-go/blob/main/client.go#L263>)
+### func \(ResetTime\) [String](<https://github.com/conneroisu/groq-go/blob/main/client.go#L190>)
 
 ```go
 func (r ResetTime) String() string
@@ -1143,7 +1143,7 @@ func (r ResetTime) String() string
 String returns the string representation of the ResetTime.
 
 <a name="ResetTime.Time"></a>
-### func \(ResetTime\) [Time](<https://github.com/conneroisu/groq-go/blob/main/client.go#L268>)
+### func \(ResetTime\) [Time](<https://github.com/conneroisu/groq-go/blob/main/client.go#L195>)
 
 ```go
 func (r ResetTime) Time() time.Time
@@ -1152,7 +1152,7 @@ func (r ResetTime) Time() time.Time
 Time returns the time.Time representation of the ResetTime.
 
 <a name="Role"></a>
-## type [Role](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L27>)
+## type [Role](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L31>)
 
 Role is the role of the chat completion message.
 
@@ -1163,7 +1163,7 @@ type Role string
 ```
 
 <a name="Segments"></a>
-## type [Segments](<https://github.com/conneroisu/groq-go/blob/main/audio.go#L78-L101>)
+## type [Segments](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L573-L596>)
 
 Segments is the segments of the response.
 
@@ -1195,7 +1195,7 @@ type Segments []struct {
 ```
 
 <a name="StreamOptions"></a>
-## type [StreamOptions](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L242-L255>)
+## type [StreamOptions](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L246-L259>)
 
 StreamOptions represents the stream options.
 
@@ -1217,7 +1217,7 @@ type StreamOptions struct {
 ```
 
 <a name="TopLogProbs"></a>
-## type [TopLogProbs](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L178-L185>)
+## type [TopLogProbs](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L182-L189>)
 
 TopLogProbs represents the top log probs.
 
@@ -1233,7 +1233,7 @@ type TopLogProbs struct {
 ```
 
 <a name="TranscriptionTimestampGranularity"></a>
-## type [TranscriptionTimestampGranularity](<https://github.com/conneroisu/groq-go/blob/main/audio.go#L29>)
+## type [TranscriptionTimestampGranularity](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L524>)
 
 TranscriptionTimestampGranularity is the timestamp granularity for the transcription.
 
@@ -1257,7 +1257,7 @@ const (
 ```
 
 <a name="Usage"></a>
-## type [Usage](<https://github.com/conneroisu/groq-go/blob/main/client.go#L82-L86>)
+## type [Usage](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L465-L469>)
 
 Usage Represents the total token usage per request to Groq.
 
@@ -1270,7 +1270,7 @@ type Usage struct {
 ```
 
 <a name="Words"></a>
-## type [Words](<https://github.com/conneroisu/groq-go/blob/main/audio.go#L68-L76>)
+## type [Words](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L563-L571>)
 
 Words is the words of the audio response.
 

@@ -33,7 +33,7 @@ func run(
 		return err
 	}
 	resp := &Responses{}
-	err = client.CreateChatCompletionJSON(ctx, groq.ChatCompletionRequest{
+	err = client.ChatCompletionJSON(ctx, groq.ChatCompletionRequest{
 		Model: groq.ModelLlama3Groq70B8192ToolUsePreview,
 		Messages: []groq.ChatCompletionMessage{
 			{

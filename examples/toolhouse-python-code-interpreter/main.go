@@ -54,7 +54,7 @@ func run(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	re, err := client.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
+	re, err := client.ChatCompletion(ctx, groq.ChatCompletionRequest{
 		Model:      groq.ModelLlama3Groq70B8192ToolUsePreview,
 		Messages:   history,
 		Tools:      tools,
@@ -69,7 +69,7 @@ func run(ctx context.Context) error {
 		return fmt.Errorf("failed to run tool: %w", err)
 	}
 	history = append(history, r...)
-	finalr, err := client.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
+	finalr, err := client.ChatCompletion(ctx, groq.ChatCompletionRequest{
 		Model:     groq.ModelLlama3Groq70B8192ToolUsePreview,
 		Messages:  history,
 		MaxTokens: 2000,

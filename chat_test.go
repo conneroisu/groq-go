@@ -48,7 +48,7 @@ func TestChat(t *testing.T) {
 		groq.WithBaseURL(testS.URL+"/v1"),
 	)
 	a.NoError(err)
-	resp, err := client.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
+	resp, err := client.ChatCompletion(ctx, groq.ChatCompletionRequest{
 		Model: groq.ModelLlama3Groq70B8192ToolUsePreview,
 		Messages: []groq.ChatCompletionMessage{
 			{

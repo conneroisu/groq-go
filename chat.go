@@ -14,8 +14,8 @@ import (
 	"github.com/conneroisu/groq-go/pkg/schema"
 )
 
-// CreateChatCompletion method is an API call to create a chat completion.
-func (c *Client) CreateChatCompletion(
+// ChatCompletion method is an API call to create a chat completion.
+func (c *Client) ChatCompletion(
 	ctx context.Context,
 	request ChatCompletionRequest,
 ) (response ChatCompletionResponse, err error) {
@@ -34,14 +34,14 @@ func (c *Client) CreateChatCompletion(
 	if ok && (reqErr.HTTPStatusCode == http.StatusServiceUnavailable ||
 		reqErr.HTTPStatusCode == http.StatusInternalServerError) {
 		time.Sleep(request.RetryDelay)
-		return c.CreateChatCompletion(ctx, request)
+		return c.ChatCompletion(ctx, request)
 	}
 	return
 }
 
-// CreateChatCompletionStream method is an API call to create a chat completion
+// ChatCompletionStream method is an API call to create a chat completion
 // w/ streaming support.
-func (c *Client) CreateChatCompletionStream(
+func (c *Client) ChatCompletionStream(
 	ctx context.Context,
 	request ChatCompletionRequest,
 ) (stream *ChatCompletionStream, err error) {
@@ -67,9 +67,9 @@ func (c *Client) CreateChatCompletionStream(
 	}, nil
 }
 
-// CreateChatCompletionJSON method is an API call to create a chat completion
+// ChatCompletionJSON method is an API call to create a chat completion
 // w/ object output.
-func (c *Client) CreateChatCompletionJSON(
+func (c *Client) ChatCompletionJSON(
 	ctx context.Context,
 	request ChatCompletionRequest,
 	output any,
@@ -86,13 +86,13 @@ func (c *Client) CreateChatCompletionJSON(
 			Strict:      true,
 		},
 	}
-	response, err := c.CreateChatCompletion(ctx, request)
+	response, err := c.ChatCompletion(ctx, request)
 	if err != nil {
 		reqErr, ok := err.(*groqerr.APIError)
 		if ok && (reqErr.HTTPStatusCode == http.StatusServiceUnavailable ||
 			reqErr.HTTPStatusCode == http.StatusInternalServerError) {
 			time.Sleep(request.RetryDelay)
-			return c.CreateChatCompletionJSON(ctx, request, output)
+			return c.ChatCompletionJSON(ctx, request, output)
 		}
 	}
 	content := response.Choices[0].Message.Content

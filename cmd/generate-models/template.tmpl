@@ -33,9 +33,9 @@ var (
 		// It has {{$model.ContextWindow}} context window.
 		//
 		// It can be used with the following client methods:
-		//	- CreateChatCompletion
-		// 	- CreateChatCompletionStream
-		// 	- CreateChatCompletionJSON
+		//	- ChatCompletion
+		// 	- ChatCompletionStream
+		// 	- ChatCompletionJSON
 		Model{{ $model.Name }} ChatModel = "{{ $model.ID }}"
 	{{- end }}
 
@@ -100,7 +100,7 @@ func TestChatModels{{ $model.Name }}(t *testing.T) {
 	a.NoError(err, "GetAPIKey error")
 	client, err := groq.NewClient(apiKey)
 	a.NoError(err, "NewClient error")
-	response, err := client.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
+	response, err := client.ChatCompletion(ctx, groq.ChatCompletionRequest{
 		Model: groq.Model{{ $model.Name }},
 		Messages: []groq.ChatCompletionMessage{
 			{
@@ -111,9 +111,9 @@ func TestChatModels{{ $model.Name }}(t *testing.T) {
 		MaxTokens: 10,
 		RetryDelay: time.Second * 2,
 	})
-	a.NoError(err, "CreateChatCompletionJSON error")
+	a.NoError(err, "ChatCompletionJSON error")
 	if len(response.Choices[0].Message.Content) == 0 {
-		t.Errorf("response.Choices[0].Message.Content is empty for model {{ $model.Name }} calling CreateChatCompletion")
+		t.Errorf("response.Choices[0].Message.Content is empty for model {{ $model.Name }} calling ChatCompletion")
 	}
 }
 {{- end }}

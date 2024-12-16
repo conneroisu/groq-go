@@ -36,7 +36,7 @@ func TestUnitExtension(t *testing.T) {
 	}
 	tooling, err := ext.GetTools(ctx)
 	a.NoError(err)
-	re, err := client.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
+	re, err := client.ChatCompletion(ctx, groq.ChatCompletionRequest{
 		Model:      groq\.ModelLlama3Groq70B8192ToolUsePreview,
 		Messages:   history,
 		Tools:      tooling,
@@ -47,7 +47,7 @@ func TestUnitExtension(t *testing.T) {
 	r, err := ext.Run(ctx, re)
 	a.NoError(err)
 	history = append(history, r...)
-	finalr, err := client.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
+	finalr, err := client.ChatCompletion(ctx, groq.ChatCompletionRequest{
 		Model:     groq\.ModelLlama3Groq70B8192ToolUsePreview,
 		Messages:  history,
 		MaxTokens: 2000,

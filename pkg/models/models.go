@@ -27,9 +27,9 @@ var (
 	// It has 8192 context window.
 	//
 	// It can be used with the following client methods:
-	//	- CreateChatCompletion
-	// 	- CreateChatCompletionStream
-	// 	- CreateChatCompletionJSON
+	//	- ChatCompletion
+	// 	- ChatCompletionStream
+	// 	- ChatCompletionJSON
 	ModelGemma29BIt ChatModel = "gemma2-9b-it"
 	// ModelGemma7BIt is an AI text chat model.
 	//
@@ -38,9 +38,9 @@ var (
 	// It has 8192 context window.
 	//
 	// It can be used with the following client methods:
-	//	- CreateChatCompletion
-	// 	- CreateChatCompletionStream
-	// 	- CreateChatCompletionJSON
+	//	- ChatCompletion
+	// 	- ChatCompletionStream
+	// 	- ChatCompletionJSON
 	ModelGemma7BIt ChatModel = "gemma-7b-it"
 	// ModelLlama3170BVersatile is an AI text chat model.
 	//
@@ -49,9 +49,9 @@ var (
 	// It has 32768 context window.
 	//
 	// It can be used with the following client methods:
-	//	- CreateChatCompletion
-	// 	- CreateChatCompletionStream
-	// 	- CreateChatCompletionJSON
+	//	- ChatCompletion
+	// 	- ChatCompletionStream
+	// 	- ChatCompletionJSON
 	ModelLlama3170BVersatile ChatModel = "llama-3.1-70b-versatile"
 	// ModelLlama318BInstant is an AI text chat model.
 	//
@@ -60,9 +60,9 @@ var (
 	// It has 131072 context window.
 	//
 	// It can be used with the following client methods:
-	//	- CreateChatCompletion
-	// 	- CreateChatCompletionStream
-	// 	- CreateChatCompletionJSON
+	//	- ChatCompletion
+	// 	- ChatCompletionStream
+	// 	- ChatCompletionJSON
 	ModelLlama318BInstant ChatModel = "llama-3.1-8b-instant"
 	// ModelLlama3211BTextPreview is an AI text chat model.
 	//
@@ -71,9 +71,9 @@ var (
 	// It has 8192 context window.
 	//
 	// It can be used with the following client methods:
-	//	- CreateChatCompletion
-	// 	- CreateChatCompletionStream
-	// 	- CreateChatCompletionJSON
+	//	- ChatCompletion
+	// 	- ChatCompletionStream
+	// 	- ChatCompletionJSON
 	ModelLlama3211BTextPreview ChatModel = "llama-3.2-11b-text-preview"
 	// ModelLlama3211BVisionPreview is an AI text chat model.
 	//
@@ -82,9 +82,9 @@ var (
 	// It has 8192 context window.
 	//
 	// It can be used with the following client methods:
-	//	- CreateChatCompletion
-	// 	- CreateChatCompletionStream
-	// 	- CreateChatCompletionJSON
+	//	- ChatCompletion
+	// 	- ChatCompletionStream
+	// 	- ChatCompletionJSON
 	ModelLlama3211BVisionPreview ChatModel = "llama-3.2-11b-vision-preview"
 	// ModelLlama321BPreview is an AI text chat model.
 	//
@@ -93,9 +93,9 @@ var (
 	// It has 8192 context window.
 	//
 	// It can be used with the following client methods:
-	//	- CreateChatCompletion
-	// 	- CreateChatCompletionStream
-	// 	- CreateChatCompletionJSON
+	//	- ChatCompletion
+	// 	- ChatCompletionStream
+	// 	- ChatCompletionJSON
 	ModelLlama321BPreview ChatModel = "llama-3.2-1b-preview"
 	// ModelLlama323BPreview is an AI text chat model.
 	//
@@ -104,9 +104,9 @@ var (
 	// It has 8192 context window.
 	//
 	// It can be used with the following client methods:
-	//	- CreateChatCompletion
-	// 	- CreateChatCompletionStream
-	// 	- CreateChatCompletionJSON
+	//	- ChatCompletion
+	// 	- ChatCompletionStream
+	// 	- ChatCompletionJSON
 	ModelLlama323BPreview ChatModel = "llama-3.2-3b-preview"
 	// ModelLlama3290BTextPreview is an AI text chat model.
 	//
@@ -115,9 +115,9 @@ var (
 	// It has 8192 context window.
 	//
 	// It can be used with the following client methods:
-	//	- CreateChatCompletion
-	// 	- CreateChatCompletionStream
-	// 	- CreateChatCompletionJSON
+	//	- ChatCompletion
+	// 	- ChatCompletionStream
+	// 	- ChatCompletionJSON
 	ModelLlama3290BTextPreview ChatModel = "llama-3.2-90b-text-preview"
 	// ModelLlama3290BVisionPreview is an AI text chat model.
 	//
@@ -126,9 +126,9 @@ var (
 	// It has 8192 context window.
 	//
 	// It can be used with the following client methods:
-	//	- CreateChatCompletion
-	// 	- CreateChatCompletionStream
-	// 	- CreateChatCompletionJSON
+	//	- ChatCompletion
+	// 	- ChatCompletionStream
+	// 	- ChatCompletionJSON
 	ModelLlama3290BVisionPreview ChatModel = "llama-3.2-90b-vision-preview"
 	// ModelLlama370B8192 is an AI text chat model.
 	//
@@ -137,9 +137,9 @@ var (
 	// It has 8192 context window.
 	//
 	// It can be used with the following client methods:
-	//	- CreateChatCompletion
-	// 	- CreateChatCompletionStream
-	// 	- CreateChatCompletionJSON
+	//	- ChatCompletion
+	// 	- ChatCompletionStream
+	// 	- ChatCompletionJSON
 	ModelLlama370B8192 ChatModel = "llama3-70b-8192"
 	// ModelLlama38B8192 is an AI text chat model.
 	//
@@ -148,9 +148,9 @@ var (
 	// It has 8192 context window.
 	//
 	// It can be used with the following client methods:
-	//	- CreateChatCompletion
-	// 	- CreateChatCompletionStream
-	// 	- CreateChatCompletionJSON
+	//	- ChatCompletion
+	// 	- ChatCompletionStream
+	// 	- ChatCompletionJSON
 	ModelLlama38B8192 ChatModel = "llama3-8b-8192"
 	// ModelLlama3Groq70B8192ToolUsePreview is an AI text chat model.
 	//
@@ -159,9 +159,9 @@ var (
 	// It has 8192 context window.
 	//
 	// It can be used with the following client methods:
-	//	- CreateChatCompletion
-	// 	- CreateChatCompletionStream
-	// 	- CreateChatCompletionJSON
+	//	- ChatCompletion
+	// 	- ChatCompletionStream
+	// 	- ChatCompletionJSON
 	ModelLlama3Groq70B8192ToolUsePreview ChatModel = "llama3-groq-70b-8192-tool-use-preview"
 	// ModelLlama3Groq8B8192ToolUsePreview is an AI text chat model.
 	//
@@ -170,9 +170,9 @@ var (
 	// It has 8192 context window.
 	//
 	// It can be used with the following client methods:
-	//	- CreateChatCompletion
-	// 	- CreateChatCompletionStream
-	// 	- CreateChatCompletionJSON
+	//	- ChatCompletion
+	// 	- ChatCompletionStream
+	// 	- ChatCompletionJSON
 	ModelLlama3Groq8B8192ToolUsePreview ChatModel = "llama3-groq-8b-8192-tool-use-preview"
 	// ModelLlavaV157B4096Preview is an AI text chat model.
 	//
@@ -181,9 +181,9 @@ var (
 	// It has 4096 context window.
 	//
 	// It can be used with the following client methods:
-	//	- CreateChatCompletion
-	// 	- CreateChatCompletionStream
-	// 	- CreateChatCompletionJSON
+	//	- ChatCompletion
+	// 	- ChatCompletionStream
+	// 	- ChatCompletionJSON
 	ModelLlavaV157B4096Preview ChatModel = "llava-v1.5-7b-4096-preview"
 	// ModelMixtral8X7B32768 is an AI text chat model.
 	//
@@ -192,9 +192,9 @@ var (
 	// It has 32768 context window.
 	//
 	// It can be used with the following client methods:
-	//	- CreateChatCompletion
-	// 	- CreateChatCompletionStream
-	// 	- CreateChatCompletionJSON
+	//	- ChatCompletion
+	// 	- ChatCompletionStream
+	// 	- ChatCompletionJSON
 	ModelMixtral8X7B32768 ChatModel = "mixtral-8x7b-32768"
 	// ModelDistilWhisperLargeV3En is an AI audio transcription model.
 	//

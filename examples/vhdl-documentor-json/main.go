@@ -65,7 +65,7 @@ func run(
 			return err
 		}
 		var thoughtThroughCode thoughtThroughCode
-		err = client.CreateChatCompletionJSON(
+		err = client.ChatCompletionJSON(
 			ctx,
 			groq.ChatCompletionRequest{
 				Model: groq.ModelLlama3Groq70B8192ToolUsePreview,

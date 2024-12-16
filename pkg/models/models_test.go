@@ -38,7 +38,7 @@ func TestChatModelsGemma29BIt(t *testing.T) {
 	a.NoError(err, "GetAPIKey error")
 	client, err := groq.NewClient(apiKey)
 	a.NoError(err, "NewClient error")
-	response, err := client.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
+	response, err := client.ChatCompletion(ctx, groq.ChatCompletionRequest{
 		Model: groq\.ModelGemma29BIt,
 		Messages: []groq.ChatCompletionMessage{
 			{
@@ -49,9 +49,9 @@ func TestChatModelsGemma29BIt(t *testing.T) {
 		MaxTokens:  10,
 		RetryDelay: time.Second * 2,
 	})
-	a.NoError(err, "CreateChatCompletionJSON error")
+	a.NoError(err, "ChatCompletionJSON error")
 	if len(response.Choices[0].Message.Content) == 0 {
-		t.Errorf("response.Choices[0].Message.Content is empty for model Gemma29BIt calling CreateChatCompletion")
+		t.Errorf("response.Choices[0].Message.Content is empty for model Gemma29BIt calling ChatCompletion")
 	}
 }
 
@@ -69,7 +69,7 @@ func TestChatModelsGemma7BIt(t *testing.T) {
 	a.NoError(err, "GetAPIKey error")
 	client, err := groq.NewClient(apiKey)
 	a.NoError(err, "NewClient error")
-	response, err := client.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
+	response, err := client.ChatCompletion(ctx, groq.ChatCompletionRequest{
 		Model: groq\.ModelGemma7BIt,
 		Messages: []groq.ChatCompletionMessage{
 			{
@@ -80,9 +80,9 @@ func TestChatModelsGemma7BIt(t *testing.T) {
 		MaxTokens:  10,
 		RetryDelay: time.Second * 2,
 	})
-	a.NoError(err, "CreateChatCompletionJSON error")
+	a.NoError(err, "ChatCompletionJSON error")
 	if len(response.Choices[0].Message.Content) == 0 {
-		t.Errorf("response.Choices[0].Message.Content is empty for model Gemma7BIt calling CreateChatCompletion")
+		t.Errorf("response.Choices[0].Message.Content is empty for model Gemma7BIt calling ChatCompletion")
 	}
 }
 
@@ -100,7 +100,7 @@ func TestChatModelsLlama3170BVersatile(t *testing.T) {
 	a.NoError(err, "GetAPIKey error")
 	client, err := groq.NewClient(apiKey)
 	a.NoError(err, "NewClient error")
-	response, err := client.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
+	response, err := client.ChatCompletion(ctx, groq.ChatCompletionRequest{
 		Model: groq\.ModelLlama3170BVersatile,
 		Messages: []groq.ChatCompletionMessage{
 			{
@@ -111,9 +111,9 @@ func TestChatModelsLlama3170BVersatile(t *testing.T) {
 		MaxTokens:  10,
 		RetryDelay: time.Second * 2,
 	})
-	a.NoError(err, "CreateChatCompletionJSON error")
+	a.NoError(err, "ChatCompletionJSON error")
 	if len(response.Choices[0].Message.Content) == 0 {
-		t.Errorf("response.Choices[0].Message.Content is empty for model Llama3170BVersatile calling CreateChatCompletion")
+		t.Errorf("response.Choices[0].Message.Content is empty for model Llama3170BVersatile calling ChatCompletion")
 	}
 }
 
@@ -131,7 +131,7 @@ func TestChatModelsLlama318BInstant(t *testing.T) {
 	a.NoError(err, "GetAPIKey error")
 	client, err := groq.NewClient(apiKey)
 	a.NoError(err, "NewClient error")
-	response, err := client.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
+	response, err := client.ChatCompletion(ctx, groq.ChatCompletionRequest{
 		Model: groq\.ModelLlama318BInstant,
 		Messages: []groq.ChatCompletionMessage{
 			{
@@ -142,9 +142,9 @@ func TestChatModelsLlama318BInstant(t *testing.T) {
 		MaxTokens:  10,
 		RetryDelay: time.Second * 2,
 	})
-	a.NoError(err, "CreateChatCompletionJSON error")
+	a.NoError(err, "ChatCompletionJSON error")
 	if len(response.Choices[0].Message.Content) == 0 {
-		t.Errorf("response.Choices[0].Message.Content is empty for model Llama318BInstant calling CreateChatCompletion")
+		t.Errorf("response.Choices[0].Message.Content is empty for model Llama318BInstant calling ChatCompletion")
 	}
 }
 
@@ -162,7 +162,7 @@ func TestChatModelsLlama3211BTextPreview(t *testing.T) {
 	a.NoError(err, "GetAPIKey error")
 	client, err := groq.NewClient(apiKey)
 	a.NoError(err, "NewClient error")
-	response, err := client.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
+	response, err := client.ChatCompletion(ctx, groq.ChatCompletionRequest{
 		Model: groq\.ModelLlama3211BTextPreview,
 		Messages: []groq.ChatCompletionMessage{
 			{
@@ -173,9 +173,9 @@ func TestChatModelsLlama3211BTextPreview(t *testing.T) {
 		MaxTokens:  10,
 		RetryDelay: time.Second * 2,
 	})
-	a.NoError(err, "CreateChatCompletionJSON error")
+	a.NoError(err, "ChatCompletionJSON error")
 	if len(response.Choices[0].Message.Content) == 0 {
-		t.Errorf("response.Choices[0].Message.Content is empty for model Llama3211BTextPreview calling CreateChatCompletion")
+		t.Errorf("response.Choices[0].Message.Content is empty for model Llama3211BTextPreview calling ChatCompletion")
 	}
 }
 
@@ -193,7 +193,7 @@ func TestChatModelsLlama3211BVisionPreview(t *testing.T) {
 	a.NoError(err, "GetAPIKey error")
 	client, err := groq.NewClient(apiKey)
 	a.NoError(err, "NewClient error")
-	response, err := client.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
+	response, err := client.ChatCompletion(ctx, groq.ChatCompletionRequest{
 		Model: groq\.ModelLlama3211BVisionPreview,
 		Messages: []groq.ChatCompletionMessage{
 			{
@@ -204,9 +204,9 @@ func TestChatModelsLlama3211BVisionPreview(t *testing.T) {
 		MaxTokens:  10,
 		RetryDelay: time.Second * 2,
 	})
-	a.NoError(err, "CreateChatCompletionJSON error")
+	a.NoError(err, "ChatCompletionJSON error")
 	if len(response.Choices[0].Message.Content) == 0 {
-		t.Errorf("response.Choices[0].Message.Content is empty for model Llama3211BVisionPreview calling CreateChatCompletion")
+		t.Errorf("response.Choices[0].Message.Content is empty for model Llama3211BVisionPreview calling ChatCompletion")
 	}
 }
 
@@ -224,7 +224,7 @@ func TestChatModelsLlama321BPreview(t *testing.T) {
 	a.NoError(err, "GetAPIKey error")
 	client, err := groq.NewClient(apiKey)
 	a.NoError(err, "NewClient error")
-	response, err := client.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
+	response, err := client.ChatCompletion(ctx, groq.ChatCompletionRequest{
 		Model: groq\.ModelLlama321BPreview,
 		Messages: []groq.ChatCompletionMessage{
 			{
@@ -235,9 +235,9 @@ func TestChatModelsLlama321BPreview(t *testing.T) {
 		MaxTokens:  10,
 		RetryDelay: time.Second * 2,
 	})
-	a.NoError(err, "CreateChatCompletionJSON error")
+	a.NoError(err, "ChatCompletionJSON error")
 	if len(response.Choices[0].Message.Content) == 0 {
-		t.Errorf("response.Choices[0].Message.Content is empty for model Llama321BPreview calling CreateChatCompletion")
+		t.Errorf("response.Choices[0].Message.Content is empty for model Llama321BPreview calling ChatCompletion")
 	}
 }
 
@@ -255,7 +255,7 @@ func TestChatModelsLlama323BPreview(t *testing.T) {
 	a.NoError(err, "GetAPIKey error")
 	client, err := groq.NewClient(apiKey)
 	a.NoError(err, "NewClient error")
-	response, err := client.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
+	response, err := client.ChatCompletion(ctx, groq.ChatCompletionRequest{
 		Model: groq\.ModelLlama323BPreview,
 		Messages: []groq.ChatCompletionMessage{
 			{
@@ -266,9 +266,9 @@ func TestChatModelsLlama323BPreview(t *testing.T) {
 		MaxTokens:  10,
 		RetryDelay: time.Second * 2,
 	})
-	a.NoError(err, "CreateChatCompletionJSON error")
+	a.NoError(err, "ChatCompletionJSON error")
 	if len(response.Choices[0].Message.Content) == 0 {
-		t.Errorf("response.Choices[0].Message.Content is empty for model Llama323BPreview calling CreateChatCompletion")
+		t.Errorf("response.Choices[0].Message.Content is empty for model Llama323BPreview calling ChatCompletion")
 	}
 }
 
@@ -286,7 +286,7 @@ func TestChatModelsLlama3290BTextPreview(t *testing.T) {
 	a.NoError(err, "GetAPIKey error")
 	client, err := groq.NewClient(apiKey)
 	a.NoError(err, "NewClient error")
-	response, err := client.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
+	response, err := client.ChatCompletion(ctx, groq.ChatCompletionRequest{
 		Model: groq\.ModelLlama3290BTextPreview,
 		Messages: []groq.ChatCompletionMessage{
 			{
@@ -297,9 +297,9 @@ func TestChatModelsLlama3290BTextPreview(t *testing.T) {
 		MaxTokens:  10,
 		RetryDelay: time.Second * 2,
 	})
-	a.NoError(err, "CreateChatCompletionJSON error")
+	a.NoError(err, "ChatCompletionJSON error")
 	if len(response.Choices[0].Message.Content) == 0 {
-		t.Errorf("response.Choices[0].Message.Content is empty for model Llama3290BTextPreview calling CreateChatCompletion")
+		t.Errorf("response.Choices[0].Message.Content is empty for model Llama3290BTextPreview calling ChatCompletion")
 	}
 }
 
@@ -317,7 +317,7 @@ func TestChatModelsLlama3290BVisionPreview(t *testing.T) {
 	a.NoError(err, "GetAPIKey error")
 	client, err := groq.NewClient(apiKey)
 	a.NoError(err, "NewClient error")
-	response, err := client.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
+	response, err := client.ChatCompletion(ctx, groq.ChatCompletionRequest{
 		Model: groq\.ModelLlama3290BVisionPreview,
 		Messages: []groq.ChatCompletionMessage{
 			{
@@ -328,9 +328,9 @@ func TestChatModelsLlama3290BVisionPreview(t *testing.T) {
 		MaxTokens:  10,
 		RetryDelay: time.Second * 2,
 	})
-	a.NoError(err, "CreateChatCompletionJSON error")
+	a.NoError(err, "ChatCompletionJSON error")
 	if len(response.Choices[0].Message.Content) == 0 {
-		t.Errorf("response.Choices[0].Message.Content is empty for model Llama3290BVisionPreview calling CreateChatCompletion")
+		t.Errorf("response.Choices[0].Message.Content is empty for model Llama3290BVisionPreview calling ChatCompletion")
 	}
 }
 
@@ -348,7 +348,7 @@ func TestChatModelsLlama370B8192(t *testing.T) {
 	a.NoError(err, "GetAPIKey error")
 	client, err := groq.NewClient(apiKey)
 	a.NoError(err, "NewClient error")
-	response, err := client.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
+	response, err := client.ChatCompletion(ctx, groq.ChatCompletionRequest{
 		Model: groq\.ModelLlama370B8192,
 		Messages: []groq.ChatCompletionMessage{
 			{
@@ -359,9 +359,9 @@ func TestChatModelsLlama370B8192(t *testing.T) {
 		MaxTokens:  10,
 		RetryDelay: time.Second * 2,
 	})
-	a.NoError(err, "CreateChatCompletionJSON error")
+	a.NoError(err, "ChatCompletionJSON error")
 	if len(response.Choices[0].Message.Content) == 0 {
-		t.Errorf("response.Choices[0].Message.Content is empty for model Llama370B8192 calling CreateChatCompletion")
+		t.Errorf("response.Choices[0].Message.Content is empty for model Llama370B8192 calling ChatCompletion")
 	}
 }
 
@@ -379,7 +379,7 @@ func TestChatModelsLlama38B8192(t *testing.T) {
 	a.NoError(err, "GetAPIKey error")
 	client, err := groq.NewClient(apiKey)
 	a.NoError(err, "NewClient error")
-	response, err := client.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
+	response, err := client.ChatCompletion(ctx, groq.ChatCompletionRequest{
 		Model: groq\.ModelLlama38B8192,
 		Messages: []groq.ChatCompletionMessage{
 			{
@@ -390,9 +390,9 @@ func TestChatModelsLlama38B8192(t *testing.T) {
 		MaxTokens:  10,
 		RetryDelay: time.Second * 2,
 	})
-	a.NoError(err, "CreateChatCompletionJSON error")
+	a.NoError(err, "ChatCompletionJSON error")
 	if len(response.Choices[0].Message.Content) == 0 {
-		t.Errorf("response.Choices[0].Message.Content is empty for model Llama38B8192 calling CreateChatCompletion")
+		t.Errorf("response.Choices[0].Message.Content is empty for model Llama38B8192 calling ChatCompletion")
 	}
 }
 
@@ -410,7 +410,7 @@ func TestChatModelsLlama3Groq70B8192ToolUsePreview(t *testing.T) {
 	a.NoError(err, "GetAPIKey error")
 	client, err := groq.NewClient(apiKey)
 	a.NoError(err, "NewClient error")
-	response, err := client.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
+	response, err := client.ChatCompletion(ctx, groq.ChatCompletionRequest{
 		Model: groq\.ModelLlama3Groq70B8192ToolUsePreview,
 		Messages: []groq.ChatCompletionMessage{
 			{
@@ -421,9 +421,9 @@ func TestChatModelsLlama3Groq70B8192ToolUsePreview(t *testing.T) {
 		MaxTokens:  10,
 		RetryDelay: time.Second * 2,
 	})
-	a.NoError(err, "CreateChatCompletionJSON error")
+	a.NoError(err, "ChatCompletionJSON error")
 	if len(response.Choices[0].Message.Content) == 0 {
-		t.Errorf("response.Choices[0].Message.Content is empty for model Llama3Groq70B8192ToolUsePreview calling CreateChatCompletion")
+		t.Errorf("response.Choices[0].Message.Content is empty for model Llama3Groq70B8192ToolUsePreview calling ChatCompletion")
 	}
 }
 
@@ -441,7 +441,7 @@ func TestChatModelsLlama3Groq8B8192ToolUsePreview(t *testing.T) {
 	a.NoError(err, "GetAPIKey error")
 	client, err := groq.NewClient(apiKey)
 	a.NoError(err, "NewClient error")
-	response, err := client.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
+	response, err := client.ChatCompletion(ctx, groq.ChatCompletionRequest{
 		Model: groq\.ModelLlama3Groq8B8192ToolUsePreview,
 		Messages: []groq.ChatCompletionMessage{
 			{
@@ -452,9 +452,9 @@ func TestChatModelsLlama3Groq8B8192ToolUsePreview(t *testing.T) {
 		MaxTokens:  10,
 		RetryDelay: time.Second * 2,
 	})
-	a.NoError(err, "CreateChatCompletionJSON error")
+	a.NoError(err, "ChatCompletionJSON error")
 	if len(response.Choices[0].Message.Content) == 0 {
-		t.Errorf("response.Choices[0].Message.Content is empty for model Llama3Groq8B8192ToolUsePreview calling CreateChatCompletion")
+		t.Errorf("response.Choices[0].Message.Content is empty for model Llama3Groq8B8192ToolUsePreview calling ChatCompletion")
 	}
 }
 
@@ -472,7 +472,7 @@ func TestChatModelsLlavaV157B4096Preview(t *testing.T) {
 	a.NoError(err, "GetAPIKey error")
 	client, err := groq.NewClient(apiKey)
 	a.NoError(err, "NewClient error")
-	response, err := client.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
+	response, err := client.ChatCompletion(ctx, groq.ChatCompletionRequest{
 		Model: groq\.ModelLlavaV157B4096Preview,
 		Messages: []groq.ChatCompletionMessage{
 			{
@@ -483,9 +483,9 @@ func TestChatModelsLlavaV157B4096Preview(t *testing.T) {
 		MaxTokens:  10,
 		RetryDelay: time.Second * 2,
 	})
-	a.NoError(err, "CreateChatCompletionJSON error")
+	a.NoError(err, "ChatCompletionJSON error")
 	if len(response.Choices[0].Message.Content) == 0 {
-		t.Errorf("response.Choices[0].Message.Content is empty for model LlavaV157B4096Preview calling CreateChatCompletion")
+		t.Errorf("response.Choices[0].Message.Content is empty for model LlavaV157B4096Preview calling ChatCompletion")
 	}
 }
 
@@ -503,7 +503,7 @@ func TestChatModelsMixtral8X7B32768(t *testing.T) {
 	a.NoError(err, "GetAPIKey error")
 	client, err := groq.NewClient(apiKey)
 	a.NoError(err, "NewClient error")
-	response, err := client.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
+	response, err := client.ChatCompletion(ctx, groq.ChatCompletionRequest{
 		Model: groq\.ModelMixtral8X7B32768,
 		Messages: []groq.ChatCompletionMessage{
 			{
@@ -514,9 +514,9 @@ func TestChatModelsMixtral8X7B32768(t *testing.T) {
 		MaxTokens:  10,
 		RetryDelay: time.Second * 2,
 	})
-	a.NoError(err, "CreateChatCompletionJSON error")
+	a.NoError(err, "ChatCompletionJSON error")
 	if len(response.Choices[0].Message.Content) == 0 {
-		t.Errorf("response.Choices[0].Message.Content is empty for model Mixtral8X7B32768 calling CreateChatCompletion")
+		t.Errorf("response.Choices[0].Message.Content is empty for model Mixtral8X7B32768 calling ChatCompletion")
 	}
 }
 
