@@ -20,6 +20,7 @@ func (l *List[T]) Init() *List[T] {
 func New[T any]() *List[T] { return new(List[T]).Init() }
 
 // Len returns the number of elements of list l.
+//
 // The complexity is O(1).
 func (l *List[T]) Len() int { return l.len }
 
