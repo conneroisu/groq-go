@@ -38,6 +38,6 @@ func run(
 	if err != nil {
 		return err
 	}
-	fmt.Println(response.Categories)
+	fmt.Println(response)
 	return nil
 }
