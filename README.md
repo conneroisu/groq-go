@@ -52,17 +52,18 @@ External Repositories using groq-go:
 
 ## Development
 
-To run the tests:
+This project uses [devenv](https://devenv.sh) for development.
 
-Make sure you have a groq key set in the environment variable `GROQ_KEY`.
+To start development:
+
 ```bash
-task test
+devenv allow
 ```
 
-To run the linter:
+To run tests:
 
 ```bash
-task lint
+test
 ```
 
 If you fork the repository, you should set up the following environment variables in ci/cd:

@@ -41,8 +41,8 @@ in {
   # services.postgres.enable = true;
 
   # https://devenv.sh/scripts/
-  scripts.make.exec = ''
-  echo "Running make"
+  scripts.test.exec = ''
+    go test -v ./...
   '';
 
   enterShell = ''
