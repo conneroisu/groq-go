@@ -20,7 +20,6 @@ import (
 
 	"github.com/conneroisu/groq-go"
 	"github.com/conneroisu/groq-go/pkg/groqerr"
-	"github.com/conneroisu/groq-go/pkg/moderation"
 	"github.com/conneroisu/groq-go/pkg/test"
 	"github.com/stretchr/testify/assert"
 )
@@ -87,10 +86,9 @@ func TestModerate(t *testing.T) {
 	)
 	a := assert.New(t)
 	a.NoError(err, "Moderation error")
-	a.Equal(true, mod.Flagged)
 	a.Contains(
-		mod.Categories,
-		moderation.CategoryViolentCrimes,
+		mod,
+		groq.ModerationViolentCrimes,
 	)
 }
 

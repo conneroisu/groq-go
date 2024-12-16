@@ -24,5 +24,5 @@ func TestModeration(t *testing.T) {
 		groq.ModelLlamaGuard38B,
 	)
 	a.NoError(err)
-	a.NotEmpty(mod.Categories)
+	a.NotEmpty(mod)
 }

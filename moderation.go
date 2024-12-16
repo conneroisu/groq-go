@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/conneroisu/groq-go/pkg/builders"
-	"github.com/conneroisu/groq-go/pkg/moderation"
 )
 
 // Moderate performs a moderation api call over a string.
@@ -15,7 +14,7 @@ func (c *Client) Moderate(
 	ctx context.Context,
 	messages []ChatCompletionMessage,
 	model ModerationModel,
-) (response Moderation, err error) {
+) (response []Moderation, err error) {
 	req, err := builders.NewRequest(
 		ctx,
 		c.header,
@@ -38,15 +37,14 @@ func (c *Client) Moderate(
 		return
 	}
 	if strings.Contains(resp.Choices[0].Message.Content, "unsafe") {
-		response.Flagged = true
 		split := strings.Split(
 			strings.Split(resp.Choices[0].Message.Content, "\n")[1],
 			",",
 		)
 		for _, s := range split {
-			response.Categories = append(
-				response.Categories,
-				moderation.SectionMap[strings.TrimSpace(s)],
+			response = append(
+				response,
+				SectionMap[strings.TrimSpace(s)],
 			)
 		}
 	}
