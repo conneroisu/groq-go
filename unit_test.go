@@ -732,11 +732,11 @@ func TestAudio(t *testing.T) {
 	}{
 		{
 			"transcribe",
-			client.CreateTranscription,
+			client.Transcribe,
 		},
 		{
 			"translate",
-			client.CreateTranslation,
+			client.Translate,
 		},
 	}
 	ctx := context.Background()
@@ -776,11 +776,11 @@ func TestAudioWithOptionalArgs(t *testing.T) {
 	}{
 		{
 			"transcribe",
-			client.CreateTranscription,
+			client.Transcribe,
 		},
 		{
 			"translate",
-			client.CreateTranslation,
+			client.Translate,
 		},
 	}
 	ctx := context.Background()

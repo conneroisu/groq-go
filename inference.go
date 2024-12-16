@@ -155,20 +155,20 @@ func (c *Client) Moderate(
 	return
 }
 
-// CreateTranscription calls the transcriptions endpoint with the given request.
+// Transcribe calls the transcriptions endpoint with the given request.
 //
 // Returns transcribed text in the response_format specified in the request.
-func (c *Client) CreateTranscription(
+func (c *Client) Transcribe(
 	ctx context.Context,
 	request AudioRequest,
 ) (AudioResponse, error) {
 	return c.callAudioAPI(ctx, request, transcriptionsSuffix)
 }
 
-// CreateTranslation calls the translations endpoint with the given request.
+// Translate calls the translations endpoint with the given request.
 //
 // Returns the translated text in the response_format specified in the request.
-func (c *Client) CreateTranslation(
+func (c *Client) Translate(
 	ctx context.Context,
 	request AudioRequest,
 ) (AudioResponse, error) {

@@ -24,7 +24,7 @@ func run(
 	if err != nil {
 		return err
 	}
-	response, err := client.CreateTranscription(ctx, groq.AudioRequest{
+	response, err := client.Transcribe(ctx, groq.AudioRequest{
 		Model:    groq.ModelWhisperLargeV3,
 		FilePath: "./The Roman Emperors who went insane Gregory Aldrete and Lex Fridman.mp3",
 	})
