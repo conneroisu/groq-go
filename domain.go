@@ -132,7 +132,9 @@ type (
 		// completion request.
 		FrequencyPenalty float32 `json:"frequency_penalty,omitempty"`
 		// LogitBias is must be a token id string (specified by their
-		// token ID in the tokenizer), not a word string. incorrect: `"logit_bias":{ "You": 6}`, correct: `"logit_bias":{"1639": 6}` refs: https://platform.openai.com/docs/api-reference/chat/create#chat/create-logit_bias
+		// token ID in the tokenizer), not a word string.
+		// incorrect: `"logit_bias":{ "You": 6}`, correct: `"logit_bias":{"1639": 6}`
+		// refs: https://platform.openai.com/docs/api-reference/chat/create#chat/create-logit_bias
 		LogitBias map[string]int `json:"logit_bias,omitempty"`
 		// LogProbs indicates whether to return log probabilities of the
 		// output tokens or not. If true, returns the log probabilities

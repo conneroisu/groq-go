@@ -1,6 +1,7 @@
 package groq
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -107,6 +108,108 @@ func (c *Client) ChatCompletionJSON(
 			response.ID,
 			err,
 		)
+	}
+	return
+}
+
+// Moderate performs a moderation api call over a string.
+// Input can be an array or slice but a string will reduce the complexity.
+func (c *Client) Moderate(
+	ctx context.Context,
+	messages []ChatCompletionMessage,
+	model ModerationModel,
+) (response []Moderation, err error) {
+	req, err := builders.NewRequest(
+		ctx,
+		c.header,
+		http.MethodPost,
+		c.fullURL(chatCompletionsSuffix, withModel(model)),
+		builders.WithBody(&struct {
+			Messages []ChatCompletionMessage `json:"messages"`
+			Model    ModerationModel         `json:"model,omitempty"`
+		}{
+			Messages: messages,
+			Model:    model,
+		}),
+	)
+	if err != nil {
+		return
+	}
+	var resp ChatCompletionResponse
+	err = c.sendRequest(req, &resp)
+	if err != nil {
+		return
+	}
+	if strings.Contains(resp.Choices[0].Message.Content, "unsafe") {
+		split := strings.Split(
+			strings.Split(resp.Choices[0].Message.Content, "\n")[1],
+			",",
+		)
+		for _, s := range split {
+			response = append(
+				response,
+				sectionMap[strings.TrimSpace(s)],
+			)
+		}
+	}
+	return
+}
+
+// CreateTranscription calls the transcriptions endpoint with the given request.
+//
+// Returns transcribed text in the response_format specified in the request.
+func (c *Client) CreateTranscription(
+	ctx context.Context,
+	request AudioRequest,
+) (AudioResponse, error) {
+	return c.callAudioAPI(ctx, request, transcriptionsSuffix)
+}
+
+// CreateTranslation calls the translations endpoint with the given request.
+//
+// Returns the translated text in the response_format specified in the request.
+func (c *Client) CreateTranslation(
+	ctx context.Context,
+	request AudioRequest,
+) (AudioResponse, error) {
+	return c.callAudioAPI(ctx, request, translationsSuffix)
+}
+
+// callAudioAPI calls the audio API with the given request.
+//
+// Currently supports both the transcription and translation APIs.
+func (c *Client) callAudioAPI(
+	ctx context.Context,
+	request AudioRequest,
+	endpointSuffix endpoint,
+) (response AudioResponse, err error) {
+	var formBody bytes.Buffer
+	c.requestFormBuilder = builders.NewFormBuilder(&formBody)
+	err = AudioMultipartForm(request, c.requestFormBuilder)
+	if err != nil {
+		return AudioResponse{}, err
+	}
+	req, err := builders.NewRequest(
+		ctx,
+		c.header,
+		http.MethodPost,
+		c.fullURL(endpointSuffix, withModel(request.Model)),
+		builders.WithBody(&formBody),
+		builders.WithContentType(c.requestFormBuilder.FormDataContentType()),
+	)
+	if err != nil {
+		return AudioResponse{}, err
+	}
+
+	if request.hasJSONResponse() {
+		err = c.sendRequest(req, &response)
+	} else {
+		var textResponse audioTextResponse
+		err = c.sendRequest(req, &textResponse)
+		response = textResponse.toAudioResponse()
+	}
+	if err != nil {
+		return AudioResponse{}, err
 	}
 	return
 }
