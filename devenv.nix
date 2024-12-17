@@ -9,8 +9,6 @@
     inherit (pkgs.stdenv) system;
   };
 in {
-  # https://devenv.sh/basics/
-  env.GREET = "devenv";
 
   languages.go.enable = true;
   languages.nix.enable = true;
@@ -41,8 +39,8 @@ in {
   # services.postgres.enable = true;
 
   # https://devenv.sh/scripts/
-  scripts.test.exec = ''
-    go test -v ./...
+  scripts.generate.exec = ''
+    go generate -v ./...
   '';
 
   enterShell = ''
