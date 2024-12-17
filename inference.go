@@ -185,7 +185,7 @@ func (c *Client) callAudioAPI(
 ) (response AudioResponse, err error) {
 	var formBody bytes.Buffer
 	c.requestFormBuilder = builders.NewFormBuilder(&formBody)
-	err = AudioMultipartForm(request, c.requestFormBuilder)
+	err = audioMultipartForm(request, c.requestFormBuilder)
 	if err != nil {
 		return AudioResponse{}, err
 	}
