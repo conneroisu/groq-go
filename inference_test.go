@@ -90,7 +90,7 @@ func TestAudioWithFailingFormBuilder(t *testing.T) {
 	mockBuilder.mockCreateFormFile = func(string, *os.File) error {
 		return mockFailedErr
 	}
-	err := AudioMultipartForm(req, mockBuilder)
+	err := audioMultipartForm(req, mockBuilder)
 	a.ErrorIs(
 		err,
 		mockFailedErr,
@@ -123,7 +123,7 @@ func TestAudioWithFailingFormBuilder(t *testing.T) {
 			failingField,
 		)
 
-		err = AudioMultipartForm(req, mockBuilder)
+		err = audioMultipartForm(req, mockBuilder)
 		a.Error(
 			err,
 			mockFailedErr,
@@ -225,7 +225,7 @@ func TestCreateFileField(t *testing.T) {
 				return mockFailedErr
 			},
 		}
-		err := AudioMultipartForm(req, mockBuilder)
+		err := audioMultipartForm(req, mockBuilder)
 		a.ErrorIs(
 			err,
 			mockFailedErr,
@@ -247,7 +247,7 @@ func TestCreateFileField(t *testing.T) {
 			},
 		}
 
-		err := AudioMultipartForm(req, mockBuilder)
+		err := audioMultipartForm(req, mockBuilder)
 		a.ErrorIs(
 			err,
 			mockFailedErr,
@@ -261,7 +261,7 @@ func TestCreateFileField(t *testing.T) {
 			FilePath: "non_existing_file.wav",
 		}
 		mockBuilder := builders.NewFormBuilder(&test.FailingErrorBuffer{})
-		err := AudioMultipartForm(req, mockBuilder)
+		err := audioMultipartForm(req, mockBuilder)
 		a.Error(
 			err,
 			"createFileField using file should return error when open file fails",
