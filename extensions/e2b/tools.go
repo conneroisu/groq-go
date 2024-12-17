@@ -69,7 +69,7 @@ var (
 			}
 			return groq.ChatCompletionMessage{
 				Content: fmt.Sprintf("Created directory %s.", params.Path),
-				Role:    groq.ChatMessageRoleFunction,
+				Role:    groq.RoleFunction,
 				Name:    "mkdir",
 			}, nil
 		},
@@ -88,7 +88,7 @@ var (
 			}
 			return groq.ChatCompletionMessage{
 				Content: string(jsonBytes),
-				Role:    groq.ChatMessageRoleFunction,
+				Role:    groq.RoleFunction,
 				Name:    "ls",
 			}, nil
 		},
@@ -103,7 +103,7 @@ var (
 			}
 			return groq.ChatCompletionMessage{
 				Content: string(content),
-				Role:    groq.ChatMessageRoleFunction,
+				Role:    groq.RoleFunction,
 				Name:    "read",
 			}, nil
 		},
@@ -118,7 +118,7 @@ var (
 			}
 			return groq.ChatCompletionMessage{
 				Content: fmt.Sprintf("Successfully wrote to file %s.", params.Path),
-				Role:    groq.ChatMessageRoleFunction,
+				Role:    groq.RoleFunction,
 				Name:    "write",
 			}, nil
 		},
@@ -165,7 +165,7 @@ var (
 			<-proc.Done()
 			return groq.ChatCompletionMessage{
 				Content: buf.String(),
-				Role:    groq.ChatMessageRoleFunction,
+				Role:    groq.RoleFunction,
 				Name:    "startProcess",
 			}, nil
 		},
@@ -309,7 +309,7 @@ func (s *Sandbox) runTool(
 	if err != nil {
 		return groq.ChatCompletionMessage{
 			Content: err.Error(),
-			Role:    groq.ChatMessageRoleFunction,
+			Role:    groq.RoleFunction,
 			Name:    tool.Function.Name,
 		}, err
 	}
@@ -317,7 +317,7 @@ func (s *Sandbox) runTool(
 	if err != nil {
 		return groq.ChatCompletionMessage{
 			Content: fmt.Sprintf("Error running tool %s: %s", tool.Function.Name, err.Error()),
-			Role:    groq.ChatMessageRoleFunction,
+			Role:    groq.RoleFunction,
 			Name:    tool.Function.Name,
 		}, err
 	}

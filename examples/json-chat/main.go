@@ -10,7 +10,6 @@ import (
 	"os"
 
 	"github.com/conneroisu/groq-go"
-	"github.com/conneroisu/groq-go/pkg/models"
 )
 
 func main() {
@@ -34,11 +33,11 @@ func run(
 		return err
 	}
 	resp := &Responses{}
-	err = client.CreateChatCompletionJSON(ctx, groq.ChatCompletionRequest{
-		Model: models.ModelLlama3Groq70B8192ToolUsePreview,
+	err = client.ChatCompletionJSON(ctx, groq.ChatCompletionRequest{
+		Model: groq.ModelLlama3Groq70B8192ToolUsePreview,
 		Messages: []groq.ChatCompletionMessage{
 			{
-				Role:    groq.ChatMessageRoleUser,
+				Role:    groq.RoleUser,
 				Content: "Create 5 short poems in json format with title and text.",
 			},
 		},

@@ -7,7 +7,6 @@ import (
 
 	"github.com/conneroisu/groq-go"
 	"github.com/conneroisu/groq-go/extensions/toolhouse"
-	"github.com/conneroisu/groq-go/pkg/models"
 	"github.com/conneroisu/groq-go/pkg/test"
 	"github.com/stretchr/testify/assert"
 )
@@ -30,14 +29,14 @@ func TestUnitExtension(t *testing.T) {
 	a.NoError(err)
 	history := []groq.ChatCompletionMessage{
 		{
-			Role:    groq.ChatMessageRoleUser,
+			Role:    groq.RoleUser,
 			Content: "Write a python function to print the first 10 prime numbers containing the number 3 then respond with the answer. DO NOT GUESS WHAT THE OUTPUT SHOULD BE. MAKE SURE TO CALL THE TOOL GIVEN.",
 		},
 	}
 	tooling, err := ext.GetTools(ctx)
 	a.NoError(err)
-	re, err := client.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
-		Model:      models.ModelLlama3Groq70B8192ToolUsePreview,
+	re, err := client.ChatCompletion(ctx, groq.ChatCompletionRequest{
+		Model:      groq.ModelLlama3Groq70B8192ToolUsePreview,
 		Messages:   history,
 		Tools:      tooling,
 		ToolChoice: "required",
@@ -47,8 +46,8 @@ func TestUnitExtension(t *testing.T) {
 	r, err := ext.Run(ctx, re)
 	a.NoError(err)
 	history = append(history, r...)
-	finalr, err := client.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
-		Model:     models.ModelLlama3Groq70B8192ToolUsePreview,
+	finalr, err := client.ChatCompletion(ctx, groq.ChatCompletionRequest{
+		Model:     groq.ModelLlama3Groq70B8192ToolUsePreview,
 		Messages:  history,
 		MaxTokens: 2000,
 	})

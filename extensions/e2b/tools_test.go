@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/conneroisu/groq-go"
-	"github.com/conneroisu/groq-go/pkg/models"
 	"github.com/conneroisu/groq-go/pkg/test"
 	"github.com/stretchr/testify/assert"
 )
@@ -36,11 +35,11 @@ func TestSandboxTooling(t *testing.T) {
 	a.NoError(err, "NewClient error")
 	tools := sb.GetTools()
 	// ask the ai to create a file with the data "Hello World!" in file "hello.txt"
-	response, err := client.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
-		Model: models.ModelLlama3Groq70B8192ToolUsePreview,
+	response, err := client.ChatCompletion(ctx, groq.ChatCompletionRequest{
+		Model: groq.ModelLlama3Groq70B8192ToolUsePreview,
 		Messages: []groq.ChatCompletionMessage{
 			{
-				Role: groq.ChatMessageRoleUser,
+				Role: groq.RoleUser,
 				Content: `
 Create a file called 'hello.txt' with the data:
 <file name="hello.txt">

@@ -8,7 +8,6 @@ import (
 	"os"
 
 	"github.com/conneroisu/groq-go"
-	"github.com/conneroisu/groq-go/pkg/models"
 )
 
 func main() {
@@ -25,8 +24,8 @@ func run(
 	if err != nil {
 		return err
 	}
-	response, err := client.CreateTranslation(ctx, groq.AudioRequest{
-		Model:    models.ModelWhisperLargeV3,
+	response, err := client.Translate(ctx, groq.AudioRequest{
+		Model:    groq.ModelWhisperLargeV3,
 		FilePath: "./house-speaks-mandarin.mp3",
 		Prompt:   "english and mandarin",
 	})

@@ -17,11 +17,10 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/conneroisu/groq-go"
 	"github.com/conneroisu/groq-go/pkg/groqerr"
-	"github.com/conneroisu/groq-go/pkg/models"
-	"github.com/conneroisu/groq-go/pkg/moderation"
 	"github.com/conneroisu/groq-go/pkg/test"
 	"github.com/stretchr/testify/assert"
 )
@@ -35,13 +34,13 @@ func TestTestServer(t *testing.T) {
 	ctx := context.Background()
 	client, err := groq.NewClient(os.Getenv("GROQ_KEY"))
 	a.NoError(err, "NewClient error")
-	strm, err := client.CreateChatCompletionStream(
+	strm, err := client.ChatCompletionStream(
 		ctx,
 		groq.ChatCompletionRequest{
-			Model: models.ModelLlama38B8192,
+			Model: groq.ModelLlama38B8192,
 			Messages: []groq.ChatCompletionMessage{
 				{
-					Role: groq.ChatMessageRoleUser,
+					Role: groq.RoleUser,
 					Content: fmt.Sprintf(`
 problem: %d
 You have a six-sided die that you roll once. Let $R{i}$ denote the event that the roll is $i$. Let $G{j}$ denote the event that the roll is greater than $j$. Let $E$ denote the event that the roll of the die is even-numbered.
@@ -80,18 +79,17 @@ func TestModerate(t *testing.T) {
 	mod, err := client.Moderate(context.Background(),
 		[]groq.ChatCompletionMessage{
 			{
-				Role:    groq.ChatMessageRoleUser,
+				Role:    groq.RoleUser,
 				Content: "I want to kill them.",
 			},
 		},
-		models.ModelLlamaGuard38B,
+		groq.ModelLlamaGuard38B,
 	)
 	a := assert.New(t)
 	a.NoError(err, "Moderation error")
-	a.Equal(true, mod.Flagged)
 	a.Contains(
-		mod.Categories,
-		moderation.CategoryViolentCrimes,
+		mod,
+		groq.ModerationViolentCrimes,
 	)
 }
 
@@ -101,11 +99,11 @@ func handleModerationEndpoint(w http.ResponseWriter, r *http.Request) {
 		ID:      "chatcmpl-123",
 		Object:  "chat.completion",
 		Created: 1693721698,
-		Model:   models.ChatModel(models.ModelLlamaGuard38B),
+		Model:   groq.ChatModel(groq.ModelLlamaGuard38B),
 		Choices: []groq.ChatCompletionChoice{
 			{
 				Message: groq.ChatCompletionMessage{
-					Role:    groq.ChatMessageRoleAssistant,
+					Role:    groq.RoleAssistant,
 					Content: "unsafe\nS1,S2",
 				},
 				FinishReason: "stop",
@@ -132,6 +130,7 @@ func handleModerationEndpoint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
 func setupGroqTestServer() (
 	client *groq.Client,
 	server *test.ServerTest,
@@ -150,6 +149,7 @@ func setupGroqTestServer() (
 	}
 	return
 }
+
 func TestEmptyKeyClientCreation(t *testing.T) {
 	client, err := groq.NewClient("")
 	a := assert.New(t)
@@ -157,8 +157,8 @@ func TestEmptyKeyClientCreation(t *testing.T) {
 	a.Nil(client, "NewClient should return nil")
 }
 
-// TestCreateChatCompletionStream tests the CreateChatCompletionStream method.
-func TestCreateChatCompletionStream(t *testing.T) {
+// TestChatCompletionStream tests the ChatCompletionStream method.
+func TestChatCompletionStream(t *testing.T) {
 	a := assert.New(t)
 	client, server, teardown := setupGroqTestServer()
 	defer teardown()
@@ -180,14 +180,14 @@ func TestCreateChatCompletionStream(t *testing.T) {
 			a.NoError(err, "Write error")
 		},
 	)
-	stream, err := client.CreateChatCompletionStream(
+	stream, err := client.ChatCompletionStream(
 		context.Background(),
 		groq.ChatCompletionRequest{
 			MaxTokens: 5,
-			Model:     models.ModelLlama38B8192,
+			Model:     groq.ModelLlama38B8192,
 			Messages: []groq.ChatCompletionMessage{
 				{
-					Role:    groq.ChatMessageRoleUser,
+					Role:    groq.RoleUser,
 					Content: "Hello!",
 				},
 			},
@@ -201,7 +201,7 @@ func TestCreateChatCompletionStream(t *testing.T) {
 			ID:                "1",
 			Object:            "completion",
 			Created:           1598069254,
-			Model:             models.ModelLlama38B8192,
+			Model:             groq.ModelLlama38B8192,
 			SystemFingerprint: "fp_d9767fc5b9",
 			Choices: []groq.ChatCompletionStreamChoice{
 				{
@@ -216,7 +216,7 @@ func TestCreateChatCompletionStream(t *testing.T) {
 			ID:                "2",
 			Object:            "completion",
 			Created:           1598069255,
-			Model:             models.ModelLlama38B8192,
+			Model:             groq.ModelLlama38B8192,
 			SystemFingerprint: "fp_d9767fc5b9",
 			Choices: []groq.ChatCompletionStreamChoice{
 				{
@@ -264,9 +264,9 @@ func TestCreateChatCompletionStream(t *testing.T) {
 	}
 }
 
-// TestCreateChatCompletionStreamError tests the CreateChatCompletionStream function with an error
+// TestChatCompletionStreamError tests the ChatCompletionStream function with an error
 // in the response.
-func TestCreateChatCompletionStreamError(t *testing.T) {
+func TestChatCompletionStreamError(t *testing.T) {
 	a := assert.New(t)
 	client, server, teardown := setupGroqTestServer()
 	defer teardown()
@@ -293,14 +293,14 @@ func TestCreateChatCompletionStreamError(t *testing.T) {
 			a.NoError(err, "Write error")
 		},
 	)
-	stream, err := client.CreateChatCompletionStream(
+	stream, err := client.ChatCompletionStream(
 		context.Background(),
 		groq.ChatCompletionRequest{
 			MaxTokens: 5,
-			Model:     models.ModelLlama38B8192,
+			Model:     groq.ModelLlama38B8192,
 			Messages: []groq.ChatCompletionMessage{
 				{
-					Role:    groq.ChatMessageRoleUser,
+					Role:    groq.RoleUser,
 					Content: "Hello!",
 				},
 			},
@@ -317,7 +317,7 @@ func TestCreateChatCompletionStreamError(t *testing.T) {
 	}
 	t.Logf("%+v\n", apiErr)
 }
-func TestCreateChatCompletionStreamWithHeaders(t *testing.T) {
+func TestChatCompletionStreamWithHeaders(t *testing.T) {
 	a := assert.New(t)
 	client, server, teardown := setupGroqTestServer()
 	defer teardown()
@@ -337,14 +337,14 @@ func TestCreateChatCompletionStreamWithHeaders(t *testing.T) {
 			a.NoError(err, "Write error")
 		},
 	)
-	stream, err := client.CreateChatCompletionStream(
+	stream, err := client.ChatCompletionStream(
 		context.Background(),
 		groq.ChatCompletionRequest{
 			MaxTokens: 5,
-			Model:     models.ModelLlama38B8192,
+			Model:     groq.ModelLlama38B8192,
 			Messages: []groq.ChatCompletionMessage{
 				{
-					Role:    groq.ChatMessageRoleUser,
+					Role:    groq.RoleUser,
 					Content: "Hello!",
 				},
 			},
@@ -358,7 +358,7 @@ func TestCreateChatCompletionStreamWithHeaders(t *testing.T) {
 		t.Errorf("expected %s to be %s", xCustomHeaderValue, value)
 	}
 }
-func TestCreateChatCompletionStreamWithRatelimitHeaders(t *testing.T) {
+func TestChatCompletionStreamWithRatelimitHeaders(t *testing.T) {
 	client, server, teardown := setupGroqTestServer()
 	a := assert.New(t)
 	rateLimitHeaders := map[string]interface{}{
@@ -391,14 +391,14 @@ func TestCreateChatCompletionStreamWithRatelimitHeaders(t *testing.T) {
 			a.NoError(err, "Write error")
 		},
 	)
-	stream, err := client.CreateChatCompletionStream(
+	stream, err := client.ChatCompletionStream(
 		context.Background(),
 		groq.ChatCompletionRequest{
 			MaxTokens: 5,
-			Model:     models.ModelLlama38B8192,
+			Model:     groq.ModelLlama38B8192,
 			Messages: []groq.ChatCompletionMessage{
 				{
-					Role:    groq.ChatMessageRoleUser,
+					Role:    groq.RoleUser,
 					Content: "Hello!",
 				},
 			},
@@ -416,21 +416,57 @@ func TestCreateChatCompletionStreamWithRatelimitHeaders(t *testing.T) {
 }
 
 // newRateLimitHeaders creates a new RateLimitHeaders from an http.Header.
-func newRateLimitHeaders(h http.Header) groq.RateLimitHeaders {
+func newRateLimitHeaders(h http.Header) RateLimitHeaders {
 	limitReq, _ := strconv.Atoi(h.Get("x-ratelimit-limit-requests"))
 	limitTokens, _ := strconv.Atoi(h.Get("x-ratelimit-limit-tokens"))
 	remainingReq, _ := strconv.Atoi(h.Get("x-ratelimit-remaining-requests"))
 	remainingTokens, _ := strconv.Atoi(h.Get("x-ratelimit-remaining-tokens"))
-	return groq.RateLimitHeaders{
+	return RateLimitHeaders{
 		LimitRequests:     limitReq,
 		LimitTokens:       limitTokens,
 		RemainingRequests: remainingReq,
 		RemainingTokens:   remainingTokens,
-		ResetRequests:     groq.ResetTime(h.Get("x-ratelimit-reset-requests")),
-		ResetTokens:       groq.ResetTime(h.Get("x-ratelimit-reset-tokens")),
+		ResetRequests:     ResetTime(h.Get("x-ratelimit-reset-requests")),
+		ResetTokens:       ResetTime(h.Get("x-ratelimit-reset-tokens")),
 	}
 }
-func TestCreateChatCompletionStreamErrorWithDataPrefix(t *testing.T) {
+
+// ResetTime is a time.Time wrapper for the rate limit reset time.
+// string
+type ResetTime string
+
+// String returns the string representation of the ResetTime.
+func (r ResetTime) String() string {
+	return string(r)
+}
+
+// Time returns the time.Time representation of the ResetTime.
+func (r ResetTime) Time() time.Time {
+	d, _ := time.ParseDuration(string(r))
+	return time.Now().Add(d)
+}
+
+// RateLimitHeaders struct represents Groq rate limits headers.
+type RateLimitHeaders struct {
+	// LimitRequests is the limit requests of the rate limit
+	// headers.
+	LimitRequests int `json:"x-ratelimit-limit-requests"`
+	// LimitTokens is the limit tokens of the rate limit headers.
+	LimitTokens int `json:"x-ratelimit-limit-tokens"`
+	// RemainingRequests is the remaining requests of the rate
+	// limit headers.
+	RemainingRequests int `json:"x-ratelimit-remaining-requests"`
+	// RemainingTokens is the remaining tokens of the rate limit
+	// headers.
+	RemainingTokens int `json:"x-ratelimit-remaining-tokens"`
+	// ResetRequests is the reset requests of the rate limit
+	// headers.
+	ResetRequests ResetTime `json:"x-ratelimit-reset-requests"`
+	// ResetTokens is the reset tokens of the rate limit headers.
+	ResetTokens ResetTime `json:"x-ratelimit-reset-tokens"`
+}
+
+func TestChatCompletionStreamErrorWithDataPrefix(t *testing.T) {
 	a := assert.New(t)
 	client, server, teardown := setupGroqTestServer()
 	defer teardown()
@@ -447,14 +483,14 @@ func TestCreateChatCompletionStreamErrorWithDataPrefix(t *testing.T) {
 			a.NoError(err, "Write error")
 		},
 	)
-	stream, err := client.CreateChatCompletionStream(
+	stream, err := client.ChatCompletionStream(
 		context.Background(),
 		groq.ChatCompletionRequest{
 			MaxTokens: 5,
-			Model:     models.ModelLlama38B8192,
+			Model:     groq.ModelLlama38B8192,
 			Messages: []groq.ChatCompletionMessage{
 				{
-					Role:    groq.ChatMessageRoleUser,
+					Role:    groq.RoleUser,
 					Content: "Hello!",
 				},
 			},
@@ -471,7 +507,7 @@ func TestCreateChatCompletionStreamErrorWithDataPrefix(t *testing.T) {
 	}
 	t.Logf("%+v\n", apiErr)
 }
-func TestCreateChatCompletionStreamRateLimitError(t *testing.T) {
+func TestChatCompletionStreamRateLimitError(t *testing.T) {
 	a := assert.New(t)
 	client, server, teardown := setupGroqTestServer()
 	defer teardown()
@@ -490,14 +526,14 @@ func TestCreateChatCompletionStreamRateLimitError(t *testing.T) {
 			a.NoError(err, "Write error")
 		},
 	)
-	_, err := client.CreateChatCompletionStream(
+	_, err := client.ChatCompletionStream(
 		context.Background(),
 		groq.ChatCompletionRequest{
 			MaxTokens: 5,
-			Model:     models.ModelLlama38B8192,
+			Model:     groq.ModelLlama38B8192,
 			Messages: []groq.ChatCompletionMessage{
 				{
-					Role:    groq.ChatMessageRoleUser,
+					Role:    groq.RoleUser,
 					Content: "Hello!",
 				},
 			},
@@ -507,12 +543,12 @@ func TestCreateChatCompletionStreamRateLimitError(t *testing.T) {
 	var apiErr *groqerr.APIError
 	if !errors.As(err, &apiErr) {
 		t.Errorf(
-			"TestCreateChatCompletionStreamRateLimitError did not return APIError",
+			"TestChatCompletionStreamRateLimitError did not return APIError",
 		)
 	}
 	t.Logf("%+v\n", apiErr)
 }
-func TestCreateChatCompletionStreamStreamOptions(t *testing.T) {
+func TestChatCompletionStreamStreamOptions(t *testing.T) {
 	a := assert.New(t)
 	client, server, teardown := setupGroqTestServer()
 	defer teardown()
@@ -533,14 +569,14 @@ func TestCreateChatCompletionStreamStreamOptions(t *testing.T) {
 			a.NoError(err, "Write error")
 		},
 	)
-	stream, err := client.CreateChatCompletionStream(
+	stream, err := client.ChatCompletionStream(
 		context.Background(),
 		groq.ChatCompletionRequest{
 			MaxTokens: 5,
-			Model:     models.ModelLlama38B8192,
+			Model:     groq.ModelLlama38B8192,
 			Messages: []groq.ChatCompletionMessage{
 				{
-					Role:    groq.ChatMessageRoleUser,
+					Role:    groq.RoleUser,
 					Content: "Hello!",
 				},
 			},
@@ -557,7 +593,7 @@ func TestCreateChatCompletionStreamStreamOptions(t *testing.T) {
 			ID:                "1",
 			Object:            "completion",
 			Created:           1598069254,
-			Model:             models.ModelLlama38B8192,
+			Model:             groq.ModelLlama38B8192,
 			SystemFingerprint: "fp_d9767fc5b9",
 			Choices: []groq.ChatCompletionStreamChoice{
 				{
@@ -572,7 +608,7 @@ func TestCreateChatCompletionStreamStreamOptions(t *testing.T) {
 			ID:                "2",
 			Object:            "completion",
 			Created:           1598069255,
-			Model:             models.ModelLlama38B8192,
+			Model:             groq.ModelLlama38B8192,
 			SystemFingerprint: "fp_d9767fc5b9",
 			Choices: []groq.ChatCompletionStreamChoice{
 				{
@@ -587,7 +623,7 @@ func TestCreateChatCompletionStreamStreamOptions(t *testing.T) {
 			ID:                "3",
 			Object:            "completion",
 			Created:           1598069256,
-			Model:             models.ModelLlama38B8192,
+			Model:             groq.ModelLlama38B8192,
 			SystemFingerprint: "fp_d9767fc5b9",
 			Choices:           []groq.ChatCompletionStreamChoice{},
 			Usage: &groq.Usage{
@@ -698,11 +734,11 @@ func TestAudio(t *testing.T) {
 	}{
 		{
 			"transcribe",
-			client.CreateTranscription,
+			client.Transcribe,
 		},
 		{
 			"translate",
-			client.CreateTranslation,
+			client.Translate,
 		},
 	}
 	ctx := context.Background()
@@ -715,7 +751,7 @@ func TestAudio(t *testing.T) {
 			test.CreateTestFile(t, path)
 			req := groq.AudioRequest{
 				FilePath: path,
-				Model:    models.ModelWhisperLargeV3,
+				Model:    groq.ModelWhisperLargeV3,
 			}
 			_, err := tc.createFn(ctx, req)
 			a.NoError(err, "audio API error")
@@ -724,7 +760,7 @@ func TestAudio(t *testing.T) {
 			req := groq.AudioRequest{
 				FilePath: "fake.webm",
 				Reader:   bytes.NewBuffer([]byte(`some webm binary data`)),
-				Model:    models.ModelWhisperLargeV3,
+				Model:    groq.ModelWhisperLargeV3,
 			}
 			_, err := tc.createFn(ctx, req)
 			a.NoError(err, "audio API error")
@@ -742,11 +778,11 @@ func TestAudioWithOptionalArgs(t *testing.T) {
 	}{
 		{
 			"transcribe",
-			client.CreateTranscription,
+			client.Transcribe,
 		},
 		{
 			"translate",
-			client.CreateTranslation,
+			client.Translate,
 		},
 	}
 	ctx := context.Background()
@@ -759,7 +795,7 @@ func TestAudioWithOptionalArgs(t *testing.T) {
 			test.CreateTestFile(t, path)
 			req := groq.AudioRequest{
 				FilePath:    path,
-				Model:       models.ModelWhisperLargeV3,
+				Model:       groq.ModelWhisperLargeV3,
 				Prompt:      "用简体中文",
 				Temperature: 0.5,
 				Language:    "zh",

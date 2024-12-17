@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/conneroisu/groq-go"
-	"github.com/conneroisu/groq-go/pkg/models"
 )
 
 var (
@@ -73,13 +72,13 @@ func input(
 		break
 	}
 	history = append(history, groq.ChatCompletionMessage{
-		Role:    groq.ChatMessageRoleUser,
+		Role:    groq.RoleUser,
 		Content: strings.Join(lines, "\n"),
 	})
-	output, err := client.CreateChatCompletionStream(
+	output, err := client.ChatCompletionStream(
 		ctx,
 		groq.ChatCompletionRequest{
-			Model:     models.ModelGemma29BIt,
+			Model:     groq.ModelGemma29BIt,
 			Messages:  history,
 			MaxTokens: 2000,
 		},

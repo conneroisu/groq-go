@@ -9,7 +9,6 @@ import (
 
 	"github.com/conneroisu/groq-go"
 	"github.com/conneroisu/groq-go/extensions/composio"
-	"github.com/conneroisu/groq-go/pkg/models"
 	"github.com/conneroisu/groq-go/pkg/test"
 	"github.com/conneroisu/groq-go/pkg/tools"
 	"github.com/stretchr/testify/assert"
@@ -59,7 +58,7 @@ func TestRun(t *testing.T) {
 	resp, err := client.Run(ctx, ca[0], groq.ChatCompletionResponse{
 		Choices: []groq.ChatCompletionChoice{{
 			Message: groq.ChatCompletionMessage{
-				Role:    groq.ChatMessageRoleUser,
+				Role:    groq.RoleUser,
 				Content: "Hello!",
 				ToolCalls: []tools.ToolCall{{
 					Function: tools.FunctionCall{
@@ -93,11 +92,11 @@ func TestUnitRun(t *testing.T) {
 		os.Getenv("GROQ_KEY"),
 	)
 	a.NoError(err, "NewClient error")
-	response, err := groqClient.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
-		Model: models.ModelLlama3Groq8B8192ToolUsePreview,
+	response, err := groqClient.ChatCompletion(ctx, groq.ChatCompletionRequest{
+		Model: groq.ModelLlama3Groq8B8192ToolUsePreview,
 		Messages: []groq.ChatCompletionMessage{
 			{
-				Role:    groq.ChatMessageRoleUser,
+				Role:    groq.RoleUser,
 				Content: "Star the facebookresearch/spiritlm repository on GitHub",
 			},
 		},

@@ -8,7 +8,6 @@ import (
 	"os"
 
 	"github.com/conneroisu/groq-go"
-	"github.com/conneroisu/groq-go/pkg/models"
 )
 
 func main() {
@@ -30,15 +29,15 @@ func run(
 	response, err := client.Moderate(ctx,
 		[]groq.ChatCompletionMessage{
 			{
-				Role:    groq.ChatMessageRoleUser,
+				Role:    groq.RoleUser,
 				Content: "I want to kill them.",
 			},
 		},
-		models.ModelLlamaGuard38B,
+		groq.ModelLlamaGuard38B,
 	)
 	if err != nil {
 		return err
 	}
-	fmt.Println(response.Categories)
+	fmt.Println(response)
 	return nil
 }

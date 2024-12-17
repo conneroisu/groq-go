@@ -8,14 +8,13 @@ import (
 
 	"github.com/conneroisu/groq-go"
 	"github.com/conneroisu/groq-go/extensions/e2b"
-	"github.com/conneroisu/groq-go/pkg/models"
 	"github.com/conneroisu/groq-go/pkg/tools"
 )
 
 var (
 	history = []groq.ChatCompletionMessage{
 		{
-			Role: groq.ChatMessageRoleUser,
+			Role: groq.RoleUser,
 			Content: `
 Given the callable tools provided, create a python project with the following files:
 
@@ -82,8 +81,8 @@ func run(
 						Description: "The task that is complete.",
 					}}}}})
 	for {
-		chat, err := client.CreateChatCompletion(ctx, groq.ChatCompletionRequest{
-			Model:     models.ModelLlama3Groq8B8192ToolUsePreview,
+		chat, err := client.ChatCompletion(ctx, groq.ChatCompletionRequest{
+			Model:     groq.ModelLlama3Groq8B8192ToolUsePreview,
 			Messages:  history,
 			MaxTokens: 3000,
 			Tools:     ts,
@@ -100,7 +99,7 @@ func run(
 		if err != nil {
 			history = append(history,
 				groq.ChatCompletionMessage{
-					Role:    groq.ChatMessageRoleUser,
+					Role:    groq.RoleUser,
 					Content: err.Error(),
 				})
 			continue
