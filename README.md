@@ -91,7 +91,6 @@ API Documentation: https://console.groq.com/docs/quickstart
 
 - [Constants](<#constants>)
 - [Variables](<#variables>)
-- [func AudioMultipartForm\(request AudioRequest, b builders.FormBuilder\) error](<#AudioMultipartForm>)
 - [type AudioModel](<#AudioModel>)
 - [type AudioRequest](<#AudioRequest>)
 - [type AudioResponse](<#AudioResponse>)
@@ -118,9 +117,9 @@ API Documentation: https://console.groq.com/docs/quickstart
   - [func \(c \*Client\) ChatCompletion\(ctx context.Context, request ChatCompletionRequest\) \(response ChatCompletionResponse, err error\)](<#Client.ChatCompletion>)
   - [func \(c \*Client\) ChatCompletionJSON\(ctx context.Context, request ChatCompletionRequest, output any\) \(err error\)](<#Client.ChatCompletionJSON>)
   - [func \(c \*Client\) ChatCompletionStream\(ctx context.Context, request ChatCompletionRequest\) \(stream \*ChatCompletionStream, err error\)](<#Client.ChatCompletionStream>)
-  - [func \(c \*Client\) CreateTranscription\(ctx context.Context, request AudioRequest\) \(AudioResponse, error\)](<#Client.CreateTranscription>)
-  - [func \(c \*Client\) CreateTranslation\(ctx context.Context, request AudioRequest\) \(AudioResponse, error\)](<#Client.CreateTranslation>)
-  - [func \(c \*Client\) Moderate\(ctx context.Context, messages \[\]ChatCompletionMessage, model ModerationModel\) \(response Moderation, err error\)](<#Client.Moderate>)
+  - [func \(c \*Client\) Moderate\(ctx context.Context, messages \[\]ChatCompletionMessage, model ModerationModel\) \(response \[\]Moderation, err error\)](<#Client.Moderate>)
+  - [func \(c \*Client\) Transcribe\(ctx context.Context, request AudioRequest\) \(AudioResponse, error\)](<#Client.Transcribe>)
+  - [func \(c \*Client\) Translate\(ctx context.Context, request AudioRequest\) \(AudioResponse, error\)](<#Client.Translate>)
 - [type FinishReason](<#FinishReason>)
   - [func \(r FinishReason\) MarshalJSON\(\) \(\[\]byte, error\)](<#FinishReason.MarshalJSON>)
 - [type Format](<#Format>)
@@ -134,10 +133,6 @@ API Documentation: https://console.groq.com/docs/quickstart
   - [func WithClient\(client \*http.Client\) Opts](<#WithClient>)
   - [func WithLogger\(logger \*slog.Logger\) Opts](<#WithLogger>)
 - [type PromptAnnotation](<#PromptAnnotation>)
-- [type RateLimitHeaders](<#RateLimitHeaders>)
-- [type ResetTime](<#ResetTime>)
-  - [func \(r ResetTime\) String\(\) string](<#ResetTime.String>)
-  - [func \(r ResetTime\) Time\(\) time.Time](<#ResetTime.Time>)
 - [type Role](<#Role>)
 - [type Segments](<#Segments>)
 - [type StreamOptions](<#StreamOptions>)
@@ -391,15 +386,6 @@ var (
 )
 ```
 
-<a name="AudioMultipartForm"></a>
-## func [AudioMultipartForm](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L625>)
-
-```go
-func AudioMultipartForm(request AudioRequest, b builders.FormBuilder) error
-```
-
-AudioMultipartForm creates a form with audio file contents and the name of the model to use for audio processing.
-
 <a name="AudioModel"></a>
 ## type [AudioModel](<https://github.com/conneroisu/groq-go/blob/main/models.go#L20>)
 
@@ -410,7 +396,7 @@ type AudioModel Model
 ```
 
 <a name="AudioRequest"></a>
-## type [AudioRequest](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L526-L544>)
+## type [AudioRequest](<https://github.com/conneroisu/groq-go/blob/main/types.go#L498-L516>)
 
 AudioRequest represents a request structure for audio API.
 
@@ -437,7 +423,7 @@ type AudioRequest struct {
 ```
 
 <a name="AudioResponse"></a>
-## type [AudioResponse](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L546-L561>)
+## type [AudioResponse](<https://github.com/conneroisu/groq-go/blob/main/types.go#L518-L533>)
 
 AudioResponse represents a response structure for audio API.
 
@@ -461,7 +447,7 @@ type AudioResponse struct {
 ```
 
 <a name="AudioResponse.SetHeader"></a>
-### func \(\*AudioResponse\) [SetHeader](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L608>)
+### func \(\*AudioResponse\) [SetHeader](<https://github.com/conneroisu/groq-go/blob/main/types.go#L580>)
 
 ```go
 func (r *AudioResponse) SetHeader(header http.Header)
@@ -470,7 +456,7 @@ func (r *AudioResponse) SetHeader(header http.Header)
 SetHeader sets the header of the response.
 
 <a name="ChatCompletionChoice"></a>
-## type [ChatCompletionChoice](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L191-L202>)
+## type [ChatCompletionChoice](<https://github.com/conneroisu/groq-go/blob/main/types.go#L192-L203>)
 
 ChatCompletionChoice represents the chat completion choice.
 
@@ -490,7 +476,7 @@ type ChatCompletionChoice struct {
 ```
 
 <a name="ChatCompletionMessage"></a>
-## type [ChatCompletionMessage](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L54-L75>)
+## type [ChatCompletionMessage](<https://github.com/conneroisu/groq-go/blob/main/types.go#L53-L74>)
 
 ChatCompletionMessage represents the chat completion message.
 
@@ -520,7 +506,7 @@ type ChatCompletionMessage struct {
 ```
 
 <a name="ChatCompletionMessage.MarshalJSON"></a>
-### func \(ChatCompletionMessage\) [MarshalJSON](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L362>)
+### func \(ChatCompletionMessage\) [MarshalJSON](<https://github.com/conneroisu/groq-go/blob/main/types.go#L356>)
 
 ```go
 func (m ChatCompletionMessage) MarshalJSON() ([]byte, error)
@@ -531,7 +517,7 @@ MarshalJSON method implements the json.Marshaler interface.
 It exists to allow for the use of the multi\-part content field.
 
 <a name="ChatCompletionMessage.UnmarshalJSON"></a>
-### func \(\*ChatCompletionMessage\) [UnmarshalJSON](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L393>)
+### func \(\*ChatCompletionMessage\) [UnmarshalJSON](<https://github.com/conneroisu/groq-go/blob/main/types.go#L387>)
 
 ```go
 func (m *ChatCompletionMessage) UnmarshalJSON(bs []byte) (err error)
@@ -542,7 +528,7 @@ UnmarshalJSON method implements the json.Unmarshaler interface.
 It exists to allow for the use of the multi\-part content field.
 
 <a name="ChatCompletionRequest"></a>
-## type [ChatCompletionRequest](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L104-L162>)
+## type [ChatCompletionRequest](<https://github.com/conneroisu/groq-go/blob/main/types.go#L103-L163>)
 
 ChatCompletionRequest represents a request structure for the chat completion API.
 
@@ -579,7 +565,9 @@ type ChatCompletionRequest struct {
     // completion request.
     FrequencyPenalty float32 `json:"frequency_penalty,omitempty"`
     // LogitBias is must be a token id string (specified by their
-    // token ID in the tokenizer), not a word string. incorrect: `"logit_bias":{ "You": 6}`, correct: `"logit_bias":{"1639": 6}` refs: https://platform.openai.com/docs/api-reference/chat/create#chat/create-logit_bias
+    // token ID in the tokenizer), not a word string.
+    // incorrect: `"logit_bias":{ "You": 6}`, correct: `"logit_bias":{"1639": 6}`
+    // refs: https://platform.openai.com/docs/api-reference/chat/create#chat/create-logit_bias
     LogitBias map[string]int `json:"logit_bias,omitempty"`
     // LogProbs indicates whether to return log probabilities of the
     // output tokens or not. If true, returns the log probabilities
@@ -609,7 +597,7 @@ type ChatCompletionRequest struct {
 ```
 
 <a name="ChatCompletionResponse"></a>
-## type [ChatCompletionResponse](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L205-L222>)
+## type [ChatCompletionResponse](<https://github.com/conneroisu/groq-go/blob/main/types.go#L206-L223>)
 
 ChatCompletionResponse represents a response structure for chat completion API.
 
@@ -635,7 +623,7 @@ type ChatCompletionResponse struct {
 ```
 
 <a name="ChatCompletionResponse.SetHeader"></a>
-### func \(\*ChatCompletionResponse\) [SetHeader](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L436>)
+### func \(\*ChatCompletionResponse\) [SetHeader](<https://github.com/conneroisu/groq-go/blob/main/types.go#L430>)
 
 ```go
 func (r *ChatCompletionResponse) SetHeader(h http.Header)
@@ -644,7 +632,7 @@ func (r *ChatCompletionResponse) SetHeader(h http.Header)
 SetHeader sets the header of the response.
 
 <a name="ChatCompletionResponseFormat"></a>
-## type [ChatCompletionResponseFormat](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L77-L83>)
+## type [ChatCompletionResponseFormat](<https://github.com/conneroisu/groq-go/blob/main/types.go#L76-L82>)
 
 ChatCompletionResponseFormat is the chat completion response format.
 
@@ -659,7 +647,7 @@ type ChatCompletionResponseFormat struct {
 ```
 
 <a name="ChatCompletionResponseFormatJSONSchema"></a>
-## type [ChatCompletionResponseFormatJSONSchema](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L86-L101>)
+## type [ChatCompletionResponseFormatJSONSchema](<https://github.com/conneroisu/groq-go/blob/main/types.go#L85-L100>)
 
 ChatCompletionResponseFormatJSONSchema is the chat completion response format json schema.
 
@@ -683,7 +671,7 @@ type ChatCompletionResponseFormatJSONSchema struct {
 ```
 
 <a name="ChatCompletionStream"></a>
-## type [ChatCompletionStream](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L297-L299>)
+## type [ChatCompletionStream](<https://github.com/conneroisu/groq-go/blob/main/types.go#L298-L300>)
 
 ChatCompletionStream is a stream of ChatCompletionStreamResponse.
 
@@ -694,7 +682,7 @@ type ChatCompletionStream struct {
 ```
 
 <a name="ChatCompletionStreamChoice"></a>
-## type [ChatCompletionStreamChoice](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L237-L244>)
+## type [ChatCompletionStreamChoice](<https://github.com/conneroisu/groq-go/blob/main/types.go#L238-L245>)
 
 ChatCompletionStreamChoice represents a response structure for chat completion API.
 
@@ -710,7 +698,7 @@ type ChatCompletionStreamChoice struct {
 ```
 
 <a name="ChatCompletionStreamChoiceDelta"></a>
-## type [ChatCompletionStreamChoiceDelta](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L225-L234>)
+## type [ChatCompletionStreamChoiceDelta](<https://github.com/conneroisu/groq-go/blob/main/types.go#L226-L235>)
 
 ChatCompletionStreamChoiceDelta represents a response structure for chat completion API.
 
@@ -728,7 +716,7 @@ type ChatCompletionStreamChoiceDelta struct {
 ```
 
 <a name="ChatCompletionStreamResponse"></a>
-## type [ChatCompletionStreamResponse](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L262-L295>)
+## type [ChatCompletionStreamResponse](<https://github.com/conneroisu/groq-go/blob/main/types.go#L263-L296>)
 
 ChatCompletionStreamResponse represents a response structure for chat completion API.
 
@@ -770,7 +758,7 @@ type ChatCompletionStreamResponse struct {
 ```
 
 <a name="ChatMessageImageURL"></a>
-## type [ChatMessageImageURL](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L37-L42>)
+## type [ChatMessageImageURL](<https://github.com/conneroisu/groq-go/blob/main/types.go#L36-L41>)
 
 ChatMessageImageURL represents the chat message image url.
 
@@ -784,7 +772,7 @@ type ChatMessageImageURL struct {
 ```
 
 <a name="ChatMessagePart"></a>
-## type [ChatMessagePart](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L45-L52>)
+## type [ChatMessagePart](<https://github.com/conneroisu/groq-go/blob/main/types.go#L44-L51>)
 
 ChatMessagePart represents the chat message part of a chat completion message.
 
@@ -800,7 +788,7 @@ type ChatMessagePart struct {
 ```
 
 <a name="ChatMessagePartType"></a>
-## type [ChatMessagePartType](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L27>)
+## type [ChatMessagePartType](<https://github.com/conneroisu/groq-go/blob/main/types.go#L26>)
 
 ChatMessagePartType is the chat message part type.
 
@@ -820,7 +808,7 @@ type ChatModel Model
 ```
 
 <a name="Client"></a>
-## type [Client](<https://github.com/conneroisu/groq-go/blob/main/client.go#L22-L34>)
+## type [Client](<https://github.com/conneroisu/groq-go/blob/main/groq.go#L21-L33>)
 
 Client is a Groq api client.
 
@@ -831,7 +819,7 @@ type Client struct {
 ```
 
 <a name="NewClient"></a>
-### func [NewClient](<https://github.com/conneroisu/groq-go/blob/main/client.go#L55>)
+### func [NewClient](<https://github.com/conneroisu/groq-go/blob/main/groq.go#L54>)
 
 ```go
 func NewClient(groqAPIKey string, opts ...Opts) (*Client, error)
@@ -840,7 +828,7 @@ func NewClient(groqAPIKey string, opts ...Opts) (*Client, error)
 NewClient creates a new Groq client.
 
 <a name="Client.ChatCompletion"></a>
-### func \(\*Client\) [ChatCompletion](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L18-L21>)
+### func \(\*Client\) [ChatCompletion](<https://github.com/conneroisu/groq-go/blob/main/inference.go#L19-L22>)
 
 ```go
 func (c *Client) ChatCompletion(ctx context.Context, request ChatCompletionRequest) (response ChatCompletionResponse, err error)
@@ -849,7 +837,7 @@ func (c *Client) ChatCompletion(ctx context.Context, request ChatCompletionReque
 ChatCompletion method is an API call to create a chat completion.
 
 <a name="Client.ChatCompletionJSON"></a>
-### func \(\*Client\) [ChatCompletionJSON](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L72-L76>)
+### func \(\*Client\) [ChatCompletionJSON](<https://github.com/conneroisu/groq-go/blob/main/inference.go#L73-L77>)
 
 ```go
 func (c *Client) ChatCompletionJSON(ctx context.Context, request ChatCompletionRequest, output any) (err error)
@@ -858,7 +846,7 @@ func (c *Client) ChatCompletionJSON(ctx context.Context, request ChatCompletionR
 ChatCompletionJSON method is an API call to create a chat completion w/ object output.
 
 <a name="Client.ChatCompletionStream"></a>
-### func \(\*Client\) [ChatCompletionStream](<https://github.com/conneroisu/groq-go/blob/main/chat.go#L44-L47>)
+### func \(\*Client\) [ChatCompletionStream](<https://github.com/conneroisu/groq-go/blob/main/inference.go#L45-L48>)
 
 ```go
 func (c *Client) ChatCompletionStream(ctx context.Context, request ChatCompletionRequest) (stream *ChatCompletionStream, err error)
@@ -866,39 +854,39 @@ func (c *Client) ChatCompletionStream(ctx context.Context, request ChatCompletio
 
 ChatCompletionStream method is an API call to create a chat completion w/ streaming support.
 
-<a name="Client.CreateTranscription"></a>
-### func \(\*Client\) [CreateTranscription](<https://github.com/conneroisu/groq-go/blob/main/audio.go#L14-L17>)
-
-```go
-func (c *Client) CreateTranscription(ctx context.Context, request AudioRequest) (AudioResponse, error)
-```
-
-CreateTranscription calls the transcriptions endpoint with the given request.
-
-Returns transcribed text in the response\_format specified in the request.
-
-<a name="Client.CreateTranslation"></a>
-### func \(\*Client\) [CreateTranslation](<https://github.com/conneroisu/groq-go/blob/main/audio.go#L24-L27>)
-
-```go
-func (c *Client) CreateTranslation(ctx context.Context, request AudioRequest) (AudioResponse, error)
-```
-
-CreateTranslation calls the translations endpoint with the given request.
-
-Returns the translated text in the response\_format specified in the request.
-
 <a name="Client.Moderate"></a>
-### func \(\*Client\) [Moderate](<https://github.com/conneroisu/groq-go/blob/main/moderation.go#L14-L18>)
+### func \(\*Client\) [Moderate](<https://github.com/conneroisu/groq-go/blob/main/inference.go#L117-L121>)
 
 ```go
-func (c *Client) Moderate(ctx context.Context, messages []ChatCompletionMessage, model ModerationModel) (response Moderation, err error)
+func (c *Client) Moderate(ctx context.Context, messages []ChatCompletionMessage, model ModerationModel) (response []Moderation, err error)
 ```
 
 Moderate performs a moderation api call over a string. Input can be an array or slice but a string will reduce the complexity.
 
+<a name="Client.Transcribe"></a>
+### func \(\*Client\) [Transcribe](<https://github.com/conneroisu/groq-go/blob/main/inference.go#L161-L164>)
+
+```go
+func (c *Client) Transcribe(ctx context.Context, request AudioRequest) (AudioResponse, error)
+```
+
+Transcribe calls the transcriptions endpoint with the given request.
+
+Returns transcribed text in the response\_format specified in the request.
+
+<a name="Client.Translate"></a>
+### func \(\*Client\) [Translate](<https://github.com/conneroisu/groq-go/blob/main/inference.go#L171-L174>)
+
+```go
+func (c *Client) Translate(ctx context.Context, request AudioRequest) (AudioResponse, error)
+```
+
+Translate calls the translations endpoint with the given request.
+
+Returns the translated text in the response\_format specified in the request.
+
 <a name="FinishReason"></a>
-## type [FinishReason](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L313>)
+## type [FinishReason](<https://github.com/conneroisu/groq-go/blob/main/types.go#L307>)
 
 FinishReason is the finish reason.
 
@@ -931,7 +919,7 @@ const (
 ```
 
 <a name="FinishReason.MarshalJSON"></a>
-### func \(FinishReason\) [MarshalJSON](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L426>)
+### func \(FinishReason\) [MarshalJSON](<https://github.com/conneroisu/groq-go/blob/main/types.go#L420>)
 
 ```go
 func (r FinishReason) MarshalJSON() ([]byte, error)
@@ -940,7 +928,7 @@ func (r FinishReason) MarshalJSON() ([]byte, error)
 MarshalJSON implements the json.Marshaler interface.
 
 <a name="Format"></a>
-## type [Format](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L441>)
+## type [Format](<https://github.com/conneroisu/groq-go/blob/main/types.go#L435>)
 
 Format is the format of a response. string
 
@@ -978,7 +966,7 @@ const (
 ```
 
 <a name="ImageURLDetail"></a>
-## type [ImageURLDetail](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L23>)
+## type [ImageURLDetail](<https://github.com/conneroisu/groq-go/blob/main/types.go#L22>)
 
 ImageURLDetail is the detail of the image at the URL.
 
@@ -989,7 +977,7 @@ type ImageURLDetail string
 ```
 
 <a name="LogProbs"></a>
-## type [LogProbs](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L164-L180>)
+## type [LogProbs](<https://github.com/conneroisu/groq-go/blob/main/types.go#L165-L181>)
 
 LogProbs is the top\-level structure containing the log probability information.
 
@@ -1023,17 +1011,93 @@ type Model string
 ```
 
 <a name="Moderation"></a>
-## type [Moderation](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L301-L306>)
+## type [Moderation](<https://github.com/conneroisu/groq-go/blob/main/types.go#L606>)
 
-Moderation represents the response of a moderation request.
+Moderation is a category of harmful content that can be used to categorize a chat history using Llama Guard 3.
+
+\[Llama Guard 3\]\(https://llama.meta.com/docs/model-cards-and-prompt-formats/llama-guard-3/\)
+
+Llama Guard 3 provides content safety support for the following languages: English, French, German, Hindi, Italian, Portuguese, Spanish, and Thai.
+
+string
 
 ```go
-type Moderation struct {
-    // Categories is the categories of the result.
-    Categories []moderation.HarmfulCategory `json:"categories"`
-    // Flagged is the flagged status of the result.
-    Flagged bool `json:"flagged"`
-}
+type Moderation string
+```
+
+<a name="ModerationViolentCrimes"></a>
+
+```go
+const (
+    // ModerationViolentCrimes (S1) is the violent crimes category.
+    //
+    // Responses that enable, encourage, or endorse the commission of
+    // violent crimes, including: (1) unlawful violence toward people
+    // (ex: terrorism, genocide, murder, hate-motivated violent crimes,
+    // child abuse, assault, battery, kidnapping) and (2) unlawful violence
+    // toward animals (ex: animal abuse)
+    ModerationViolentCrimes Moderation = "violent_crimes"
+    // ModerationNonviolentCrimes (S2) is the non-violent crimes category.
+    ModerationNonviolentCrimes Moderation = "non_violent_crimes"
+    // ModerationSexRelatedCrimes (S3) is the sex-related crimes category.
+    ModerationSexRelatedCrimes Moderation = "sex_related_crimes"
+    // ModerationChildSexualExploitation (S4) is the child sexual exploitation
+    // category.
+    //
+    // Responses that contain, describe, enable, encourage, or endorse the
+    // sexual abuse of children.
+    ModerationChildSexualExploitation Moderation = "child_sexual_exploitation"
+    // ModerationDefamation (S5) is the defamation category.
+    //
+    // Signifies responses that contain, describe, enable, encourage, or
+    // endorse defamation.
+    ModerationDefamation Moderation = "defamation"
+    // ModerationSpecializedAdvice (S6) is the specialized advice category.
+    //
+    // Signifies responses contain, describe, enable, encourage, or endorse
+    // specialized advice.
+    ModerationSpecializedAdvice Moderation = "specialized_advice"
+    // ModerationPrivacy (S7) is the privacy category.
+    //
+    // Responses contain, describe, enable, encourage, or endorse privacy.
+    ModerationPrivacy Moderation = "privacy"
+    // ModerationIntellectualProperty (S8) is the intellectual property
+    // category. Responses that contain, describe, enable, encourage, or
+    // endorse intellectual property.
+    ModerationIntellectualProperty Moderation = "intellectual_property"
+    // ModerationIndiscriminateWeapons (S9) is the indiscriminate weapons
+    // category.
+    //
+    // Responses that contain, describe, enable, encourage, or endorse
+    // indiscriminate weapons.
+    ModerationIndiscriminateWeapons Moderation = "indiscriminate_weapons"
+    // ModerationHate (S10) is the hate category.
+    //
+    // Responses contain, describe, enable, encourage, or endorse hate.
+    ModerationHate Moderation = "hate"
+    // ModerationSuicideOrSelfHarm (S11) is the suicide/self-harm category.
+    //
+    // Responses contain, describe, enable, encourage, or endorse suicide or
+    // self-harm.
+    ModerationSuicideOrSelfHarm Moderation = "suicide_and_self_harm"
+    // ModerationSexualContent (S12) is the sexual content category.
+    //
+    // Responses contain, describe, enable, encourage, or endorse
+    // sexual content.
+    ModerationSexualContent Moderation = "sexual_content"
+    // ModerationElections (S13) is the elections category.
+    //
+    // Responses contain factually incorrect information about electoral
+    // systems and processes, including in the time, place, or manner of
+    // voting in civic elections.
+    ModerationElections Moderation = "elections"
+    // ModerationCodeInterpreterAbuse (S14) is the code interpreter abuse
+    // category.
+    //
+    // Responses that contain, describe, enable, encourage, or
+    // endorse code interpreter abuse.
+    ModerationCodeInterpreterAbuse Moderation = "code_interpreter_abuse"
+)
 ```
 
 <a name="ModerationModel"></a>
@@ -1046,7 +1110,7 @@ type ModerationModel Model
 ```
 
 <a name="Opts"></a>
-## type [Opts](<https://github.com/conneroisu/groq-go/blob/main/client.go#L36>)
+## type [Opts](<https://github.com/conneroisu/groq-go/blob/main/groq.go#L35>)
 
 Opts is a function that sets options for a Groq client.
 
@@ -1055,7 +1119,7 @@ type Opts func(*Client)
 ```
 
 <a name="WithBaseURL"></a>
-### func [WithBaseURL](<https://github.com/conneroisu/groq-go/blob/main/client.go#L45>)
+### func [WithBaseURL](<https://github.com/conneroisu/groq-go/blob/main/groq.go#L44>)
 
 ```go
 func WithBaseURL(baseURL string) Opts
@@ -1064,7 +1128,7 @@ func WithBaseURL(baseURL string) Opts
 WithBaseURL sets the base URL for the Groq client.
 
 <a name="WithClient"></a>
-### func [WithClient](<https://github.com/conneroisu/groq-go/blob/main/client.go#L40>)
+### func [WithClient](<https://github.com/conneroisu/groq-go/blob/main/groq.go#L39>)
 
 ```go
 func WithClient(client *http.Client) Opts
@@ -1073,7 +1137,7 @@ func WithClient(client *http.Client) Opts
 WithClient sets the client for the Groq client.
 
 <a name="WithLogger"></a>
-### func [WithLogger](<https://github.com/conneroisu/groq-go/blob/main/client.go#L50>)
+### func [WithLogger](<https://github.com/conneroisu/groq-go/blob/main/groq.go#L49>)
 
 ```go
 func WithLogger(logger *slog.Logger) Opts
@@ -1082,7 +1146,7 @@ func WithLogger(logger *slog.Logger) Opts
 WithLogger sets the logger for the Groq client.
 
 <a name="PromptAnnotation"></a>
-## type [PromptAnnotation](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L33-L35>)
+## type [PromptAnnotation](<https://github.com/conneroisu/groq-go/blob/main/types.go#L32-L34>)
 
 PromptAnnotation represents the prompt annotation.
 
@@ -1092,61 +1156,8 @@ type PromptAnnotation struct {
 }
 ```
 
-<a name="RateLimitHeaders"></a>
-## type [RateLimitHeaders](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L443-L460>)
-
-RateLimitHeaders struct represents Groq rate limits headers.
-
-```go
-type RateLimitHeaders struct {
-    // LimitRequests is the limit requests of the rate limit
-    // headers.
-    LimitRequests int `json:"x-ratelimit-limit-requests"`
-    // LimitTokens is the limit tokens of the rate limit headers.
-    LimitTokens int `json:"x-ratelimit-limit-tokens"`
-    // RemainingRequests is the remaining requests of the rate
-    // limit headers.
-    RemainingRequests int `json:"x-ratelimit-remaining-requests"`
-    // RemainingTokens is the remaining tokens of the rate limit
-    // headers.
-    RemainingTokens int `json:"x-ratelimit-remaining-tokens"`
-    // ResetRequests is the reset requests of the rate limit
-    // headers.
-    ResetRequests ResetTime `json:"x-ratelimit-reset-requests"`
-    // ResetTokens is the reset tokens of the rate limit headers.
-    ResetTokens ResetTime `json:"x-ratelimit-reset-tokens"`
-}
-```
-
-<a name="ResetTime"></a>
-## type [ResetTime](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L463>)
-
-ResetTime is a time.Time wrapper for the rate limit reset time. string
-
-```go
-type ResetTime string
-```
-
-<a name="ResetTime.String"></a>
-### func \(ResetTime\) [String](<https://github.com/conneroisu/groq-go/blob/main/client.go#L190>)
-
-```go
-func (r ResetTime) String() string
-```
-
-String returns the string representation of the ResetTime.
-
-<a name="ResetTime.Time"></a>
-### func \(ResetTime\) [Time](<https://github.com/conneroisu/groq-go/blob/main/client.go#L195>)
-
-```go
-func (r ResetTime) Time() time.Time
-```
-
-Time returns the time.Time representation of the ResetTime.
-
 <a name="Role"></a>
-## type [Role](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L31>)
+## type [Role](<https://github.com/conneroisu/groq-go/blob/main/types.go#L30>)
 
 Role is the role of the chat completion message.
 
@@ -1157,7 +1168,7 @@ type Role string
 ```
 
 <a name="Segments"></a>
-## type [Segments](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L573-L596>)
+## type [Segments](<https://github.com/conneroisu/groq-go/blob/main/types.go#L545-L568>)
 
 Segments is the segments of the response.
 
@@ -1189,7 +1200,7 @@ type Segments []struct {
 ```
 
 <a name="StreamOptions"></a>
-## type [StreamOptions](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L246-L259>)
+## type [StreamOptions](<https://github.com/conneroisu/groq-go/blob/main/types.go#L247-L260>)
 
 StreamOptions represents the stream options.
 
@@ -1211,7 +1222,7 @@ type StreamOptions struct {
 ```
 
 <a name="TopLogProbs"></a>
-## type [TopLogProbs](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L182-L189>)
+## type [TopLogProbs](<https://github.com/conneroisu/groq-go/blob/main/types.go#L183-L190>)
 
 TopLogProbs represents the top log probs.
 
@@ -1227,7 +1238,7 @@ type TopLogProbs struct {
 ```
 
 <a name="TranscriptionTimestampGranularity"></a>
-## type [TranscriptionTimestampGranularity](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L524>)
+## type [TranscriptionTimestampGranularity](<https://github.com/conneroisu/groq-go/blob/main/types.go#L496>)
 
 TranscriptionTimestampGranularity is the timestamp granularity for the transcription.
 
@@ -1251,7 +1262,7 @@ const (
 ```
 
 <a name="Usage"></a>
-## type [Usage](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L465-L469>)
+## type [Usage](<https://github.com/conneroisu/groq-go/blob/main/types.go#L437-L441>)
 
 Usage Represents the total token usage per request to Groq.
 
@@ -1264,7 +1275,7 @@ type Usage struct {
 ```
 
 <a name="Words"></a>
-## type [Words](<https://github.com/conneroisu/groq-go/blob/main/domain.go#L563-L571>)
+## type [Words](<https://github.com/conneroisu/groq-go/blob/main/types.go#L535-L543>)
 
 Words is the words of the audio response.
 
