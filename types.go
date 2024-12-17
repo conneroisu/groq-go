@@ -592,74 +592,6 @@ func (r AudioRequest) hasJSONResponse() bool {
 		r.Format == FormatVerboseJSON
 }
 
-// AudioMultipartForm creates a form with audio file contents and the name of
-// the model to use for audio processing.
-func AudioMultipartForm(request AudioRequest, b builders.FormBuilder) error {
-	err := createFileField(request, b)
-	if err != nil {
-		return err
-	}
-	err = b.WriteField("model", string(request.Model))
-	if err != nil {
-		return fmt.Errorf("writing model name: %w", err)
-	}
-	// Create a form field for the prompt (if provided)
-	if request.Prompt != "" {
-		err = b.WriteField("prompt", request.Prompt)
-		if err != nil {
-			return fmt.Errorf("writing prompt: %w", err)
-		}
-	}
-	// Create a form field for the format (if provided)
-	if request.Format != "" {
-		err = b.WriteField("response_format", string(request.Format))
-		if err != nil {
-			return fmt.Errorf("writing format: %w", err)
-		}
-	}
-	// Create a form field for the temperature (if provided)
-	if request.Temperature != 0 {
-		err = b.WriteField(
-			"temperature",
-			fmt.Sprintf("%.2f", request.Temperature),
-		)
-		if err != nil {
-			return fmt.Errorf("writing temperature: %w", err)
-		}
-	}
-	// Create a form field for the language (if provided)
-	if request.Language != "" {
-		err = b.WriteField("language", request.Language)
-		if err != nil {
-			return fmt.Errorf("writing language: %w", err)
-		}
-	}
-	return b.Close()
-}
-
-func createFileField(
-	request AudioRequest,
-	b builders.FormBuilder,
-) (err error) {
-	if request.Reader != nil {
-		err := b.CreateFormFileReader("file", request.Reader, request.FilePath)
-		if err != nil {
-			return fmt.Errorf("creating form using reader: %w", err)
-		}
-		return nil
-	}
-	f, err := os.Open(request.FilePath)
-	if err != nil {
-		return fmt.Errorf("opening audio file: %w", err)
-	}
-	defer f.Close()
-	err = b.CreateFormFile("file", f)
-	if err != nil {
-		return fmt.Errorf("creating form file: %w", err)
-	}
-	return nil
-}
-
 type (
 	// Moderation is a category of harmful content that can be used to
 	// categorize a chat history using Llama Guard 3.
@@ -763,3 +695,71 @@ var (
 		"S14": ModerationCodeInterpreterAbuse,
 	}
 )
+
+func createFileField(
+	request AudioRequest,
+	b builders.FormBuilder,
+) (err error) {
+	if request.Reader != nil {
+		err := b.CreateFormFileReader("file", request.Reader, request.FilePath)
+		if err != nil {
+			return fmt.Errorf("creating form using reader: %w", err)
+		}
+		return nil
+	}
+	f, err := os.Open(request.FilePath)
+	if err != nil {
+		return fmt.Errorf("opening audio file: %w", err)
+	}
+	defer f.Close()
+	err = b.CreateFormFile("file", f)
+	if err != nil {
+		return fmt.Errorf("creating form file: %w", err)
+	}
+	return nil
+}
+
+// audioMultipartForm creates a form with audio file contents and the name of
+// the model to use for audio processing.
+func audioMultipartForm(request AudioRequest, b builders.FormBuilder) error {
+	err := createFileField(request, b)
+	if err != nil {
+		return err
+	}
+	err = b.WriteField("model", string(request.Model))
+	if err != nil {
+		return fmt.Errorf("writing model name: %w", err)
+	}
+	// Create a form field for the prompt (if provided)
+	if request.Prompt != "" {
+		err = b.WriteField("prompt", request.Prompt)
+		if err != nil {
+			return fmt.Errorf("writing prompt: %w", err)
+		}
+	}
+	// Create a form field for the format (if provided)
+	if request.Format != "" {
+		err = b.WriteField("response_format", string(request.Format))
+		if err != nil {
+			return fmt.Errorf("writing format: %w", err)
+		}
+	}
+	// Create a form field for the temperature (if provided)
+	if request.Temperature != 0 {
+		err = b.WriteField(
+			"temperature",
+			fmt.Sprintf("%.2f", request.Temperature),
+		)
+		if err != nil {
+			return fmt.Errorf("writing temperature: %w", err)
+		}
+	}
+	// Create a form field for the language (if provided)
+	if request.Language != "" {
+		err = b.WriteField("language", request.Language)
+		if err != nil {
+			return fmt.Errorf("writing language: %w", err)
+		}
+	}
+	return b.Close()
+}

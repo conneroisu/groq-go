@@ -130,6 +130,7 @@ func handleModerationEndpoint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
 func setupGroqTestServer() (
 	client *groq.Client,
 	server *test.ServerTest,
@@ -148,6 +149,7 @@ func setupGroqTestServer() (
 	}
 	return
 }
+
 func TestEmptyKeyClientCreation(t *testing.T) {
 	client, err := groq.NewClient("")
 	a := assert.New(t)
