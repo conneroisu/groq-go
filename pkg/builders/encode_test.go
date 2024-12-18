@@ -515,7 +515,7 @@ func (m customEncodedInt) EncodeValues(key string, v *url.Values) error {
 }
 
 func TestValues_CustomEncodingInt(t *testing.T) {
-	var zero customEncodedInt = 0
+	var zero customEncodedInt
 	var one customEncodedInt = 1
 	tests := []struct {
 		input interface{}
@@ -590,7 +590,7 @@ func (m *customEncodedIntPtr) EncodeValues(key string, v *url.Values) error {
 // Test behavior when encoding is defined for a pointer of a custom type.
 // Custom type should be able to encode values for nil pointers.
 func TestValues_CustomEncodingPointer(t *testing.T) {
-	var zero customEncodedIntPtr = 0
+	var zero customEncodedIntPtr
 	var one customEncodedIntPtr = 1
 	tests := []struct {
 		input interface{}

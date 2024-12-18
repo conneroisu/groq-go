@@ -15,6 +15,17 @@ import (
 	"github.com/conneroisu/groq-go/pkg/schema"
 )
 
+const (
+	// groqAPIURLv1 is the base URL for the Groq API.
+	groqAPIURLv1 = "https://api.groq.com/openai/v1"
+
+	chatCompletionsSuffix endpoint = "/chat/completions"
+	transcriptionsSuffix  endpoint = "/audio/transcriptions"
+	translationsSuffix    endpoint = "/audio/translations"
+	embeddingsSuffix      endpoint = "/embeddings"
+	moderationsSuffix     endpoint = "/moderations"
+)
+
 // ChatCompletion method is an API call to create a chat completion.
 func (c *Client) ChatCompletion(
 	ctx context.Context,
@@ -79,8 +90,8 @@ func (c *Client) ChatCompletionJSON(
 	if err != nil {
 		return err
 	}
-	request.ResponseFormat = &ChatCompletionResponseFormat{
-		JSONSchema: &ChatCompletionResponseFormatJSONSchema{
+	request.ResponseFormat = &ChatResponseFormat{
+		JSONSchema: &JSONSchema{
 			Name:        schema.Title,
 			Description: schema.Description,
 			Schema:      *schema,

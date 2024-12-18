@@ -37,7 +37,7 @@ func TestChat(t *testing.T) {
 			},
 		},
 	}
-	ts.RegisterHandler("/v1/chat/completions", func(w http.ResponseWriter, r *http.Request) {
+	ts.RegisterHandler("/v1/chat/completions", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		jsval, err := json.Marshal(returnObj)
@@ -171,7 +171,7 @@ func setupGroqTestServer() (
 }
 
 // handleModerationEndpoint handles the moderation endpoint.
-func handleModerationEndpoint(w http.ResponseWriter, r *http.Request) {
+func handleModerationEndpoint(w http.ResponseWriter, _ *http.Request) {
 	response := ChatCompletionResponse{
 		ID:      "chatcmpl-123",
 		Object:  "chat.completion",
