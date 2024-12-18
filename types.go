@@ -48,64 +48,85 @@ const (
 
 // ChatCompletionRequest represents a request structure for the chat
 // completion API.
-type ChatCompletionRequest struct {
-	// Model is the model of the chat completion request.
-	Model ChatModel `json:"model"`
-	// Messages are the messages of the chat completion request.
-	Messages []ChatCompletionMessage `json:"messages"`
-	// MaxTokens is the max tokens that the model can generate.
-	MaxTokens int `json:"max_tokens,omitempty"`
-	// Temperature is the temperature of the model during inference.
-	Temperature float32 `json:"temperature,omitempty"`
-	// TopP is the top p of the of the model during inference.
-	TopP float32 `json:"top_p,omitempty"`
-	// N is the n of the chat completion request.
-	N int `json:"n,omitempty"`
-	// Stream is the stream of the chat completion request.
-	Stream bool `json:"stream,omitempty"`
-	// Stop is the stop of the chat completion request.
-	Stop []string `json:"stop,omitempty"`
-	// PresencePenalty is the presence penalty for the model during
-	// inference.
-	PresencePenalty float32 `json:"presence_penalty,omitempty"`
-	// ResponseFormat is the response format of the chat completion
-	// request.
-	ResponseFormat *ChatResponseFormat `json:"response_format,omitempty"`
-	// Seed is the seed of the chat completion request.
-	Seed *int `json:"seed,omitempty"`
-	// FrequencyPenalty is the frequency penalty of the chat
-	// completion request.
-	FrequencyPenalty float32 `json:"frequency_penalty,omitempty"`
-	// LogitBias is must be a token id string (specified by their
-	// token ID in the tokenizer), not a word string.
-	// incorrect: `"logit_bias":{ "You": 6}`, correct: `"logit_bias":{"1639": 6}`
-	// refs: https://platform.openai.com/docs/api-reference/chat/create#chat/create-logit_bias
-	LogitBias map[string]int `json:"logit_bias,omitempty"`
-	// LogProbs indicates whether to return log probabilities of the
-	// output tokens or not. If true, returns the log probabilities
-	// of each output token returned in the content of message.
-	//
-	// This option is currently not available on the
-	// gpt-4-vision-preview model.
-	LogProbs bool `json:"logprobs,omitempty"`
-	// TopLogProbs is an integer between 0 and 5 specifying the
-	// number of most likely tokens to return at each token
-	// position, each with an associated log probability. Logprobs
-	// must be set to true if this parameter is used.
-	TopLogProbs int `json:"top_logprobs,omitempty"`
-	// User is the user of the chat completion request.
-	User string `json:"user,omitempty"`
-	// Tools is the tools of the chat completion request.
-	Tools []tools.Tool `json:"tools,omitempty"`
-	// This can be either a string or an ToolChoice object.
-	ToolChoice any `json:"tool_choice,omitempty"`
-	// Options for streaming response. Only set this when you set stream: true.
-	StreamOptions *StreamOptions `json:"stream_options,omitempty"`
-	// Disable the default behavior of parallel tool calls by setting it: false.
-	ParallelToolCalls any `json:"parallel_tool_calls,omitempty"`
-	// RetryDelay is the delay between retries.
-	RetryDelay time.Duration `json:"-"`
-}
+type (
+	ChatCompletionRequest struct {
+		// Model is the model of the chat completion request.
+		Model ChatModel `json:"model"`
+		// Messages are the messages of the chat completion request.
+		Messages []ChatCompletionMessage `json:"messages"`
+		// MaxTokens is the max tokens that the model can generate.
+		MaxTokens int `json:"max_tokens,omitempty"`
+		// Temperature is the temperature of the model during inference.
+		Temperature float32 `json:"temperature,omitempty"`
+		// TopP is the top p of the of the model during inference.
+		TopP float32 `json:"top_p,omitempty"`
+		// N is the n of the chat completion request.
+		N int `json:"n,omitempty"`
+		// Stream is the stream of the chat completion request.
+		Stream bool `json:"stream,omitempty"`
+		// Stop is the stop of the chat completion request.
+		Stop []string `json:"stop,omitempty"`
+		// PresencePenalty is the presence penalty for the model during
+		// inference.
+		PresencePenalty float32 `json:"presence_penalty,omitempty"`
+		// ResponseFormat is the response format of the chat completion
+		// request.
+		ResponseFormat *ChatResponseFormat `json:"response_format,omitempty"`
+		// Seed is the seed of the chat completion request.
+		Seed *int `json:"seed,omitempty"`
+		// FrequencyPenalty is the frequency penalty of the chat
+		// completion request.
+		FrequencyPenalty float32 `json:"frequency_penalty,omitempty"`
+		// LogitBias is must be a token id string (specified by their
+		// token ID in the tokenizer), not a word string.
+		// incorrect: `"logit_bias":{ "You": 6}`, correct: `"logit_bias":{"1639": 6}`
+		// refs: https://platform.openai.com/docs/api-reference/chat/create#chat/create-logit_bias
+		LogitBias map[string]int `json:"logit_bias,omitempty"`
+		// LogProbs indicates whether to return log probabilities of the
+		// output tokens or not. If true, returns the log probabilities
+		// of each output token returned in the content of message.
+		//
+		// This option is currently not available on the
+		// gpt-4-vision-preview model.
+		LogProbs bool `json:"logprobs,omitempty"`
+		// TopLogProbs is an integer between 0 and 5 specifying the
+		// number of most likely tokens to return at each token
+		// position, each with an associated log probability. Logprobs
+		// must be set to true if this parameter is used.
+		TopLogProbs int `json:"top_logprobs,omitempty"`
+		// User is the user of the chat completion request.
+		User string `json:"user,omitempty"`
+		// Tools is the tools of the chat completion request.
+		Tools []tools.Tool `json:"tools,omitempty"`
+		// This can be either a string or an ToolChoice object.
+		ToolChoice any `json:"tool_choice,omitempty"`
+		// Options for streaming response. Only set this when you set stream: true.
+		StreamOptions *StreamOptions `json:"stream_options,omitempty"`
+		// Disable the default behavior of parallel tool calls by setting it: false.
+		ParallelToolCalls any `json:"parallel_tool_calls,omitempty"`
+		// RetryDelay is the delay between retries.
+		RetryDelay time.Duration `json:"-"`
+	}
+	// ChatCompletionResponse represents a response structure for chat
+	// completion API.
+	ChatCompletionResponse struct {
+		// ID is the id of the response.
+		ID string `json:"id"`
+		// Object is the object of the response.
+		Object string `json:"object"`
+		// Created is the created time of the response.
+		Created int64 `json:"created"`
+		// Model is the model of the response.
+		Model ChatModel `json:"model"`
+		// Choices is the choices of the response.
+		Choices []ChatCompletionChoice `json:"choices"`
+		// Usage is the usage of the response.
+		Usage Usage `json:"usage"`
+		// SystemFingerprint is the system fingerprint of the response.
+		SystemFingerprint string `json:"system_fingerprint"`
+		header            http.Header
+	}
+)
 
 // ChatCompletionMessage represents the chat completion message.
 type ChatCompletionMessage struct {
@@ -160,6 +181,15 @@ type ChatMessagePart struct {
 	ImageURL *ChatMessageImageURL `json:"image_url,omitempty"`
 }
 
+// ChatResponseFormat is the chat completion response format.
+type ChatResponseFormat struct {
+	// Type is the type of the chat completion response format.
+	Type Format `json:"type,omitempty"`
+	// JSONSchema is the json schema of the chat completion response
+	// format.
+	JSONSchema *JSONSchema `json:"json_schema,omitempty"`
+}
+
 // ChatMessagePartType is the chat message part type.
 //
 // string
@@ -180,17 +210,7 @@ type ChatMessageImageURL struct {
 	Detail ImageURLDetail `json:"detail,omitempty"`
 }
 
-// #TODO
-
 type (
-	// ChatResponseFormat is the chat completion response format.
-	ChatResponseFormat struct {
-		// Type is the type of the chat completion response format.
-		Type Format `json:"type,omitempty"`
-		// JSONSchema is the json schema of the chat completion response
-		// format.
-		JSONSchema *JSONSchema `json:"json_schema,omitempty"`
-	}
 	// JSONSchema is the chat completion
 	// response format json schema.
 	JSONSchema struct {
@@ -242,25 +262,6 @@ type (
 		// LogProbs is the logarithmic probabilities of the choice of
 		// the model for each token.
 		LogProbs *LogProbs `json:"logprobs,omitempty"`
-	}
-	// ChatCompletionResponse represents a response structure for chat
-	// completion API.
-	ChatCompletionResponse struct {
-		// ID is the id of the response.
-		ID string `json:"id"`
-		// Object is the object of the response.
-		Object string `json:"object"`
-		// Created is the created time of the response.
-		Created int64 `json:"created"`
-		// Model is the model of the response.
-		Model ChatModel `json:"model"`
-		// Choices is the choices of the response.
-		Choices []ChatCompletionChoice `json:"choices"`
-		// Usage is the usage of the response.
-		Usage Usage `json:"usage"`
-		// SystemFingerprint is the system fingerprint of the response.
-		SystemFingerprint string `json:"system_fingerprint"`
-		header            http.Header
 	}
 	// ChatCompletionStreamChoiceDelta represents a response structure for
 	// chat completion API.
