@@ -479,21 +479,7 @@ const (
 	moderationsSuffix     endpoint = "/moderations"
 )
 
-const (
-	// TranscriptionTimestampGranularityWord is the word timestamp
-	// granularity.
-	TranscriptionTimestampGranularityWord TranscriptionTimestampGranularity = "word"
-	// TranscriptionTimestampGranularitySegment is the segment timestamp
-	// granularity.
-	TranscriptionTimestampGranularitySegment TranscriptionTimestampGranularity = "segment"
-)
-
 type (
-	// TranscriptionTimestampGranularity is the timestamp granularity for
-	// the transcription.
-	//
-	// string
-	TranscriptionTimestampGranularity string
 	// AudioRequest represents a request structure for audio API.
 	AudioRequest struct {
 		// Model is the model to use for the transcription.
