@@ -97,6 +97,7 @@ func (c *Client) ChatCompletionJSON(
 			Schema:      *schema,
 			Strict:      true,
 		},
+		Type: FormatJSON,
 	}
 	response, err := c.ChatCompletion(ctx, request)
 	if err != nil {
