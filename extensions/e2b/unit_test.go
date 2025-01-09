@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/conneroisu/groq-go/extensions/e2b"
-	"github.com/conneroisu/groq-go/pkg/test"
+	"github.com/conneroisu/groq-go/internal/test"
 	"github.com/stretchr/testify/assert"
 )
 

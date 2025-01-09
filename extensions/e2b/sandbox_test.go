@@ -9,7 +9,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/conneroisu/groq-go/pkg/test"
+	"github.com/conneroisu/groq-go/internal/test"
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/assert"
 )

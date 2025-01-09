@@ -10,7 +10,7 @@ import (
 	"github.com/conneroisu/groq-go"
 	"github.com/conneroisu/groq-go/internal/streams"
 	"github.com/conneroisu/groq-go/pkg/groqerr"
-	"github.com/conneroisu/groq-go/pkg/test"
+	"github.com/conneroisu/groq-go/internal/test"
 	"github.com/stretchr/testify/assert"
 )
 
