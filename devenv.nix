@@ -38,6 +38,7 @@ in {
     gomodifytags
     gotests
     gotools
+    gomarkdoc
   ];
 
   scripts = {
