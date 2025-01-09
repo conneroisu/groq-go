@@ -70,7 +70,7 @@ func TestWriteRead(t *testing.T) {
 	a.NoError(err, "Write error")
 	readContent, err := sb.Read(ctx, filePath)
 	a.NoError(err, "Read error")
-	a.Equal(content, string(readContent), "Read content does not match written content")
+	a.Equal(content, readContent, "Read content does not match written content")
 	readBytesContent, err := sb.ReadBytes(ctx, filePath)
 	a.NoError(err, "ReadBytes error")
 	a.Equal(content, string(readBytesContent), "ReadBytes content does not match written content")

@@ -17,7 +17,7 @@ func TestRun(t *testing.T) {
 	a := assert.New(t)
 	ctx := context.Background()
 	ts := test.NewTestServer()
-	ts.RegisterHandler("/run_tools", func(w http.ResponseWriter, r *http.Request) {
+	ts.RegisterHandler("/run_tools", func(w http.ResponseWriter, _ *http.Request) {
 		var runResp struct {
 			Provider string `json:"provider"`
 			Content  struct {

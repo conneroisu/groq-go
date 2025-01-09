@@ -20,7 +20,11 @@ func main() {
 func run(
 	ctx context.Context,
 ) error {
-	client, err := groq.NewClient(os.Getenv("GROQ_KEY"))
+	key := os.Getenv("GROQ_KEY")
+	if key == "" {
+		return fmt.Errorf("GROQ_KEY is required")
+	}
+	client, err := groq.NewClient(key)
 	if err != nil {
 		return err
 	}

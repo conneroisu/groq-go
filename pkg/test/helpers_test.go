@@ -98,7 +98,7 @@ func TestTokenRoundTripper(t *testing.T) {
 	}
 
 	// Prepare a test HTTP request.
-	req, err := http.NewRequest("GET", "http://example.com", nil)
+	req, err := http.NewRequest(http.MethodGet, "http://example.com", nil)
 	a.NoError(err, "Should be able to create a new request")
 
 	// Perform the HTTP request.

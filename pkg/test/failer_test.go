@@ -97,7 +97,7 @@ func TestFailingErrorBuffer_Bytes(t *testing.T) {
 func TestFailingErrorBuffer_MultipleWrites(t *testing.T) {
 	buf := &test.FailingErrorBuffer{}
 
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		n, err := buf.Write([]byte("data"))
 		if n != 0 {
 			t.Errorf("Write call %d returned n=%d, expected n=0", i+1, n)

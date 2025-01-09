@@ -9,59 +9,63 @@
     inherit (pkgs.stdenv) system;
   };
 in {
+  languages = {
+    nix.enable = true;
+    go = {
+      enable = true;
+      package = unstable-pkgs.go;
+    };
+  };
 
-  languages.go.enable = true;
-  languages.nix.enable = true;
+  git-hooks = {
+    hooks = {
+      golangci-lint.enable = true;
+    };
+  };
   # https://devenv.sh/packages/
   packages = with pkgs; [
     git
     zsh
-    revive
     unstable-pkgs.iferr
     go
+    pprof
     gopls
     impl
     golangci-lint-langserver
     golangci-lint
+    revive
     templ
     gomodifytags
     gotests
     gotools
   ];
 
-  # https://devenv.sh/languages/
-  # languages.rust.enable = true;
+  scripts = {
+    generate.exec = ''
+      go generate -v ./...
+    '';
 
-  # https://devenv.sh/processes/
-  # processes.cargo-watch.exec = "cargo-watch";
-
-  # https://devenv.sh/services/
-  # services.postgres.enable = true;
-
-  # https://devenv.sh/scripts/
-  scripts.generate.exec = ''
-    go generate -v ./...
-  '';
+    tests.exec = ''
+      go test -v -short ./...
+    '';
+    unit-tests.exec = ''
+      go test -v ./...
+    '';
+    lint.exec = ''
+      golangci-lint run
+    '';
+    dx.exec = ''
+      $EDITOR $(git rev-parse --show-toplevel)/devenv.nix
+    '';
+  };
 
   enterShell = ''
     git status
   '';
-
-  # https://devenv.sh/tasks/
-  # tasks = {
-  #   "myproj:setup".exec = "mytool build";
-  #   "devenv:enterShell".after = [ "myproj:setup" ];
-  # };
-
-  # https://devenv.sh/tests/
   enterTest = ''
     echo "Running tests"
     git --version | grep --color=auto "${pkgs.git.version}"
   '';
 
-  # https://devenv.sh/pre-commit-hooks/
-  # pre-commit.hooks.shellcheck.enable = true;
-
-  # See full reference at https://devenv.sh/reference/options/
   cachix.enable = true;
 }

@@ -185,7 +185,6 @@ func (j *JigsawStack) VisionObjectDetection(
 		return "", err
 	}
 	return "", nil
-
 }
 
 // ImageGeneration generates an image from a prompt and parameters.

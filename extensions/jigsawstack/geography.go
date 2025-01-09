@@ -55,7 +55,7 @@ type (
 				Website   string `json:"website"`
 				OpenHours struct {
 				} `json:"open_hours"`
-			} `json:"addtional_properties"`
+			} `json:"additional_properties"`
 		} `json:"data"`
 	}
 )

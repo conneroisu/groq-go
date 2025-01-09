@@ -10,9 +10,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/conneroisu/groq-go/internal/schema"
 	"github.com/conneroisu/groq-go/pkg/builders"
 	"github.com/conneroisu/groq-go/pkg/groqerr"
-	"github.com/conneroisu/groq-go/pkg/schema"
 )
 
 const (

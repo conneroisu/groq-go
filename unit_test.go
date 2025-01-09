@@ -94,7 +94,7 @@ func TestModerate(t *testing.T) {
 }
 
 // handleModerationEndpoint handles the moderation endpoint.
-func handleModerationEndpoint(w http.ResponseWriter, r *http.Request) {
+func handleModerationEndpoint(w http.ResponseWriter, _ *http.Request) {
 	response := groq.ChatCompletionResponse{
 		ID:      "chatcmpl-123",
 		Object:  "chat.completion",
@@ -515,7 +515,7 @@ func TestChatCompletionStreamRateLimitError(t *testing.T) {
 		"/v1/chat/completions",
 		func(w http.ResponseWriter, _ *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(429)
+			w.WriteHeader(http.StatusTooManyRequests)
 			// Send test responses
 			dataBytes := []byte(`{"error":{` +
 				`"message": "You are sending requests too quickly.",` +
@@ -756,7 +756,7 @@ func TestAudio(t *testing.T) {
 			_, err := tc.createFn(ctx, req)
 			a.NoError(err, "audio API error")
 		})
-		t.Run(tc.name+" (with reader)", func(t *testing.T) {
+		t.Run(tc.name+" (with reader)", func(_ *testing.T) {
 			req := groq.AudioRequest{
 				FilePath: "fake.webm",
 				Reader:   bytes.NewBuffer([]byte(`some webm binary data`)),
@@ -811,7 +811,7 @@ func TestAudioWithOptionalArgs(t *testing.T) {
 func handleAudioEndpoint(w http.ResponseWriter, r *http.Request) {
 	var err error
 	// audio endpoints only accept POST requests
-	if r.Method != "POST" {
+	if r.Method != http.MethodPost {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 	}
 	mediaType, params, err := mime.ParseMediaType(r.Header.Get("Content-Type"))

@@ -102,7 +102,7 @@ var (
 				return groq.ChatCompletionMessage{}, err
 			}
 			return groq.ChatCompletionMessage{
-				Content: string(content),
+				Content: content,
 				Role:    groq.RoleFunction,
 				Name:    "read",
 			}, nil

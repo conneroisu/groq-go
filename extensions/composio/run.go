@@ -70,7 +70,7 @@ func (c *Composio) Run(
 			return nil, err
 		}
 		respH = append(respH, groq.ChatCompletionMessage{
-			Content: string(body),
+			Content: body,
 			Name:    toolCall.ID,
 			Role:    groq.RoleFunction,
 		})

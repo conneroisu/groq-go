@@ -132,7 +132,7 @@ func reflectValue(values url.Values, val reflect.Value, scope string) error {
 	var embedded []reflect.Value
 
 	typ := val.Type()
-	for i := 0; i < typ.NumField(); i++ {
+	for i := range typ.NumField() {
 		sf := typ.Field(i)
 		if sf.PkgPath != "" && !sf.Anonymous { // unexported
 			continue
@@ -210,7 +210,7 @@ func reflectValue(values url.Values, val reflect.Value, scope string) error {
 			if del != "" {
 				s := new(bytes.Buffer)
 				first := true
-				for i := 0; i < sv.Len(); i++ {
+				for i := range sv.Len() {
 					if first {
 						first = false
 					} else {
@@ -220,7 +220,7 @@ func reflectValue(values url.Values, val reflect.Value, scope string) error {
 				}
 				values.Add(name, s.String())
 			} else {
-				for i := 0; i < sv.Len(); i++ {
+				for i := range sv.Len() {
 					k := name
 					if opts.Contains("numbered") {
 						k = fmt.Sprintf("%s%d", name, i)

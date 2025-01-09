@@ -16,7 +16,7 @@ func TestGetTools(t *testing.T) {
 	a := assert.New(t)
 	ctx := context.Background()
 	ts := test.NewTestServer()
-	ts.RegisterHandler("/get_tools", func(w http.ResponseWriter, r *http.Request) {
+	ts.RegisterHandler("/get_tools", func(w http.ResponseWriter, _ *http.Request) {
 		var ts []tools.Tool
 		ts = append(ts, tools.Tool{
 			Function: tools.FunctionDefinition{

@@ -49,7 +49,6 @@ type (
 		id  string            // ID is process id.
 		cmd string            // cmd is process's command.
 		Cwd string            // cwd is process's current working directory.
-		ctx context.Context   // ctx is the context for the process.
 		sb  *Sandbox          // sb is the sandbox the process belongs to.
 		Env map[string]string // env is process's environment variables.
 	}
@@ -448,7 +447,6 @@ func (p *Process) Start(ctx context.Context) (err error) {
 	if err != nil {
 		return err
 	}
-	p.ctx = ctx
 	select {
 	case body := <-respCh:
 		res, err := decodeResponse[string, APIError](body)
